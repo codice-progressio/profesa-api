@@ -13,7 +13,7 @@ var db = require('./config/db');
 // ============================================
 //  true = Producción
 //  false = Development
-var ENVIROMENT = db.enviroment(true);
+var ENVIROMENT = db.enviroment(false);
 // ============================================
 
 // Inicializar variables.

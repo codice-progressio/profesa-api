@@ -5,6 +5,16 @@ mongoose.Promise = global.Promise;
 var colores = require('./utils/colors');
 var bodyParser = require('body-parser');
 var ERR = require('./utils/respStatus');
+var db = require('./config/db');
+
+
+// ============================================
+// ENVIROMENT
+// ============================================
+//  true = Producción
+//  false = Development
+var ENVIROMENT = db.enviroment(true);
+// ============================================
 
 // Inicializar variables.
 var app = express();
@@ -83,14 +93,13 @@ var materialRoutes = require('./routes/almacen/material');
 
 
 
-// Conexión a la base de datos. 
-// mongoose.connection.openUri('mongodb://localhost:27017/carrduci', (err, res) => {
-//     if (err) throw err;
-//     console.log(colores.success('ONLINE') + ' Base de datos.');
-// });
-mongoose.connection.openUri('mongodb://localhost:27017/hospitalDB', (err, res) => {
-    if (err) throw err;
-    console.log(colores.success('ONLINE') + ' Base de datos.');
+mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
+    console.log(ENVIROMENT.msj_bienvenida);
+    if (err) {
+        console.log(ENVIROMENT.msj_bd_err);
+        throw err;
+    }
+    console.log(ENVIROMENT.msj_bd_ok);
 });
 
 
@@ -158,6 +167,6 @@ app.use(function(err, req, res, next) {
 });
 
 // Escuchar peticiones.
-app.listen(3000, () => {
-    console.log(colores.success('ONLINE') + ' Express server corriendo en el puerto 3000.');
+app.listen(ENVIROMENT.port, () => {
+    console.log(ENVIROMENT.msj_mongoose_ok);
 });

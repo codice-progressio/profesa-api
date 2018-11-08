@@ -138,7 +138,7 @@ function calcularNivel(folio) {
 
         if (linea.nivelDeUrgencia === NVU.LV.U) {
             // Si hay una sola linea urgente entonces 
-            // todo el folio es urgente. 
+            // tlodo el folio es urgente. 
             temp = NVU.LV.U;
             break;
         } else if (linea.nivelDeUrgencia === NVU.LV.M) {

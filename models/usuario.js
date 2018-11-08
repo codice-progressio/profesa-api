@@ -4,6 +4,7 @@ var uniqueValidator = require('mongoose-unique-validator');
 var Schema = mongoose.Schema;
 
 var rolesValidos = {
+    // TODO: Estos valores tienen que ir en el archivo config.js
     values: [
         'ADMIN_ROLE',
         'USER_ROLE',
@@ -19,7 +20,7 @@ var usuarioSchema = new Schema({
     email: { type: String, unique: true, required: [true, 'El correo es necesario.'] },
     password: { type: String, required: [true, 'La contraseña es necesaria.'] },
     img: { type: String, required: false },
-    // Un usuario puede tener varios roles. 
+    // TODO: Un usuario debe poder tener varios roles. 
     role: { type: String, required: true, default: 'USER_ROLE', enum: rolesValidos },
     google: { type: Boolean, default: false }
 });

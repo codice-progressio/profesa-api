@@ -7,6 +7,8 @@ var bodyParser = require('body-parser');
 var ERR = require('./utils/respStatus');
 var db = require('./config/db');
 
+var defaults = require('./config/defaultData');
+
 
 // ============================================
 // ENVIROMENT
@@ -169,4 +171,5 @@ app.use(function(err, req, res, next) {
 // Escuchar peticiones.
 app.listen(ENVIROMENT.port, () => {
     console.log(ENVIROMENT.msj_mongoose_ok);
+    defaults();
 });

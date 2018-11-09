@@ -78,7 +78,6 @@ app.get('/costos', (req, res, next) => {
         }
     };
 
-    console.log(colores.invertir_fondo('estamos aqui, aqui es donde sale resina'));
 
     ModeloCompleto.find({})
         // .skip(desde)

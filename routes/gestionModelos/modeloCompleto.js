@@ -55,6 +55,7 @@ app.get('/', (req, res, next) => {
 
             });
         });
+    z
 });
 // ============================================
 // FIN Obtenmos todos los modelos. 
@@ -77,6 +78,8 @@ app.get('/costos', (req, res, next) => {
             }
         }
     };
+
+    console.log(colores.invertir_fondo('estamos aqui, aqui es donde sale resina'));
 
     ModeloCompleto.find({})
         // .skip(desde)

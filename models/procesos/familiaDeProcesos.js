@@ -9,6 +9,7 @@ var familiaDeProcesosSchema = new Schema({
             ref: 'Proceso',
             required: [true, "El proceso es necesario."]
         },
+        // TODO: Debe mantener integridad y usar un solo schema. Ver notda de Modelo completo. 
         orden: { type: Number }
     }],
     nombre: { type: String, required: [true, 'El nombre es requerido.'] },

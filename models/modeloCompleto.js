@@ -70,6 +70,7 @@ var modeloCompletoSchema = new Schema({
             ref: 'Proceso',
             required: [true, "El proceso es necesario."]
         },
+        // TODO: Aqui debe de ir el proces del que viene para facilitar el óren y mantener integridad de datos. 
         orden: { type: Number }
     }],
 

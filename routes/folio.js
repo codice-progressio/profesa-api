@@ -22,8 +22,6 @@ app.get('/', (req, res, next) => {
     var prioridad = req.query.prioridad;
 
 
-
-
     var filtros = {};
 
     if (sinOrdenes) {
@@ -68,6 +66,7 @@ app.get('/', (req, res, next) => {
         .populate('folioLineas.ordenes.ubicacionActual.departamento')
         .populate('folioLineas.ordenes.siguienteDepartamento.departamento')
         .populate('folioLineas.ordenes.trayectoNormal.departamento')
+        // TODO: Quitar comentario. 
         // .populate({
         //     path: 'folioLineas.ordenes.ubicacionActual.departamentoActual',
         //     populate: {
@@ -118,9 +117,15 @@ app.get('/:id', (req, res) => {
     var id = req.params.id;
     // Popular
     const populate = {
-        path: 'folioLineas.modeloCompleto folioLineas.laserCliente',
+        path: 'folioLineas.modeloCompleto folioLineas.laserCliente ',
         populate: {
-            path: 'modelo tamano color terminado laserAlmacen versionModelo'
+            path: 'modelo tamano color terminado laserAlmacen versionModelo familiaDeProcesos procesosEspeciales.proceso',
+            populate: {
+                path: 'procesos.proceso departamento',
+                populate: {
+                    path: 'departamento'
+                }
+            }
         }
     };
 
@@ -143,37 +148,39 @@ app.get('/:id', (req, res) => {
                 }
             }
         })
+        .populate({ path: 'folioLineas.procesos.proceso', populate: { path: 'departamento' } })
         .populate(populate)
-        .exec((err, folio) => {
-            if (err) {
-                console.log(colores.danger('Error get:/id - folio') + 'Error al buscar folio. =>' + err);
 
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error al buscar folio.',
-                    errors: err
-                });
-            }
+    .exec((err, folio) => {
+        if (err) {
+            console.log(colores.danger('Error get:/id - folio') + 'Error al buscar folio. =>' + err);
 
-            //Validamos que haya un folio con ese id.
-            if (!folio) {
-                console.log(colores.danger('Error get:/id - folio') + `El folio con id ${id} no existe. =>` + err);
-
-                return res.status(400).json({
-                    ok: false,
-                    mensaje: `El folio con id ${id} no existe.`,
-                    errors: { message: 'No existe un folio con ID.' }
-                });
-            }
-
-            // Contamos los datos totales que hay registrados, 
-            // estos sirven para la paginación. 
-            return res.status(200).json({
-                ok: true,
-                mensaje: 'Petición realizada correctamente',
-                folio: folio,
+            return res.status(500).json({
+                ok: false,
+                mensaje: 'Error al buscar folio.',
+                errors: err
             });
+        }
+
+        //Validamos que haya un folio con ese id.
+        if (!folio) {
+            console.log(colores.danger('Error get:/id - folio') + `El folio con id ${id} no existe. =>` + err);
+
+            return res.status(400).json({
+                ok: false,
+                mensaje: `El folio con id ${id} no existe.`,
+                errors: { message: 'No existe un folio con ID.' }
+            });
+        }
+
+        // Contamos los datos totales que hay registrados, 
+        // estos sirven para la paginación. 
+        return res.status(200).json({
+            ok: true,
+            mensaje: 'Petición realizada correctamente',
+            folio: folio,
         });
+    });
 });
 // ============================================
 // END Obtener toda la información de un folio con sus lineas. 

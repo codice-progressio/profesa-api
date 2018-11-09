@@ -4,6 +4,32 @@ var Schema = mongoose.Schema;
 var ordenSchema = require('./orden');
 var NVU = require('../../config/nivelesDeUrgencia');
 
+var Tenido = [{
+    color: {
+        type: String,
+        require: [true, 'Es necesario que definas el color para teñir.']
+    },
+    cantidad: {
+        type: Number,
+        require: [true, 'Es necesario que definas la cantidad a teñir.'],
+        min: [1, "La cantidad mínima a teñir es 1."]
+    },
+}];
+
+function comprobarCantidadesDeTenido(value) {
+    var total = 0;
+    console.log(JSON.stringify(value));
+    value.forEach(e => {
+        // Sumamos todas las cantidades que se pasaron. 
+        total += e.cantidad;
+    });
+    // Si el total supera a la cantidad del pedido retornamos error. 
+
+    if (this.cantidad < total) return false;
+    return true;
+}
+
+
 
 const folioLineaSchema = new Schema({
     // El número de pedido que se asigna en el pre del save. (Tambien se asigna a la órden.);
@@ -38,10 +64,20 @@ const folioLineaSchema = new Schema({
     ordenes: [ordenSchema],
     ordenesGeneradas: { type: Boolean, default: false },
     trayectoGenerado: { type: Boolean, default: false },
-    porcentajeAvance: { type: Number, min: 0, max: 100 }
+    porcentajeAvance: { type: Number, min: 0, max: 100 },
 
+    // Para la descripcion de colores teñidos. Este solo va para el departamento de teñido. 
+    // coloresTenidos: [{ type: Tenido, validate: [comprobarCantidadesDeTenido, "El total de botones a teñir supera el del pedido."] }]
+    coloresTenidos: { type: Tenido, validate: [comprobarCantidadesDeTenido, "El total de botones a teñir supera el del pedido."] },
 
-
+    // Este proceso debe afectar al órden en que se estable las órdenes. 
+    procesos: [{
+        proceso: {
+            type: Schema.Types.ObjectId,
+            ref: 'Proceso',
+        },
+        orden: { type: Number, require: [true, 'No se definio el órden del proceso.'] }
+    }],
 
     // Esto de aqui es para que mongose no escriba
     //  folioLineas en vez de folioLineaes

@@ -241,17 +241,33 @@ function buscarModelosCompletos(busqueda, regex) {
                     .populate('Terminado')
                     .populate('laserAlmacen')
                     .populate('versionModelo')
-                    .exec((err, modeloCompleto) => {
-                        if (err) {
-                            // Si tenemos un error tomamos el valor reject y le pasamos un valor,
-                            // de esta manera la promesa sabe que todo se vue a la #$TE
-                            reject('Error al cargar modeloCompleto' + err);
-                        } else {
-                            // Si no hubo error entonces pasamos el resultado al resolve para
-                            // que la promesa nos lo devuelva. 
-                            resolve(modeloCompleto);
+                    .populate({
+                        path: 'familiaDeProcesos',
+                        populate: {
+                            path: 'procesos.proceso',
+                            populate: {
+                                path: 'maquinas  departamento'
+                            }
                         }
-                    });
+                    })
+                    .populate({
+                        path: 'procesosEspeciales.proceso',
+                        populate: {
+                            path: 'maquinas  departamento'
+                        }
+                    })
+
+                .exec((err, modeloCompleto) => {
+                    if (err) {
+                        // Si tenemos un error tomamos el valor reject y le pasamos un valor,
+                        // de esta manera la promesa sabe que todo se vue a la #$TE
+                        reject('Error al cargar modeloCompleto' + err);
+                    } else {
+                        // Si no hubo error entonces pasamos el resultado al resolve para
+                        // que la promesa nos lo devuelva. 
+                        resolve(modeloCompleto);
+                    }
+                });
             }
         });
     });

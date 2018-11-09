@@ -16,6 +16,8 @@ var Maquina = require('../models/maquina');
 
 app.get('/:idOrden/:departamento', (req, res) => {
 
+    // TODO: Optimizar con promesas este código. 
+
     const idOrden = req.params.idOrden;
     const departamento = (req.params.departamento).toUpperCase();
 
@@ -34,7 +36,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
                 path: 'modelo tamano color terminado laserAlmacen versionModelo'
             }
         }).exec((err, folio) => {
-
+            // TODO: LIMPIAR COMENTARIO
             // if (err) {
             //     return res.status(500).json({
             //         ok: false,
@@ -43,7 +45,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
             //     });
             // }
 
-
+            // TODO: Mover a catch
             if (err) {
                 return RESP._500(res, {
                     msj: 'Error al buscar la órden.',
@@ -52,6 +54,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
             }
             //No hubo ningúna coincidencia. 
             if (!folio) {
+                // TODO: LIMPIAR COMENTARIO
                 // return res.status(400).json({
                 //     ok: false,
                 //     mensaje: 'La órden no existe',
@@ -74,7 +77,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
             // le pasamos. 
 
             Departamento.findOne({ nombre: departamento }, (err, departamentoDoc) => {
-
+                //TODO: Limpiar comentario 
                 // if (err) {
                 //     return res.status(500).json({
                 //         ok: false,
@@ -91,6 +94,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
                 }
 
                 if (!departamentoDoc) {
+                    // TODO: Limpiar comentario. 
                     // return res.status(400).json({
                     //     ok: false,
                     //     mensaje: 'Error con el departamento',
@@ -105,6 +109,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
                 const esDeptoActual = orden.ubicacionActual.departamento.nombre === departamento;
 
                 if (!esDeptoActual) {
+                    // TODO: Limpiar comentario. 
                     // return res.status(400).json({
                     //     ok: false,
                     //     mensaje: 'Esta órden no se encuentra en este departamento',
@@ -115,7 +120,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
                         err: `La órden existe pero no esta disponible para este departamento. Actualmente se encuentra registrada en '${orden.ubicacionActual.departamento.nombre}'`,
                     });
                 }
-
+                // TODO: Limpiar comentario
                 // return res.status(200).json({
                 //     ok: true,
                 //     orden: orden,
@@ -236,10 +241,8 @@ app.get('/:depto', (req, res) => {
 app.post('/', (req, res, next) => {
 
     var datos = req.body;
-
-
     Folio.findById(datos.idFolio, (err, folioEncontrado) => {
-
+        // TODO: Mover a catch.
         if (err) {
             return res.status(500).json({
                 ok: false,
@@ -289,7 +292,7 @@ app.post('/', (req, res, next) => {
             return RESP._200(res, 'Se guardo el folio correctamente.', [
                 { tipo: 'folio', datos: folioGrabado },
             ]);
-
+            // TODO: LIMPIAR COMENTARIO. 
             // if (err) {
             //     return res.status(500).json({
             //         ok: false,

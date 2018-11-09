@@ -40,6 +40,7 @@ app.put('/:idFolio/:idLinea', (req, res) => {
             'folioLineas.$.laserCliente': body.laserCliente,
             'folioLineas.$.almacen': body.almacen,
             'folioLineas.$.updatedAt': new Date().toISOString(),
+            'folioLineas.$.procesos': body.procesos,
         }
     };
 
@@ -73,7 +74,7 @@ app.put('/:idFolio/:idLinea', (req, res) => {
 // ============================================
 
 app.post('/:idFolio', (req, res, next) => {
-
+    // TODO: Actualziar para promesas. 
     // Obetenemos el body para extraer de el 
     // los parametros que se envían por POST
     var body = req.body;
@@ -99,6 +100,8 @@ app.post('/:idFolio', (req, res, next) => {
             nivelDeUrgencia: body.nivelDeUrgencia,
             laserCliente: body.laserCliente ? body.laserCliente : null,
             almacen: body.almacen ? true : false,
+            coloresTenidos: body.coloresTenidos,
+            procesos: body.procesos,
         });
 
         folioExistente.save((err, folioModificado) => {
@@ -115,26 +118,33 @@ app.post('/:idFolio', (req, res, next) => {
 
             // Popular
             const populate = {
-                path: 'folioLineas.modeloCompleto folioLineas.laserCliente',
+                path: 'folioLineas.modeloCompleto folioLineas.laserCliente ',
                 populate: {
-                    path: 'modelo tamano color terminado laserAlmacen versionModelo'
+                    path: 'modelo tamano color terminado laserAlmacen versionModelo familiaDeProcesos procesosEspeciales.proceso',
+                    populate: {
+                        path: 'procesos.proceso departamento',
+                        populate: {
+                            path: 'departamento'
+                        }
+                    }
                 }
             };
 
-            Folio.populate(folioModificado, populate, (err, folioCargado) => {
-                if (err) {
-                    return res.status(500).json({
-                        ok: false,
-                        mensaje: 'Error de parte del servidor. No se pudo poblar el pedido.',
-                        errors: err
-                    });
-                }
+            folioModificado.populate({ path: 'folioLineas.procesos.proceso', populate: { path: 'departamento' } })
+                .populate(populate, (err, folioCargado) => {
+                    if (err) {
+                        return res.status(500).json({
+                            ok: false,
+                            mensaje: 'Error de parte del servidor. No se pudo poblar el pedido.',
+                            errors: err
+                        });
+                    }
 
-                res.status(200).json({
-                    ok: true,
-                    folioLinea: folioCargado.folioLineas.pop()
+                    res.status(200).json({
+                        ok: true,
+                        folioLinea: folioCargado.folioLineas.pop()
+                    });
                 });
-            });
         });
     });
 });

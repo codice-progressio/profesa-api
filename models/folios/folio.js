@@ -62,14 +62,12 @@ function trayectoDeOrden(folio) {
     for (let i = 0; i < folio.folioLineas.length; i++) {
         const linea = folio.folioLineas[i];
         if (!linea.almacen && linea.ordenesGeneradas && !linea.trayectoGenerado) {
-            console.log('Estamos listos para modificar ordenes.');
             //No es de almacen y se generaron las órdenes. 
             // Definimos la trayectoria que ocupa cada órden.
             // A esta altura se supone que todo debe de pasar por 
             // producción en algún nivel. 
 
             // Necesitamos definir la trayectoria que esta en el modelo. 
-            console.log('Esto es lo que hay');
             var mc = mongoose.models['ModeloCompleto'].findById(linea.modeloCompleto._id)
                 .populate('familiaDeProcesos')
                 .populate({

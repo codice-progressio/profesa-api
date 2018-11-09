@@ -55,7 +55,6 @@ app.get('/', (req, res, next) => {
 
             });
         });
-    z
 });
 // ============================================
 // FIN Obtenmos todos los modelos. 

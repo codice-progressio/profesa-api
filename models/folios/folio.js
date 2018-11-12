@@ -25,7 +25,8 @@ var folioSchema = new Schema({
     // folioLineas: [{ type: Schema.Types.Mixed, ref: 'FolioLinea' }]
     folioLineas: [folioLineaSchema],
     nivelDeUrgencia: NVU.KEY,
-    porcentajeAvance: { type: Number, min: 0, max: 100 }
+    porcentajeAvance: { type: Number, min: 0, max: 100 },
+    ordenesGeneradas: { type: Boolean, default: false }
 
 
 }, { collection: 'folios', timestamps: true });
@@ -57,72 +58,119 @@ folioSchema.methods.calcularNivel = function(idFolio) {
     });
 };
 
+// Copia el trayecto a la órden tomando los valores de el órden
+// de procesos de los siguientes puntos: (En este órden. )
+//      1.- ModeloCompleto.FamiliaDeProcesos. [Numeros enteros. 1, 2, 3 ... ]
+//      2.- ModeloCompleto.FamiliaDeProcesos. [Numeros decimales. 1.1, 2.1, 3.1 ... ]
+//      3.- Folio.LineaFolio.Procesos. [Numeros decimales. 1.2, 2.2, 3.2 ... ]
+// Los reordena y ese es el órden que tomara el trayecto. 
+
 function trayectoDeOrden(folio) {
+    // Si el folio ya genero las órdenes no se ejecuta esta acción. Así no hay un bucle infinito. 
+    if (folio.ordenesGeneradas) { return; }
 
-    for (let i = 0; i < folio.folioLineas.length; i++) {
-        const linea = folio.folioLineas[i];
-        if (!linea.almacen && linea.ordenesGeneradas && !linea.trayectoGenerado) {
-            //No es de almacen y se generaron las órdenes. 
-            // Definimos la trayectoria que ocupa cada órden.
-            // A esta altura se supone que todo debe de pasar por 
-            // producción en algún nivel. 
+    // Datos para popular el folio. Es necesario buscarlo de nuevo para tener
+    // toda la información que requerimos para el trayecto de las órdenes. 
+    const p = {
+        path: 'folioLineas.modeloCompleto folioLineas.laserCliente folioLineas.procesos.proceso',
+        populate: {
+            path: 'modelo tamano color terminado laserAlmacen versionModelo familiaDeProcesos procesosEspeciales.proceso',
+            populate: {
+                path: 'procesos.proceso departamento',
+                populate: {
+                    path: 'departamento'
+                }
+            }
+        }
+    };
 
-            // Necesitamos definir la trayectoria que esta en el modelo. 
-            var mc = mongoose.models['ModeloCompleto'].findById(linea.modeloCompleto._id)
-                .populate('familiaDeProcesos')
-                .populate({
-                    path: 'familiaDeProcesos',
-                    populate: {
-                        path: 'procesos.proceso'
-                    }
-                })
-                .populate('procesosEspeciales')
-                .exec();
+    // Obtenemos la promesa. 
+    var folPopu = mongoose.models['Folio'].findById(folio._id).populate(p).exec();
 
-            mc.then(modeloCompleto => {
+    folPopu.then(folioPopulado => {
+            // Recorremos cada linea del folio para generar sus órdenes.
+            for (let i = 0; i < folioPopulado.folioLineas.length; i++) {
+                const linea = folioPopulado.folioLineas[i];
+                // No puede ir para alamacen, debe tener las órdenes generadas y no debe tener el
+                // trayecto generado. 
+                if (!linea.almacen && linea.ordenesGeneradas && !linea.trayectoGenerado) {
+                    console.log(`5.${i}`);
+                    //No es de almacen y se generaron las órdenes. 
+                    // Definimos la trayectoria que ocupa cada órden.
+                    // A esta altura se supone que todo debe de pasar por 
+                    // producción en algún nivel. 
+
+                    // Populamos el folio.
                     // Ahora recorremos todos los departamentos que tenemos 
                     // los procesos.
                     //Recorremos cada órden.
                     linea.ordenes.forEach(orden => {
-                        modeloCompleto.familiaDeProcesos.procesos.forEach(f => {
+
+                        // Cargamos los procesos que vienen definimos en el modeloCompleto. 
+                        linea.modeloCompleto.familiaDeProcesos.procesos.forEach(f => {
                             orden.trayectoNormal.push({
-                                orden: f.proceso.orden,
-                                departamento: f.proceso.departamento
+                                orden: f.orden,
+                                departamento: f.proceso.departamento,
                             });
                         });
+
+                        // Cargamos los procesos especiales extras del modelo. 
+                        linea.modeloCompleto.procesosEspeciales.forEach(proc => {
+                            orden.trayectoNormal.push({
+                                orden: proc.orden,
+                                departamento: proc.proceso.departamento,
+                            });
+                        });
+
+                        // Cargamos los procesos que se definieron en el pedido. 
+                        linea.procesos.forEach(proc => {
+                            orden.trayectoNormal.push({
+                                orden: proc.orden,
+                                departamento: proc.proceso.departamento,
+                            });
+                        });
+
                         // Tomamos el primer departamento y lo volvemos como ubicacion
                         // actual.
+
                         orden.trayectoNormal.sort(function(a, b) {
                             return (a.orden - b.orden);
                         });
 
                         // Actualizamos la ubicación actual. 
                         orden.ubicacionActual = {
-                            departamento: mongoose.Types.ObjectId(orden.trayectoNormal[0].departamento),
+                            departamento: mongoose.Types.ObjectId(orden.trayectoNormal[0].departamento._id),
                             entrada: new Date().toISOString(),
                             orden: orden.trayectoNormal[0].orden
                         };
 
                         if (orden.trayectoNormal.length > 1) {
                             orden.siguienteDepartamento = {
-                                departamento: mongoose.Types.ObjectId(orden.trayectoNormal[1].departamento),
+                                departamento: mongoose.Types.ObjectId(orden.trayectoNormal[1].departamento._id),
                                 orden: orden.trayectoNormal[1].orden
                                     // entrada: new Date().toISOString()
                             };
                         }
                     });
 
-                    linea.trayectoGenerado = true;
-                    return folio.save();
-                }).then(folioGrabado => {
-                    console.log(' Todo bien ');
-                    return;
-                })
-                .catch(err => {
-                    console.log(colores.danger('ERROR') + err);
-                });
-        }
-    }
+                    folioPopulado.trayectoGenerado = true;
+                    folioPopulado.ordenesGeneradas = true;
+                } else {
+                    console.log(colores.warning('NO SE ORDENA POR QUE VA PARA ALMACEN =>>>') + 'No se ordena por que va para almacen.');
+                }
+            }
+            if (folioPopulado.trayectoGenerado) {
+                return folioPopulado.save();
+            }
+            return;
+        }).then(folioParaGrabar => {
+            console.log(colores.success('ORDENES') + 'Se generaron las órdenes de manera correcta.');
+            return;
+        })
+        .catch(err => {
+            console.log(colores.danger('ERROR') + err);
+        });
+
 }
 
 function calcularNivel(folio) {

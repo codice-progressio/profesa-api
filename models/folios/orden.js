@@ -39,13 +39,14 @@ const ordenSchema = new Schema({
     piezasFinales: { type: Number, min: 1 },
     observaciones: { type: String },
 
-    trayectoNormal: [{
-        orden: { type: Number },
-        departamento: {
-            type: Schema.Types.ObjectId,
-            ref: 'Departamento'
-        }
-    }],
+    // trayectoNormal: [{
+    //     orden: { type: Number },
+    //     departamento: {
+    //         type: Schema.Types.ObjectId,
+    //         ref: 'Departamento'
+    //     }
+    // }],
+    trayectoNormal: [trayecto],
 
     trayectoRecorrido: [trayecto],
 

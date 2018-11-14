@@ -41,6 +41,7 @@ app.put('/:idFolio/:idLinea', (req, res) => {
             'folioLineas.$.almacen': body.almacen,
             'folioLineas.$.updatedAt': new Date().toISOString(),
             'folioLineas.$.procesos': body.procesos,
+            'folioLineas.$.coloresTenidos': body.coloresTenidos,
         }
     };
 

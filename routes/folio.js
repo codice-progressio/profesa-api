@@ -131,6 +131,7 @@ app.get('/:id', (req, res) => {
 
     Folio.findById(id)
         // .populate('cliente', 'sae nombre')
+        .populate('folioLineas.ordenes.trayectoNormal.departamento')
         .populate({
             path: 'cliente',
             populate: {

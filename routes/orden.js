@@ -10,130 +10,226 @@ var RESP = require('../utils/respStatus');
 var CONST = require('../utils/constantes');
 var Maquina = require('../models/maquina');
 
+
 // ============================================
-// Obtiene las órdenes de un departamento dado.
+// Recive la órden que se le pase. 
+// ============================================
+app.put('/', (req, res) => {
+    const id = req.body._id;
+    const depto = req.body.departamento;
+    Promise.all([
+        existeFolioConOrden(id),
+        existeDepartamento(depto)
+    ]).then(respuestas => {
+        const fol = respuestas[0];
+        const departamento = respuestas[1];
+
+        // Se encuentra en este departamento. 
+        let orden = null;
+
+        for (let i = 0; i < fol.folioLineas.length; i++) {
+            const linea = fol.folioLineas[i];
+            orden = linea.ordenes.id(id);
+            if (orden) {
+                break;
+            }
+        }
+
+        const esDeptoActual = orden.ubicacionActual.departamento.nombre === departamento.nombre;
+        if (!esDeptoActual) {
+            return RESP._400(res, {
+                msj: 'Esta órden no se encuentra en este departamento',
+                err: `La órden existe pero no esta disponible para este departamento. Actualmente se encuentra registrada en '${orden.ubicacionActual.departamento.nombre}'`,
+            });
+        }
+
+        if (orden.ubicacionActual.recivida) {
+            return RESP._400(res, {
+                msj: 'Está órden ya fue recivida.',
+                err: 'La órden ya esta trabajandose.',
+            });
+        }
+
+        // Recivimos la órden.
+        orden.ubicacionActual.recivida = true;
+        orden.ubicacionActual.recepcion = new Date();
+        return fol.save();
+    }).then(folioGrabado => {
+
+        return RESP._200(res, 'Se recivio la órden.', [
+            { tipo: 'todoCorrecto', datos: true },
+        ]);
+
+    }).catch(err => {
+        console.log(err);
+        return RESP._500(res, err);
+    });
+
+});
+
+function existeFolioConOrden(id) {
+    const uno = {
+        'folioLineas.ordenes': { '$elemMatch': { _id: id } }
+    };
+    return new Promise((resolve, reject) => {
+        const fol = Folio.findOne(uno)
+            .populate('folioLineas.ordenes.ubicacionActual.departamento')
+            .exec();
+        fol.then(folioEncontrado => {
+            if (!folioEncontrado) {
+                reject(RESP.errorGeneral({
+                    msj: 'No existe la órden.',
+                    err: 'El id de la órden que ingresaste no existe.',
+                }));
+            }
+            console.log(folioEncontrado);
+
+            resolve(folioEncontrado);
+        }).catch(err => {
+            reject(RESP.errorGeneral({
+                msj: 'Hubo un error buscando la órden.',
+                err: err,
+            }));
+        });
+
+    });
+
+}
+
+// ============================================
+// Obtiene la órden de un departamento dado.
 // ============================================
 
 app.get('/:idOrden/:departamento', (req, res) => {
 
-    // TODO: Optimizar con promesas este código. 
-
     const idOrden = req.params.idOrden;
     const departamento = (req.params.departamento).toUpperCase();
+    console.log('Entro aqui.');
 
+    Promise.all([
+        orden(idOrden),
+        existeDepartamento(departamento),
+    ]).then(respuestas => {
+
+        const orden = respuestas[0][0];
+        if (orden.terminada) {
+            return RESP._400(res, {
+                msj: 'Esta órden ya esta terminada',
+                err: 'La órden finalizó su trayecto. ',
+            });
+        }
+
+
+        const modeloCompleto = respuestas[0][1];
+        const depto = respuestas[1];
+
+        const esDeptoActual = orden.ubicacionActual.departamento.nombre === depto.nombre;
+        if (!esDeptoActual) {
+            return RESP._400(res, {
+                msj: 'Esta órden no se encuentra en este departamento',
+                err: `La órden existe pero no esta disponible para este departamento. Actualmente se encuentra registrada en '${orden.ubicacionActual.departamento.nombre}'`,
+            });
+        }
+
+        if (!orden.ubicacionActual.recivida) {
+            const tamanoTrayecto = orden.trayectoRecorrido.length;
+            // Si no existe trayecto tiene que dar el mensaje de que no ha sido en
+            // entregada para producción. 
+            let msj_Err = '';
+            if (tamanoTrayecto > 0) {
+                const deptoAnterior = orden.trayectoRecorrido[tamanoTrayecto - 1];
+                msj_Err = `La órden está en espera de ser recivida. El último departamento que la manipulo fue ${deptoAnterior.nombre}`;
+            } else {
+                const EsteDepto = `Para poder registrarla es necesario que la recivas primero.`;
+                msj_Err = `La órden todavía no ha sido entregada para empezar su producción. ` + EsteDepto;
+            }
+            return RESP._400(res, {
+                msj: 'Órden sin recibir.',
+                err: msj_Err,
+            });
+
+        }
+        return RESP._200(res, null, [
+            { tipo: 'orden', datos: orden },
+            { tipo: 'modeloCompleto', datos: modeloCompleto },
+        ]);
+
+
+    }).catch(err => {
+        return RESP._500(res, err);
+    });
+});
+
+function orden(idOrden) {
     // Buscamos un folio que contenga la órden con el id que le pasemos
     // como parametro. Esto nos devuelve todo el folio pero solo la linea
     // que necesitamos. 
     const uno = {
         'folioLineas.ordenes': { '$elemMatch': { _id: idOrden } },
     };
+    return new Promise((resolve, reject) => {
+        const folioPromesa = Folio.findOne(uno)
+            .populate('folioLineas.ordenes.ubicacionActual.departamento')
+            .populate('folioLineas.ordenes.trayectoNormal.departamento')
+            .populate({
+                path: 'folioLineas.modeloCompleto',
+                populate: {
+                    path: 'modelo tamano color terminado laserAlmacen versionModelo'
+                }
+            }).exec();
 
-    Folio.findOne(uno)
-        .populate('folioLineas.ordenes.ubicacionActual.departamento')
-        .populate({
-            path: 'folioLineas.modeloCompleto',
-            populate: {
-                path: 'modelo tamano color terminado laserAlmacen versionModelo'
-            }
-        }).exec((err, folio) => {
-            // TODO: LIMPIAR COMENTARIO
-            // if (err) {
-            //     return res.status(500).json({
-            //         ok: false,
-            //         mensaje: 'Error al buscar órden.',
-            //         err: err
-            //     });
-            // }
 
-            // TODO: Mover a catch
-            if (err) {
-                return RESP._500(res, {
-                    msj: 'Error al buscar la órden.',
+        folioPromesa.then(folioEncontrado => {
+                //No hubo ningúna coincidencia. 
+                if (!folioEncontrado) {
+                    // Como no hay coincidencia la órden no existe.
+                    reject(RESP.errorGeneral({
+                        msj: 'La órden no existe.',
+                        err: 'El id que ingresaste no coincide con ningúna órden.',
+                    }));
+                } else {
+
+                    const linea = folioEncontrado.folioLineas.find((linea) => {
+                        return linea.ordenes.id(idOrden);
+                    });
+                    const orden = linea.ordenes.id(idOrden);
+
+                    resolve([orden, linea.modeloCompleto]);
+                }
+            })
+            .catch(err => {
+                reject(RESP.errorGeneral({
+                    msj: 'Hubo un error buscando la órden',
                     err: err,
-                });
-            }
-            //No hubo ningúna coincidencia. 
-            if (!folio) {
-                // TODO: LIMPIAR COMENTARIO
-                // return res.status(400).json({
-                //     ok: false,
-                //     mensaje: 'La órden no existe',
-                //     err: ''
-                // });
-                return RESP._400(res, {
-                    msj: 'La órden no exíste',
-                    err: 'La órden no exíste',
-                });
-            }
+                }));
+            });
+    });
 
-            //Filtramos el folioLinea que contiene la órden.
-            const linea = folio.folioLineas.find((linea) => {
-                return linea.ordenes.id(idOrden);
+}
+
+function existeDepartamento(departamento) {
+
+    return new Promise((resolve, reject) => {
+        const d = Departamento.findOne({ nombre: departamento.toUpperCase() }).exec();
+        d.then(departamentoEncontrado => {
+                if (!departamentoEncontrado) {
+                    reject(RESP.errorGeneral({
+                        msj: 'No existe el departamento.',
+                        err: 'El departamento que ingresaste no existe o no esta registrado.',
+                    }));
+                }
+                resolve(departamentoEncontrado)
+            })
+            .catch(err => {
+                reject(RESP.errorGeneral({
+                    msj: 'Hubo un error buscando el departamento.',
+                    err: err,
+                }));
             });
 
-            const orden = linea.ordenes.id(idOrden);
 
-            // Comprobamos que la órden existe para el departamento que
-            // le pasamos. 
-
-            Departamento.findOne({ nombre: departamento }, (err, departamentoDoc) => {
-                //TODO: Limpiar comentario 
-                // if (err) {
-                //     return res.status(500).json({
-                //         ok: false,
-                //         mensaje: 'Error con el departamento',
-                //         err: err
-                //     });
-                // }
-                if (err) {
-                    return RESP._500(res, {
-                        msj: 'Hubo un error buscando el departamento.',
-                        err: err,
-                    });
-
-                }
-
-                if (!departamentoDoc) {
-                    // TODO: Limpiar comentario. 
-                    // return res.status(400).json({
-                    //     ok: false,
-                    //     mensaje: 'Error con el departamento',
-                    //     err: 'El departamento no existe.'
-                    // });
-                    return RESP._400(res, {
-                        msj: 'El departamento no existe.',
-                        err: 'El departamento no existe.',
-                    });
-                }
-
-                const esDeptoActual = orden.ubicacionActual.departamento.nombre === departamento;
-
-                if (!esDeptoActual) {
-                    // TODO: Limpiar comentario. 
-                    // return res.status(400).json({
-                    //     ok: false,
-                    //     mensaje: 'Esta órden no se encuentra en este departamento',
-                    //     err: ''
-                    // });
-                    return RESP._400(res, {
-                        msj: 'Esta órden no se encuentra en este departamento',
-                        err: `La órden existe pero no esta disponible para este departamento. Actualmente se encuentra registrada en '${orden.ubicacionActual.departamento.nombre}'`,
-                    });
-                }
-                // TODO: Limpiar comentario
-                // return res.status(200).json({
-                //     ok: true,
-                //     orden: orden,
-                //     modeloCompleto: linea.modeloCompleto
-                // });
-                return RESP._200(res, null, [
-                    { tipo: 'orden', datos: orden },
-                    { tipo: 'modeloCompleto', datos: linea.modeloCompleto },
-                ]);
-
-            });
-        });
-});
+    });
+}
 
 // ============================================
 // OBTIENE LA LISTA DE ÓRDENES POR DEPARTAMENTO.
@@ -292,19 +388,6 @@ app.post('/', (req, res, next) => {
             return RESP._200(res, 'Se guardo el folio correctamente.', [
                 { tipo: 'folio', datos: folioGrabado },
             ]);
-            // TODO: LIMPIAR COMENTARIO. 
-            // if (err) {
-            //     return res.status(500).json({
-            //         ok: false,
-            //         mensaje: 'Error al grabar el folio.',
-            //         errors: err
-            //     });
-            // }
-            // res.status(200).json({
-            //     ok: true,
-            //     mensaje: 'Petición realizada correctamente',
-            //     folioGrabado: folioGrabado
-            // });
         });
     });
 });
@@ -317,8 +400,6 @@ app.put('/:idOrden', (req, res) => {
     //Hay que saber para que depto es.
     let depto = req.query.depto;
 
-    console.log(colores.log.debug('Entramos al put'));
-
     //Este camino modificado debe ser 
     // intercepado por el guard y si no es un usuario 
     // con permiso suficiente no se debe ejecutar este
@@ -326,25 +407,14 @@ app.put('/:idOrden', (req, res) => {
     const caminoModificadoAutorizado = req.query.caminoModificado;
 
     depto = depto.replace(/\'/g, '');
-    console.log('Los datos');
-
     const datos = req.body;
-    console.log(datos);
-
 
     // Obtenemos el id de la órden.
     const id = req.params.idOrden;
 
     //Buscamos el folio que coincida con la órden para modificarlo. 
     Folio.findOne({ 'folioLineas.ordenes._id': id }, (err, folio) => {
-        console.log(colores.log.debug('Dentro de find one'));
-        // if (err) {
-        //     return res.status(500).json({
-        //         ok: false,
-        //         mensaje: 'Error al tratar de modificar la órden',
-        //         errors: err
-        //     });
-        // }
+
         if (err) {
             return RESP._500(res, {
                 msj: 'Error al tratar de modificar la órden.',
@@ -352,8 +422,6 @@ app.put('/:idOrden', (req, res) => {
             });
 
         }
-
-
 
         // Buscamos la órden que lo contenga
         let orden = null;
@@ -369,14 +437,6 @@ app.put('/:idOrden', (req, res) => {
 
 
         if (!orden) {
-            // return res.status(400).json({
-            //     ok: false,
-            //     msj: 'Error al buscar la órden',
-            //     err: {
-            //         message: 'No existe la órden',
-            //         error: err2
-            //     }
-            // });
 
             return RESP._400(res, {
                 msj: 'Erro al buscar la órden',
@@ -391,16 +451,7 @@ app.put('/:idOrden', (req, res) => {
             Departamento.findOne({ nombre: depto }, (err2, departamento) => {
                 console.log(colores.log.debug('Buscando el departamento para su id: ' + departamento._id));
 
-                // if (err2) {
-                //     return res.status(400).json({
-                //         ok: false,
-                //         msj: 'Error al buscar el departamento',
-                //         err: {
-                //             message: 'Se generó un error al buscar el departamento para asignarlo a la órden.',
-                //             error: err2
-                //         }
-                //     });
-                // }
+
                 if (err) {
                     return RESP._500(res, {
                         msj: 'Error al buscar el departamento.',
@@ -412,11 +463,7 @@ app.put('/:idOrden', (req, res) => {
                 }
 
                 if (!departamento) {
-                    // return res.status(400).json({
-                    //     ok: false,
-                    //     msj: 'No existe el departamento',
-                    //     err: { message: 'El departamento que se busco no exite' }
-                    // });
+
                     RESP._400(res, {
                         msj: 'No existe el departamento',
                         err: 'El departamento que se busco no existe.',
@@ -428,10 +475,6 @@ app.put('/:idOrden', (req, res) => {
                 // ============================================
 
                 schemaParaOrden[depto](orden, datos, departamento);
-
-
-
-
 
                 let datosTransformacion = {
                     orden: orden,
@@ -537,7 +580,6 @@ function avanzarCamino(orden, depto) {
     // Obtenemos la ubicacion actual. 
     const ubicacionActual = orden.ubicacionActual;
 
-
     // Obtenemos el siguiente departamento desde el trayecto 
     // normal.
     for (let i = 0; i < orden.trayectoNormal.length; i++) {
@@ -552,6 +594,7 @@ function avanzarCamino(orden, depto) {
             orden.trayectoRecorrido.push(ubicacionActual);
             orden.ubicacionActual = orden.siguienteDepartamento;
             //No se da entrada por que hay que recivir la órden. 
+
 
             // Si hay todavía un departamento en el trayecto normal
             // entonces si ponemos siguiente departamento, si no, 

@@ -61,6 +61,7 @@ const resp = {};
 // el middleware para los errores. 
 // No los quites XO.
 function generalError(dat) {
+
     var data = {
         ok: false,
         mensaje: dat.msj,
@@ -81,7 +82,9 @@ function generalError(dat) {
             data.erroresInterfaz.push(dat.err.errors[campo].message);
         }
     }
-
+    console.log(colores.danger('ERROR') + data.mensaje);
+    // DEJA ESTO AQUÍ. 
+    console.log(data.errorGeneral);
     return { data };
 }
 
@@ -96,26 +99,36 @@ function generalStatusOk(data) {
     return data2;
 }
 
+resp.errorGeneral = (datos) => {
+    if (datos.err) {
+        return generalError(datos);
+    }
+};
+
 //Modelo de errores. 
 resp._400 = (res, datos) => {
     if (datos.err) {
-        logError(datos);
+        // logError(datos);
         return res.status(400).json(generalError(datos));
     }
 };
 
 resp._500 = (res, datos) => {
     if (datos.err) {
-        logError(datos);
+        // logError(datos);
         return res.status(500).json(generalError(datos));
+    } else {
+        return res.status(500).json(datos);
     }
 };
 resp._500_Send = (res, datos) => {
     if (datos.err) {
-        logError(datos);
+        // logError(datos);
         return res.status(500).send(generalError(datos));
     }
 };
+
+
 
 //Modelo de mensajes. 
 resp._200 = (res, msj, datos) => {
@@ -129,11 +142,5 @@ resp._200 = (res, msj, datos) => {
     }
     return res.status(200).json(generalStatusOk(datos));
 };
-
-function logError(datos) {
-    let a = colores.danger('ERROR') + JSON.stringify(datos);
-    console.log(a);
-}
-
 
 module.exports = resp;

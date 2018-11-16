@@ -10,10 +10,16 @@ var trayectoSchema = new Schema({
         require: [true, 'El departamento es obligatorio.']
     },
 
+    // Esta se guarda cuando se modifica la órden. 
     entrada: { type: Date },
     salida: { type: Date },
-    orden: { type: Number, require: [true, 'El departamento es obligatorio.'] },
-    // TODO: Quitar esta linea. 
-    ANY: { type: String }
+    orden: { type: Number, require: [true, 'El órden es obligatorio.'] },
+
+    // El primer paso comenzar a trabajar una órden es recivirla en el proceso
+    // actual donde esta. (trayecto).
+    recivida: { type: Boolean, default: false },
+    // La fecha en que se recive. 
+    recepcion: { type: Date }
+
 });
 module.exports = trayectoSchema;

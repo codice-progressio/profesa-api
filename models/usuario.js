@@ -1,17 +1,12 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
+var ROLES = require('../config/roles');
 
 var Schema = mongoose.Schema;
 
 var rolesValidos = {
     // TODO: Estos valores tienen que ir en el archivo config.js
-    values: [
-        'ADMIN_ROLE',
-        'USER_ROLE',
-        'VENDEDOR_ROLE',
-        'MATERIALES_REGISTRO_ROLE',
-        'SELECCION_CONTEO_ROLE',
-    ],
+    values: ROLES,
     message: '{VALUE} no es un rol permitido.'
 };
 

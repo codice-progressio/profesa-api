@@ -26,6 +26,8 @@ module.exports.enviroment = (env) => {
         msj_bd_ok: msj_bd_ok,
         msj_bd_err: msj_bd_err,
         env: env,
+        // Este es lo mismo que env pero para hacerlo más leible. 
+        esModoProduccion: env,
         port: port,
         msj_mongoose_ok: msj_mongo
     };

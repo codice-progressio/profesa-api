@@ -6,6 +6,8 @@ var ModeloCompleto = require('../models/modeloCompleto');
 var Proceso = require('../models/procesos/proceso');
 var colores = require("../utils/colors");
 var RESP = require('../utils/respStatus');
+var Departamento = require('../models/departamento');
+var CONSTANSTES = require('../utils/constantes');
 
 // ============================================
 // Obtiene todos los procesos. Especiales y en familia. 
@@ -126,17 +128,32 @@ app.post('/familia', (req, res) => {
         });
     }
 
-    familiaDeProcesos.save((err, familiaNueva) => {
-        if (err) {
+    // Guardamos por defecto CONTROL DE PRODUCCIÓN como el primer proceso que se debe realizar en la familia. y
+    // como primer departamento por defecto. 
+    // Lo buscamos
+    const p = Proceso.findOne({ nombre: CONSTANSTES.PROCESOS.CONTROL_DE_PRODUCCION._n }).exec();
+    p.then(procesoD => {
+        if (!procesoD) {
             return RESP._500(res, {
-                msj: 'No se pudo guardar la familia de procesos',
-                err: err,
-
+                msj: 'Hubo un error buscando el proceso por defecto: ' + CONSTANSTES.PROCESOS.CONTROL_PRODUCCION._n,
+                err: 'El sistema necesita este proceso para poder continuar. (¿Defaults no funcionan?)',
+                masInfo: [{
+                    infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
+                    dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
+                }]
             });
         }
+        familiaDeProcesos.procesos.unshift({ proceso: procesoD, orden: 0 });
+        return familiaDeProcesos.save();
+    }).then(familiaNueva => {
         return RESP._200(res, 'Se guardo la familia de manera correcta.', [
             { tipo: 'familiaDeProcesos', datos: familiaNueva },
         ]);
+    }).catch(err => {
+        return RESP._500(res, {
+            msj: 'Hubo un error guardando la familia de procesos.',
+            err: err,
+        });
     });
 
 });

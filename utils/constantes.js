@@ -1,13 +1,9 @@
-const CONSTANTES = {
-    DEPARTAMENTOS: {
-        MATERIALES: { _v: 'MATERIALES', _n: 'MATERIALES' },
-        TRANSFORMACION: { _v: 'TRANSFORMACION', _n: 'TRANSFORMACIÓN' },
-        PASTILLA: { _v: 'PASTILLA', _n: 'PASTILLA' },
-        SELECCION: { _v: 'SELECCION', _n: 'SELECCIÓN' },
-        PULIDO: { _v: 'PULIDO', _n: 'PULIDO' },
-        EMPAQUE: { _v: 'EMPAQUE', _n: 'EMPAQUE' },
-        PRODUCTO_TERMINADO: { _v: 'PRODUCTO_TERMINADO', _n: 'PRODUCTO TERMINADO' }
-    },
+var DEPTO = require('../config/departametosDefaults');
+var PROC = require('../config/procesosDefault');
+
+module.exports = {
+    PROCESOS: PROC,
+    DEPARTAMENTOS: DEPTO,
     ERRORES: {
         MAS_INFO: {
             TIPO_ERROR: {
@@ -23,9 +19,3 @@ const CONSTANTES = {
         },
     },
 };
-
-
-
-
-
-module.exports = CONSTANTES;

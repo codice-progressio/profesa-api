@@ -16,10 +16,12 @@ app.get('/', (req, res, next) => {
         .populate('gastos.gasto')
         .populate('departamentos')
         .exec((err, maquinas) => {
-            RESP._500(res, {
-                msj: 'Hubo un error buscando las máquinas.',
-                err: err,
-            });
+            if (err) {
+                RESP._500(res, {
+                    msj: 'Hubo un error buscando las máquinas.',
+                    err: err,
+                });
+            }
 
             RESP._200(res, null, [
                 { tipo: 'maquinas', datos: maquinas },

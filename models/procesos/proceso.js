@@ -13,7 +13,7 @@ var procesoSchema = new Schema({
     especial: { type: Boolean, value: false },
     gastos: {
         type: [gastoConsumoSchema],
-        validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un gasto definido']
+        // validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un gasto definido']
     },
     maquinas: [{ type: Schema.Types.ObjectId, ref: 'Maquina' }],
 

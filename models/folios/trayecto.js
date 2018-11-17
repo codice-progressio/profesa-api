@@ -2,6 +2,13 @@ var mongoose = require('mongoose');
 
 var Schema = mongoose.Schema;
 
+var materialesSchema = require('./infoDeptos/materiales');
+var pastillaSchema = require('./infoDeptos/pastilla');
+var transformacionSchema = require('./infoDeptos/transformacion');
+var pulidoSchema = require('./infoDeptos/pulido');
+var seleccionSchema = require('./infoDeptos/seleccion');
+var empaqueSchema = require('./infoDeptos/empaque');
+
 var trayectoSchema = new Schema({
     //El departamento en el que se encuentra actualmente.
     departamento: {
@@ -9,6 +16,14 @@ var trayectoSchema = new Schema({
         ref: 'Departamento',
         require: [true, 'El departamento es obligatorio.']
     },
+
+
+    materiales: [materialesSchema],
+    pastilla: [pastillaSchema],
+    transformacion: [transformacionSchema],
+    pulido: [pulidoSchema],
+    seleccion: [seleccionSchema],
+    empaque: [empaqueSchema],
 
     // Esta se guarda cuando se modifica la órden. 
     entrada: { type: Date },

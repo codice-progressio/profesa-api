@@ -545,33 +545,33 @@ var schemaParaOrden = {
 
 
 function seleccion(orden, datos, depto) {
+    orden.ubicacionActual.seleccion.push(datos);
     avanzarCamino(orden);
-    orden.seleccion.push(datos);
 }
 
 function pulido(orden, datos, depto) {
+    orden.ubicacionActual.pulido.push(datos);
     avanzarCamino(orden);
-    orden.pulido.push(datos);
 }
 
 function transformacion(orden, datos, depto) {
+    orden.ubicacionActual.transformacion.push(datos);
     avanzarCamino(orden);
-    orden.transformacion.push(datos);
 }
 
 function pastilla(orden, datos, depto) {
+    orden.ubicacionActual.pastilla.push(datos);
     avanzarCamino(orden);
-    orden.pastilla.push(datos);
 }
 
 function materiales(orden, datos, depto) {
+    orden.ubicacionActual.materiales.push(datos);
     avanzarCamino(orden);
-    orden.materiales.push(datos);
 }
 
 function empaque(orden, datos, depto) {
+    orden.ubicacionActual.materiales.push(datos);
     avanzarCamino(orden);
-    orden.materiales.push(datos);
 }
 
 

@@ -143,7 +143,7 @@ app.post('/familia', (req, res) => {
                 }]
             });
         }
-        familiaDeProcesos.procesos.unshift({ proceso: procesoD, orden: 0 });
+        familiaDeProcesos.procesos.unshift({ proceso: procesoD._id, orden: 0 });
         return familiaDeProcesos.save();
     }).then(familiaNueva => {
         return RESP._200(res, 'Se guardo la familia de manera correcta.', [

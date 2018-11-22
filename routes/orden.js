@@ -11,32 +11,61 @@ var CONST = require('../utils/constantes');
 var Maquina = require('../models/maquina');
 
 
+
+function buscarOrdenDentroDeFolio(fol, id) {
+    // Esta función solo funciona si antes se ha comprobado
+    // que la órden existe dentro del departamento. 
+    let orden = null;
+    for (let i = 0; i < fol.folioLineas.length; i++) {
+        const linea = fol.folioLineas[i];
+        orden = linea.ordenes.id(id);
+        if (orden) {
+            break;
+        }
+    }
+    return orden;
+}
+
+function esDeptoActual(orden, depto) {
+    // Comprueba que la órden este en el mismo 
+    // departamento que el se esta mandando.     
+    return orden.ubicacionActual.departamento.nombre === depto.nombre;
+}
+
 // ============================================
 // Recive la órden que se le pase. 
 // ============================================
+// Todos los departamentos necesitan recivir las 
+// órdenes antes de empezar a trabajarlas. 
 app.put('/', (req, res) => {
-    const id = req.body._id;
+    const id_de_la_orden = req.body._id;
     const depto = req.body.departamento;
+    const deptoTrabajado = req.body.deptoTrabajado;
+    var mensajeGeneral = '';
+
+    console.log('Este es el departamento => ');
+    console.log(deptoTrabajado);
+
+
+    // ============================================
+    // Parametros varios para trabajo de órden. 
+    // ============================================
+    // empeazarATrabajar: Si es true.
+    const empezarATrabajar = req.query.empezarATrabajar;
+
     Promise.all([
-        existeFolioConOrden(id),
+        existeFolioConOrden(id_de_la_orden),
         existeDepartamento(depto)
     ]).then(respuestas => {
         const fol = respuestas[0];
         const departamento = respuestas[1];
 
         // Se encuentra en este departamento. 
-        let orden = null;
+        let orden = buscarOrdenDentroDeFolio(fol, id_de_la_orden);
 
-        for (let i = 0; i < fol.folioLineas.length; i++) {
-            const linea = fol.folioLineas[i];
-            orden = linea.ordenes.id(id);
-            if (orden) {
-                break;
-            }
-        }
 
-        const esDeptoActual = orden.ubicacionActual.departamento.nombre === departamento.nombre;
-        if (!esDeptoActual) {
+        // const esDeptoActual = orden.ubicacionActual.departamento.nombre === departamento.nombre;
+        if (!esDeptoActual(orden, departamento)) {
             return RESP._400(res, {
                 msj: 'Esta órden no se encuentra en este departamento',
                 err: `La órden existe pero no esta disponible para este departamento. Actualmente se encuentra registrada en '${orden.ubicacionActual.departamento.nombre}'`,
@@ -44,24 +73,57 @@ app.put('/', (req, res) => {
         }
 
         if (orden.ubicacionActual.recivida) {
+            // Si la órden ya fue recivida entonces la señalamos que empieza a trabajar. 
+            console.log('La órden esta recivida: => empezarAtrabajar: ' + empezarATrabajar);
+
+            if (empezarATrabajar) {
+                if (!deptoTrabajado) {
+                    return RESP._400(res, {
+                        msj: 'No se recivio el departamento para modificar.',
+                        err: 'Es necesario pasar el departamento que se va a modificar para guardarlo.',
+                        masInfo: [{
+                            infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
+                            dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
+                        }]
+                    });
+                }
+
+
+                if (orden.ubicacionActual.hasOwnProperty(depto.toLowerCase())) {
+                    if (orden.ubicacionActual[depto.toLowerCase()].trabajando) {
+                        return RESP._400(res, {
+                            msj: 'Esta órden ya se encuentra trabajando.',
+                            err: 'La órden ya se encuentra trabajando en esta ubicación.',
+                        });
+                    }
+                }
+
+                deptoTrabajado.trabajando = true;
+                orden.ubicacionActual[depto.toLowerCase()] = deptoTrabajado;
+                console.log('La órden que se va a grabar.');
+                console.log(orden);
+
+                mensajeGeneral = 'Órden trabajando.';
+                return fol.save();
+            }
+
+
             return RESP._400(res, {
                 msj: 'Está órden ya fue recivida.',
                 err: 'La órden ya esta trabajandose.',
             });
         }
-
         // Recivimos la órden.
+        mensajeGeneral = 'Se recivio la órden.';
         orden.ubicacionActual.recivida = true;
         orden.ubicacionActual.recepcion = new Date();
         return fol.save();
     }).then(folioGrabado => {
-
-        return RESP._200(res, 'Se recivio la órden.', [
-            { tipo: 'todoCorrecto', datos: true },
+        const orden = buscarOrdenDentroDeFolio(folioGrabado, id_de_la_orden);
+        return RESP._200(res, mensajeGeneral, [
+            { tipo: 'orden', orden },
         ]);
-
     }).catch(err => {
-        console.log(err);
         return RESP._500(res, err);
     });
 
@@ -104,7 +166,6 @@ app.get('/:idOrden/:departamento', (req, res) => {
 
     const idOrden = req.params.idOrden;
     const departamento = (req.params.departamento).toUpperCase();
-    console.log('Entro aqui.');
 
     Promise.all([
         orden(idOrden),
@@ -138,7 +199,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
             let msj_Err = '';
             if (tamanoTrayecto > 0) {
                 const deptoAnterior = orden.trayectoRecorrido[tamanoTrayecto - 1];
-                msj_Err = `La órden está en espera de ser recivida. El último departamento que la manipulo fue ${deptoAnterior.nombre}`;
+                msj_Err = `Esta órden ya fue terminada por el departamento de ${deptoAnterior.departamento.nombre}, pero es necesario que la recivas para poder empezar a trabajarla.`;
             } else {
                 const EsteDepto = `Para poder registrarla es necesario que la recivas primero.`;
                 msj_Err = `La órden todavía no ha sido entregada para empezar su producción. ` + EsteDepto;
@@ -149,6 +210,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
             });
 
         }
+
         return RESP._200(res, null, [
             { tipo: 'orden', datos: orden },
             { tipo: 'modeloCompleto', datos: modeloCompleto },
@@ -170,6 +232,11 @@ function orden(idOrden) {
     return new Promise((resolve, reject) => {
         const folioPromesa = Folio.findOne(uno)
             .populate('folioLineas.ordenes.ubicacionActual.departamento')
+            .populate('folioLineas.ordenes.trayectoRecorrido.departamento')
+            .populate({
+                path: 'folioLineas.ordenes.ubicacionActual.transformacion.maquinaActual',
+
+            })
             .populate('folioLineas.ordenes.trayectoNormal.departamento')
             .populate({
                 path: 'folioLineas.modeloCompleto',
@@ -218,7 +285,7 @@ function existeDepartamento(departamento) {
                         err: 'El departamento que ingresaste no existe o no esta registrado.',
                     }));
                 }
-                resolve(departamentoEncontrado)
+                resolve(departamentoEncontrado);
             })
             .catch(err => {
                 reject(RESP.errorGeneral({
@@ -411,114 +478,71 @@ app.put('/:idOrden', (req, res) => {
 
     // Obtenemos el id de la órden.
     const id = req.params.idOrden;
+    console.log('Estamos aquí');
 
-    //Buscamos el folio que coincida con la órden para modificarlo. 
-    Folio.findOne({ 'folioLineas.ordenes._id': id }, (err, folio) => {
+    Promise.all([
+        existeFolioConOrden(id),
+        existeDepartamento(depto)
+    ]).then(respuestas => {
+        const folio = respuestas[0];
+        const departamento = respuestas[1];
+        console.log('Dentor de la promesa.');
 
-        if (err) {
-            return RESP._500(res, {
-                msj: 'Error al tratar de modificar la órden.',
-                err: err,
-            });
 
-        }
+        const orden = buscarOrdenDentroDeFolio(folio, id);
+        if (CONST.DEPARTAMENTOS.hasOwnProperty(depto.toUpperCase())) {
 
-        // Buscamos la órden que lo contenga
-        let orden = null;
-        for (let i = 0; i < folio.folioLineas.length; i++) {
-            const linea = folio.folioLineas[i];
-            orden = linea.ordenes.id(id);
-            if (orden) {
-                break;
+            // ============================================
+            // AQUI ES DONDE SE AVANZA EN LA ORDEN
+            // ============================================
+
+            // schemaParaOrden[depto](orden, datos, departamento);
+            datosDeOrdenYAvanzar(orden, datos, depto.toLowerCase());
+
+
+            // ============================================
+            //  TODO: OJO!!! ESTA PARTE TODAVÍA NO ESTA FUNCIONANDO.
+            // ============================================
+
+            // NO BORRAR!!!! NO BORRAR!!!!!!
+
+
+            let datosTransformacion = {
+                orden: orden,
+                departamento: departamento,
+                res: res,
+                callback: function() {
+                    //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
+                    folio.save(err => {
+                        if (err) {
+                            return RESP._500(res, {
+                                msj: 'Hubo un error actualizando el folio.',
+                                err: err,
+                            });
+
+                        }
+
+                        // return res.status(200).json({
+                        //     ok: true,
+                        // });
+                        return RESP._200(res, 'Órden modificada correctamente.', [
+                            { tipo: 'todoCorrecto', datos: true },
+                        ]);
+                    });
+
+                }
+            };
+
+
+            if (!datosTransformacion.orden.ubicacionActual) {
+                //Si no tenemos más ubicaciónes entonces no es necesario 
+                // que hagamos la parte de transformación. 
+                datosTransformacion.orden.terminada = true;
+                datosTransformacion.callback();
+            } else {
+                asingarAMaquinaTransformacion(datosTransformacion);
             }
-        }
-        console.log(colores.log.debug('Buscando órden que contenga'));
-
-
-
-        if (!orden) {
-
-            return RESP._400(res, {
-                msj: 'Erro al buscar la órden',
-                err: 'No existe la órden',
-            });
-        }
-
-        if (schemaParaOrden.hasOwnProperty(depto)) {
-            console.log(colores.log.debug('Existe la operación para el depto'));
-
-            // Buscamos el departamento.
-            Departamento.findOne({ nombre: depto }, (err2, departamento) => {
-                console.log(colores.log.debug('Buscando el departamento para su id: ' + departamento._id));
-
-
-                if (err) {
-                    return RESP._500(res, {
-                        msj: 'Error al buscar el departamento.',
-                        err: err2,
-                        masInfo: [
-                            { infoAdicional: 'error', dataAdicional: 'Se generó un error al buscar el departamento para asignarlo a la órden.' }
-                        ]
-                    });
-                }
-
-                if (!departamento) {
-
-                    RESP._400(res, {
-                        msj: 'No existe el departamento',
-                        err: 'El departamento que se busco no existe.',
-                    });
-                }
-
-                // ============================================
-                // AQUI ES DONDE SE AVANZA EN LA ORDEN
-                // ============================================
-
-                schemaParaOrden[depto](orden, datos, departamento);
-
-                let datosTransformacion = {
-                    orden: orden,
-                    departamento: departamento,
-                    res: res,
-                    callback: function() {
-                        //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
-                        folio.save(err => {
-                            if (err) {
-                                return RESP._500(res, {
-                                    msj: 'Hubo un error actualizando el folio.',
-                                    err: err,
-                                });
-
-                            }
-
-                            // return res.status(200).json({
-                            //     ok: true,
-                            // });
-                            return RESP._200(res, 'Órden modificada correctamente.', [
-                                { tipo: 'todoCorrecto', datos: true },
-                            ]);
-                        });
-
-                    },
-                };
-
-                if (!datosTransformacion.orden.ubicacionActual) {
-                    //Si no tenemos más ubicaciónes entonces no es necesario 
-                    // que hagamos la parte de transformación. 
-                    datosTransformacion.orden.terminada = true;
-                    datosTransformacion.callback();
-                } else {
-                    asingarAMaquinaTransformacion(datosTransformacion);
-
-                }
-            });
-
-
         } else {
-            // return res.status(500).json({
-            //     ok: false,
-            //     msj: 'Departamento no definido como función.'
-            // });
             return RESP._500(res, {
                 msj: 'Departamento no defindo como funcón en sistema. ',
                 err: err,
@@ -527,53 +551,22 @@ app.put('/:idOrden', (req, res) => {
                 ]
             });
 
+
         }
+    }).catch(err => {
+        console.log(err);
+
+        return RESP._500(res, err);
     });
 
 
 });
 
 
-var schemaParaOrden = {
-    [CONST.DEPARTAMENTOS.MATERIALES._v]: materiales,
-    [CONST.DEPARTAMENTOS.PASTILLA._v]: pastilla,
-    [CONST.DEPARTAMENTOS.TRANSFORMACION._v]: transformacion,
-    [CONST.DEPARTAMENTOS.PULIDO._v]: pulido,
-    [CONST.DEPARTAMENTOS.SELECCION._v]: seleccion,
-    [CONST.DEPARTAMENTOS.EMPAQUE._v]: empaque,
-};
-
-
-function seleccion(orden, datos, depto) {
-    orden.ubicacionActual.seleccion.push(datos);
+function datosDeOrdenYAvanzar(orden, datos, depto) {
+    orden.ubicacionActual[depto] = datos;
     avanzarCamino(orden);
 }
-
-function pulido(orden, datos, depto) {
-    orden.ubicacionActual.pulido.push(datos);
-    avanzarCamino(orden);
-}
-
-function transformacion(orden, datos, depto) {
-    orden.ubicacionActual.transformacion.push(datos);
-    avanzarCamino(orden);
-}
-
-function pastilla(orden, datos, depto) {
-    orden.ubicacionActual.pastilla.push(datos);
-    avanzarCamino(orden);
-}
-
-function materiales(orden, datos, depto) {
-    orden.ubicacionActual.materiales.push(datos);
-    avanzarCamino(orden);
-}
-
-function empaque(orden, datos, depto) {
-    orden.ubicacionActual.materiales.push(datos);
-    avanzarCamino(orden);
-}
-
 
 
 function avanzarCamino(orden, depto) {

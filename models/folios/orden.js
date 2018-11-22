@@ -2,13 +2,6 @@ var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 
 var trayecto = require('./trayecto');
-
-// var materialesSchema = require('./infoDeptos/materiales');
-// var pastillaSchema = require('./infoDeptos/pastilla');
-// var transformacionSchema = require('./infoDeptos/transformacion');
-// var pulidoSchema = require('./infoDeptos/pulido');
-// var seleccionSchema = require('./infoDeptos/seleccion');
-// var empaqueSchema = require('./infoDeptos/empaque');
 var NVU = require('../../config/nivelesDeUrgencia');
 
 const ordenSchema = new Schema({
@@ -29,23 +22,10 @@ const ordenSchema = new Schema({
     unidad: { type: Number, min: 0.0001, max: 1, required: [true, 'La únidad de esta órden es requerida.'] },
     piezasTeoricas: { type: Number, min: 1, required: [true, 'Es necesario definir la cantidad esperada de esta órden.'] },
 
-    // materiales: [materialesSchema],
-    // pastilla: [pastillaSchema],
-    // transformacion: [transformacionSchema],
-    // pulido: [pulidoSchema],
-    // seleccion: [seleccionSchema],
-    // empaque: [empaqueSchema],
 
     piezasFinales: { type: Number, min: 1 },
     observaciones: { type: String },
 
-    // trayectoNormal: [{
-    //     orden: { type: Number },
-    //     departamento: {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Departamento'
-    //     }
-    // }],
     trayectoNormal: [trayecto],
 
     trayectoRecorrido: [trayecto],

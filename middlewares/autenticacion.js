@@ -37,10 +37,9 @@ exports.verificarADMIN_ROLE = function(req, res, next) {
         next();
         return;
     } else {
-        return res.status(401).json({
-            ok: true,
-            mensaje: 'Token incorrecto. --Quitar | No es adminis',
-            errors: { message: 'No es administrador, no puede hacer eso.' }
+        return RESP._401(res, {
+            msj: 'Token incorrecto --Quitar | No es admin - ni mismo usuario.',
+            err: 'No es administrador, no puede hacer eso.',
         });
     }
 };
@@ -59,11 +58,11 @@ exports.verificarADMIN_o_MismoUsuario = function(req, res, next) {
         next();
         return;
     } else {
-        return res.status(401).json({
-            ok: true,
-            mensaje: 'Token incorrecto. --Quitar | No es adminis - ni mismo usuario',
-            errors: { message: 'No es administrador, no puede hacer eso.' }
+        return RESP._401(res, {
+            msj: 'Token incorrecto --Quitar | No es admin - ni mismo usuario.',
+            err: 'No eres administrador, no puedes hacer eso.',
         });
+
     }
 };
 
@@ -82,10 +81,9 @@ exports.verificarNoCambioDeADMIN_ROLE = function(req, res, next) {
         next();
         return;
     } else {
-        return res.status(401).json({
-            ok: true,
-            mensaje: 'Token incorrecto. --Quitar | No es adminis - ni mismo usuario',
-            errors: { message: 'No puedes cambiar tu role, comunicate con un administrador.' }
+        return RESP._401(res, {
+            msj: 'Token incorrecto --Quitar | No es admin - ni mismo usuario.',
+            err: 'No puedes cambiar tu role, comunicate con un administrador.',
         });
     }
 };

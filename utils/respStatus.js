@@ -112,12 +112,21 @@ resp._400 = (res, datos) => {
         return res.status(400).json(generalError(datos));
     }
 };
+//Modelo de errores. 
+resp._401 = (res, datos) => {
+    if (datos.err) {
+        // logError(datos);
+        return res.status(401).json(generalError(datos));
+    }
+};
 
 resp._500 = (res, datos) => {
     if (datos.err) {
         // logError(datos);
         return res.status(500).json(generalError(datos));
     } else {
+        console.log(colores.danger('ERROR') + datos);
+        console.log(datos);
         return res.status(500).json(datos);
     }
 };

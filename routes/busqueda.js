@@ -15,6 +15,7 @@ var Terminado = require('../models/terminado');
 var MarcaLaser = require('../models/marcaLaser');
 var VersionModelo = require('../models/versionModelo');
 var colores = require('../utils/colors');
+var RESP = require('../utils/respStatus');
 
 // ============================================
 // Busqueda general
@@ -51,7 +52,6 @@ app.get('/todo/:busqueda', (req, res, next) => {
 
 app.get('/coleccion/:tabla/:busqueda', (req, res) => {
 
-
     var tabla = req.params.tabla;
     var busqueda = req.params.busqueda;
     var regex = new RegExp(busqueda, 'i');
@@ -63,7 +63,7 @@ app.get('/coleccion/:tabla/:busqueda', (req, res) => {
                 [tabla]: respuesta,
             });
         }).catch(err => {
-            console.log(err);
+            return RESP._500(res, err);
         });
     } else {
         return res.status(400).json({
@@ -143,6 +143,8 @@ function buscarUsuarios(busqueda, regex) {
 function buscarUsuariosPorRole(busqueda, regex) {
     // Esta función nos ayuda a filtra los usuarios por 
     // role. Por ejemplo, los que son vendedores.
+    console.log('Buscar usuarios por role');
+
     return new Promise((resolve, reject) => {
         Usuario.find({}, 'nombre email role img _id')
             .or({ 'role': regex })
@@ -150,7 +152,16 @@ function buscarUsuariosPorRole(busqueda, regex) {
                 if (err) {
                     reject('Error al cargar usuarios', err);
                 } else {
-                    resolve(usuarios);
+                    console.log(usuarios.length + " =>>> ");
+
+                    if (usuarios.length === 0) {
+                        reject(RESP.errorGeneral({
+                            msj: `No existen usuarios con ROL ${regex.toString()}`,
+                            err: 'Es necesario que se registren usuarios con este rol para poder continuar.',
+                        }));
+                    } else {
+                        resolve(usuarios);
+                    }
                 }
             });
     });
@@ -189,39 +200,6 @@ function buscarModelosCompletos(busqueda, regex) {
 
     // Es necesaio que retorne la misma promesa que se instancia.
     return new Promise((resolve, reject) => {
-
-
-        // Promise.all(buscarMC(busqueda)).then(respuestas => {
-
-        //         // Buscamos las combinaciones de modelo completo.
-        //         // resolve(respuestas);
-        //         resolve(combinacionesDeBusqueda(respuestas));
-
-
-        //         // const mc = ModeloCompleto
-        //         //     .find({ $or: buscar })
-        //         //     .populate('modelo')
-        //         //     .populate('tamano')
-        //         //     .populate('color')
-        //         //     .populate('Terminado')
-        //         //     .populate('laserAlmacen')
-        //         //     .populate('versionModelo')
-        //         //     .exec();
-        //         // return mc;
-        //     })
-        //     // .then(mcs => {
-        //     //     resolve(mcs);
-        //     // })
-
-        // .catch(err => {
-        //     console.log(colores.danger('ERROR') + err);
-
-        //     reject('Error al buscar un modelo' + err);
-        // });
-
-
-
-
         Modelo.find({ modelo: regex }, '_id').exec((err, modelos) => {
 
             if (err) {

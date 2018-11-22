@@ -20,13 +20,19 @@ const D = colores.info('DEFAULTS');
 module.exports = () => {
     console.log(D + colores.warning('Comprobando información.'));
 
+    // ============================================
     // Debe existir un SUPER-ADMIN
+    // ============================================
+
     const comprobaciones = Usuario.find({ nombre: USUARIO_SUPER_ADMIN.nombre }).exec();
 
     comprobaciones.then(admin => {
         return crearSuperAdmin(admin);
     }).then(() => {
-        // Deben existir los departamentos. 
+        // ============================================
+        // Deben existir los departamentos.
+        // ============================================
+
         const promesas = [];
         for (const depto in _DEPTOS) {
             if (_DEPTOS.hasOwnProperty(depto)) {
@@ -42,11 +48,19 @@ module.exports = () => {
             console.log(D + colores.info('DEPARTAMENTOS') + respuesta);
         });
 
+        // ============================================
         // DEBE EXISTIR UN PROCESO DE CONTROL DE PRODUCCIÓN POR DEFECTO.
+        // ============================================
+
         return debeExistirProcesoPorDefectoEnControlProduccion();
 
     }).then(proEntregaDeOrden => {
         console.log(D + colores.info('PROCESOS') + proEntregaDeOrden);
+
+        // ============================================
+        // Deben existir los roles en la base de datos.
+        // ============================================
+
 
     }).catch(err => {
         console.log(colores.danger('ERROR COMPROBANDO DEFAULTS') + 'Hubo un error en la comprobación de valores por defecto.');

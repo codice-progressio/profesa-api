@@ -1,4 +1,5 @@
 var mongoose = require('mongoose');
+var _CONST = require('../../utils/constantes');
 
 var Schema = mongoose.Schema;
 
@@ -18,12 +19,20 @@ var trayectoSchema = new Schema({
     },
 
 
-    materiales: [materialesSchema],
-    pastilla: [pastillaSchema],
-    transformacion: [transformacionSchema],
-    pulido: [pulidoSchema],
-    seleccion: [seleccionSchema],
-    empaque: [empaqueSchema],
+
+    // [_CONST.DEPARTAMENTOS.MATERIALES._v]: [materialesSchema],
+    // [_CONST.DEPARTAMENTOS.PASTILLA._v]: [pastillaSchema],
+    // transformacion: transformacionSchema,
+    // [_CONST.DEPARTAMENTOS.PULIDO._v]: [pulidoSchema],
+    // [_CONST.DEPARTAMENTOS.SELECCION._v]: [seleccionSchema],
+    // [_CONST.DEPARTAMENTOS.EMPAQUE._v]: [empaqueSchema],
+
+    materiales: materialesSchema,
+    pastilla: pastillaSchema,
+    transformacion: transformacionSchema,
+    pulido: pulidoSchema,
+    seleccion: seleccionSchema,
+    empaque: empaqueSchema,
 
     // Esta se guarda cuando se modifica la órden. 
     entrada: { type: Date },

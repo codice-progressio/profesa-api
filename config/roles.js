@@ -4,6 +4,9 @@ const ROLES = [
     'VENDEDOR_ROLE',
     'MATERIALES_REGISTRO_ROLE',
     'SELECCION_CONTEO_ROLE',
+    'EMPAQUE_ROLE'
 ];
+
+
 
 module.exports = ROLES;

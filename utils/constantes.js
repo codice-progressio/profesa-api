@@ -1,7 +1,9 @@
 var DEPTO = require('../config/departametosDefaults');
 var PROC = require('../config/procesosDefault');
+var ROLES = require('../config/roles');
 
 module.exports = {
+    ROLES: ROLES,
     PROCESOS: PROC,
     DEPARTAMENTOS: DEPTO,
     ERRORES: {

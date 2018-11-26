@@ -23,7 +23,7 @@ app.get('/:tipo/:img', (req, res, next) => {
 });
 
 app.get('/*', (req, res, next) => {
-    res.sendfile(imgNoExiste());
+    res.sendFile(imgNoExiste());
 });
 
 function imgNoExiste() {

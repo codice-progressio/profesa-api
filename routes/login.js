@@ -7,6 +7,7 @@ var bcrypt = require('bcryptjs');
 var Usuario = require('../models/usuario');
 var jwt = require('jsonwebtoken');
 var SEED = require('../config/config').SEED;
+var CONST = require('../utils/constantes');
 
 
 // Google
@@ -118,7 +119,8 @@ app.post('/google', async(req, res) => {
                     usuario: usuarioDB,
                     token: token,
                     id: usuarioDB.id,
-                    menu: obtenerMenu(usuarioDB.role)
+                    menu: obtenerMenu(usuarioDB.role),
+                    roles: CONST.ROLES
                 });
             });
         }
@@ -184,7 +186,8 @@ app.post('/', (req, res) => {
             usuario: usuarioDB,
             token: token,
             id: usuarioDB.id,
-            menu: obtenerMenu(usuarioDB.role)
+            menu: obtenerMenu(usuarioDB.role),
+            roles: CONST.ROLES
         });
     });
 
@@ -192,27 +195,18 @@ app.post('/', (req, res) => {
 
 function obtenerMenu(ROLE) {
 
-    var menu = [{
+    const MENUS = {
+        PRINCIPAL: {
+            // TODO MUNDO DEBE DE TENER ESTO. 
+            roles: CONST.ROLES.ARRAY,
             titulo: 'Principal',
             icono: 'mdi mdi-gauge',
             submenu: [
                 { titulo: 'Dashboard', url: '/dashboard' },
-                { titulo: 'ProgressBar', url: '/progress' },
-                { titulo: 'Gráficas', url: '/graficas1' },
-                // { titulo: 'Promesas', url: '/promesas' },
-                // { titulo: 'rxjs', url: '/rxjs' },
             ]
         },
-        // {
-        //     titulo: 'Administrador',
-        //     icono: 'fa fa-gears',
-        //     submenu: [
-        //         // // { titulo: 'Usuarios', url: '/usuarios' },
-        //         // { titulo: 'Hospitales', url: '/hospitales' },
-        //         // { titulo: 'Médicos', url: '/medicos' },
-        //     ]
-        // },
-        {
+        CONTROL_DE_PRODUCCION: {
+            roles: [],
             titulo: 'Control de Producción',
             icono: 'mdi mdi-gauge',
             submenu: [
@@ -220,39 +214,92 @@ function obtenerMenu(ROLE) {
                 { titulo: 'Seguimiento', url: '/produccion' },
             ]
         },
-        {
+        GESTION_DE_PROCESOS: {
+            roles: [],
             titulo: 'Gestión de procesos',
-            icono: 'fa fa-project-diagram',
+            icono: 'mdi mdi-file-chart',
             submenu: [
                 { titulo: 'Registro y modificación de procesos', url: '/procesos' },
                 { titulo: 'Costos de proceso', url: '/procesos/costos' },
                 { titulo: 'Gestión de procesos en modelos', url: '/procesos/modelos' },
             ]
         },
-        {
+        MANEJO_DE_MODELOS: {
+            roles: [],
             titulo: 'Manejo de modelos',
             icono: 'fa fa-plus',
             submenu: [
                 { titulo: 'Modelos', url: '/modelos' },
             ]
-        }
-    ];
-
-
-
-    if (ROLE === 'ADMIN_ROLE') {
-        menu.push({
+        },
+        ADMINISTRADOR: {
+            roles: [],
             titulo: 'Administrador',
             icono: 'fa fa-gears',
             submenu: [
                 { titulo: 'Usuarios', url: '/usuarios' },
                 { titulo: 'Departametos', url: '/departamentos' },
-                // { titulo: 'Hospitales', url: '/hospitales' },
-                // { titulo: 'Médicos', url: '/medicos' },
             ]
-        });
+        },
+
+        EMPAQUE: {
+            roles: [
+                CONST.ROLES.EMPAQUE_REGISTRO_ROLE
+            ],
+            titulo: 'Empaque',
+            icono: 'fa fa-gears fa-spin ',
+            submenu: [
+                { titulo: 'Empaque', url: '/produccion/empaque' },
+            ]
+        },
+        CHUCHERIAS: {
+            roles: [
+                CONST.ROLES.SUPER_ADMIN,
+            ],
+            titulo: 'SUPER-ADMIN',
+            icono: 'fa fa-user fa-spin tada inifinite animated',
+            submenu: [
+                { titulo: 'Hospitales', url: '/hospitales' },
+                { titulo: 'Médicos', url: '/medicos' },
+                { titulo: 'ProgressBar', url: '/progress' },
+                { titulo: 'Gráficas', url: '/graficas1' },
+                { titulo: 'Promesas', url: '/promesas' },
+                { titulo: 'rxjs', url: '/rxjs' },
+            ]
+        }
     }
 
+    // Agregamos los administradordes. 
+
+    for (const menu in MENUS) {
+        if (MENUS.hasOwnProperty(menu)) {
+            const element = MENUS[menu];
+            if (menu !== 'CHUCHERIAS' && menu !== 'PRINCIPAL') {
+                element.roles.push(CONST.ROLES.ADMIN_ROLE);
+                element.roles.push(CONST.ROLES.SUPER_ADMIN);
+            }
+        }
+    }
+
+    const menuSeleccionado = {};
+
+
+    for (let i = 0; i < ROLE.length; i++) {
+        const rol = ROLE[i];
+
+        for (const menu in MENUS) {
+            if (MENUS.hasOwnProperty(menu)) {
+                const element = MENUS[menu];
+                if (element.roles.includes(rol)) {
+                    menuSeleccionado[menu] = element;
+                    // Lo borramos para que el menú no se repita. 
+                    delete MENUS[menu];
+                }
+            }
+        }
+
+    }
+    var menu = Object.values(menuSeleccionado);
     return menu;
 }
 

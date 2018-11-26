@@ -2,17 +2,20 @@ var colores = require('../utils/colors');
 var Usuario = require('../models/usuario');
 var _DEPTOS = require('../config/departametosDefaults');
 var _PROC = require('../config/procesosDefault');
+var _ROLE = require('../config/roles');
+var Role = require('../models/role');
 var CONSTANTES = require('../utils/constantes');
 var Departamento = require('../models/departamento');
 var RESP = require('../utils/respStatus');
 var Proceso = require('../models/procesos/proceso');
+var bcrypt = require('bcryptjs');
 
 const USUARIO_SUPER_ADMIN = {
     nombre: "SUPER-ADMIN",
     email: "super-admin@super.com",
-    password: "XX###adm",
+    password: bcrypt.hashSync("XX###adm", 10),
     img: "",
-    role: "",
+    role: [_ROLE.SUPER_ADMIN],
 
 };
 
@@ -24,11 +27,17 @@ module.exports = () => {
     // Debe existir un SUPER-ADMIN
     // ============================================
 
-    const comprobaciones = Usuario.find({ nombre: USUARIO_SUPER_ADMIN.nombre }).exec();
+    Usuario.findOne({ nombre: USUARIO_SUPER_ADMIN.nombre }).exec().then(admin => {
 
-    comprobaciones.then(admin => {
         return crearSuperAdmin(admin);
-    }).then(() => {
+    }).then((adminCreado) => {
+
+        if (!adminCreado) {
+            console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Se creo el usuario.");
+        } else {
+            console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Existe el usuario.");
+
+        }
         // ============================================
         // Deben existir los departamentos.
         // ============================================
@@ -57,10 +66,22 @@ module.exports = () => {
     }).then(proEntregaDeOrden => {
         console.log(D + colores.info('PROCESOS') + proEntregaDeOrden);
 
-        // ============================================
-        // Deben existir los roles en la base de datos.
-        // ============================================
+        //     // ============================================
+        //     // Deben existir los roles en la base de datos.
+        //     // ============================================
+        //     const promesasRoles = [];
+        //     for (let i = 0; i < _ROLE.ARRAY.length; i++) {
+        //         const role = _ROLE.ARRAY[i];
+        //         promesasRoles.push(comprobarRolPorDefecto(role));
 
+        //     }
+
+
+        //     return Promise.all(promesasRoles);
+        // }).then(resp => {
+        //     resp.forEach(respuesta => {
+        //         console.log(D + colores.info('ROLES') + respuesta);
+        //     });
 
     }).catch(err => {
         console.log(colores.danger('ERROR COMPROBANDO DEFAULTS') + 'Hubo un error en la comprobación de valores por defecto.');
@@ -70,16 +91,40 @@ module.exports = () => {
 
 };
 
-function crearSuperAdmin(admin) {
-    if (!admin) {
+function comprobarRolPorDefecto(role) {
+    return new Promise((resolve, reject) => {
+        Role.existe(role).then(roleEncontrado => {
+            if (!roleEncontrado) {
+                const b = new Role();
+                b.role = role;
+                return b.save();
+            }
+            resolve(colores.success(role) + 'Existe en la BD.');
+        }).then(roleGuardado => {
+            resolve(colores.warning(role) + 'No existia se creo.');
+        }).catch(err => {
+            reject(RESP.errorGeneral({
+                msj: 'Hubo un error buscando el role.',
+                err: err,
+            }));
+        });
+    });
+}
+
+
+
+function crearSuperAdmin(adminExistente) {
+    if (!adminExistente) {
         console.log(D + colores.warning('SUPER-ADMIN') + "No existe el usuario super admin. Se creará.");
-        admin.nombre = USUARIO_SUPER_ADMIN.nombre;
-        admin.email = USUARIO_SUPER_ADMIN.email;
-        admin.password = USUARIO_SUPER_ADMIN.password;
+        const nuevoAdmin = new Usuario();
+        nuevoAdmin.nombre = USUARIO_SUPER_ADMIN.nombre;
+        nuevoAdmin.email = USUARIO_SUPER_ADMIN.email;
+        nuevoAdmin.password = USUARIO_SUPER_ADMIN.password;
         // TODO: Tomar este rol de la configuración general y 
-        admin.role = USUARIO_SUPER_ADMIN.role;
+        nuevoAdmin.role = USUARIO_SUPER_ADMIN.role;
+        return nuevoAdmin.save();
     } else {
-        console.log(D + colores.warning('SUPER-ADMIN') + "Existe el usuario.");
+        return adminExistente;
     }
 }
 
@@ -87,8 +132,7 @@ function comprobarDepartamentos(deptoBuscado) {
     // Busca un departamento en una promesa. 
     return new Promise((resolve, reject) => {
         // Buscamos el departamento. 
-        const dep = Departamento.findOne({ nombre: deptoBuscado }).exec();
-        dep.then(deptoEncontrado => {
+        Departamento.existe(deptoBuscado).then(deptoEncontrado => {
             // Existencia del departamento.
             if (!deptoEncontrado) {
                 const d = new Departamento();

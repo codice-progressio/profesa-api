@@ -277,8 +277,7 @@ function orden(idOrden) {
 function existeDepartamento(departamento) {
 
     return new Promise((resolve, reject) => {
-        const d = Departamento.findOne({ nombre: departamento.toUpperCase() }).exec();
-        d.then(departamentoEncontrado => {
+        Departamento.existe(departamento).then(departamentoEncontrado => {
                 if (!departamentoEncontrado) {
                     reject(RESP.errorGeneral({
                         msj: 'No existe el departamento.',
@@ -304,9 +303,7 @@ function existeDepartamento(departamento) {
 app.get('/:depto', (req, res) => {
     const depto = (req.params.depto).toUpperCase();
 
-    const d = Departamento.findOne({ nombre: depto }).exec();
-
-    d.then(departamento => {
+    Departamento.existe(depto).then(departamento => {
         if (!departamento) {
             return RESP._400(res, {
                 msj: 'Error al buscar el departamento.',

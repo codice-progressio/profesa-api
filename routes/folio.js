@@ -2,6 +2,8 @@
 var express = require('express');
 var Folio = require('../models/folios/folio');
 var colores = require('../utils/colors');
+var PERMISOS = require('../middlewares/permisos').PERMISOS;
+var _CONST = require('../utils/constantes');
 
 
 var app = express();
@@ -10,7 +12,11 @@ var app = express();
 // Obtener todos los folios existentes. 
 // ============================================
 
-app.get('/', (req, res, next) => {
+
+
+app.get('/', PERMISOS([
+    _CONST.ROLES.CONTROL_DE_PRODUCCION_CONSULTAR_FOLIOS_ROLE
+]), (req, res, next) => {
 
     console.log(colores.info('/folio') + '[get] Funcionando.');
     var desde = req.query.desde || 0;
@@ -44,8 +50,6 @@ app.get('/', (req, res, next) => {
         ];
 
     }
-
-
 
 
     Folio.find(filtros)

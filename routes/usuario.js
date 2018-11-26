@@ -3,6 +3,8 @@ var express = require('express');
 var colores = require('../utils/colors');
 var bcrypt = require('bcryptjs');
 var Usuario = require('../models/usuario');
+var CONST = require('../utils/constantes');
+var RESP = require('../utils/respStatus');
 
 var mdAutenticacion = require('../middlewares/autenticacion');
 
@@ -40,7 +42,7 @@ app.get('/', (req, res, next) => {
                     res.status(200).json({
                         ok: true,
                         usuarios: usuarios,
-                        total: conteo
+                        total: conteo - 1
                     });
 
                 });
@@ -86,59 +88,39 @@ app.put('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_
 
     var id = req.params.id;
     var body = req.body;
+    console.log('Entramos por aaca');
 
-    Usuario.findById(id, (err, usuario) => {
-
-        var body = req.body;
-
-        if (err) {
-            console.log(colores.danger('Error PUT - Usuario') + 'Error al buscar usuario. =>' + err);
-
-            return res.status(500).json({
-                ok: false,
-                mensaje: 'Error al buscar usuario.',
-                errors: err
+    Usuario.findById(id).exec().then(u => {
+        console.log('siguio');
+        if (!u) {
+            return RESP._400(res, {
+                msj: 'El usuario no existe. ',
+                err: 'El id que ingresaste no esta registrado con ningún usuario.',
             });
         }
 
-        //Validamos que haya un usuario con ese id.
-        if (!usuario) {
-            console.log(colores.danger('Error PUT - Usuario') + `El usuario con id ${id} no existe. =>` + err);
-
-            return res.status(400).json({
-                ok: false,
-                mensaje: `El usuario con id ${id} no existe.`,
-                errors: { message: 'No existe un usuario con ID.' }
-            });
+        u.nombre = body.nombre;
+        u.email = body.email;
+        u.role = body.role;
+        // Si se agrega un password si se modifica MIENTRAS NO SEA SUPER ADMIN. 
+        if (body.password && !u.role.includes(CONST.ROLES.SUPER_ADMIN)) {
+            u.password = bcrypt.hashSync(body.password, 10);
         }
 
+        return u.save();
 
-        usuario.nombre = body.nombre;
-        usuario.email = body.email;
-        usuario.role = body.role;
-
-
-        usuario.save((err, usuarioGuardado) => {
-
-            if (err) {
-                console.log(colores.danger('Error PUT - Usuario') + 'Error al actualizar usuario. =>' + err);
-
-                return res.status(400).json({
-                    ok: false,
-                    mensaje: 'Error al actualizar usuario.',
-                    errors: err
-                });
-            }
-
-            // Mantenemos el password secreto. 
-            usuarioGuardado.password = ':D';
-
-            res.status(200).json({
-                ok: true,
-                usuario: usuarioGuardado
-            });
+    }).then(uG => {
+        uG.password = ':D';
+        return RESP._200(res, `Se actualizo el usuario ${uG.nombre} correctamente.`, [
+            { tipo: 'usuario', datos: uG },
+        ]);
+    }).catch(err => {
+        return RESP._500(res, {
+            msj: 'Hubo un error actualizando el usuario.',
+            err: err,
         });
     });
+
 });
 
 
@@ -147,41 +129,62 @@ app.put('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_
 // Crear un nuevo usuario. 
 // ============================================
 app.post('/', (req, res) => {
+    console.log('eSTAMOS AQUI');
 
     var body = req.body;
+
+
+
     var usuario = new Usuario({
         nombre: body.nombre,
         email: body.email,
-        password: bcrypt.hashSync(body.password, 10),
-        img: body.imgl,
+        password: bcrypt.hashSync(body.password ? body.password : null, 10),
+        img: body.img,
         role: body.role,
-
+        idTrabajador: body.idTrabajador
     });
 
-    usuario.save((err, usuarioGuardado) => {
-        if (err) {
-            console.log(colores.danger('Error POST - Usuario') + 'No se pudo completar la petición =>' + err);
+    console.log(usuario);
 
-            return res.status(400).json({
-                ok: false,
-                mensaje: 'Error al crear usuario.',
-                errors: err
-            });
-        }
+    usuario.save().then(uGuardado => {
+        console.log(' Esta aqua');
 
-        console.log(colores.info('POST') + ' Petición correcta: Usuarios');
-        res.status(201).json({
-            ok: true,
-            usuario: usuarioGuardado,
-            // Este usuario lo obtenemos desde la autenticacion 
-            // "mdAutenticacion.verificarToken"
-            // Agregamos en el request (req) el usuario logueado 
-            // actualmente para poder hacer algúnas 
-            // cosas monitas
-            usuariotoken: req.usuario
+        return RESP._200(res, `Usuario '${uGuardado.nombre}' creado con éxito.`, [
+            { tipo: 'usuario', datos: uGuardado },
+            { tipo: 'usuarioToken', datos: req.usuario },
+        ]);
+
+    }).catch(err => {
+        console.log(err);
+
+        return RESP._500(res, {
+            msj: 'Hubo un error guardando el usuario.',
+            err: err,
         });
-
     });
+
+    // usuario.save((err, usuarioGuardado) => {
+    //     if (err) {
+
+    //         return res.status(400).json({
+    //             ok: false,
+    //             mensaje: 'Error al crear usuario.',
+    //             errors: err
+    //         });
+    //     }
+
+    //     res.status(201).json({
+    //         ok: true,
+    //         usuario: usuarioGuardado,
+    //         // Este usuario lo obtenemos desde la autenticacion 
+    //         // "mdAutenticacion.verificarToken"
+    //         // Agregamos en el request (req) el usuario logueado 
+    //         // actualmente para poder hacer algúnas 
+    //         // cosas monitas
+    //         usuariotoken: req.usuario
+    //     });
+
+    // });
 
 
 });

@@ -187,7 +187,7 @@ app.post('/', (req, res) => {
             token: token,
             id: usuarioDB.id,
             menu: obtenerMenu(usuarioDB.role),
-            roles: CONST.ROLES
+            // roles: CONST.ROLES
         });
     });
 

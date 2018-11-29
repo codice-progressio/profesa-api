@@ -4,6 +4,8 @@ var Folio = require('../models/folios/folio');
 var colores = require('../utils/colors');
 var PERMISOS = require('../middlewares/permisos').PERMISOS;
 var _CONST = require('../utils/constantes');
+var RESP = require('../utils/respStatus');
+
 
 
 var app = express();
@@ -12,11 +14,7 @@ var app = express();
 // Obtener todos los folios existentes. 
 // ============================================
 
-
-
-app.get('/', PERMISOS([
-    _CONST.ROLES.CONTROL_DE_PRODUCCION_CONSULTAR_FOLIOS_ROLE
-]), (req, res, next) => {
+app.get('/', PERMISOS('/'), (req, res, next) => {
 
     console.log(colores.info('/folio') + '[get] Funcionando.');
     var desde = req.query.desde || 0;
@@ -70,22 +68,6 @@ app.get('/', PERMISOS([
         .populate('folioLineas.ordenes.ubicacionActual.departamento')
         .populate('folioLineas.ordenes.siguienteDepartamento.departamento')
         .populate('folioLineas.ordenes.trayectoNormal.departamento')
-        // TODO: Quitar comentario. 
-        // .populate({
-        //     path: 'folioLineas.ordenes.ubicacionActual.departamentoActual',
-        //     populate: {
-        //         path: 'departamento'
-        //     }
-        // })
-        // .populate({
-        //     path: 'folioLineas',
-        //     populate: {
-        //         path: 'modeloCompleto laserCliente',
-        //         populate: {
-        //             path: 'laserAlmacen modelo tamano color terminado'
-        //         }
-        //     }
-        // })
         .exec((err, folios) => {
             if (err) {
                 return res.status(500).json({
@@ -98,12 +80,9 @@ app.get('/', PERMISOS([
             // Contamos los datos totales que hay registrados, 
             // estos sirven para la paginación. 
             Folio.count(filtros, (err, conteo) => {
-                return res.status(200).json({
-                    ok: true,
-                    mensaje: 'Petición realizada correctamente',
-                    folios: folios,
-                    total: conteo
-                });
+                return RESP._200(res, null, [
+                    { tipo: 'folios', datos: folios },
+                ]);
             });
         });
 });

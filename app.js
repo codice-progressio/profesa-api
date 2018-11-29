@@ -7,8 +7,12 @@ var bodyParser = require('body-parser');
 var ERR = require('./utils/respStatus');
 var db = require('./config/db');
 
-var defaults = require('./config/defaultData');
+var RESP = require('./utils/respStatus');
 
+var defaults = require('./config/defaultData');
+var _ROUTES = require('./config/routes').ROUTES;
+
+var _PERMISOS = require('./middlewares/permisos').PERMISOS;
 
 // ============================================
 // ENVIROMENT
@@ -38,9 +42,19 @@ Array.prototype.greaterThan0 = function(a) {
 // ============================================
 
 app.use(function(req, res, next) {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+
+    res.header("Access-Control-Allow-Origin", "http://localhost:4200");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     res.header('Access-Control-Allow-Methods', "POST, GET, PUT, DELETE, OPTIONS");
+    res.header("Access-Control-Allow-Credentials", "true");
+    console.log(req.method);
+
+    if (req.method == "OPTIONS") {
+        console.log('Metodo options');
+
+        res.StatusCode = 200;
+        return res.status(200).send();
+    }
     next();
 });
 
@@ -50,51 +64,6 @@ app.use(function(req, res, next) {
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-
-
-//importar rutas.
-var appRoutes = require('./routes/app');
-var usuarioRoutes = require('./routes/usuario');
-var loginRoutes = require('./routes/login');
-var hospitalRoutes = require('./routes/hospital');
-var medicoRoutes = require('./routes/medico');
-var busquedaRoutes = require('./routes/busqueda');
-var uploadRoutes = require('./routes/upload');
-var imagenesRoutes = require('./routes/imagenes');
-
-// ============================================
-// IMPORTAR RUTAS PARA SISTEMA CARRDUCI
-// ============================================
-
-var folioRoutes = require('./routes/folio');
-var folioLineaRoutes = require('./routes/folioLinea');
-var modeloCompletoRoutes = require('./routes/gestionModelos/modeloCompleto');
-var clienteRoutes = require('./routes/cliente');
-var departamentoRoutes = require('./routes/departamento');
-var procesoRoutes = require('./routes/proceso');
-var ordenRoutes = require('./routes/orden');
-var trayectoriaRoutes = require('./routes/trayectoria');
-var maquinaRoutes = require('./routes/maquina');
-var gastoRoutes = require('./routes/gasto');
-
-var modeloRoutes = require('./routes/gestionModelos/modelo');
-var tamanoRoutes = require('./routes/gestionModelos/tamano');
-var colorRoutes = require('./routes/gestionModelos/color');
-var terminadoRoutes = require('./routes/gestionModelos/terminado');
-var versionModeloRoutes = require('./routes/gestionModelos/versionModelo');
-var laserRoutes = require('./routes/gestionModelos/laser');
-
-// ALMACEN
-var materialRoutes = require('./routes/almacen/material');
-
-
-// ============================================
-// END IMPORTAR RUTAS PARA SISTEMA CARRDUCI
-// ============================================
-
-
-
-
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
     console.log(ENVIROMENT.msj_bienvenida);
     if (err) {
@@ -105,68 +74,56 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 });
 
 
-// Rutas - Middleware
-app.use('/usuario', usuarioRoutes);
-app.use('/hospital', hospitalRoutes);
-app.use('/medico', medicoRoutes);
-app.use('/login', loginRoutes);
-app.use('/busqueda', busquedaRoutes);
-app.use('/upload', uploadRoutes);
-app.use('/img', imagenesRoutes);
 
-// ============================================
-// Rutas - Middleware PARA SISTEMA CARRDUCI
-// ============================================
+// // ============================================
+// // Rutas - Middleware PARA SISTEMA CARRDUCI
+// // ============================================
 
-app.use('/folio', folioRoutes);
-app.use('/folioLinea', folioLineaRoutes);
-app.use('/modeloCompleto', modeloCompletoRoutes);
-app.use('/cliente', clienteRoutes);
-app.use('/departamento', departamentoRoutes);
-app.use('/proceso', procesoRoutes);
-app.use('/orden', ordenRoutes);
-app.use('/trayectoria', trayectoriaRoutes);
-app.use('/maquina', maquinaRoutes);
-app.use('/gasto', gastoRoutes);
+// Obtenemos el token
+app.use((req, res, next) => {
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        req.token = req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+        req.token = req.query.token;
+    }
 
-app.use('/modelo', modeloRoutes);
-app.use('/tamano', tamanoRoutes);
-app.use('/color', colorRoutes);
-app.use('/terminado', terminadoRoutes);
-app.use('/versionModelo', versionModeloRoutes);
-app.use('/laser', laserRoutes);
+    console.log('Hay token:' + req.token);
 
-// Almacen
-app.use('/material', materialRoutes);
+    next();
 
+});
 
+// NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.
+app.use([_PERMISOS()], (req, res, next) => {
+    console.log(colores.success('SEGURIDAD') + colores.info(req.originalUrl) + 'Validado.');
+    next();
+});
 
+// Luego creamos las routes.
+for (const key in _ROUTES) {
+    if (_ROUTES.hasOwnProperty(key)) {
+        const route = _ROUTES[key];
+        app.use(route.url, route.route)
+    }
+}
 
-
-// ============================================
-// END Rutas - Middleware PARA SISTEMA CARRDUCI
-// ============================================
-
-
-//ESta tiene que ser la última ruta. 
-app.use('/', appRoutes);
-
+// Llamamos a los errores. 
 app.use(function(req, res, next) {
-
-    var error = {
-        error: 'Error 404',
-        mensaje: 'La página solicitada no existe.',
-        páginaSolicitada: req.get('host') + req.originalUrl,
-        status: 404,
-        ok: false
-    };
-
-    res.status(404).send(error);
+    return RESP._404(res, {
+        msj: 'La pagina solicitada no existe.',
+        err: 'La pagina que solicitaste no existe.',
+    });
 });
 
 app.use(function(err, req, res, next) {
-    return res.status(500).json(err);
+    return RESP._500(res, {
+        msj: 'Hubo un error.',
+        err: err,
+    });
+
 });
+
+
 
 // Escuchar peticiones.
 app.listen(ENVIROMENT.port, () => {

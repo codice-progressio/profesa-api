@@ -119,6 +119,12 @@ resp._401 = (res, datos) => {
         return res.status(401).json(generalError(datos));
     }
 };
+resp._404 = (res, datos) => {
+    if (datos.err) {
+        // logError(datos);
+        return res.status(404).json(generalError(datos));
+    }
+};
 
 resp._500 = (res, datos) => {
     if (datos.err) {

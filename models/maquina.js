@@ -22,13 +22,15 @@ var maquinaSchema = new Schema({
         ref: 'Orden'
     }],
 
-    departamentos: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: 'Departamento',
-        }],
-        validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un departamento definido.']
-    },
+    // departamentos: {
+    //     type: {
+    //         type: Schema.Types.ObjectId,
+    //         ref: 'Departamento',
+    //     },
+    //     validate: [(a) => {
+    //         return a.length >= 1;
+    //     }, 'El campo debe tener por lo menos un departamento definido.']
+    // },
 
 
     // Estos son los datos de trabajo de la maquina. 
@@ -44,7 +46,9 @@ var maquinaSchema = new Schema({
 
     gastos: {
         type: [gastoConsumo],
-        validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un gasto definido']
+        validate: [function(a) {
+            return a.length >= 1;
+        }, 'El campo debe tener por lo menos un gasto definido']
     },
 
     costo: { type: Number, require: [true, "Para fines de costos este campo es obligatorio."], min: [1, 'La máquina no puede costar menos de un peso.'] },

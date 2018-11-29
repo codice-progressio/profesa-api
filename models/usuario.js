@@ -16,7 +16,7 @@ var usuarioSchema = new Schema({
     password: { type: String, required: [true, 'La contraseña es necesaria.'] },
     img: { type: String, required: false },
     // TODO: Un usuario debe poder tener varios roles. 
-    role: [{ type: String, required: true, enum: rolesValidos }],
+    role: { type: [String], required: true, enum: rolesValidos, default: [_ROLES.USER_ROLE] },
     google: { type: Boolean, default: false },
     idTrabajador: { type: Number }
 });

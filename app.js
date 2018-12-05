@@ -43,7 +43,7 @@ Array.prototype.greaterThan0 = function(a) {
 
 app.use(function(req, res, next) {
 
-    res.header("Access-Control-Allow-Origin", "http://localhost:4200");
+    res.header("Access-Control-Allow-Origin", ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN);
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     res.header('Access-Control-Allow-Methods', "POST, GET, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Credentials", "true");

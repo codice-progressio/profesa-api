@@ -15,7 +15,7 @@ const ACCESS_CONTROL_ALLOW_ORIGIN = {
 module.exports.enviroment = (env) => {
     const uri = env ? URI_PRODUCTION : URI_DEVELOPMENT;
     const port = env ? PORT_PRODUCTION : PORT_DEVELOPMENT;
-    const ACAO = evn ? ACCESS_CONTROL_ALLOW_ORIGIN.PRODUCTION : ACCESS_CONTROL_ALLOW_ORIGIN.DEVELOPMENT;
+    const ACAO = env ? ACCESS_CONTROL_ALLOW_ORIGIN.PRODUCTION : ACCESS_CONTROL_ALLOW_ORIGIN.DEVELOPMENT;
 
     const msj_dev_bienvenida = col.danger('***********| PRECAUCIÓN |**********') + 'Estas en modo desarrollo.';
     const msj_pro_bienvenida = col.success('PRODUCCIóN ') + 'Estas en modo producción.';

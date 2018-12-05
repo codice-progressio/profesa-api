@@ -9,15 +9,27 @@ var colores = require('../utils/colors');
 // de los usuarios para permitir la ejecución o no de las rutas. 
 
 
-function esLogin(url) {
-    const urlLogin = url.split('/')[1].split('?')[0];
-    return `/${urlLogin}` === _ROUTES.ROUTES._LOGIN.url;
+function esExepcion(url) {
+    const urlBase = `/${url.split('/')[1].split('?')[0]}`;
+
+    const exepciones = [
+        _ROUTES.ROUTES._LOGIN.url,
+        _ROUTES.ROUTES._IMG.url
+    ];
+
+    for (let i = 0; i < exepciones.length; i++) {
+        const exe = exepciones[i];
+        if (exe === urlBase) return true;
+    }
+
+
+    return false;
 }
 
 function token(req, res, next) {
 
-    // Si es login no comprobamos nada. 
-    if (esLogin(req.originalUrl)) {
+    // Si es una exepcion no comprobamos nada. 
+    if (esExepcion(req.originalUrl)) {
         next();
         return;
     }
@@ -30,8 +42,6 @@ function token(req, res, next) {
     }
 
     var token = req.token;
-
-    console.log('token =>' + token);
 
     jwt.verify(token, SEED, (err, decode) => {
 
@@ -53,25 +63,31 @@ function obtenerRolesEnFuncionDeUrl(req, res) {
 
 
     var rolesDeLaURL = [];
-    var url = req.originalUrl.split('?')[0];
 
-
-    var pathPrincipal = '_' + url.split('/')[1];
-    console.log(pathPrincipal.toUpperCase());
-
-    if (_ROUTES.ROUTES.hasOwnProperty(pathPrincipal.toUpperCase())) {
-        const route = _ROUTES.ROUTES[pathPrincipal.toUpperCase()];
+    var pathPrincipal = obtenerPathsConvertidos(req.originalUrl).principal;
+    if (_ROUTES.ROUTES.hasOwnProperty(pathPrincipal)) {
+        const route = _ROUTES.ROUTES[pathPrincipal];
         // Existe la ruta principal
         // Agregamos sus roles. 
         rolesDeLaURL.concat(route.roles);
     }
-    console.log(colores.warning('PERMISOS DE RUTA') + colores.info(url) + rolesDeLaURL);
+    console.log(colores.warning('PERMISOS DE RUTA') + colores.info(req.originalUrl) + rolesDeLaURL);
     return rolesDeLaURL;
 }
 
+function obtenerPathsConvertidos(originalUrl) {
+    var url = originalUrl.split('?')[0];
+    var pathPrincipal = '_' + url.split('/')[1];
+    var pathSecundario = '_' + url.split('/').splice(2).join('_');
+    return {
+        principal: pathPrincipal,
+        secundario: pathSecundario
+    };
+}
+
 function obtenerRolesEnFuncionDePATH(req, res, path) {
-    console.log('Ejecutando roles en funcion de path:' + path);
-    const pahtConvertido = path.replace('/', '_').toUpperCase();
+
+    var rolesDeLaURL = [];
     // Existe la ruta?
     if (_ROUTES.ROUTES.hasOwnProperty(pahtConvertido)) {
 
@@ -79,15 +95,10 @@ function obtenerRolesEnFuncionDePATH(req, res, path) {
     }
 };
 
-// exports.PERMISOS_2_LV = function (path) {
-//     console.log('Ejecutando permisos de segundo nivel en path:' + path);
-//     return this.PERMISOS(path);
-// }
-
 exports.PERMISOS = function(PATH) {
-    console.log('Esta comprobando los permisos. ');
     return [token, function(req, res, next) {
-        if (esLogin(req.originalUrl)) {
+
+        if (esExepcion(req.originalUrl)) {
             next();
             return;
         }
@@ -97,40 +108,36 @@ exports.PERMISOS = function(PATH) {
         // la segunda capa de seguirdad, solo hay que buscar 
         // la propiedad correspondiente.
         if (PATH) {
-            ROLES_REQUERIDOS = obtenerRolesEnFuncionDePATH(req, res, path);
+            ROLES_REQUERIDOS = obtenerRolesEnFuncionDePATH(req, res, PATH);
         } else {
             ROLES_REQUERIDOS = obtenerRolesEnFuncionDeUrl(req, res);
         }
 
-        console.log('Dentro del request ');
         const USUARIO_LOGUEADO = req.usuario;
         const PERMISOS_DE_USUARIO = USUARIO_LOGUEADO.role;
-
-        if (PERMISOS_DE_USUARIO.length === 0 || ROLES_REQUERIDOS.length === 0) {
-            console.log(colores.danger('SIN PERMISOS') + colores.info('Parece que el usuario que se esta logueando no tiene permisos de ningun tipo o la ruta no ha sido definida con sus permisos. '));
-            // No se puede ingresar al sistema si la ruta no tiene permisos
-            // o si el usuario no tiene permisos. Es necesario que ambos 
-            // los tengan para poder acceder. 
-            return RESP._401(res, {
-                msj: 'No tienes los permisos necesarios para esta petición.',
-                err: 'Reportaselo a tu administrador.',
-                autorizado: false
-            });
-        }
-
-        console.log('Dentro del request 2');
-        // Si es super-admin no hace la comprobación. 
         if (PERMISOS_DE_USUARIO.includes(_CONST.ROLES.SUPER_ADMIN)) {
             next();
         } else {
+
+            if (PERMISOS_DE_USUARIO.length === 0 || ROLES_REQUERIDOS.length === 0) {
+                console.log(colores.danger('SIN PERMISOS') + colores.info('Parece que el usuario que se esta logueando no tiene permisos de ningun tipo o la ruta no ha sido definida con sus permisos. '));
+                // No se puede ingresar al sistema si la ruta no tiene permisos
+                // o si el usuario no tiene permisos. Es necesario que ambos 
+                // los tengan para poder acceder. 
+                return RESP._401(res, {
+                    msj: 'No tienes los permisos necesarios para esta petición.',
+                    err: 'Reportaselo a tu administrador.',
+                    autorizado: false
+                });
+            }
+
+
 
             console.log('Dentro del request 3');
             // Comprobamos que el usuario tenga todos los permisos
             //  que son necesarios.
             ROLES_REQUERIDOS.forEach(role => {
-                console.log('Dentro del request 4');
                 if (!PERMISOS_DE_USUARIO.includes(role)) {
-                    console.log('Dentro del request 5');
                     return RESP._401(res, {
                         msj: 'No tienes los permisos necesarios para esta petición.',
                         err: 'ROLES REQUERIDOS : ' + ROLES_REQUERIDOS,
@@ -138,7 +145,6 @@ exports.PERMISOS = function(PATH) {
                     });
                 }
             });
-            console.log('Dentro del request 7');
             next();
         };
 

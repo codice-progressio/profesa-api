@@ -14,7 +14,7 @@ var app = express();
 // Obtener todos los folios existentes. 
 // ============================================
 
-app.get('/', PERMISOS('/'), (req, res, next) => {
+app.get('/', (req, res, next) => {
 
     console.log(colores.info('/folio') + '[get] Funcionando.');
     var desde = req.query.desde || 0;
@@ -61,31 +61,32 @@ app.get('/', PERMISOS('/'), (req, res, next) => {
         .populate({
             path: 'folioLineas.modeloCompleto',
             populate: {
-                path: 'laserAlmacen modelo tamano color terminado'
+                path: 'modelo tamano color terminado'
             }
         })
-        .populate('folioLineas.laserCliente')
+        .populate('folioLineas.')
         .populate('folioLineas.ordenes.ubicacionActual.departamento')
         .populate('folioLineas.ordenes.siguienteDepartamento.departamento')
         .populate('folioLineas.ordenes.trayectoNormal.departamento')
-        .exec((err, folios) => {
-            if (err) {
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error cargando folios.',
-                    errors: err
-                });
-            }
+        .exec().then(folios => {
 
             // Contamos los datos totales que hay registrados, 
             // estos sirven para la paginación. 
             Folio.count(filtros, (err, conteo) => {
                 return RESP._200(res, null, [
                     { tipo: 'folios', datos: folios },
+                    { tipo: 'total', datos: conteo },
                 ]);
             });
+        }).catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error cargando los folios.',
+                err: err,
+            });
+
         });
 });
+
 
 // ============================================
 // Actualizar el folio.
@@ -100,9 +101,9 @@ app.get('/:id', (req, res) => {
     var id = req.params.id;
     // Popular
     const populate = {
-        path: 'folioLineas.modeloCompleto folioLineas.laserCliente ',
+        path: 'folioLineas.modeloCompleto folioLineas. ',
         populate: {
-            path: 'modelo tamano color terminado laserAlmacen versionModelo familiaDeProcesos procesosEspeciales.proceso',
+            path: 'modelo tamano color terminado  familiaDeProcesos procesosEspeciales.proceso',
             populate: {
                 path: 'procesos.proceso departamento',
                 populate: {
@@ -126,45 +127,38 @@ app.get('/:id', (req, res) => {
         .populate({
             path: 'folioLineas',
             populate: {
-                path: 'modeloCompleto laserCliente',
+                path: 'modeloCompleto ',
                 populate: {
-                    path: 'laserAlmacen modelo tamano color terminado'
+                    path: ' modelo tamano color terminado'
                 }
             }
         })
         .populate({ path: 'folioLineas.procesos.proceso', populate: { path: 'departamento' } })
         .populate(populate)
+        .exec()
+        .then(folioEncontrado => {
+            if (!folioEncontrado) {
+                return RESP._400(res, {
+                    msj: 'No existe el folio.',
+                    err: 'El id del folio que pasaste no existe en la BD.',
+                });
+            }
 
-    .exec((err, folio) => {
-        if (err) {
-            console.log(colores.danger('Error get:/id - folio') + 'Error al buscar folio. =>' + err);
+            return RESP._200(res, null, [
+                { tipo: 'folio', datos: folioEncontrado },
+            ]);
 
-            return res.status(500).json({
-                ok: false,
-                mensaje: 'Error al buscar folio.',
-                errors: err
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando el folio completo con sus pedidos.',
+                err: err,
             });
-        }
-
-        //Validamos que haya un folio con ese id.
-        if (!folio) {
-            console.log(colores.danger('Error get:/id - folio') + `El folio con id ${id} no existe. =>` + err);
-
-            return res.status(400).json({
-                ok: false,
-                mensaje: `El folio con id ${id} no existe.`,
-                errors: { message: 'No existe un folio con ID.' }
-            });
-        }
-
-        // Contamos los datos totales que hay registrados, 
-        // estos sirven para la paginación. 
-        return res.status(200).json({
-            ok: true,
-            mensaje: 'Petición realizada correctamente',
-            folio: folio,
         });
-    });
+
+
+
+
 });
 // ============================================
 // END Obtener toda la información de un folio con sus lineas. 
@@ -238,39 +232,21 @@ app.post('/', (req, res, next) => {
         observaciones: body.observaciones
     });
 
-    folio.save((err, folioGuardado) => {
-
-        if (err) {
-            console.log(colores.danger('Error POST - folio') + 'Error al guardar folio. =>' + err);
-
-            return res.status(400).json({
-                ok: false,
-                mensaje: 'Error al guardar folio.',
-                errors: err
-            });
-        }
-
-        // Ojo que aquí retornamos un documentos. 
-        // Todavia no entiendo que significa pero tiene que ser así como
-        // lo estoy haciendo. 
-        folioGuardado
-            .populate('cliente', 'sae nombre')
-            .populate('vendedor', 'nombre')
-            .execPopulate()
-            .then((folioGuardado) => {
-                res.status(200).json({
-                    ok: true,
-                    folio: folioGuardado
-                });
-            }).catch((err) => {
-
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error al popular el folio.',
-                    errors: err
-                });
-            });
+    var fol = folio.save();
+    fol.then(folioGuardado => {
+        return Folio.populate(folioGuardado, { path: 'cliente vendedor' });
+    }).then(folioPopulado => {
+        return RESP._200(res, 'Se guardo el folio de manera correcta.', [
+            { tipo: 'folio', datos: folioPopulado },
+        ]);
+    }).catch(err => {
+        return RESP._500(res, {
+            msj: 'Hubo un error guardando el folio.',
+            err: err,
+        });
     });
+
+
 });
 
 // ============================================

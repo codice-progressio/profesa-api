@@ -138,7 +138,7 @@ app.post('/', (req, res) => {
     var usuario = new Usuario({
         nombre: body.nombre,
         email: body.email,
-        password: bcrypt.hashSync(body.password ? body.password : null, 10),
+        password: bcrypt.hashSync(body.password ? body.password : '', 10),
         img: body.img,
         role: body.role,
         idTrabajador: body.idTrabajador

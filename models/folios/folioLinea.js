@@ -4,6 +4,8 @@ var Schema = mongoose.Schema;
 var ordenSchema = require('./orden');
 var NVU = require('../../config/nivelesDeUrgencia');
 
+var LaserCliente = require('../marcaLaser');
+
 var Tenido = [{
     color: {
         type: String,
@@ -49,10 +51,7 @@ const folioLineaSchema = new Schema({
     // tambien lleva marcaLaser, pero no son iguales. La de 
     // modeloCompleto es una marca que hace para almacen 
     // mientras que esta marca es la que es solicitada por el cliente.
-    laserCliente: {
-        type: Schema.Types.ObjectId,
-        ref: 'MarcaLaser'
-    },
+    laserCliente: LaserCliente,
 
     // Si se selecciona esta opción quiere decir que el botón
     // se tiene que surtir de almacen.

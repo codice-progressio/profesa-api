@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 var uniqueValidator = require('mongoose-unique-validator');
 
 var marcaLaserSchema = new Schema({
-    laser: { type: String, unique: true },
+    laser: { type: String },
     imagenes: [{ type: String }],
 
 
@@ -12,5 +12,4 @@ var marcaLaserSchema = new Schema({
     //  marcaLasers en vez de marcaLaseres
 }, { collection: 'marcasLaser' });
 
-marcaLaserSchema.plugin(uniqueValidator, { message: ' \'{PATH}\' debe ser único.' });
-module.exports = mongoose.model('MarcaLaser', marcaLaserSchema);
+module.exports = marcaLaserSchema;

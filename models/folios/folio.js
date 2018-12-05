@@ -74,7 +74,7 @@ function trayectoDeOrden(folio) {
     const p = {
         path: 'folioLineas.modeloCompleto folioLineas.laserCliente folioLineas.procesos.proceso',
         populate: {
-            path: 'modelo tamano color terminado laserAlmacen versionModelo familiaDeProcesos procesosEspeciales.proceso',
+            path: 'modelo tamano color terminado familiaDeProcesos procesosEspeciales.proceso',
             populate: {
                 path: 'procesos.proceso departamento',
                 populate: {

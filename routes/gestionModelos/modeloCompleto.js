@@ -8,7 +8,6 @@ var Tamano = require('../../models/tamano');
 var Color = require('../../models/colores/color');
 var Terminado = require('../../models/terminado');
 var MarcaLaser = require('../../models/marcaLaser');
-var VersionModelo = require('../../models/versionModelo');
 
 var ModeloCompleto = require('../../models/modeloCompleto');
 var RESP = require('../../utils/respStatus');
@@ -34,8 +33,6 @@ app.get('/', (req, res, next) => {
         .populate('tamano')
         .populate('color')
         .populate('terminado')
-        .populate('laserAlmacen')
-        .populate('versionModelo')
         .exec((err, modelosCompletos) => {
             if (err) {
                 return RESP._500(res, {
@@ -86,17 +83,15 @@ app.get('/costos', (req, res, next) => {
         .populate('tamano')
         .populate({
             path: 'color',
-            populate: {
-                path: 'receta.centrifuga.resinas.tipoDeMaterial',
-                populate: {
-                    path: 'tipoDeMaterial'
-                }
+            // populate: {
+            //     path: 'receta.centrifuga.resinas.tipoDeMaterial',
+            //     populate: {
+            //         path: 'tipoDeMaterial'
+            //     }
 
-            }
+            // }
         })
         .populate('terminado')
-        .populate('laserAlmacen')
-        .populate('versionModelo')
         // .populate('familiaDeProcesos')
         .populate({
             path: 'familiaDeProcesos',
@@ -174,8 +169,8 @@ app.post('/', (req, res, next) => {
         guardarTamano(paraBusqueda),
         guardarColor(paraBusqueda),
         guardarTerminado(paraBusqueda),
-        guardarMarcaLaser(paraBusqueda),
-        guardarVersionModelo(paraBusqueda)
+
+
         // Este map permite que se ejecuten todos los 
         // promesas aun con errores y no lanza el 
         // catch hasta que esten temrinadas. 
@@ -199,16 +194,15 @@ app.post('/', (req, res, next) => {
         var tamano = respuestas[1][0];
         var color = respuestas[2][0];
         var terminado = respuestas[3][0];
-        var laserAlmacen = respuestas[4][0];
-        var versionModelo = respuestas[5][0];
+
 
         var datos = {
             modelo: modelo,
             tamano: tamano,
             color: color,
             terminado: terminado,
-            laserAlmacen: laserAlmacen,
-            versionModelo: versionModelo,
+            laserAlmacen: body.laserAlmacen,
+            versionModelo: body.versionModelo,
             familiaDeProcesos: body.familiaDeProcesos,
             procesosEspeciales: body.procesosEspeciales
         };
@@ -220,22 +214,19 @@ app.post('/', (req, res, next) => {
                 tamano: datos.tamano._id,
                 color: datos.color._id,
                 terminado: datos.terminado._id,
-                laserAlmacen: datos.laserAlmacen._id,
-                versionModelo: datos.versionModelo._id,
+                versionModelo: datos.versionModelo,
             }).exec();
 
             existeElModeloCompleto.then(modCom => {
                 if (!modCom) {
                     // No existe el modelo completo pero si existen los
                     // valores.
-                    console.log('No existe el modelo completo');
 
                     return crearUnModeloCompleto(datos, res);
                 }
-                console.log('Existe el modelo completo');
 
                 // Existe el modelo completo ( la combinación esta registrada) entonces tiramos error. 
-                let mod = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}-${laserAlmacen.laser}-${versionModelo.versionModelo}`;
+                let mod = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}-${datos.versionModelo}`;
                 return RESP._400(res, {
                     msj: `El modelo ${mod} ya existe.`,
                     err: 'La combinación que ingresaste ya está registrada.',
@@ -333,7 +324,7 @@ function crearUnModeloCompleto(datos, res) {
         tamano: datos.tamano,
         color: datos.color,
         terminado: datos.terminado,
-        laserAlmacen: datos.laserAlmacen,
+        laserAlmacen: { laser: datos.laserAlmacen },
         versionModelo: datos.versionModelo,
         familiaDeProcesos: datos.familiaDeProcesos,
         procesosEspeciales: datos.procesosEspeciales
@@ -476,66 +467,7 @@ function guardarTerminado(dato) {
 
 }
 
-function guardarMarcaLaser(dato) {
-    return new Promise((resolve, reject) => {
-        MarcaLaser.findOne({ laser: dato.laserAlmacen }, (err, marcaLaserExistente) => {
-            if (err) {
-                reject('Error al buscar la marcaLaser.');
-            }
-            if (marcaLaserExistente) {
-                // Si el marcaLaser existe obtenemos su id.
-                resolve([marcaLaserExistente, true]);
-            } else {
-                // Si no existe lo guardamos
-                marcaLaserNuevo = new MarcaLaser({
-                    laser: dato.laserAlmacen ? dato.laserAlmacen : ''
-                });
 
-                console.log('Esta marca laser nos interesa: >>>' + marcaLaserNuevo.laser + '<<<<');
-
-
-                marcaLaserNuevo.save((err, marcaLaserGuardado) => {
-                    if (err) {
-                        reject('Error al guardar el marcaLaser.');
-                    }
-                    // Y obtenemos su id para guardarlo en el modeloCompleto.
-                    resolve([marcaLaserGuardado, false]);
-                });
-            }
-        });
-
-    });
-
-}
-
-function guardarVersionModelo(dato) {
-    return new Promise((resolve, reject) => {
-        VersionModelo.findOne({ versionModelo: dato.versionModelo }, (err, versionModeloExistente) => {
-            if (err) {
-                reject('Error al buscar la versionModelo.');
-            }
-            if (versionModeloExistente) {
-                // Si el versionModelo existe obtenemos su id.
-                resolve([versionModeloExistente, true]);
-            } else {
-                // Si no existe lo guardamos
-                versionModeloNuevo = new VersionModelo({
-                    versionModelo: dato.versionModelo ? dato.versionModelo : ''
-                });
-
-                versionModeloNuevo.save((err, versionModeloGuardada) => {
-                    if (err) {
-                        reject('Error al guardar el versionModelo.');
-                    }
-                    // Y obtenemos su id para guardarlo en el modeloCompleto.
-                    resolve([versionModeloGuardada, false]);
-                });
-            }
-        });
-
-    });
-
-}
 // ============================================
 // COMPROBACIONES SOBRE MODELO. 
 // ============================================

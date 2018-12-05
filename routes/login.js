@@ -239,6 +239,8 @@ function obtenerMenu(ROLE) {
             submenu: [
                 { titulo: 'Usuarios', url: '/usuarios' },
                 { titulo: 'Departametos', url: '/departamentos' },
+                { titulo: 'Clientes', url: '/clientes' },
+
             ]
         },
 

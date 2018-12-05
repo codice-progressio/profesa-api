@@ -9,6 +9,7 @@ var transformacionSchema = require('./infoDeptos/transformacion');
 var pulidoSchema = require('./infoDeptos/pulido');
 var seleccionSchema = require('./infoDeptos/seleccion');
 var empaqueSchema = require('./infoDeptos/empaque');
+var controlDeProduccionSchema = require('./infoDeptos/controlDeProduccion');
 
 var trayectoSchema = new Schema({
     //El departamento en el que se encuentra actualmente.
@@ -26,7 +27,7 @@ var trayectoSchema = new Schema({
     // [_CONST.DEPARTAMENTOS.PULIDO._v]: [pulidoSchema],
     // [_CONST.DEPARTAMENTOS.SELECCION._v]: [seleccionSchema],
     // [_CONST.DEPARTAMENTOS.EMPAQUE._v]: [empaqueSchema],
-
+    controlDeProduccion: controlDeProduccionSchema,
     materiales: materialesSchema,
     pastilla: pastillaSchema,
     transformacion: transformacionSchema,

@@ -13,7 +13,6 @@ var Tamano = require('../models/tamano');
 var Color = require('../models/colores/color');
 var Terminado = require('../models/terminado');
 var MarcaLaser = require('../models/marcaLaser');
-var VersionModelo = require('../models/versionModelo');
 var colores = require('../utils/colors');
 var RESP = require('../utils/respStatus');
 
@@ -216,10 +215,9 @@ function buscarModelosCompletos(busqueda, regex) {
                     .populate('modelo')
                     .populate('tamano')
                     .populate('color')
-                    .populate('Terminado')
-                    .populate('laserAlmacen')
-                    .populate('versionModelo')
-                    .populate({
+                    .populate('terminado')
+
+                .populate({
                         path: 'familiaDeProcesos',
                         populate: {
                             path: 'procesos.proceso',
@@ -239,7 +237,10 @@ function buscarModelosCompletos(busqueda, regex) {
                     if (err) {
                         // Si tenemos un error tomamos el valor reject y le pasamos un valor,
                         // de esta manera la promesa sabe que todo se vue a la #$TE
-                        reject('Error al cargar modeloCompleto' + err);
+                        reject(RESP.errorGeneral({
+                            msj: 'Error al cargar el modelo completo.',
+                            err: err,
+                        }));
                     } else {
                         // Si no hubo error entonces pasamos el resultado al resolve para
                         // que la promesa nos lo devuelva. 
@@ -280,7 +281,7 @@ function buscarModelosCompletos(busqueda, regex) {
             { s: Color, campo: 'color' },
             { s: Terminado, campo: 'terminado' },
             { s: MarcaLaser, campo: 'laser' },
-            { s: VersionModelo, campo: 'versionModelo' },
+
         ];
 
         for (let i = 0; i < arrSchemas.length; i++) {

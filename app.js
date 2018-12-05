@@ -47,11 +47,8 @@ app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
     res.header('Access-Control-Allow-Methods', "POST, GET, PUT, DELETE, OPTIONS");
     res.header("Access-Control-Allow-Credentials", "true");
-    console.log(req.method);
 
     if (req.method == "OPTIONS") {
-        console.log('Metodo options');
-
         res.StatusCode = 200;
         return res.status(200).send();
     }
@@ -81,23 +78,23 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 
 // Obtenemos el token
 app.use((req, res, next) => {
+    console.log(colores.success('PETICION RECIVIDA') + colores.info(req.originalUrl));
+
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
         req.token = req.headers.authorization.split(' ')[1];
     } else if (req.query && req.query.token) {
         req.token = req.query.token;
     }
-
-    console.log('Hay token:' + req.token);
-
     next();
-
 });
 
 // NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.
-app.use([_PERMISOS()], (req, res, next) => {
-    console.log(colores.success('SEGURIDAD') + colores.info(req.originalUrl) + 'Validado.');
-    next();
-});
+app.use(
+    // [_PERMISOS()],
+    (req, res, next) => {
+        console.log(colores.success('SEGURIDAD') + colores.info(req.originalUrl) + 'Validado.');
+        next();
+    });
 
 // Luego creamos las routes.
 for (const key in _ROUTES) {

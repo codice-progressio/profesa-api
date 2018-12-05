@@ -6,6 +6,8 @@ var Folio = require('../models/folios/folio');
 
 var colores = require('../utils/colors');
 
+var marcaLaser = require('../models/marcaLaser');
+
 var modeloCompletoSchema = new Schema({
     // True cuando se desea generar medias órdenes
     // por defecto. 
@@ -34,9 +36,9 @@ var modeloCompletoSchema = new Schema({
 
 
     // Hay algúnos modelos que llevan marcaLaser desde que se fabrican. 
-    laserAlmacen: { type: Schema.Types.ObjectId, ref: 'MarcaLaser' },
+    laserAlmacen: marcaLaser,
     // Las versiones posibles de un modelo para no perder la nomenclatura anterior. 
-    versionModelo: { type: Schema.Types.ObjectId, ref: 'VersionModelo' },
+    versionModelo: { type: String },
 
     //La familia de procesos es una agrupación de todos los procesos que conlleva
     // este modelo. 

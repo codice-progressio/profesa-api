@@ -241,7 +241,7 @@ function orden(idOrden) {
             .populate({
                 path: 'folioLineas.modeloCompleto',
                 populate: {
-                    path: 'modelo tamano color terminado laserAlmacen versionModelo'
+                    path: 'modelo tamano color terminado'
                 }
             }).exec();
 
@@ -326,7 +326,7 @@ app.get('/:depto', (req, res) => {
             .populate({
                 path: 'folioLineas.modeloCompleto',
                 populate: {
-                    path: 'modelo tamano color terminado marcaLaser versionModelo'
+                    path: 'modelo tamano color terminado marcaLaser'
                 }
             }).populate('folioLineas.laserCliente').exec();
 
@@ -394,6 +394,7 @@ app.get('/:depto', (req, res) => {
 
 });
 
+
 // ============================================
 // Guarda todas las órdenes. 
 // ============================================
@@ -455,6 +456,74 @@ app.post('/', (req, res, next) => {
         });
     });
 });
+
+// ============================================
+// Modifica las ordenes que se le pasen para 
+// recivirlas y entregaras en el depto. Control de produccion.
+// ============================================
+
+app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
+    const arreglo = req.body;
+    console.log(arreglo);
+
+
+    // Comprobamos que el deparatmento esta la bd y tiene su id.
+    Departamento.existe(CONST.DEPARTAMENTOS.CONTROL_DE_PRODUCCION._n)
+        .then(deptoExistente => {
+            if (!deptoExistente) {
+                return RESP._400(res, {
+                    msj: 'El departamento no existe. ',
+                    err: 'CONTROL DE PRODUCCION NO ESTA REGISTRADO.',
+                });
+            }
+
+            return Folio.find({
+                // Buscamos los folios que contengan los id. 
+                'folioLineas.ordenes._id': { $in: arreglo },
+                // y que esten en el departamento. 
+                'folioLineas.ordenes.ubicacionActual.departamento': deptoExistente._id
+            }).exec()
+
+        })
+        .then(foliosEncontrados => {
+            if (!foliosEncontrados) {
+                return RESP._400(res, {
+                    msj: 'No se encontraron coincidencias con las ordenes que se buscaron.',
+                    err: 'Las ordenes que se buscaron no coinciden con ninguna en la BD.',
+                });
+            }
+
+            // Filtramos las ordenes para modificarlas. 
+
+            const ordenes = [];
+            arreglo.forEach(_id => {
+                foliosEncontrados.forEach(x => ordenes.push(buscarOrdenDentroDeFolio(x, _id)));
+            });
+
+            ordenes.forEach(ord => {
+                ord.ubicacionActual.recivida = true;
+                ord.ubicacionActual.recepcion = new Date();
+                datosDeOrdenYAvanzar(ord, { entregadoAProduccion: new Date() }, CONST.DEPARTAMENTOS.CONTROL_DE_PRODUCCION._n.toLowerCase());
+            });
+            a = foliosEncontrados.filter(x => { x.save(); return true; })
+            return Promise.all(a);
+
+        }).then(foliosGrabados => {
+            return RESP._200(res, 'Ordenes actualizadas correctamente.', [
+                { tipo: 'ok', datos: foliosGrabados.length },
+            ]);
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando las ordenes para recivirlas y entregarlas.',
+                err: err,
+
+            });
+        });
+
+
+});
+
 
 // ============================================
 // Modifica una órden para agregarle un registro.
@@ -562,6 +631,9 @@ app.put('/:idOrden', (req, res) => {
 
 function datosDeOrdenYAvanzar(orden, datos, depto) {
     orden.ubicacionActual[depto] = datos;
+    console.log(orden.ubicacionActual[depto]);
+    console.log(depto);
+
     avanzarCamino(orden);
 }
 

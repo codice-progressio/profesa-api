@@ -1,12 +1,9 @@
 var express = require('express');
-var colores = require('../utils/colors');
 
 // var FolioLinea = require('../models/folioLinea');
 var Folio = require('../models/folios/folio');
 
-var Modelo = require('../models/modelo');
-var Tamano = require('../models/tamano');
-var Color = require('../models/colores/color');
+var RESP = require('../utils/respStatus');
 
 // 
 
@@ -74,7 +71,7 @@ app.put('/:idFolio/:idLinea', (req, res) => {
 // Agregar nueva linea al folio. 
 // ============================================
 
-app.post('/:idFolio', (req, res, next) => {
+app.post('/:idFolio', (req, res) => {
     // TODO: Actualziar para promesas. 
     // Obetenemos el body para extraer de el 
     // los parametros que se envían por POST
@@ -83,45 +80,38 @@ app.post('/:idFolio', (req, res, next) => {
     // Obtenemos el id del folio de el que queremos sus lineas. 
     var idFolio = req.params.idFolio;
 
-    Folio.findById(idFolio, (err, folioExistente) => {
-        if (!folioExistente) {
-            return res.status(400).json({
-                ok: true,
-                mensaje: 'El folio no existe.',
-                errors: err
-            });
-        }
+    Folio.findById(idFolio).exec()
+        .then(folioExistente => {
+            if (!folioExistente) {
+                return RESP._400(res, {
+                    msj: 'El folio no existe.',
+                    err: 'El id que ingresaste no coincide con ningun folio.',
 
-        // Creamos el nuevo objeto y pasamos los datos del req.body
-        // al json que queremos manejar. 
-
-        folioExistente.folioLineas.push({
-            modeloCompleto: body.modeloCompleto,
-            cantidad: body.cantidad,
-            nivelDeUrgencia: body.nivelDeUrgencia,
-            laserCliente: body.laserCliente ? body.laserCliente : null,
-            almacen: body.almacen ? true : false,
-            coloresTenidos: body.coloresTenidos,
-            procesos: body.procesos,
-        });
-
-        folioExistente.save((err, folioModificado) => {
-
-            if (err) {
-                console.log(colores.danger('Error POST - folioLinea') + 'Error al guardar folioLinea. =>' + err);
-
-                return res.status(500).json({
-                    ok: false,
-                    mensaje: 'Error de parte del servidor. No se pudo guardar el pedido.',
-                    errors: err
                 });
             }
 
-            // Popular
+            // Creamos el nuevo objeto y pasamos los datos del req.body
+            // al json que queremos manejar. 
+            console.log('laserCliente:' + JSON.stringify(body.laserCliente));
+
+            folioExistente.folioLineas.push({
+                modeloCompleto: body.modeloCompleto,
+                cantidad: body.cantidad,
+                nivelDeUrgencia: body.nivelDeUrgencia,
+                laserCliente: body.laserCliente,
+                almacen: body.almacen ? true : false,
+                coloresTenidos: body.coloresTenidos,
+                procesos: body.procesos,
+            });
+
+            return folioExistente.save();
+        })
+        .then(folioGrabado => {
+
             const populate = {
-                path: 'folioLineas.modeloCompleto folioLineas.laserCliente ',
+                path: 'folioLineas.modeloCompleto ',
                 populate: {
-                    path: 'modelo tamano color terminado laserAlmacen versionModelo familiaDeProcesos procesosEspeciales.proceso',
+                    path: 'modelo tamano color terminado familiaDeProcesos procesosEspeciales.proceso',
                     populate: {
                         path: 'procesos.proceso departamento',
                         populate: {
@@ -131,23 +121,24 @@ app.post('/:idFolio', (req, res, next) => {
                 }
             };
 
-            folioModificado.populate({ path: 'folioLineas.procesos.proceso', populate: { path: 'departamento' } })
-                .populate(populate, (err, folioCargado) => {
-                    if (err) {
-                        return res.status(500).json({
-                            ok: false,
-                            mensaje: 'Error de parte del servidor. No se pudo poblar el pedido.',
-                            errors: err
-                        });
-                    }
+            return folioGrabado
+                .populate({ path: 'folioLineas.procesos.proceso', populate: { path: 'departamento' } })
+                .populate(populate);
 
-                    res.status(200).json({
-                        ok: true,
-                        folioLinea: folioCargado.folioLineas.pop()
-                    });
-                });
+
+
+        }).then(folioPopulado => {
+            return RESP._200(res, 'Mensaje para interfaz ó null', [
+                { tipo: 'folioLinea', datos: folioPopulado.folioLineas.pop() },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error guardando el pedido para el folio.',
+                err: err,
+            });
         });
-    });
 });
 
 
@@ -169,7 +160,7 @@ app.delete('/:idFolio/:idLinea', (req, res) => {
         }
     };
 
-    Folio.findByIdAndUpdate(idFolio, eliminar, (err, folioModificado) => {
+    Folio.findByIdAndUpdate(idFolio, eliminar, (err) => {
         if (err) {
             return res.status(500).json({
                 ok: false,

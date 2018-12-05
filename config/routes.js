@@ -27,8 +27,6 @@ var modeloRoutes = require('../routes/gestionModelos/modelo');
 var tamanoRoutes = require('../routes/gestionModelos/tamano');
 var colorRoutes = require('../routes/gestionModelos/color');
 var terminadoRoutes = require('../routes/gestionModelos/terminado');
-var versionModeloRoutes = require('../routes/gestionModelos/versionModelo');
-var laserRoutes = require('../routes/gestionModelos/laser');
 var materialRoutes = require('../routes/almacen/material');
 
 var R = require('../config/roles');
@@ -43,7 +41,7 @@ module.exports.ROUTES = {
         url: '/folio',
         route: folioRoutes,
         roles: [
-            R.CONTROL_DE_PRODUCCION_CONSULTAR_FOLIOS_ROLE,
+            R.FOLIO_CONSULTAR,
         ],
         subRoutes: {
             _: {
@@ -206,22 +204,8 @@ module.exports.ROUTES = {
 
         }
     },
-    _VERSIONMODELO: {
-        url: '/versionModelo',
-        route: versionModeloRoutes,
-        roles: [],
-        subRoutes: {
 
-        }
-    },
-    _LASER: {
-        url: '/laser',
-        route: laserRoutes,
-        roles: [],
-        subRoutes: {
 
-        }
-    },
     _MATERIAL: {
         url: '/material',
         route: materialRoutes,

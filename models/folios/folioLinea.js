@@ -77,10 +77,15 @@ const folioLineaSchema = new Schema({
         },
         orden: { type: Number, require: [true, 'No se definio el órden del proceso.'] }
     }],
+    observaciones: { type: String },
+    terminado: { type: Boolean, default: false }
 
     // Esto de aqui es para que mongose no escriba
     //  folioLineas en vez de folioLineaes
 }, { timestamps: true });
+
+
+
 
 
 

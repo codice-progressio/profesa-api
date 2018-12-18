@@ -26,21 +26,30 @@ var folioSchema = new Schema({
     folioLineas: [folioLineaSchema],
     nivelDeUrgencia: NVU.KEY,
     porcentajeAvance: { type: Number, min: 0, max: 100 },
-    ordenesGeneradas: { type: Boolean, default: false }
+    ordenesGeneradas: { type: Boolean, default: false },
+    impreso: { type: Boolean, default: false },
+    terminado: { type: Boolean, default: false }
 
 
 }, { collection: 'folios', timestamps: true });
 
 folioSchema.plugin(uniqueValidator, { message: '\'{PATH}\' debe ser único.' });
 
-// Borrado de relacionados con folio. Aqui hay que actualizar un poco todavia. 
-folioSchema.pre('save', function(next) {
-    calcularNivel(this);
-    copiarModeloCompletoAOrden(this);
-    asignarNumeroDePedido(this);
-    calcularPorcentajeDeAvance(this);
+var autoPopulate = function(next) {
+    this.populate('cliente');
     next();
-});
+};
+folioSchema
+    .pre('findOne', autoPopulate)
+    .pre('save', function(next) {
+        // Borrado de relacionados con folio. Aqui hay que actualizar un poco todavia. 
+        calcularNivel(this);
+        copiarModeloCompletoAOrden(this);
+        asignarNumeroDePedido(this);
+        calcularPorcentajeDeAvance(this);
+        verificarFolioTerminado(this);
+        next();
+    });
 
 folioSchema.post('save', function() {
     // Si la linea se surte de almacen entonces la trayectoria tiene 
@@ -294,6 +303,32 @@ function calcularPorcentajeDeAvance(folio) {
     // console.log('Folio porcentaje: ' + folio.porcentajeAvance);
 
 
+}
+
+function verificarFolioTerminado(folio) {
+    console.log(`${colores.info('FOLIO MODELS')}  Verificando si el folio ya esta terminado `);
+    // Revisamos si el folio tiene todos sus pedidos como terminados. 
+    // Si es asi entonces cambiamos la bandera a terminado. 
+    // Recorremos todos los pedidos.
+    for (let i = 0; i < folio.folioLineas.length; i++) {
+        const linea = folio.folioLineas[i];
+        // Recorremos todas las ordenes.
+        folio.terminado = true;
+        linea.terminado = true;
+        for (let o = 0; o < linea.ordenes.length; o++) {
+            const orden = linea.ordenes[o];
+            // Si una sola orden no esta terminada 
+            // basta para que el pedido y el folio no esten termiandos. 
+            console.log(` orden.terminada? ${orden.terminada}`);
+            if (!orden.terminada) {
+                folio.terminado = false;
+                linea.terminado = false;
+                // Break por que hay que comprobar los demas pedidos.
+                break;
+            }
+        }
+    }
+    console.log(`${colores.info('FOLIO MODELS')}  folio.terminado? ${folio.terminado}`);
 }
 
 module.exports = mongoose.model('Folio', folioSchema);

@@ -7,15 +7,11 @@ var Modelo = require('../../models/modelo');
 var Tamano = require('../../models/tamano');
 var Color = require('../../models/colores/color');
 var Terminado = require('../../models/terminado');
-var MarcaLaser = require('../../models/marcaLaser');
 
 var ModeloCompleto = require('../../models/modeloCompleto');
 var RESP = require('../../utils/respStatus');
 
 var app = express();
-
-
-
 
 // ============================================
 // Obtenmos todos los modelos. 
@@ -25,14 +21,15 @@ app.get('/', (req, res, next) => {
     console.log(colores.info('/modeloCompleto') + '[get] Funcionando.');
     var desde = req.query.desde || 0;
     desde = Number(desde);
+    limite = Number(req.query.limite | 20);
 
     ModeloCompleto.find({})
-        // .skip(desde)
-        // .limit(20)
-        .populate('modelo')
-        .populate('tamano')
-        .populate('color')
-        .populate('terminado')
+        .skip(desde)
+        .limit(20)
+        // .populate('modelo')
+        // .populate('tamano')
+        // .populate('color')
+        // .populate('terminado')
         .exec((err, modelosCompletos) => {
             if (err) {
                 return RESP._500(res, {
@@ -66,79 +63,162 @@ app.get('/costos', (req, res, next) => {
     var desde = req.query.desde || 0;
     desde = Number(desde);
 
-    var popMaquinasYGastos = {
-        populate: {
-            path: 'maquinas gastos.gasto departamento',
-            populate: {
-                path: 'gastos.gasto'
-            }
-        }
-    };
+    // var popMaquinasYGastos = {
+    //     populate: {
+    //         path: 'maquinas gastos.gasto departamento',
+    //         populate: {
+    //             path: 'gastos.gasto'
+    //         }
+    //     }
+    // };
 
 
     ModeloCompleto.find({})
         // .skip(desde)
         // .limit(20)
-        .populate('modelo')
-        .populate('tamano')
-        .populate({
-            path: 'color',
-            // populate: {
-            //     path: 'receta.centrifuga.resinas.tipoDeMaterial',
-            //     populate: {
-            //         path: 'tipoDeMaterial'
-            //     }
+        // .populate('modelo')
+        // .populate('tamano')
+        // .populate({
+        //     path: 'color',
+        //     // populate: {
+        //     //     path: 'receta.centrifuga.resinas.tipoDeMaterial',
+        //     //     populate: {
+        //     //         path: 'tipoDeMaterial'
+        //     //     }
 
-            // }
-        })
-        .populate('terminado')
-        // .populate('familiaDeProcesos')
-        .populate({
-            path: 'familiaDeProcesos',
-            populate: {
-                path: 'procesos.proceso',
-                populate: {
-                    path: 'maquinas gastos.gasto departamento',
-                    populate: {
-                        path: 'gastos.gasto'
-                    }
-                }
+    //     // }
+    // })
+    // .populate('terminado')
+    // .populate('familiaDeProcesos')
+    // .populate({
+    //     path: 'familiaDeProcesos',
+    //     populate: {
+    //         path: 'procesos.proceso',
+    //         populate: {
+    //             path: 'maquinas gastos.gasto departamento',
+    //             populate: {
+    //                 path: 'gastos.gasto'
+    //             }
+    //         }
 
-            }
+    //     }
 
-        })
-        .populate({
-            path: 'procesosEspeciales.proceso',
-            populate: {
-                path: 'maquinas gastos.gasto departamento',
-                populate: {
-                    path: 'gastos.gasto'
-                }
-            }
-        })
-        .exec((err, modelosCompletos) => {
-            if (err) {
-                return RESP._500(res, {
-                    msj: 'Error cargando los modelos completos.',
-                    err: err,
-                });
-            }
-
-            // Contamos los datos totales que hay registrados, 
-            // estos sirven para la paginación. 
-            ModeloCompleto.count({}, (err, conteo) => {
-
-                return RESP._200(res, null, [
-                    { tipo: 'modelosCompletos', datos: modelosCompletos },
-                    { tipo: 'total', conteo },
-                ]);
-
+    // })
+    // .populate({
+    //     path: 'procesosEspeciales.proceso',
+    //     populate: {
+    //         path: 'maquinas gastos.gasto departamento',
+    //         populate: {
+    //             path: 'gastos.gasto'
+    //         }
+    //     }
+    // })
+    .exec((err, modelosCompletos) => {
+        if (err) {
+            return RESP._500(res, {
+                msj: 'Error cargando los modelos completos.',
+                err: err,
             });
+        }
+
+        // Contamos los datos totales que hay registrados, 
+        // estos sirven para la paginación. 
+        ModeloCompleto.count({}, (err, conteo) => {
+
+            return RESP._200(res, null, [
+                { tipo: 'modelosCompletos', datos: modelosCompletos },
+                { tipo: 'total', conteo },
+            ]);
+
         });
+    });
 });
 // ============================================
 // FIN Obtenmos todos los modelos. 
 // ============================================
+
+// ============================================
+// Buscamos un modelo completo.l
+// ============================================
+
+app.get('/buscar/:termino', (req, res, next) => {
+    var termino = req.params.termino;
+    var desde = Number(req.query.desde || 0);
+    var limite = Number(req.query.limite || 30);
+
+    var terminosSeparados = termino.search('-') ? termino.split('-') : [termino];
+    console.log(`${colores.info('no funka')}  terminos ${JSON.stringify(terminosSeparados)}`);
+    // Separamos los terminos de busqueda
+    // Creamos el regex
+
+    // Buscamos las coincidencias para cada promesa. El orden es el siguiemnte
+    //                [0] MOD
+    //                [1] TAM
+    //                [2] COL
+    //                [3] TER
+
+    const promesas = [];
+    const schemas = [
+        [Modelo, 'modelo'],
+        [Tamano, 'tamano'],
+        [Color, 'color'],
+        [Terminado, 'terminado']
+    ];
+
+    for (let i = 0; i < terminosSeparados.length; i++) {
+        const termino = terminosSeparados[i];
+        const campo = schemas[i][1];
+        console.log(` El campmo ${campo} y el regex: ${termino}`);
+        const s = schemas[i][0].find({
+            [campo]: new RegExp(termino, 'i')
+        }).exec();
+        promesas.push(s);
+    }
+
+    const objetoParaFind = {};
+    let conteoTotal = {};
+
+
+    // Ejecutamos las promesas.
+    Promise.all(promesas)
+        .then(resp => {
+
+            // Obtenemos el id de cada objecto
+            let arregloDeObjetos = [];
+
+            arregloDeObjetos = resp.map(a => {
+                const na = a.map(id => {
+                    return id._id;
+                });
+                return { $in: na };
+            });
+
+            // Generamos el objeto de busqueda con el valor de
+            // cada campo.
+            for (let i = 0; i < arregloDeObjetos.length; i++) {
+                const arr = arregloDeObjetos[i];
+                objetoParaFind[schemas[i][1]] = arr;
+            }
+
+            return ModeloCompleto.find(objetoParaFind).countDocuments();
+        }).then(conteo => {
+            conteoTotal = conteo;
+            return ModeloCompleto.find(objetoParaFind).skip(desde).limit(limite).exec();
+        }).then(mcCoincidencias => {
+            return RESP._200(res, null, [
+                { tipo: 'modelosCompletos', datos: mcCoincidencias },
+                { tipo: 'total', datos: conteoTotal },
+            ]);
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando el modelo completo.',
+                err: err,
+            });
+        });
+});
+
+
 
 
 // ============================================

@@ -88,6 +88,31 @@ var modeloCompletoSchema = new Schema({
 
 }, { collection: 'modelosCompletos' });
 
+var autoPopulate = function(next) {
+    this.populate('modelo');
+    this.populate('tamano');
+    this.populate('color');
+    this.populate('terminado');
+    this.populate({
+        path: 'familiaDeProcesos',
+        populate: {
+            path: 'procesos.proceso',
+            populate: {
+                path: 'maquinas  departamento'
+            }
+        }
+    });
+    this.populate({
+        path: 'procesosEspeciales.proceso',
+        populate: {
+            path: 'maquinas  departamento'
+        }
+    });
+    next();
+};
+
+
+modeloCompletoSchema.pre('findOne', autoPopulate).pre('find', autoPopulate);
 
 modeloCompletoSchema.pre('remove', function(next) {
     console.log('Estamos eliminando cualquier cosa relacionada con los modelos completos a excepción de sus partes.');

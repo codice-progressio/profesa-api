@@ -4,6 +4,7 @@ var express = require('express');
 var Folio = require('../models/folios/folio');
 
 var RESP = require('../utils/respStatus');
+var colores = require('../utils/colors');
 
 // 
 
@@ -39,6 +40,7 @@ app.put('/:idFolio/:idLinea', (req, res) => {
             'folioLineas.$.updatedAt': new Date().toISOString(),
             'folioLineas.$.procesos': body.procesos,
             'folioLineas.$.coloresTenidos': body.coloresTenidos,
+            'folioLineas.$.observaciones': body.observaciones,
         }
     };
 
@@ -71,6 +73,8 @@ app.put('/:idFolio/:idLinea', (req, res) => {
 // Agregar nueva linea al folio. 
 // ============================================
 
+
+
 app.post('/:idFolio', (req, res) => {
     // TODO: Actualziar para promesas. 
     // Obetenemos el body para extraer de el 
@@ -90,9 +94,38 @@ app.post('/:idFolio', (req, res) => {
                 });
             }
 
+
+            const mca = folioExistente.cliente.modelosCompletosAutorizados;
+            const idModeloSolicitado = body.modeloCompleto._id;
+
+            console.log(` Id solicitado ${idModeloSolicitado}`);
+
+            let autorizado = false;
+            let msj = 'Este modelo no esta autorizado para este cliente.';
+            for (let i = 0; i < mca.length; i++) {
+                const b = mca[i];
+                console.log(` MODELO COMPLETO ${b.modeloCompleto._id}`);
+                if (b.modeloCompleto._id.toString() === idModeloSolicitado) {
+                    // Cambiamos la bandera.
+                    autorizado = b.autorizado;
+                    // Si esta autorizado no se va a mostrar este mensaje. 
+                    msj = 'Ya se solicito que se autorizara el modelo para este cliente pero todavia no se aprueba.';
+                    break;
+                }
+            }
+
+            if (!autorizado) {
+                return RESP._400(res, {
+                    msj: 'Modelo no autorizado.',
+                    err: msj,
+                });
+            }
+
+
+
+
             // Creamos el nuevo objeto y pasamos los datos del req.body
             // al json que queremos manejar. 
-            console.log('laserCliente:' + JSON.stringify(body.laserCliente));
 
             folioExistente.folioLineas.push({
                 modeloCompleto: body.modeloCompleto,
@@ -102,6 +135,7 @@ app.post('/:idFolio', (req, res) => {
                 almacen: body.almacen ? true : false,
                 coloresTenidos: body.coloresTenidos,
                 procesos: body.procesos,
+                observaciones: body.observaciones,
             });
 
             return folioExistente.save();
@@ -128,7 +162,7 @@ app.post('/:idFolio', (req, res) => {
 
 
         }).then(folioPopulado => {
-            return RESP._200(res, 'Mensaje para interfaz ó null', [
+            return RESP._200(res, 'Folio actualizado.', [
                 { tipo: 'folioLinea', datos: folioPopulado.folioLineas.pop() },
             ]);
 

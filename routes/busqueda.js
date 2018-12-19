@@ -55,6 +55,10 @@ app.get('/coleccion/:tabla/:busqueda', (req, res) => {
     var busqueda = req.params.busqueda;
     var regex = new RegExp(busqueda, 'i');
 
+    var desde = Number(req.query.desde || 0);
+    var limite = Number(req.query.limite || 30);
+
+
     if (promesas.hasOwnProperty(tabla)) {
         promesas[tabla](busqueda, regex).then((respuesta) => {
             return res.status(200).json({
@@ -196,28 +200,25 @@ function buscarClientes(busqueda, regex) {
 
 
 function buscarModelosCompletos(busqueda, regex) {
-
+    console.log(` ESTAMOS AQUI ${'Aqui tus variables'}`);
     // Es necesaio que retorne la misma promesa que se instancia.
     return new Promise((resolve, reject) => {
-        Modelo.find({ modelo: regex }, '_id').exec((err, modelos) => {
+        Modelo.find({ modelo: regex }, '_id')
+            .exec()
+            .then(modelos => {
 
-            if (err) {
-                reject('Error al buscar un modelo' + err);
-            } else {
-                // Filtramos los id para buscarlos dentro del modelo completo
-                ids = [];
                 modelos.forEach(i => {
                     ids.push(i._id);
                 });
 
                 // Creamos la nueva instanacia para la busqueda asincrona. 
-                ModeloCompleto.find({ modelo: ids })
+                return ModeloCompleto
+                    .find({ modelo: ids })
                     .populate('modelo')
                     .populate('tamano')
                     .populate('color')
                     .populate('terminado')
-
-                .populate({
+                    .populate({
                         path: 'familiaDeProcesos',
                         populate: {
                             path: 'procesos.proceso',
@@ -232,118 +233,115 @@ function buscarModelosCompletos(busqueda, regex) {
                             path: 'maquinas  departamento'
                         }
                     })
+                    .exec();
 
-                .exec((err, modeloCompleto) => {
-                    if (err) {
-                        // Si tenemos un error tomamos el valor reject y le pasamos un valor,
-                        // de esta manera la promesa sabe que todo se vue a la #$TE
-                        reject(RESP.errorGeneral({
-                            msj: 'Error al cargar el modelo completo.',
-                            err: err,
-                        }));
-                    } else {
-                        // Si no hubo error entonces pasamos el resultado al resolve para
-                        // que la promesa nos lo devuelva. 
-                        resolve(modeloCompleto);
-                    }
-                });
+            })
+            .then(modeloCompleto => {
+                console.log(`${colores.info('DEBUG DE BUSQUEDA==>')}  Estamos en la promesa ${JSON.stringify(modeloCompleto)}`);
+                resolve(modeloCompleto);
+            }).catch(err => {
+                reject(RESP.errorGeneral({
+                    msj: 'Hubo un error buscando el modelo completo.',
+                    err: err,
+                }));
+            });
+
+    });
+}
+
+// ============================================
+// Busqueda de modelos completos
+// ============================================
+
+function buscarMC(busqueda) {
+
+    // Separamos la busqueda
+    let arraRegex = busqueda.split('-');
+    arraRegex = arraRegex.map(x => x = x.toUpperCase());
+    arraRegex = arraRegex.map(x => x = new RegExp(x, 'i'));
+    // DEBE SEGUIR ESTE ÓRDEN, DE OTRA MANERA NO FUNCIONA
+    // 
+    //      MOD-TAM-COL-TER-MARCA_LASER-VERSION
+    // 
+    // DE MANERA QUE SE ORDENEN DE LA SIGUIENTE MANERA. 
+    // 
+    //                [0] MOD
+    //                [1] TAM
+    //                [2] COL
+    //                [3] TER
+    //                [4] MARCA_LASER
+    //                [5] VERSION
+    // 
+    var arregloDePromesas = [];
+    var arrSchemas = [
+        { s: Modelo, campo: 'modelo' },
+        { s: Tamano, campo: 'tamano' },
+        { s: Color, campo: 'color' },
+        { s: Terminado, campo: 'terminado' },
+        { s: MarcaLaser, campo: 'laser' },
+
+    ];
+
+    for (let i = 0; i < arrSchemas.length; i++) {
+        const sch = arrSchemas[i];
+        const regex = arraRegex[i];
+        const pro = new Promise((resolve, reject) => {
+            // Si no hay regex mandamos null para no buscar nada. 
+            if (!regex) { resolve(null); } else {
+                var a = sch.s.find({
+                    [sch.campo]: regex
+                }).exec();
+                a.then(b => {
+                    // Retornamos el nombre de los campos para 
+                    // usarlos cuando busquemos el modelo completo. 
+                    resolve({ datos: b, campo: sch.campo });
+                }).catch(err => reject(err));
             }
         });
+        // Guardamos la promesa para ejecutarla en la busqueda de modelos completos. 
+        arregloDePromesas.push(pro);
+    }
+    return arregloDePromesas;
+}
+
+function combinacionesDeBusqueda(arr) {
+
+    const arreBusqueda = [];
+
+    arr.map(x => {
+        if (x) {
+            x.datos.map(y => {
+                if (!arreBusqueda[x.campo]) {
+                    arreBusqueda[x.campo] = [];
+                }
+                arreBusqueda.push({
+                    [x.campo]: y._id
+                });
+            });
+
+        }
     });
 
-    // ============================================
-    // Busqueda de modelos completos
-    // ============================================
+    for (const key in arreBusqueda) {
+        if (arreBusqueda.hasOwnProperty(key)) {
+            const arreglo = arreBusqueda[key];
 
-    function buscarMC(busqueda) {
 
-        // Separamos la busqueda
-        let arraRegex = busqueda.split('-');
-        arraRegex = arraRegex.map(x => x = x.toUpperCase());
-        arraRegex = arraRegex.map(x => x = new RegExp(x, 'i'));
-        // DEBE SEGUIR ESTE ÓRDEN, DE OTRA MANERA NO FUNCIONA
-        // 
-        //      MOD-TAM-COL-TER-MARCA_LASER-VERSION
-        // 
-        // DE MANERA QUE SE ORDENEN DE LA SIGUIENTE MANERA. 
-        // 
-        //                [0] MOD
-        //                [1] TAM
-        //                [2] COL
-        //                [3] TER
-        //                [4] MARCA_LASER
-        //                [5] VERSION
-        // 
-        var arregloDePromesas = [];
-        var arrSchemas = [
-            { s: Modelo, campo: 'modelo' },
-            { s: Tamano, campo: 'tamano' },
-            { s: Color, campo: 'color' },
-            { s: Terminado, campo: 'terminado' },
-            { s: MarcaLaser, campo: 'laser' },
-
-        ];
-
-        for (let i = 0; i < arrSchemas.length; i++) {
-            const sch = arrSchemas[i];
-            const regex = arraRegex[i];
-            const pro = new Promise((resolve, reject) => {
-                // Si no hay regex mandamos null para no buscar nada. 
-                if (!regex) { resolve(null); } else {
-                    var a = sch.s.find({
-                        [sch.campo]: regex
-                    }).exec();
-                    a.then(b => {
-                        // Retornamos el nombre de los campos para 
-                        // usarlos cuando busquemos el modelo completo. 
-                        resolve({ datos: b, campo: sch.campo });
-                    }).catch(err => reject(err));
-                }
-            });
-            // Guardamos la promesa para ejecutarla en la busqueda de modelos completos. 
-            arregloDePromesas.push(pro);
         }
-        return arregloDePromesas;
     }
 
-    function combinacionesDeBusqueda(arr) {
-
-        const arreBusqueda = [];
-
-        arr.map(x => {
-            if (x) {
-                x.datos.map(y => {
-                    if (!arreBusqueda[x.campo]) {
-                        arreBusqueda[x.campo] = [];
-                    }
-                    arreBusqueda.push({
-                        [x.campo]: y._id
-                    });
-                });
-
-            }
-        });
-
-        for (const key in arreBusqueda) {
-            if (arreBusqueda.hasOwnProperty(key)) {
-                const arreglo = arreBusqueda[key];
-
-
-            }
-        }
-
-        return arreBusqueda;
-
-
-    }
-
-
-    // ============================================
-    // Fin busqueda de modelos completos
-    // ============================================
+    return arreBusqueda;
 
 
 }
+
+
+// ============================================
+// Fin busqueda de modelos completos
+// ============================================
+
+
+
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app;

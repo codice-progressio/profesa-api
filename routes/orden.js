@@ -37,15 +37,25 @@ function esDeptoActual(orden, depto) {
 // ============================================
 // Todos los departamentos necesitan recivir las 
 // órdenes antes de empezar a trabajarlas. 
+// 
+// Se se pasa req.query.empezarATrabajar en true
+// la orden tiene dos pasos para ser recivida. El primero
+// es el paso normal de todos los deptos, el segundo es 
+// aplicable en casos que hay que asignar, por ejemplo en transformacion
+// una orden a una maquina antes de empezar a a trabajar.
 app.put('/', (req, res) => {
     const id_de_la_orden = req.body._id;
     const depto = req.body.departamento;
+    const depto_ = Departamento.obtener(depto);
     const deptoTrabajado = req.body.deptoTrabajado;
     var mensajeGeneral = '';
 
-    console.log('Este es el departamento => ');
-    console.log(deptoTrabajado);
-
+    if (!depto_) {
+        return RESP._400(res, {
+            msj: `Parece que el departamento ${depto} no esta registrado.`,
+            err: 'Comunicale este error a tu administrador.',
+        });
+    }
 
     // ============================================
     // Parametros varios para trabajo de órden. 
@@ -74,23 +84,18 @@ app.put('/', (req, res) => {
 
         if (orden.ubicacionActual.recivida) {
             // Si la órden ya fue recivida entonces la señalamos que empieza a trabajar. 
-            console.log('La órden esta recivida: => empezarAtrabajar: ' + empezarATrabajar);
 
             if (empezarATrabajar) {
                 if (!deptoTrabajado) {
                     return RESP._400(res, {
                         msj: 'No se recivio el departamento para modificar.',
                         err: 'Es necesario pasar el departamento que se va a modificar para guardarlo.',
-                        masInfo: [{
-                            infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
-                            dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
-                        }]
                     });
                 }
 
 
-                if (orden.ubicacionActual.hasOwnProperty(depto.toLowerCase())) {
-                    if (orden.ubicacionActual[depto.toLowerCase()].trabajando) {
+                if (orden.ubicacionActual.hasOwnProperty(depto_._vm)) {
+                    if (orden.ubicacionActual[depto_._vm].trabajando) {
                         return RESP._400(res, {
                             msj: 'Esta órden ya se encuentra trabajando.',
                             err: 'La órden ya se encuentra trabajando en esta ubicación.',
@@ -99,10 +104,7 @@ app.put('/', (req, res) => {
                 }
 
                 deptoTrabajado.trabajando = true;
-                orden.ubicacionActual[depto.toLowerCase()] = deptoTrabajado;
-                console.log('La órden que se va a grabar.');
-                console.log(orden);
-
+                orden.ubicacionActual[depto_._vm] = deptoTrabajado;
                 mensajeGeneral = 'Órden trabajando.';
                 return fol.save();
             }
@@ -275,7 +277,6 @@ function orden(idOrden) {
 }
 
 function existeDepartamento(departamento) {
-
     return new Promise((resolve, reject) => {
         Departamento.existe(departamento).then(departamentoEncontrado => {
                 if (!departamentoEncontrado) {
@@ -354,6 +355,7 @@ app.get('/:depto', (req, res) => {
                         // OJO, SE HACE LA COMPROBACIÓN DOS VECES POR QUE ESTAMOS FILTRANDO 
                         // ARRIBA POR FOLIOS!!! Y NO POR ORDENES!! DE MANERA QUE TODAS LAS ÓRDENES DEL 
                         // FOLIO SE VAN A MOSTRAR!!! ESTEN EN EL DEPTO QUE ESTEN. 
+                        if (orden.terminada === true) return false;
                         if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento.nombre === depto) {
 
                             var ordenO = orden.toObject();
@@ -495,16 +497,20 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
 
             // Filtramos las ordenes para modificarlas. 
 
-            const ordenes = [];
-            arreglo.forEach(_id => {
-                foliosEncontrados.forEach(x => ordenes.push(buscarOrdenDentroDeFolio(x, _id)));
+            console.log('Cantidad de folios encontrados: ' + foliosEncontrados.length);
+
+            foliosEncontrados.forEach(x => {
+                arreglo.forEach(_id => {
+                    ordenEncontrada = buscarOrdenDentroDeFolio(x, _id);
+                    if (ordenEncontrada) {
+                        ordenEncontrada.ubicacionActual.recivida = true;
+                        ordenEncontrada.ubicacionActual.recepcion = new Date();
+                        datosDeOrdenYAvanzar(ordenEncontrada, { entregadoAProduccion: new Date() }, CONST.DEPARTAMENTOS.CONTROL_DE_PRODUCCION._n.toLowerCase());
+                    }
+                });
             });
 
-            ordenes.forEach(ord => {
-                ord.ubicacionActual.recivida = true;
-                ord.ubicacionActual.recepcion = new Date();
-                datosDeOrdenYAvanzar(ord, { entregadoAProduccion: new Date() }, CONST.DEPARTAMENTOS.CONTROL_DE_PRODUCCION._n.toLowerCase());
-            });
+
             a = foliosEncontrados.filter(x => { x.save(); return true; })
             return Promise.all(a);
 
@@ -517,7 +523,6 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
             return RESP._500(res, {
                 msj: 'Hubo un error buscando las ordenes para recivirlas y entregarlas.',
                 err: err,
-
             });
         });
 
@@ -525,9 +530,11 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
 });
 
 
+
 // ============================================
 // Modifica una órden para agregarle un registro.
 // ============================================
+
 
 app.put('/:idOrden', (req, res) => {
     //Hay que saber para que depto es.
@@ -544,8 +551,6 @@ app.put('/:idOrden', (req, res) => {
 
     // Obtenemos el id de la órden.
     const id = req.params.idOrden;
-    console.log('Estamos aquí');
-
     Promise.all([
         existeFolioConOrden(id),
         existeDepartamento(depto)
@@ -556,14 +561,17 @@ app.put('/:idOrden', (req, res) => {
 
 
         const orden = buscarOrdenDentroDeFolio(folio, id);
-        if (CONST.DEPARTAMENTOS.hasOwnProperty(depto.toUpperCase())) {
+        var dep = Departamento.obtener(depto)
+        console.log(`${colores.info('DEPTO OBTENIDO')} Departamento obtenido ${JSON.stringify(dep)}`)
+        if (dep) {
 
             // ============================================
             // AQUI ES DONDE SE AVANZA EN LA ORDEN
             // ============================================
 
             // schemaParaOrden[depto](orden, datos, departamento);
-            datosDeOrdenYAvanzar(orden, datos, depto.toLowerCase());
+            // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
+            datosDeOrdenYAvanzar(orden, datos, dep._v);
 
 
             // ============================================
@@ -611,7 +619,7 @@ app.put('/:idOrden', (req, res) => {
         } else {
             return RESP._500(res, {
                 msj: 'Departamento no defindo como funcón en sistema. ',
-                err: err,
+                err: 'Algo extrano paso.',
                 masInfo: [
                     { infoAdicional: 'sys', dataAdicional: 'Es necesario definir una operación en el sistema para que se guarda en su respectivo schema. ' }
                 ]
@@ -631,9 +639,6 @@ app.put('/:idOrden', (req, res) => {
 
 function datosDeOrdenYAvanzar(orden, datos, depto) {
     orden.ubicacionActual[depto] = datos;
-    console.log(orden.ubicacionActual[depto]);
-    console.log(depto);
-
     avanzarCamino(orden);
 }
 
@@ -662,12 +667,11 @@ function avanzarCamino(orden, depto) {
             // entonces si ponemos siguiente departamento, si no, 
             // lo dejamos así.
             if ((orden.trayectoRecorrido.length >= orden.trayectoNormal.length)) {
+
                 orden.terminada = true;
 
                 return;
             } else {
-                console.log('[IMPORTANTE]  =>>> Hay todavía trayecto NORMAL: ' + JSON.stringify(orden.trayectoNormal[i + 2]));
-                console.log('Trayecto recorrido tama: ' + orden.trayectoRecorrido.length);
                 orden.siguienteDepartamento = orden.trayectoNormal[i + 2];
 
             }

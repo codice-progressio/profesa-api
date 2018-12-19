@@ -19,7 +19,7 @@ var _PERMISOS = require('./middlewares/permisos').PERMISOS;
 // ============================================
 //  true = Producción
 //  false = Development
-var ENVIROMENT = db.enviroment(true);
+var ENVIROMENT = db.enviroment(false);
 // ============================================
 
 // Inicializar variables.
@@ -76,9 +76,16 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // // Rutas - Middleware PARA SISTEMA CARRDUCI
 // // ============================================
 
+
+
 // Obtenemos el token
 app.use((req, res, next) => {
-    console.log(colores.success('PETICION RECIVIDA') + colores.info(req.originalUrl));
+    // console.log('Esperando 5000 ms');
+
+    // setTimeout(function() {
+
+
+    console.log(colores.success('PETICION RECIVIDA') + colores.danger(req.method) + colores.info(req.originalUrl));
 
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
         req.token = req.headers.authorization.split(' ')[1];
@@ -86,6 +93,11 @@ app.use((req, res, next) => {
         req.token = req.query.token;
     }
     next();
+
+
+
+
+    // }, 3000);
 });
 
 // NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.

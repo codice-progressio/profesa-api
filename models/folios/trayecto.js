@@ -10,6 +10,7 @@ var pulidoSchema = require('./infoDeptos/pulido');
 var seleccionSchema = require('./infoDeptos/seleccion');
 var empaqueSchema = require('./infoDeptos/empaque');
 var controlDeProduccionSchema = require('./infoDeptos/controlDeProduccion');
+var productoTerminadoSchema = require('./infoDeptos/productoTerminado');
 
 var trayectoSchema = new Schema({
     //El departamento en el que se encuentra actualmente.
@@ -34,6 +35,7 @@ var trayectoSchema = new Schema({
     pulido: pulidoSchema,
     seleccion: seleccionSchema,
     empaque: empaqueSchema,
+    productoTerminado: productoTerminadoSchema,
 
     // Esta se guarda cuando se modifica la órden. 
     entrada: { type: Date },

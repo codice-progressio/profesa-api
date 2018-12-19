@@ -1,7 +1,76 @@
 FEATURES:
+    Departamentos nuevos:
+        ☐ Metalizado.
+        ☐ Barnizado
+        ☐ Burato
+
+    Transformacion:
+        ☐ Paros de la maquina. Una GUI para definir los paros que tuvo la maquina. Dejar que el admin adminsitre los tiempo de paro. 
+        
+    Sistema de notificaciones:
+
+        ☐ Sistema de notificaciones y alertas en el dashboar 
+
+
+
+    Almacenes:
+        Proveedor:
+        ☐ Datos del proveedor:;
+        Nombre
+        Razon social
+        Domicilio completo
+        =>Quienes atienden
+            Nombre
+            Telefono
+            Correo
+            Puesto
+        # Consecutivo
+        Tiempo de entrega
+        Monedas
+
+        Articulos:
+            ☐ Tiene que tener un proveedor que sea prioritario( Si tiene tres, que se seleccione al que se le da prioridad.)
+            ☐ Datos del articulo:
+            ??Codigo de localización.
+            Cod interno.
+            =>Almacen
+                ?? Ubicacion 
+            Descripcion
+            =>Proveedores
+                Proveedor
+                Precio
+            =>Existencias
+                Entradas
+                Salidas
+                Solicitado - En espera?
+            Presentacion ( Unidad , tambor, cubeta, etc)
+            Unidad de medida. 
+        
+        Ficha de compra:
+            Hoja de requisición:
+            ☐ Datos de la requisicion
+                Articulo
+                Fecha
+                Usuario => Quien realiza la requisición.
+                Cantidad
+                Costo unitario
+                ???Costo total???
+                Fecha de espera para recivirlo (Cuando se necesita)
+                Prowvedor => El seleccionado 
+        Hoja de compra:
+        ☐ Datos de la compra:
+            Fecha
+            Usuario => Empleado que la realiza. 
+            Requisición
+            # Consecutivo de órden.
+            => Recivido
+            Fecha de recivido
+            Quien recive. 
+
 FIX:
 DEPERECATED:
 DELETE:
 CLEAN:
 Archive:
+
 

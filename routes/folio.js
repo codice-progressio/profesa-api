@@ -16,14 +16,14 @@ var app = express();
 
 app.get('/', (req, res, next) => {
 
-    console.log(colores.info('/folio') + '[get] Funcionando.');
-    var desde = req.query.desde || 0;
+    let desde = req.query.desde || 0;
     desde = Number(desde);
 
-    var sinOrdenes = req.query.sinOrdenes || false;
-    var conOrdenes = req.query.conOrdenes || false;
-    var limite = +req.query.limite || 5;
-    var prioridad = req.query.prioridad;
+    const sinOrdenes = req.query.sinOrdenes || false;
+    const conOrdenes = req.query.conOrdenes || false;
+    const terminados = req.query.terminados || false;
+    const limite = +req.query.limite || 5;
+    const prioridad = req.query.prioridad;
 
 
     var filtros = {};
@@ -40,14 +40,24 @@ app.get('/', (req, res, next) => {
         filtros.$or = [
             { 'folioLineas.ordenesGeneradas': true },
         ];
+
+        filtros.$and = [
+            { 'terminado': terminados },
+            { "folioLineas.0": { "$exists": true } }
+        ];
     }
 
     if (prioridad) {
         filtros.$or = [
             { 'nivelDeUrgencia': prioridad }
         ];
-
     }
+
+
+
+    console.log(`${colores.info('DEBUG FOLIOS TERMINADOS')}  terminados? ${terminados}`);
+    console.log(`${colores.info('DEBUG FOLIOS CON ORDENES')}  ORDENES? ${conOrdenes}`);
+    console.log(`${colores.info('DEBUG FOLIOS filtros')}  filtros: ${JSON.stringify(filtros)}`);
 
 
     Folio.find(filtros)
@@ -290,6 +300,45 @@ app.delete('/:id', (req, res) => {
 // END Eliminar un folio por el ID
 // ============================================
 
+
+// ============================================
+// Senalar como impreso un folio.
+// ============================================
+
+app.post('/ordenesImpresas', (req, res, next) => {
+    Folio.findById(req.body._id)
+        .then(folioEncontrado => {
+            if (!folioEncontrado) {
+                return RESP._400(res, {
+                    msj: 'No existe el folio.',
+                    err: 'El id del folio que ingresaste no existe.',
+                });
+            }
+            folioEncontrado.impreso = true;
+            return folioEncontrado.save();
+        })
+        .then(folioGrabado => {
+            return RESP._200(res, null, [
+                { tipo: 'folio', datos: folioGrabado },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando el folio para senalarlo como impreso',
+                err: err,
+
+            });
+        });
+
+
+
+});
+
+
+// ============================================
+// END Senalar como impreso un folio.
+// ============================================
 
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.

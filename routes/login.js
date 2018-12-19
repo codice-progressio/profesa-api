@@ -8,6 +8,7 @@ var Usuario = require('../models/usuario');
 var jwt = require('jsonwebtoken');
 var SEED = require('../config/config').SEED;
 var CONST = require('../utils/constantes');
+var RESP = require('../utils/respStatus');
 
 
 // Google
@@ -141,39 +142,27 @@ app.post('/google', async(req, res) => {
 app.post('/', (req, res) => {
 
     var body = req.body;
-
-    Usuario.findOne({ email: body.email }, (err, usuarioDB) => {
-
-        if (err) {
-            return res.status(500).json({
-                ok: false,
-                mensaje: 'Error al buscar usuario.',
-                errors: err
-
-            });
-        }
+    console.log(`${colores.info('PROBANDO EL LOGIN')}  Entramos al login ${req}`);
+    Usuario.findOne({ email: body.email }).exec().then(usuarioDB => {
 
         if (!usuarioDB) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: 'Credenciales incorrectas - email.',
-                errors: err
+            return RESP._400(res, {
+                msj: 'Credencianles incorrectas',
+                err: 'No se pudo loguear.',
             });
         }
-        if (!body.password) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: 'Password no debe estar vacio - password.',
-                errors: err
-            });
 
+        if (!body.password) {
+            return RESP._400(res, {
+                msj: 'El password no debe estar vacio.',
+                err: 'Parece que olvidaste escribir el password.',
+            });
         }
 
         if (!bcrypt.compareSync(body.password, usuarioDB.password)) {
-            return res.status(400).json({
-                ok: false,
-                mensaje: 'Credenciales incorrectas - password.',
-                errors: err
+            return RESP._400(res, {
+                msj: 'Credencianles incorrectas',
+                err: 'No se pudo loguear.',
             });
         }
 
@@ -181,15 +170,28 @@ app.post('/', (req, res) => {
         usuarioDB.password = ':D';
         var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 });
 
-        res.status(200).json({
-            ok: true,
-            usuario: usuarioDB,
-            token: token,
-            id: usuarioDB.id,
-            menu: obtenerMenu(usuarioDB.role),
-            // roles: CONST.ROLES
+        // res.status(200).json({
+        //     ok: true,
+        //     usuario: usuarioDB,
+        //     token: token,
+        //     id: usuarioDB.id,
+        //     menu: obtenerMenu(usuarioDB.role),
+        //     // roles: CONST.ROLES
+        // });
+
+        return RESP._200(res, `Bienvenido ${usuarioDB.nombre}`, [
+            { tipo: 'usuario', datos: usuarioDB },
+            { tipo: 'token', datos: token },
+            { tipo: 'id', datos: usuarioDB.id },
+            { tipo: 'menu', datos: obtenerMenu(usuarioDB.role) },
+        ]);
+
+    }).catch(err => {
+        return RESP._500(res, {
+            msj: 'Hubo un error en el login.',
+            err: err,
         });
-    });
+    })
 
 });
 
@@ -203,6 +205,14 @@ function obtenerMenu(ROLE) {
             icono: 'mdi mdi-gauge',
             submenu: [
                 { titulo: 'Dashboard', url: '/dashboard' },
+            ]
+        },
+        REPORTES: {
+            roles: [],
+            titulo: 'Reportes',
+            icono: 'mdi mdi-gauge',
+            submenu: [
+                { titulo: 'Historial de folios', url: '/folios/historial' },
             ]
         },
         CONTROL_DE_PRODUCCION: {
@@ -244,22 +254,30 @@ function obtenerMenu(ROLE) {
             ]
         },
 
-        EMPAQUE: {
+        PRODUCCION: {
             roles: [
                 CONST.ROLES.EMPAQUE_REGISTRO_ROLE
             ],
-            titulo: 'Empaque',
-            icono: 'fa fa-gears fa-spin ',
+            titulo: 'Registros',
+            icono: 'fa fa-file-text',
             submenu: [
+                { titulo: 'Control de produccion', url: '/produccion/controlDeProduccion' },
+                { titulo: 'Materiales', url: '/produccion/materiales' },
+                { titulo: 'Pastilla', url: '/produccion/pastilla' },
+                { titulo: 'Transformacion', url: '/produccion/transformacion' },
+                { titulo: 'Pulido', url: '/produccion/pulido' },
+                { titulo: 'Seleccion', url: '/produccion/seleccion' },
                 { titulo: 'Empaque', url: '/produccion/empaque' },
+                { titulo: 'Producto terminado', url: '/produccion/productoTerminado' },
             ]
+
         },
         CHUCHERIAS: {
             roles: [
                 CONST.ROLES.SUPER_ADMIN,
             ],
             titulo: 'SUPER-ADMIN',
-            icono: 'fa fa-user fa-spin tada inifinite animated',
+            icono: 'fa fa-user tada inifinite animated',
             submenu: [
                 { titulo: 'Hospitales', url: '/hospitales' },
                 { titulo: 'Médicos', url: '/medicos' },

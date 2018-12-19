@@ -60,78 +60,36 @@ app.get('/', (req, res, next) => {
 
 app.get('/costos', (req, res, next) => {
     console.log(colores.info('/modeloCompleto') + '[get] Funcionando.');
-    var desde = req.query.desde || 0;
-    desde = Number(desde);
+    const desde = Number(req.query.desde) || 0;
+    const limite = Number(req.query.limite) || 30;
 
-    // var popMaquinasYGastos = {
-    //     populate: {
-    //         path: 'maquinas gastos.gasto departamento',
-    //         populate: {
-    //             path: 'gastos.gasto'
-    //         }
-    //     }
-    // };
-
+    var mc;
 
     ModeloCompleto.find({})
-        // .skip(desde)
-        // .limit(20)
-        // .populate('modelo')
-        // .populate('tamano')
-        // .populate({
-        //     path: 'color',
-        //     // populate: {
-        //     //     path: 'receta.centrifuga.resinas.tipoDeMaterial',
-        //     //     populate: {
-        //     //         path: 'tipoDeMaterial'
-        //     //     }
+        .skip(desde)
+        .limit(limite)
+        .exec()
+        .then(modelosCompletos => {
+            mc = modelosCompletos;
 
-    //     // }
-    // })
-    // .populate('terminado')
-    // .populate('familiaDeProcesos')
-    // .populate({
-    //     path: 'familiaDeProcesos',
-    //     populate: {
-    //         path: 'procesos.proceso',
-    //         populate: {
-    //             path: 'maquinas gastos.gasto departamento',
-    //             populate: {
-    //                 path: 'gastos.gasto'
-    //             }
-    //         }
-
-    //     }
-
-    // })
-    // .populate({
-    //     path: 'procesosEspeciales.proceso',
-    //     populate: {
-    //         path: 'maquinas gastos.gasto departamento',
-    //         populate: {
-    //             path: 'gastos.gasto'
-    //         }
-    //     }
-    // })
-    .exec((err, modelosCompletos) => {
-        if (err) {
-            return RESP._500(res, {
-                msj: 'Error cargando los modelos completos.',
-                err: err,
-            });
-        }
-
-        // Contamos los datos totales que hay registrados, 
-        // estos sirven para la paginación. 
-        ModeloCompleto.count({}, (err, conteo) => {
-
+            // Contamos los datos totales que hay registrados, 
+            // estos sirven para la paginación. 
+            return ModeloCompleto.countDocuments();
+        })
+        .then(mcContado => {
             return RESP._200(res, null, [
-                { tipo: 'modelosCompletos', datos: modelosCompletos },
-                { tipo: 'total', conteo },
+                { tipo: 'modelosCompletos', datos: mc },
+                { tipo: 'total', datos: mcContado },
             ]);
 
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando los modelos completos con costo.',
+                err: err,
+            });
         });
-    });
+
 });
 // ============================================
 // FIN Obtenmos todos los modelos. 

@@ -10,27 +10,29 @@ var Terminado = require('../../models/terminado');
 // ============================================
 
 app.get('/', (req, res, next) => {
-    var promise = Terminado.find({}).exec();
 
-    promise.then(terminados => {
-        if (!terminados) {
-            return RESP._400(res, {
-                msj: 'No has registrado aun ningún terminado.',
-                err: 'Es necesario que registres un terminado. ',
+    const desde = Number(req.query.desde || 0);
+    const limite = Number(req.query.limite || 30);
+    const sort = Number(req.query.sort || 1);
+    const campo = String(req.query.campo || 'terminado');
+    Promise.all([
+            Terminado.find().limit(limite).skip(desde).sort({
+                [campo]: sort
+            }).exec(),
+            Terminado.countDocuments()
+        ]).then(resp => {
+            return RESP._200(res, null, [
+                { tipo: 'terminados', datos: resp[0] },
+                { tipo: 'total', datos: resp[1] },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando los termiandos.',
+                err: err,
             });
-        }
-
-        return RESP._200(res, null, [
-            { tipo: 'terminados', datos: terminados },
-        ]);
-
-    }).catch(err => {
-        console.log(colores.danger('ERROR') + err);
-        return RESP._500(res, {
-            msj: 'Hubo un error buscando los termiandos.',
-            err: err,
         });
-    });
 
 });
 
@@ -57,8 +59,32 @@ app.put('/', (req, res, next) => {
                 msj: 'Hubo un error actualizando el terminado.',
                 err: err,
             });
-        })
+        });
 
+});
+
+app.delete('/:id', (req, res, next) => {
+    const id = req.params.id;
+
+    Terminado.findOneAndRemove({ _id: id }).exec().then(eliminado => {
+
+            if (!eliminado) {
+                return RESP._400(res, {
+                    msj: 'No existe el terminado.',
+                    err: 'El id del terminado que ingresaste no esta registrado en la BD.',
+                });
+            }
+            return RESP._200(res, `Se elimino de manera correcta el terminado ${eliminado.terminado}`, [
+                { tipo: 'terminado', datos: eliminado },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error eliminando el terminado.',
+                err: err,
+            });
+        });
 });
 
 

@@ -11,6 +11,10 @@ var seleccionSchema = require('./infoDeptos/seleccion');
 var empaqueSchema = require('./infoDeptos/empaque');
 var controlDeProduccionSchema = require('./infoDeptos/controlDeProduccion');
 var productoTerminadoSchema = require('./infoDeptos/productoTerminado');
+var metalizadoSchema = require('./infoDeptos/metalizado');
+var barnizadoSchema = require('./infoDeptos/barnizado');
+var buratoSchema = require('./infoDeptos/burato');
+
 
 var trayectoSchema = new Schema({
     //El departamento en el que se encuentra actualmente.
@@ -22,12 +26,7 @@ var trayectoSchema = new Schema({
 
 
 
-    // [_CONST.DEPARTAMENTOS.MATERIALES._v]: [materialesSchema],
-    // [_CONST.DEPARTAMENTOS.PASTILLA._v]: [pastillaSchema],
-    // transformacion: transformacionSchema,
-    // [_CONST.DEPARTAMENTOS.PULIDO._v]: [pulidoSchema],
-    // [_CONST.DEPARTAMENTOS.SELECCION._v]: [seleccionSchema],
-    // [_CONST.DEPARTAMENTOS.EMPAQUE._v]: [empaqueSchema],
+
     controlDeProduccion: controlDeProduccionSchema,
     materiales: materialesSchema,
     pastilla: pastillaSchema,
@@ -36,6 +35,9 @@ var trayectoSchema = new Schema({
     seleccion: seleccionSchema,
     empaque: empaqueSchema,
     productoTerminado: productoTerminadoSchema,
+    metalizado: metalizadoSchema,
+    barnizado: barnizadoSchema,
+    burato: buratoSchema,
 
     // Esta se guarda cuando se modifica la órden. 
     entrada: { type: Date },

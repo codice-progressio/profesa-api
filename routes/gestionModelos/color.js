@@ -12,25 +12,27 @@ var Color = require('../../models/colores/color');
 // ============================================
 
 app.get('/', (req, res, next) => {
-    var promise = Color.find({}).exec();
-    promise.then(colores => {
-            if (!colores) {
-                return RESP._400(res, {
-                    msj: 'No has registrado aun ningún color.',
-                    err: 'Es necesario que registres colores.',
-                });
-            }
+    const desde = Number(req.query.desde || 0);
+    const limite = Number(req.query.limite || 30);
+    const sort = Number(req.query.sort || 1);
+    const campo = String(req.query.campo || 'tamano');
+
+    Promise.all([
+            Color.find().limit(limite).skip(desde).sort({
+                [campo]: sort
+            }).exec(),
+            Color.countDocuments()
+        ]).then(resp => {
             return RESP._200(res, null, [
-                { tipo: 'colores', datos: colores },
+                { tipo: 'colores', datos: resp[0] },
+                { tipo: 'total', datos: resp[1] },
             ]);
 
         })
         .catch(err => {
-            console.log(colores.danger('ERROR') + err);
             return RESP._500(res, {
                 msj: 'Hubo un error buscando los colores.',
                 err: err,
-
             });
         });
 });
@@ -99,6 +101,30 @@ app.put('/receta', (req, res) => {
             err: err,
         });
     });
+});
+
+app.delete('/:id', (req, res, next) => {
+    const id = req.params.id;
+
+    Color.findOneAndRemove({ _id: id }).exec().then(eliminado => {
+
+            if (!eliminado) {
+                return RESP._400(res, {
+                    msj: 'No existe el color.',
+                    err: 'El id del color que ingresaste no esta registrado en la BD.',
+                });
+            }
+            return RESP._200(res, `Se elimino de manera correcta el color ${eliminado.color}`, [
+                { tipo: 'color', datos: eliminado },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error eliminando el color.',
+                err: err,
+            });
+        });
 });
 
 

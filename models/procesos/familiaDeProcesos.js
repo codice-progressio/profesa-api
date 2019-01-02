@@ -21,6 +21,19 @@ var familiaDeProcesosSchema = new Schema({
 //     nombre: { type: String, required: [true, 'El nombre es requerido.'] },
 // });
 
+var autoUpdate = function(next) {
+    this.populate('procesos.proceso');
+    this.populate({
+        path: 'procesos.proceso',
+        populate: { path: 'departamento costos maquinas' }
+    });
+    next();
+};
+
+
+familiaDeProcesosSchema.pre('find', autoUpdate);
+
+
 
 
 module.exports = mongoose.model('FamiliaDeProcesos', familiaDeProcesosSchema);

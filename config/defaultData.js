@@ -87,7 +87,6 @@ module.exports = () => {
         console.log(colores.danger('ERROR COMPROBANDO DEFAULTS') + 'Hubo un error en la comprobación de valores por defecto.');
         throw new Error(err);
     });
-    // TODO: Roles por defecto. 
 
 };
 
@@ -120,7 +119,6 @@ function crearSuperAdmin(adminExistente) {
         nuevoAdmin.nombre = USUARIO_SUPER_ADMIN.nombre;
         nuevoAdmin.email = USUARIO_SUPER_ADMIN.email;
         nuevoAdmin.password = USUARIO_SUPER_ADMIN.password;
-        // TODO: Tomar este rol de la configuración general y 
         nuevoAdmin.role = USUARIO_SUPER_ADMIN.role;
         return nuevoAdmin.save();
     } else {

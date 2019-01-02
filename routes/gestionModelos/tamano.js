@@ -3,33 +3,36 @@ var express = require('express');
 var app = express();
 var colores = require("../../utils/colors");
 var RESP = require('../../utils/respStatus');
-var Tamanos = require('../../models/tamano');
+var Tamano = require('../../models/tamano');
 
 // ============================================
 // Obtiene todos los tamaños. 
 // ============================================
 
 app.get('/', (req, res, next) => {
-    var promise = Tamanos.find({}).exec();
-    promise.then(tamanos => {
-        if (!tamanos) {
-            return RESP._400(res, {
-                msj: 'No existen tamaños registrados.',
-                err: 'Es necesario que registres tamaños ',
+    const desde = Number(req.query.desde || 0);
+    const limite = Number(req.query.limite || 30);
+    const sort = Number(req.query.sort || 1);
+    const campo = String(req.query.campo || 'tamano');
+
+    Promise.all([
+            Tamano.find().limit(limite).skip(desde).sort({
+                [campo]: sort
+            }).exec(),
+            Tamano.countDocuments()
+        ]).then(resp => {
+            return RESP._200(res, null, [
+                { tipo: 'tamanos', datos: resp[0] },
+                { tipo: 'total', datos: resp[1] },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando los tamanos.',
+                err: err,
             });
-        }
-
-        return RESP._200(res, null, [
-            { tipo: 'tamanos', datos: tamanos },
-        ]);
-
-    }).catch(err => {
-        console.log(colores.danger('ERROR') + err);
-        return RESP._500(res, {
-            msj: 'Hubo un error buscando los tamaños.',
-            err: err,
         });
-    });
 
 });
 
@@ -38,10 +41,10 @@ app.get('/', (req, res, next) => {
 // Modificamos un tamano. 
 // ============================================
 app.put('/', (req, res, next) => {
-    var promise = Tamanos.findById(req.body._id).exec();
+    var promise = Tamano.findById(req.body._id).exec();
     promise.then(tamano => {
         if (!tamano) {
-            Promise.reject(" No existe")
+            Promise.reject(" No existe");
             return RESP._400(res, {
                 msj: 'No existe el tamaño',
                 err: 'El id que ingresaste no esta en la base de datos.',
@@ -64,6 +67,31 @@ app.put('/', (req, res, next) => {
     });
 
 });
+
+app.delete('/:id', (req, res, next) => {
+    const id = req.params.id;
+
+    Tamano.findOneAndRemove({ _id: id }).exec().then(eliminado => {
+
+            if (!eliminado) {
+                return RESP._400(res, {
+                    msj: 'No existe el tamano.',
+                    err: 'El id del tamano que ingresaste no esta registrado en la BD.',
+                });
+            }
+            return RESP._200(res, `Se elimino de manera correcta el tamano ${eliminado.tamano}`, [
+                { tipo: 'tamano', datos: eliminado },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error eliminando el tamano.',
+                err: err,
+            });
+        });
+});
+
 
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.

@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var uniqueValidator = require('mongoose-unique-validator');
 var VALIDACIONES = require('../utils/validaciones');
+var ModeloCompleto = require('../models/modeloCompleto');
 
 var Schema = mongoose.Schema;
 
@@ -26,6 +27,11 @@ var tamanoSchema = new Schema({
 }, { collection: 'tamanos' });
 
 tamanoSchema.plugin(uniqueValidator, { message: ' \'{PATH}\' debe ser único.' });
+
+tamanoSchema.pre('findOneAndRemove', false, function(next) {
+    const id = this._conditions._id;
+    ModeloCompleto.eliminarRelacionados(id, 'tamano', next);
+});
 
 
 module.exports = mongoose.model('Tamano', tamanoSchema);

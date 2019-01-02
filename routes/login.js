@@ -268,9 +268,11 @@ function obtenerMenu(ROLE) {
                 { titulo: 'Pulido', url: '/produccion/pulido' },
                 { titulo: 'Seleccion', url: '/produccion/seleccion' },
                 { titulo: 'Empaque', url: '/produccion/empaque' },
+                { titulo: 'Burato', url: '/produccion/burato' },
+                { titulo: 'Metalizado', url: '/produccion/metalizado' },
+                { titulo: 'Barnizado', url: '/produccion/barnizado' },
                 { titulo: 'Producto terminado', url: '/produccion/productoTerminado' },
             ]
-
         },
         CHUCHERIAS: {
             roles: [

@@ -19,7 +19,7 @@ var _PERMISOS = require('./middlewares/permisos').PERMISOS;
 // ============================================
 //  true = Producción
 //  false = Development
-var ENVIROMENT = db.enviroment(true);
+var ENVIROMENT = db.enviroment(false);
 // ============================================
 
 // Inicializar variables.
@@ -62,11 +62,14 @@ app.use(function(req, res, next) {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
+    // Mensaje de conexion a la base de datos. 
     console.log(ENVIROMENT.msj_bienvenida);
     if (err) {
+        // Mensaje de error en la base de datos. 
         console.log(ENVIROMENT.msj_bd_err);
         throw err;
     }
+    // Mensaje de conexion exitosa a la BD
     console.log(ENVIROMENT.msj_bd_ok);
 });
 
@@ -85,7 +88,7 @@ app.use((req, res, next) => {
     // setTimeout(function() {
 
 
-    console.log(colores.success('PETICION RECIVIDA') + colores.danger(req.method) + colores.info(req.originalUrl));
+    console.log(`${new Date()}|` + colores.success('PETICION RECIVIDA') + colores.danger(req.method) + colores.info(req.originalUrl));
 
     if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
         req.token = req.headers.authorization.split(' ')[1];
@@ -97,7 +100,7 @@ app.use((req, res, next) => {
 
 
 
-    // }, 3000);
+    // }, (Math.random() * 10) * 1000);
 });
 
 // NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.

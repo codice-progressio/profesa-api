@@ -21,4 +21,19 @@ var procesoSchema = new Schema({
 
 procesoSchema.plugin(uniqueValidator, { message: ' \'{PATH}\' debe ser único.' });
 
+var autoPopulate = function(next) {
+    this.populate('departamento');
+    this.populate('gastos.gasto');
+    this.populate({
+        path: 'maquinas',
+        populate: { path: 'gastos.gasto' }
+    });
+    next();
+
+};
+
+procesoSchema.pre('find', autoPopulate);
+
+
+
 module.exports = mongoose.model('Proceso', procesoSchema);

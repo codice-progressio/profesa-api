@@ -10,6 +10,10 @@ const DEPARTAMENTOS = {
     PULIDO: { _v: 'PULIDO', _n: 'PULIDO', _vm: 'pulido' },
     SELECCION: { _v: 'SELECCION', _n: 'SELECCIÓN', _vm: 'seleccion' },
     EMPAQUE: { _v: 'EMPAQUE', _n: 'EMPAQUE', _vm: 'empaque' },
-    PRODUCTO_TERMINADO: { _v: 'PRODUCTO_TERMINADO', _n: 'PRODUCTO TERMINADO' }
+    PRODUCTO_TERMINADO: { _v: 'PRODUCTO_TERMINADO', _n: 'PRODUCTO TERMINADO', _vm: 'productoTerminado' },
+    METALIZADO: { _v: 'METALIZADO', _n: 'METALIZADO', _vm: 'metalizado' },
+    BARNIZADO: { _v: 'BARNIZADO', _n: 'BARNIZADO', _vm: 'barnizado' },
+    BURATO: { _v: 'BURATO', _n: 'BURATO', _vm: 'burato' },
+
 };
 module.exports = DEPARTAMENTOS;

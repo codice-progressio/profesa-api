@@ -18,37 +18,30 @@ var app = express();
 // ============================================
 
 app.get('/', (req, res, next) => {
-    console.log(colores.info('/modeloCompleto') + '[get] Funcionando.');
-    var desde = req.query.desde || 0;
-    desde = Number(desde);
-    limite = Number(req.query.limite | 20);
+    const desde = Number(req.query.desde || 0);
+    const limite = Number(req.query.limite || 30);
+    const sort = Number(req.query.sort || 1);
+    const campo = String(req.query.campo || 'modelo');
 
-    ModeloCompleto.find({})
-        .skip(desde)
-        .limit(20)
-        // .populate('modelo')
-        // .populate('tamano')
-        // .populate('color')
-        // .populate('terminado')
-        .exec((err, modelosCompletos) => {
-            if (err) {
-                return RESP._500(res, {
-                    msj: 'Error cargando los modelos completos.',
-                    err: err,
-                });
-            }
+    Promise.all([
+            ModeloCompleto.find().limit(limite).skip(desde).sort({
+                [campo]: sort
+            }).exec(),
+            ModeloCompleto.countDocuments()
+        ]).then(resp => {
+            return RESP._200(res, null, [
+                { tipo: 'modelosCompletos', datos: resp[0] },
+                { tipo: 'total', datos: resp[1] },
+            ]);
 
-            // Contamos los datos totales que hay registrados, 
-            // estos sirven para la paginación. 
-            ModeloCompleto.count({}, (err, conteo) => {
-
-                return RESP._200(res, null, [
-                    { tipo: 'modelosCompletos', datos: modelosCompletos },
-                    { tipo: 'total', conteo },
-                ]);
-
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando los modelos completos',
+                err: err,
             });
         });
+
 });
 // ============================================
 // FIN Obtenmos todos los modelos. 
@@ -59,36 +52,31 @@ app.get('/', (req, res, next) => {
 // ============================================
 
 app.get('/costos', (req, res, next) => {
-    console.log(colores.info('/modeloCompleto') + '[get] Funcionando.');
-    const desde = Number(req.query.desde) || 0;
-    const limite = Number(req.query.limite) || 30;
+    const desde = Number(req.query.desde || 0);
+    const limite = Number(req.query.limite || 30);
+    const sort = Number(req.query.sort || 1);
+    const campo = String(req.query.campo || 'modelo');
 
-    var mc;
 
-    ModeloCompleto.find({})
-        .skip(desde)
-        .limit(limite)
-        .exec()
-        .then(modelosCompletos => {
-            mc = modelosCompletos;
-
-            // Contamos los datos totales que hay registrados, 
-            // estos sirven para la paginación. 
-            return ModeloCompleto.countDocuments();
-        })
-        .then(mcContado => {
+    Promise.all([
+            ModeloCompleto.find().limit(limite).skip(desde).sort({
+                [campo]: sort
+            }).exec(),
+        ]).then(resp => {
             return RESP._200(res, null, [
-                { tipo: 'modelosCompletos', datos: mc },
-                { tipo: 'total', datos: mcContado },
+                { tipo: 'modelosCompletos', datos: resp[0] },
+                { tipo: 'total', datos: resp[1] },
             ]);
 
         })
         .catch(err => {
             return RESP._500(res, {
-                msj: 'Hubo un error buscando los modelos completos con costo.',
+                msj: 'Hubo un error cargando los modelos completos con costo.',
                 err: err,
             });
         });
+
+
 
 });
 // ============================================
@@ -174,6 +162,51 @@ app.get('/buscar/:termino', (req, res, next) => {
                 err: err,
             });
         });
+});
+
+
+// ============================================
+// Modifica un modeloCompleto.
+
+// Por el momento solo modifica si el modelo completo 
+// se genera como medias ordenes. 
+// ============================================
+
+app.put('/', (req, res, next) => {
+    const media = req.body.medias;
+    const id = req.body._id;
+
+    const set = {
+        $set: {
+            medias: media
+        }
+    };
+
+
+    ModeloCompleto.findByIdAndUpdate(id, set).then(resp => {
+            if (!resp) {
+                return RESP._400(res, {
+                    msj: 'El modelo no existe.',
+                    err: 'El id del modelo completo que ingresaste no existe.',
+
+                });
+            }
+
+            return RESP._200(res, 'Se actualizo el modelo completo.', [
+                { tipo: 'modeloCompleto', datos: resp },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error actualizando el modelo completo',
+                err: err,
+            });
+        });
+
+
+
+
 });
 
 

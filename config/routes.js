@@ -18,6 +18,7 @@ var modeloCompletoRoutes = require('../routes/gestionModelos/modeloCompleto');
 var clienteRoutes = require('../routes/cliente');
 var departamentoRoutes = require('../routes/departamento');
 var procesoRoutes = require('../routes/proceso');
+var familiaDeProcesosRoutes = require('../routes/familiaDeProcesos');
 var ordenRoutes = require('../routes/orden');
 var trayectoriaRoutes = require('../routes/trayectoria');
 var maquinaRoutes = require('../routes/maquina');
@@ -137,6 +138,14 @@ module.exports.ROUTES = {
     _PROCESO: {
         url: '/proceso',
         route: procesoRoutes,
+        roles: [],
+        subRoutes: {
+
+        }
+    },
+    _FAMILIADEPROCESOS: {
+        url: '/familiaDeProcesos',
+        route: familiaDeProcesosRoutes,
         roles: [],
         subRoutes: {
 

@@ -10,14 +10,7 @@ CRUD.nombreDeObjetoSingular = 'tamano';
 CRUD.nombreDeObjetoPlural = 'tamanos';
 CRUD.campoSortDefault = 'tamano';
 CRUD.camposActualizables = {
-    medias: null,
-    laserAlmacen: null,
-    versionModelo: null,
-    familiaDeProcesos: null,
-    procesosEspeciales: null,
-    nombreCompleto: null,
-    porcentajeDeMerma: null,
-    espesor: null,
+    estandar: null,
 };
 
 

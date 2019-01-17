@@ -1,11 +1,11 @@
 var express = require('express');
 var app = express();
-var Modelo = require('../../models/modelo');
+var Tamano = require('../../models/tamano');
 
 
 var CRUD = require('../CRUD');
 CRUD.app = app;
-CRUD.modelo = Modelo;
+CRUD.modelo = Tamano;
 CRUD.nombreDeObjetoSingular = 'tamano';
 CRUD.nombreDeObjetoPlural = 'tamanos';
 CRUD.campoSortDefault = 'tamano';

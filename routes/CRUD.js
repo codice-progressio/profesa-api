@@ -49,7 +49,7 @@ const get = function(modelo, app, nombreDeObjeto, campoSortDefault) {
 
 
 /**
- * Ejecuta una busqueda por id y retorna el elemento encontrado si existe.  
+ * Ejecuta una busqueda por id y retorna el elemento encontrado si existe.  Lanza un pre('findOne', cb).
  *
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
@@ -68,22 +68,21 @@ const getById = function(modelo, app, nombreDeObjeto) {
         }
         // <!-- 
         // =====================================
-        //  BUSCAMOS CON FIND Y NO CON FINDBYID PARA QUE SE LANZE EL PRE HOOK
+        //  BUSCAMOS CON FINDONE Y NO CON FINDBYID PARA QUE SE LANZE EL PRE HOOK
         // =====================================
         // -->
-        modelo.find({ _id: id }).exec()
+        modelo.findOne({ _id: id }).exec()
             .then(elemento => {
-                // Como es por id solo se puede obtener un elemento
-                if (elemento.length === 0) {
+
+                if (!elemento) {
                     return RESP._400(res, {
                         msj: 'No hubo coincidencia.',
                         err: `El id que ingresaste no coincide con ninguno en la bd: ${nombreDeObjeto}`,
                     });
                 }
 
-                // Retornamos el unico elemento que debe haber. El [0]
                 return RESP._200(res, null, [
-                    { tipo: nombreDeObjeto, datos: elemento[0] },
+                    { tipo: nombreDeObjeto, datos: elemento },
                 ]);
 
             })

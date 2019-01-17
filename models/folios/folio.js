@@ -40,6 +40,7 @@ var autoPopulate = function(next) {
     next();
 };
 folioSchema
+    .pre('find', autoPopulate)
     .pre('findOne', autoPopulate)
     .pre('save', function(next) {
         // Borrado de relacionados con folio. Aqui hay que actualizar un poco todavia. 

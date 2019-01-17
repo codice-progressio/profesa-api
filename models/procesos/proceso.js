@@ -80,6 +80,7 @@ let eliminarRelacionados = function(next) {
 
 procesoSchema
     .pre('find', autoPopulate)
+    .pre('findOne', autoPopulate)
     .pre('remove', eliminarRelacionados);
 
 

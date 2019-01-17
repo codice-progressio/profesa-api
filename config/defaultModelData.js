@@ -15,12 +15,12 @@ const defaults = {
         BARNIZADO: '',
         BURATO: '',
         LASER: '',
-        ALMACEN: '',
+        ALMACEN_DE_BOTON: '',
     },
     PROCESOS: {
         CONTROL_DE_PRODUCCION: '',
         LASER: '',
-        ALMACEN: '',
+        ALMACEN_DE_BOTON: '',
     }
 };
 

@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 
 var Schema = mongoose.Schema;
 
-var almacenSchema = new Schema({
+var almacenDeBotonSchema = new Schema({
 
     guardar: { type: Boolean, default: false },
     trabajando: { type: Boolean },
@@ -25,4 +25,4 @@ var almacenSchema = new Schema({
 
 }, { timestamps: true });
 
-module.exports = almacenSchema;
+module.exports = almacenDeBotonSchema;

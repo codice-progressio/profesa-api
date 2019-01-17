@@ -6,6 +6,16 @@ var NVU = require('../../config/nivelesDeUrgencia');
 
 var LaserCliente = require('../marcaLaser');
 
+var procesosSchema = require('../procesos/procesos');
+
+
+// <!-- 
+// =====================================
+//  validaciones
+// =====================================
+// -->
+
+
 var Tenido = [{
     color: {
         type: String,
@@ -31,7 +41,11 @@ function comprobarCantidadesDeTenido(value) {
     return true;
 }
 
-
+// <!-- 
+// =====================================
+//  END validaciones
+// =====================================
+// -->
 
 const folioLineaSchema = new Schema({
     // El número de pedido que se asigna en el pre del save. (Tambien se asigna a la órden.);
@@ -70,13 +84,7 @@ const folioLineaSchema = new Schema({
     coloresTenidos: { type: Tenido, validate: [comprobarCantidadesDeTenido, "El total de botones a teñir supera el del pedido."] },
 
     // Este proceso debe afectar al órden en que se estable las órdenes. 
-    procesos: [{
-        proceso: {
-            type: Schema.Types.ObjectId,
-            ref: 'Proceso',
-        },
-        orden: { type: Number, require: [true, 'No se definio el órden del proceso.'] }
-    }],
+    procesos: [procesosSchema],
     observaciones: { type: String },
     terminado: { type: Boolean, default: false }
 

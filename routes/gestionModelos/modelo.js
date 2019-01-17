@@ -6,22 +6,22 @@ var RESP = require('../../utils/respStatus');
 var Modelo = require('../../models/modelo');
 var ModeloCompleto = require('../../models/modeloCompleto');
 var Cliente = require('../../models/cliente');
+var CONSTANSTES = require('../../utils/constantes');
+
 
 var Folio = require('../../models/folios/folio');
 
 app.get('/', (req, res, next) => {
 
-    const desde = Number(req.query.desde || 0);
-    const limite = Number(req.query.limite || 30);
-    const sort = Number(req.query.sort || 1);
-    const campo = String(req.query.campo || 'modelo');
-
-
+    const CONSULTAS = CONSTANSTES.consultas(req.query, 'modelo');
 
     Promise.all([
-            Modelo.find().limit(limite).skip(desde).sort({
-                [campo]: sort
-            }).exec(),
+            Modelo.find().limit(CONSULTAS.limite)
+            .skip(CONSULTAS.desde)
+            .sort({
+                [CONSULTAS.campo]: CONSULTAS.sort
+            })
+            .exec(),
             Modelo.countDocuments()
         ]).then(resp => {
             return RESP._200(res, null, [

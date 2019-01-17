@@ -1,6 +1,8 @@
-var DEPTO = require('../config/departametosDefaults');
-var PROC = require('../config/procesosDefault');
-var ROLES = require('../config/roles');
+let DEPTO = require('../config/departametosDefaults');
+let PROC = require('../config/procesosDefault');
+
+let ROLES = require('../config/roles');
+let colores = require('../utils/colors');
 
 module.exports = {
     ROLES: ROLES,
@@ -20,4 +22,34 @@ module.exports = {
             },
         },
     },
+    /**
+     * Retorna los datos necesarios para definir la paginacion en la consulta. 
+     *  
+     * Es necesario definir en el query 'desde', 'limite', 'sort' y 'campo'.
+     * 
+     * @param {*} query El elemento de donde se van a extraer los datos. 
+     * @param {*} CAMPO El nombre del campo por defecto. 
+     * @returns Retorna los elementos necesarios para la paginacion en un objeto. 
+     * 
+     * {
+            desde,
+            limite,
+            sort,
+            campo,
+        }
+     */
+    consultas: function(query, CAMPO) {
+        const desde = Number(query.desde || 0);
+        const limite = Number(query.limite || 30);
+        const sort = Number(query.sort || 1);
+        const campo = String(query.campo || CAMPO);
+
+        return {
+            desde: desde,
+            limite: limite,
+            sort: sort,
+            campo: campo,
+        };
+
+    }
 };

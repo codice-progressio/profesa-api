@@ -1,44 +1,45 @@
-var express = require('express');
-var app = express();
-var FamiliaDeProceso = require('../models/procesos/familiaDeProcesos');
-var ModeloCompleto = require('../models/modeloCompleto');
-var Proceso = require('../models/procesos/proceso');
-var colores = require("../utils/colors");
-var RESP = require('../utils/respStatus');
-var Departamento = require('../models/departamento');
-var CONSTANSTES = require('../utils/constantes');
-
-// ============================================
-// Obtiene todas las familias de proceso. 
-// ============================================
+let express = require('express');
+let app = express();
+let FamiliaDeProceso = require('../models/procesos/familiaDeProcesos');
+let ModeloCompleto = require('../models/modeloCompleto');
+let Proceso = require('../models/procesos/proceso');
+let colores = require("../utils/colors");
+let RESP = require('../utils/respStatus');
+let Departamento = require('../models/departamento');
+let CONSTANSTES = require('../utils/constantes');
+let PROC = require('../config/procesosDefault');
 
 
-app.get('/', (req, res, next) => {
-    var desde = Number(req.query.desde || 0);
-    var limite = Number(req.query.limite || 5);
-    var docs;
+let CRUD = require('../routes/CRUD');
 
-    FamiliaDeProceso.find()
-        .limit(limite)
-        .skip(desde)
-        .then(resp => {
-            docs = resp;
-            return FamiliaDeProceso.countDocuments();
-        })
-        .then(conteo => {
-            return RESP._200(res, null, [
-                { tipo: 'familiasDeProcesos', datos: docs },
-                { tipo: 'total', datos: conteo },
-            ]);
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error buscando las familias de procesos.',
-                err: err,
-            });
-        });
+CRUD.app = app;
+CRUD.modelo = FamiliaDeProceso;
+CRUD.nombreDeObjetoSingular = 'familiaDeProcesos';
+CRUD.nombreDeObjetoPlural = 'familiasDeProcesos';
+CRUD.campoSortDefault = 'nombre';
+CRUD.camposActualizables = {
+    procesos: "",
+    nombre: "",
+    soloParaProductoTerminado: "",
 
-});
+};
+
+
+
+CRUD.camposDeBusqueda = [
+    'nombre',
+    'procesos.proceso.nombre',
+    'procesos.proceso.observaciones',
+];
+
+CRUD.crud(
+    'get',
+    'getById',
+    'getBuscar',
+    'put',
+    'delete'
+);
+
 
 // ============================================
 // Guardamos una nueva famila de procesos. 
@@ -62,11 +63,12 @@ app.post('/', (req, res) => {
     // Guardamos por defecto CONTROL DE PRODUCCIÓN como el primer proceso que se debe realizar en la familia. y
     // como primer departamento por defecto. 
     // Lo buscamos
-    const p = Proceso.findOne({ nombre: CONSTANSTES.PROCESOS.CONTROL_DE_PRODUCCION._n }).exec();
+    console.log(` Estos datos deben mostrarse ${JSON.stringify(PROC)}`);
+    const p = Proceso.findOne({ nombre: PROC.CONTROL_DE_PRODUCCION._n }).exec();
     p.then(procesoD => {
         if (!procesoD) {
             return RESP._500(res, {
-                msj: 'Hubo un error buscando el proceso por defecto: ' + CONSTANSTES.PROCESOS.CONTROL_PRODUCCION._n,
+                msj: 'Hubo un error buscando el proceso por defecto: ' + PROC.CONTROL_PRODUCCION._n,
                 err: 'El sistema necesita este proceso para poder continuar. (¿Defaults no funcionan?)',
                 masInfo: [{
                     infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
@@ -87,45 +89,6 @@ app.post('/', (req, res) => {
         });
     });
 
-});
-
-// ============================================
-// Modificamos una famiia
-// ============================================
-app.put('/:idFamilia', (req, res) => {
-    const id = req.params.idFamilia;
-    console.log(' Entro ');
-
-    const set = {
-        '$set': {
-            procesos: req.body.procesos,
-            nombre: req.body.nombre,
-        }
-    };
-
-    FamiliaDeProceso.findByIdAndUpdate(id, set, (err, familiaActualizada) => {
-        console.log(' Tuvo que haber guardado.  ');
-        if (err) {
-            return RESP._500(res, {
-                msj: 'Hubo un error actualizando la familia',
-                err: err,
-            });
-        }
-
-        if (!familiaActualizada) {
-            return RESP._400(res, {
-                msj: 'No existe la familia.',
-                err: "El id de la familia que pasaste no existe. ",
-
-            });
-        }
-
-        return RESP._200(res, 'Se actualizo la familia de manera correcta.', [
-            { tipo: 'familiaDeProcesos', datos: familiaActualizada },
-        ]);
-
-    });
-    console.log(' Parece que no entro  ');
 });
 
 // ============================================

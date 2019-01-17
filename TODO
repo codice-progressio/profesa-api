@@ -1,22 +1,17 @@
 FEATURES:
-    Departamentos nuevos:
-        ☐ Almacen de materiales.
-        ☐ Almacen de refacciones.
-        ☐ Almacen de producto terminado. 
-        ☐ Carga dinamica de procesos en base a la hoja de matriz de fabian. 
-
-    Transformacion:
-        ☐ Paros de la maquina. Una GUI para definir los paros que tuvo la maquina. Dejar que el admin adminsitre los tipos de paro. Dejar abierto para recivir los datos desde un plc. 
-        
+   
     Procesos:
-        ☐ Los proceosos deben poder señalarse como requiere produccion o no. 
-        ☐ Cuando un proceso no requiere produccion debe permitir diferenciarse entre uno que si ocupe. Esto afecta principalmente el GUI cuando se selecciona un modelo para el pedido. Deben desaparecer los que requieren proudccion cuando el modelo viene desde almacen. 
-        ☐ Debe haber familias de procesos que se puedan aplicar desde el pedido en el (GUI) y que no requieran produccion.
-            
+        ✔ Los proceosos deben poder señalarse como requiere produccion o no. @started(19-01-02 07:59) @done(19-01-02 08:11) @lasted(12m55s)
+        ✔ Ordenar los procesos por nombre. @done(19-01-02 09:10)
+       
         Estandarizacion para procesos.:
-            ☐ Los procesos deben de llevar hit.
+            ☐ Los procesos deben de llevar hit. @started(19-01-02 09:11)
             ☐ Hoja de control de calidad. 
             ☐ Todas las que el ingeniero Rafael tiene. 
+            ☐ Que permita el almacenaje del hit.
+            ☐ Quien lo va a hacer? > Usuarios capacitados. 
+            ☐ Con que lo va a hacer. Material y herramientas. 
+            ☐ Procesos disponibles al crear familia que se arrastre para agregar a la lista. 
         
     Sistema de alertas y notificaciones:
         ☐ Dashboard debe mostrar notificaciones y alertas.
@@ -33,78 +28,85 @@ FEATURES:
     Historial de folio:
         ☐ Mostrar el historial de folios
         
-    Almacenes:
-        ☐ Datos del proveedor:;
-        Nombre
-        Razon social
-        Domicilio completo
-        =>Quienes atienden
-            Nombre
-            Telefono
-            Correo
-            Puesto
-        # Consecutivo
-        Tiempo de entrega
-        Monedas
+   
 
-        Articulos:
-            ☐ Tiene que tener un proveedor que sea prioritario( Si tiene tres, que se seleccione al que se le da prioridad.)
-            ☐ Datos del articulo:
-            ??Codigo de localización.
-            Cod interno.
-            =>Almacen
-                ?? Ubicacion 
-            Descripcion
-            =>Proveedores
-                Proveedor
-                Precio
-            =>Existencias
-                Entradas
-                Salidas
-                Solicitado - En espera?
-            Presentacion ( Unidad , tambor, cubeta, etc)
-            Unidad de medida. 
-            =>Tipo de articulo
-                EJEMPLO Refaccion, resina, etc.
-        
-        Ficha de compra:
-            ☐ Datos de la requisicion
-                Articulo
-                Fecha
-                Usuario => Quien realiza la requisición.
-                Cantidad
-                Costo unitario
-                ???Costo total???
-                Fecha de espera para recivirlo (Cuando se necesita)
-                Prowvedor => El seleccionado 
-            ☐ Datos de la compra:
-                Fecha
-                Usuario => Empleado que la realiza. 
-                Requisición
-                # Consecutivo de órden.
-                => Recivido
-                Fecha de recivido
-                Quien recive. 
-
-    Ventanass:
-        ☐ Almacen
-        Tipos de ingenieria.:
-            ☐ Ingenieria de manufactura. 
-            ☐ Ingenieria de calidad
-            ☐ Ingenieria de diseno.
-        ☐ Produccion
-        ☐ Ventas
-        ☐ RH.
-
+    
     Pedidos:
         ☐ Un modelo debe de poder surtirse desde almacen para laserarse u otro proceso. 
+
+        Departamentos nuevos:
+        ☐ Almacen de materiales.
+        ☐ Almacen de refacciones.
+        ☐ Almacen de producto terminado. 
+
+        Almacenes:
+            ☐ Datos del proveedor:;
+            Nombre
+            Razon social
+            Domicilio completo
+            =>Quienes atienden
+                Nombre
+                Telefono
+                Correo
+                Puesto
+            # Consecutivo
+            Tiempo de entrega
+            Monedas
+    
+            Articulos:
+                ☐ Tiene que tener un proveedor que sea prioritario( Si tiene tres, que se seleccione al que se le da prioridad.)
+                ☐ Datos del articulo:
+                ??Codigo de localización.
+                Cod interno.
+                =>Almacen
+                    ?? Ubicacion 
+                Descripcion
+                =>Proveedores
+                    Proveedor
+                    Precio
+                =>Existencias
+                    Entradas
+                    Salidas
+                    Solicitado - En espera?
+                Presentacion ( Unidad , tambor, cubeta, etc)
+                Unidad de medida. 
+                =>Tipo de articulo
+                    EJEMPLO Refaccion, resina, etc.
+            
+            Ficha de compra:
+                ☐ Datos de la requisicion
+                    Articulo
+                    Fecha
+                    Usuario => Quien realiza la requisición.
+                    Cantidad
+                    Costo unitario
+                    ???Costo total???
+                    Fecha de espera para recivirlo (Cuando se necesita)
+                    Prowvedor => El seleccionado 
+                ☐ Datos de la compra:
+                    Fecha
+                    Usuario => Empleado que la realiza. 
+                    Requisición
+                    # Consecutivo de órden.
+                    => Recivido
+                    Fecha de recivido
+                    Quien recive. 
+
+                    
+        ☐ Carga dinamica de procesos en base a la hoja de matriz de fabian. 
+
+    
 
 FIX:
 
     ☐ Comprobar que no se puedan agregar dos familias de procesos al mismo modelo. 
 
+    Procesos:
+        ✔ El proceso no require ser senalado como especial. @done(19-01-02 08:05)
+
 Archive:
   ✔ Metalizado. @started(18-12-19 16:43) @done(18-12-19 17:02) @lasted(19m50s) @project(FEATURES.Departamentos nuevos)
   ✔ Barnizado. @started(18-12-19 16:46) @done(18-12-19 17:02) @lasted(16m50s) @project(FEATURES.Departamentos nuevos)
   ✔ Burato. @started(18-12-19 16:46) @done(18-12-19 17:02) @lasted(16m50s) @project(FEATURES.Departamentos nuevos)
+----------------
 

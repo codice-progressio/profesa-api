@@ -1,14 +1,19 @@
-var colores = require('../utils/colors');
-var Usuario = require('../models/usuario');
-var _DEPTOS = require('../config/departametosDefaults');
-var _PROC = require('../config/procesosDefault');
-var _ROLE = require('../config/roles');
-var Role = require('../models/role');
-var CONSTANTES = require('../utils/constantes');
-var Departamento = require('../models/departamento');
-var RESP = require('../utils/respStatus');
-var Proceso = require('../models/procesos/proceso');
-var bcrypt = require('bcryptjs');
+let colores = require('../utils/colors');
+let Usuario = require('../models/usuario');
+let _DEPTOS = require('../config/departametosDefaults');
+let _PROC = require('../config/procesosDefault');
+let _ROLE = require('../config/roles');
+let Role = require('../models/role');
+let CONSTANTES = require('../utils/constantes');
+let Departamento = require('../models/departamento');
+let RESP = require('../utils/respStatus');
+let Proceso = require('../models/procesos/proceso');
+let bcrypt = require('bcryptjs');
+var DefaultModelDataModel = require('../config/defaultModelData');
+
+let Defaults = require('../models/configModels/default');
+
+
 
 const USUARIO_SUPER_ADMIN = {
     nombre: "SUPER-ADMIN",
@@ -36,8 +41,10 @@ module.exports = () => {
             console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Se creo el usuario.");
         } else {
             console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Existe el usuario.");
-
         }
+
+        DefaultModelDataModel.SUPER_ADMIN = adminCreado._id;
+        console.log(D + colores.info(adminCreado._id) + "Se almaceno el id");
         // ============================================
         // Deben existir los departamentos.
         // ============================================
@@ -46,7 +53,7 @@ module.exports = () => {
         for (const depto in _DEPTOS) {
             if (_DEPTOS.hasOwnProperty(depto)) {
                 const departamento = _DEPTOS[depto];
-                promesas.push(comprobarDepartamentos(departamento._n));
+                promesas.push(comprobarDepartamentos(departamento._n, depto));
             }
         }
 
@@ -61,27 +68,21 @@ module.exports = () => {
         // DEBE EXISTIR UN PROCESO DE CONTROL DE PRODUCCIÓN POR DEFECTO.
         // ============================================
 
-        return debeExistirProcesoPorDefectoEnControlProduccion();
+        return Promise.all(procesosPorDefautl());
 
-    }).then(proEntregaDeOrden => {
-        console.log(D + colores.info('PROCESOS') + proEntregaDeOrden);
+    }).then(procesosDefaults => {
 
-        //     // ============================================
-        //     // Deben existir los roles en la base de datos.
-        //     // ============================================
-        //     const promesasRoles = [];
-        //     for (let i = 0; i < _ROLE.ARRAY.length; i++) {
-        //         const role = _ROLE.ARRAY[i];
-        //         promesasRoles.push(comprobarRolPorDefecto(role));
+        for (let i = 0; i < procesosDefaults.length; i++) {
+            const proc = procesosDefaults[i];
+            console.log(D + colores.info('PROCESOS') + proc);
+        }
 
-        //     }
+        let d = new Defaults(DefaultModelDataModel);
 
 
-        //     return Promise.all(promesasRoles);
-        // }).then(resp => {
-        //     resp.forEach(respuesta => {
-        //         console.log(D + colores.info('ROLES') + respuesta);
-        //     });
+        return d.save();
+    }).then(resp => {
+        console.log(D + colores.info('DEFAULTS') + 'Se actualizaron los id de los defaults.');
 
     }).catch(err => {
         console.log(colores.danger('ERROR COMPROBANDO DEFAULTS') + 'Hubo un error en la comprobación de valores por defecto.');
@@ -90,25 +91,25 @@ module.exports = () => {
 
 };
 
-function comprobarRolPorDefecto(role) {
-    return new Promise((resolve, reject) => {
-        Role.existe(role).then(roleEncontrado => {
-            if (!roleEncontrado) {
-                const b = new Role();
-                b.role = role;
-                return b.save();
-            }
-            resolve(colores.success(role) + 'Existe en la BD.');
-        }).then(roleGuardado => {
-            resolve(colores.warning(role) + 'No existia se creo.');
-        }).catch(err => {
-            reject(RESP.errorGeneral({
-                msj: 'Hubo un error buscando el role.',
-                err: err,
-            }));
-        });
-    });
-}
+// function comprobarRolPorDefecto(role) {
+//     return new Promise((resolve, reject) => {
+//         Role.existe(role).then(roleEncontrado => {
+//             if (!roleEncontrado) {
+//                 const b = new Role();
+//                 b.role = role;
+//                 return b.save();
+//             }
+//             resolve(colores.success(role) + 'Existe en la BD.');
+//         }).then(roleGuardado => {
+//             resolve(colores.warning(role) + 'No existia se creo.');
+//         }).catch(err => {
+//             reject(RESP.errorGeneral({
+//                 msj: 'Hubo un error buscando el role.',
+//                 err: err,
+//             }));
+//         });
+//     });
+// }
 
 
 
@@ -126,7 +127,7 @@ function crearSuperAdmin(adminExistente) {
     }
 }
 
-function comprobarDepartamentos(deptoBuscado) {
+function comprobarDepartamentos(deptoBuscado, nombreVar) {
     // Busca un departamento en una promesa. 
     return new Promise((resolve, reject) => {
         // Buscamos el departamento. 
@@ -137,8 +138,16 @@ function comprobarDepartamentos(deptoBuscado) {
                 d.nombre = deptoBuscado;
                 return d.save();
             }
+            DefaultModelDataModel.DEPARTAMENTOS[nombreVar] = deptoEncontrado._id;
+            console.log(D + colores.info(deptoEncontrado._id) + "Se almaceno el id");
             resolve(colores.success(deptoBuscado) + 'Existe en la BD.');
         }).then(deptoGuardado => {
+            // Si no tiene id quiere decir que ya existia y no se creo, Entonces
+            // se grabo en la linea anterior. 
+            if (deptoGuardado) {
+                DefaultModelDataModel.DEPARTAMENTOS[deptoBuscado] = deptoGuardado._id;
+                console.log(D + colores.info(deptoGuardado._id) + "Se almaceno el id");
+            }
             resolve(colores.warning(deptoBuscado) + 'No existia se creo.');
         }).catch(err => {
             reject(RESP.errorGeneral({
@@ -149,49 +158,89 @@ function comprobarDepartamentos(deptoBuscado) {
     });
 }
 
-function debeExistirProcesoPorDefectoEnControlProduccion() {
-    const nombreProceso = _PROC.CONTROL_DE_PRODUCCION._n;
-    const nombreDepto = _DEPTOS.CONTROL_DE_PRODUCCION._n;
-
+function existeDepartamento(nombreDepto) {
     return new Promise((resolve, reject) => {
-
-        Promise.all([
-            existeDepartamento(nombreDepto),
-            existeProceso(nombreProceso, nombreDepto)
-        ]).then(respuestas => {
-            const depto = respuestas[0];
-            const proce = respuestas[1];
-
-            if (!depto) {
-                reject(RESP.errorGeneral({
-                    msj: 'No existe el departamento: ' + _DEPTOS.CONTROL_DE_PRODUCCION._n,
-                    err: 'Algo extraño paso. Este departamento debería existir.',
-                }));
-            } else {
-                if (!proce) {
-                    // No existe, hay que crearlo. 
-                    const p = new Proceso();
-                    p.departamento = depto;
-                    p.nombre = nombreProceso;
-                    p.pasos.push({ orden: 1, descripcion: 'Entregar órdenes para empezar producción.' });
-                    p.observaciones = 'Este proceso debe ir simpre al principio de todas las familias.';
-                    p.especial = false;
-                    p.save().then(procGrabado => {
-                        resolve(colores.warning(nombreProceso) + 'El proceso no existia. Se grabo.');
-                    }).catch(err => {
-                        reject(RESP.errorGeneral({
-                            msj: 'Hubo un error grabando el proceso: ' + nombreProceso,
-                            err: err,
-                        }));
-                    });
-                } else {
-                    resolve(colores.success(nombreProceso) + 'Existe el proceso.');
-                }
-            }
+        const p = Departamento.findOne({ nombre: nombreDepto }).exec();
+        p.then(depto => {
+            resolve(depto);
         }).catch(err => {
-            reject(err);
+            reject(RESP.errorGeneral({
+                msj: 'Hubo un error buscando el departamento.',
+                err: err,
+            }));
         });
     });
+}
+
+/**
+ * Busca que los procesos de la lista por default exista y si no existen
+ * los crea.
+ *
+ * @returns Un arreglo de promesas para ejectuar las acciones por cada proceso.
+ */
+function procesosPorDefautl() {
+
+    // Guardamos todo en promesas retornarlo luego. 
+    let promesas = [];
+
+    // const nombreProceso = _PROC.CONTROL_DE_PRODUCCION._n;
+    // const nombreDepto = _DEPTOS.CONTROL_DE_PRODUCCION._n;
+
+    for (const key in _PROC) {
+        if (_PROC.hasOwnProperty(key)) {
+            const dpd = _PROC[key];
+            var p = new Promise((resolve, reject) => {
+
+                Promise.all([
+                    existeDepartamento(dpd._departamento),
+                    existeProceso(dpd._n, dpd._departamento)
+                ]).then(respuestas => {
+                    const depto = respuestas[0];
+                    const proce = respuestas[1];
+
+                    // Si algo extrano pasa y no se crea el departamento mandamos un error
+                    // para depurar. 
+                    if (!depto) {
+                        reject(RESP.errorGeneral({
+                            msj: 'No existe el departamento: ' + dpd._departamento,
+                            err: 'Algo extraño paso. Este departamento debería existir.',
+                        }));
+                    } else {
+                        if (!proce) {
+
+                            // No existe, hay que crearlo
+                            const p = new Proceso();
+                            p.departamento = depto;
+                            p.nombre = dpd._n;
+                            p.observaciones = dpd.observaciones;
+                            p.requiereProduccion = dpd.requiereProduccion;
+
+                            p.save().then(procGrabado => {
+                                DefaultModelDataModel.PROCESOS[key] = procGrabado._id;
+                                console.log(D + colores.info(procGrabado._id) + "Se almaceno el id");
+                                resolve(colores.warning(dpd._n) + 'El proceso no existia. Se grabo.');
+                            }).catch(err => {
+                                reject(RESP.errorGeneral({
+                                    msj: 'Hubo un error grabando el proceso: ' + dpd._n,
+                                    err: err,
+                                }));
+                            });
+                        } else {
+                            DefaultModelDataModel.PROCESOS[key] = proce._id;
+                            console.log(D + colores.info(proce._id) + "Se almaceno el id");
+                            resolve(colores.success(dpd._n) + 'Existe el proceso.');
+                        }
+                    }
+                }).catch(err => {
+                    reject(err);
+                });
+            });
+            promesas.push(p);
+        }
+    }
+
+    return promesas;
+
 }
 
 function existeDepartamento(nombreDepto) {

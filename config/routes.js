@@ -29,9 +29,20 @@ var tamanoRoutes = require('../routes/gestionModelos/tamano');
 var colorRoutes = require('../routes/gestionModelos/color');
 var terminadoRoutes = require('../routes/gestionModelos/terminado');
 var materialRoutes = require('../routes/almacen/material');
+var hitRoutes = require('../routes/ingenieria/hit');
+var defaultsRoute = require('../routes/configCruds/defaults.crud');
 
 var R = require('../config/roles');
 module.exports.ROUTES = {
+    _DEFAULTS: {
+        url: '/defaults',
+        route: defaultsRoute,
+        roles: [],
+        subRoutes: {}
+
+    },
+
+
     _LOGIN: {
         url: '/login',
         route: loginRoutes,
@@ -223,4 +234,14 @@ module.exports.ROUTES = {
 
         }
     },
+
+    _HIT: {
+        url: '/hit',
+        route: hitRoutes,
+        roles: [],
+        subRoutes: {
+
+        }
+    },
+
 }

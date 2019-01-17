@@ -55,9 +55,9 @@ app.get('/', (req, res, next) => {
 
 
 
-    console.log(`${colores.info('DEBUG FOLIOS TERMINADOS')}  terminados? ${terminados}`);
-    console.log(`${colores.info('DEBUG FOLIOS CON ORDENES')}  ORDENES? ${conOrdenes}`);
-    console.log(`${colores.info('DEBUG FOLIOS filtros')}  filtros: ${JSON.stringify(filtros)}`);
+    // console.log(`${colores.info('DEBUG FOLIOS TERMINADOS')}  terminados? ${terminados}`);
+    // console.log(`${colores.info('DEBUG FOLIOS CON ORDENES')}  ORDENES? ${conOrdenes}`);
+    // console.log(`${colores.info('DEBUG FOLIOS filtros')}  filtros: ${JSON.stringify(filtros)}`);
 
 
     Folio.find(filtros)

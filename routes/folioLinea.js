@@ -15,7 +15,6 @@ var app = express();
 // Actualizar el folio.
 // ============================================
 
-
 app.put('/:idFolio/:idLinea', (req, res) => {
     // Obetenemos el body para extraer de el 
     // los parametros que se envían por POST

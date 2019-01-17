@@ -14,6 +14,7 @@ var productoTerminadoSchema = require('./infoDeptos/productoTerminado');
 var metalizadoSchema = require('./infoDeptos/metalizado');
 var barnizadoSchema = require('./infoDeptos/barnizado');
 var buratoSchema = require('./infoDeptos/burato');
+var laserSchema = require('./infoDeptos/laser');
 
 
 var trayectoSchema = new Schema({
@@ -38,6 +39,8 @@ var trayectoSchema = new Schema({
     metalizado: metalizadoSchema,
     barnizado: barnizadoSchema,
     burato: buratoSchema,
+    laser: laserSchema,
+
 
     // Esta se guarda cuando se modifica la órden. 
     entrada: { type: Date },

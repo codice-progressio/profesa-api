@@ -9,61 +9,29 @@ var Usuario = require('../models/usuario');
 
 var app = express();
 
-app.get("/", (req, res, next) => {
 
-    var desde = req.query.desde || 0;
-    desde = Number(desde);
+var CRUD = require('../routes/CRUD');
+CRUD.app = app;
+CRUD.modelo = Cliente;
+CRUD.nombreDeObjetoSingular = 'cliente';
+CRUD.nombreDeObjetoPlural = 'clientes';
+CRUD.campoSortDefault = 'nombre';
+CRUD.camposActualizables = {
+    sae: null,
+    nombre: null,
+    laserados: null,
+    modelosCompletosAutorizados: null,
+};
 
-    Cliente.find({})
-        .skip(desde)
-        .limit(30)
-        .exec().then(clientes => {
-            Cliente.countDocuments({}, (err, conteo) => {
-                return RESP._200(res, null, [
-                    { tipo: 'clientes', datos: clientes },
-                    { tipo: 'total', datos: conteo },
-                ]);
 
-            });
 
-        }).catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error buscando los clientes.',
-                err: err,
-            });
-        });
-});
+CRUD.camposDeBusqueda = [
+    'nombre',
+    'sae',
+    'laserados.laser',
+];
 
-// ============================================
-// Obtiene un cliente por su id.
-// ============================================
-
-app.get('/id/:id', (req, res, next) => {
-    const id = req.params.id;
-
-    Cliente.findOne({ _id: id })
-        .exec()
-        .then(clienteEncontrado => {
-
-            if (!clienteEncontrado) {
-                return RESP._400(res, {
-                    msj: 'No existe el cliente.',
-                    err: 'El id que ingresaste no coincide con ninguno en la base de datos.',
-                });
-            }
-
-            return RESP._200(res, null, [
-                { tipo: 'cliente', datos: clienteEncontrado },
-            ]);
-
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error buscando al cliente.',
-                err: err,
-            });
-        });
-});
+CRUD.crud();
 
 
 // ============================================
@@ -71,7 +39,7 @@ app.get('/id/:id', (req, res, next) => {
 // ============================================
 // El id de la marca embebida. 
 
-app.get('/:idLaser', (req, res, next) => {
+app.get('/laser/:idLaser', (req, res, next) => {
     const id = req.params.idLaser;
     Cliente.findOne({ laserados: { $elemMatch: { _id: id } } }).exec()
         .then(clienteEncontrado => {
@@ -95,117 +63,16 @@ app.get('/:idLaser', (req, res, next) => {
 
 });
 
-
-// ============================================
-// Guardar un cliente??
-// ============================================
-
-app.post("/", (req, res, next) => {
-
-    new Cliente(req.body).save()
-        .then(clienteGuardado => {
-            return RESP._200(res, 'Se guardo el cliente de manera correcta.', [
-                { tipo: 'cliente', datos: clienteGuardado },
-            ]);
-
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error guardado en cliente.',
-                err: err,
-            });
-        });
-});
-
-// ============================================
-// Actualizar cliente
-// ============================================
-
-app.put("/:id", (req, res) => {
-    console.log(colores.info("/cliente") + "[put] Funcionando.");
-    var id = req.params.id;
-    var body = req.body;
-
-    Cliente.findById(id).exec()
-        .then(clienteEncontrado => {
-            if (!clienteEncontrado) {
-                return RESP._400(res, {
-                    msj: 'No existe el cliente. ',
-                    err: 'El id del cliente que pasaste no esta regsitrado.',
-                });
-            }
-
-            clienteEncontrado.nombre = body.nombre;
-            clienteEncontrado.sae = body.sae;
-            clienteEncontrado.laserados = body.laserados;
-            clienteEncontrado.modelosCompletosAutorizados = body.modelosCompletosAutorizados;
-
-            return clienteEncontrado.save();
-
-        }).then(clienteModificado => {
-            return RESP._200(res, 'Se modfico correctamente el cliente.', [
-                { tipo: 'cliente', datos: clienteModificado },
-            ]);
-
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error modificando al cliente.',
-                err: err,
-            });
-        });
-
-});
-
-// ============================================
-// Borrar un cliente
-// ============================================
-
-app.delete("/:id", (req, res) => {
-    console.log(colores.info("/cliente") + "[delete] Funcionando.");
-
-    var id = req.params.id;
-
-    Cliente.findByIdAndRemove(id, (err, clienteBorrado) => {
-        if (err) {
-            var msj = "Error al borrar el cliente";
-            console.log(colores.danger("Error DELETE - cliente") + `${msj} =>` + err);
-            return res.status(500).json({
-                ok: false,
-                mensaje: `${msj}`,
-                errors: err
-            });
-        }
-
-        if (!clienteBorrado) {
-            var msj2 = "No existe un cliente con ese id.";
-
-            console.log(
-                colores.danger("Error DELETE - cliente") + `${msj2} =>` + err
-            );
-            return res.status(400).json({
-                ok: false,
-                mensaje: msj2,
-                errors: { message: msj2 }
-            });
-        }
-
-        console.log(colores.info("DELETE") + " Petición correcta: clientes");
-        res.status(200).json({
-            ok: true,
-            cliente: clienteBorradop
-        });
-    });
-});
-
-// ============================================
-// Agregar una marca laser al cliente.
-// ============================================
+// // ============================================
+// // Agregar una marca laser al cliente.
+// // ============================================
 
 app.put("/laser/:idCliente", (req, res) => {
     var idCliente = req.params.idCliente;
 
     var marcaLaser = req.body.laser;
+
+    console.log(` Estamos aqui en cliente`);
 
     Cliente.findById(idCliente).exec()
         .then(clienteEncontrado => {

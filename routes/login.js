@@ -202,7 +202,7 @@ function obtenerMenu(ROLE) {
             // TODO MUNDO DEBE DE TENER ESTO. 
             roles: CONST.ROLES.ARRAY,
             titulo: 'Principal',
-            icono: 'mdi mdi-gauge',
+            icono: 'fas fa-comments',
             submenu: [
                 { titulo: 'Dashboard', url: '/dashboard' },
             ]
@@ -210,7 +210,7 @@ function obtenerMenu(ROLE) {
         REPORTES: {
             roles: [],
             titulo: 'Reportes',
-            icono: 'mdi mdi-gauge',
+            icono: 'fa fa-pie-chart',
             submenu: [
                 { titulo: 'Historial de folios', url: '/folios/historial' },
             ]
@@ -218,7 +218,7 @@ function obtenerMenu(ROLE) {
         CONTROL_DE_PRODUCCION: {
             roles: [],
             titulo: 'Control de Producción',
-            icono: 'mdi mdi-gauge',
+            icono: 'fas fa-project-diagram',
             submenu: [
                 { titulo: 'Registro de folios', url: '/folios' },
                 { titulo: 'Seguimiento', url: '/produccion' },
@@ -226,26 +226,19 @@ function obtenerMenu(ROLE) {
         },
         GESTION_DE_PROCESOS: {
             roles: [],
-            titulo: 'Gestión de procesos',
-            icono: 'mdi mdi-file-chart',
+            titulo: 'Ingenieria',
+            icono: 'fas fa-gears',
             submenu: [
-                { titulo: 'Registro y modificación de procesos', url: '/procesos' },
-                { titulo: 'Costos de proceso', url: '/procesos/costos' },
-                { titulo: 'Gestión de procesos en modelos', url: '/procesos/modelos' },
-            ]
-        },
-        MANEJO_DE_MODELOS: {
-            roles: [],
-            titulo: 'Manejo de modelos',
-            icono: 'fa fa-plus',
-            submenu: [
-                { titulo: 'Modelos', url: '/modelos' },
+                { titulo: 'Procesos', url: '/procesos' },
+                // { titulo: 'Costos de proceso', url: '/procesos/costos' },
+                { titulo: 'Modelos', url: '/procesos/modelos' },
+                { titulo: 'Hit', url: '/hits' },
             ]
         },
         ADMINISTRADOR: {
             roles: [],
             titulo: 'Administrador',
-            icono: 'fa fa-gears',
+            icono: 'fas fa-toolbox',
             submenu: [
                 { titulo: 'Usuarios', url: '/usuarios' },
                 { titulo: 'Departametos', url: '/departamentos' },
@@ -265,6 +258,7 @@ function obtenerMenu(ROLE) {
                 { titulo: 'Materiales', url: '/produccion/materiales' },
                 { titulo: 'Pastilla', url: '/produccion/pastilla' },
                 { titulo: 'Transformacion', url: '/produccion/transformacion' },
+                { titulo: 'Laser', url: '/produccion/laser' },
                 { titulo: 'Pulido', url: '/produccion/pulido' },
                 { titulo: 'Seleccion', url: '/produccion/seleccion' },
                 { titulo: 'Empaque', url: '/produccion/empaque' },

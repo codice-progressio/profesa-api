@@ -255,6 +255,7 @@ function obtenerMenu(ROLE) {
             icono: 'fa fa-file-text',
             submenu: [
                 { titulo: 'Control de produccion', url: '/produccion/controlDeProduccion' },
+                { titulo: 'Almacen de boton', url: '/produccion/almacenDeBoton' },
                 { titulo: 'Materiales', url: '/produccion/materiales' },
                 { titulo: 'Pastilla', url: '/produccion/pastilla' },
                 { titulo: 'Transformacion', url: '/produccion/transformacion' },

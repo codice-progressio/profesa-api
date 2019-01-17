@@ -19,5 +19,14 @@ module.exports = {
         _departamento: DEPARTAMENTOS.LASER._n,
         observaciones: 'Este proceceso se utiliza cuando el pedido se senala como "laserar boton"',
         requiereProduccion: false,
+    },
+    ALMACEN: {
+        // Este proceso es para todas las familias de proceso y se
+        // crea de manera automatica. 
+        _n: 'SURTIR DESDE ALMACEN.',
+        // El departamento al que esta relacinado.
+        _departamento: DEPARTAMENTOS.ALMACEN._n,
+        observaciones: 'Este proceceso se utiliza cuando el pedido se senala surtir de almacen.',
+        requiereProduccion: false,
     }
 };

@@ -15,6 +15,7 @@ const DEPARTAMENTOS = {
     BARNIZADO: { _v: 'BARNIZADO', _n: 'BARNIZADO', _vm: 'barnizado' },
     BURATO: { _v: 'BURATO', _n: 'BURATO', _vm: 'burato' },
     LASER: { _v: 'LASER', _n: 'LASER', _vm: 'laser' },
+    ALMACEN: { _v: 'ALMACEN', _n: 'ALMACEN', _vm: 'almacen' },
 
 };
 module.exports = DEPARTAMENTOS;

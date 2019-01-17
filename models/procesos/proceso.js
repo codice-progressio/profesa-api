@@ -78,7 +78,9 @@ let eliminarRelacionados = function(next) {
 };
 
 
-procesoSchema.pre('find', autoPopulate).pre('remove', eliminarRelacionados);
+procesoSchema
+    .pre('find', autoPopulate)
+    .pre('remove', eliminarRelacionados);
 
 
 

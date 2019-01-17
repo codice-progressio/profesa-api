@@ -66,18 +66,24 @@ const getById = function(modelo, app, nombreDeObjeto) {
 
             });
         }
-
-        modelo.findById(id).exec()
+        // <!-- 
+        // =====================================
+        //  BUSCAMOS CON FIND Y NO CON FINDBYID PARA QUE SE LANZE EL PRE HOOK
+        // =====================================
+        // -->
+        modelo.find({ _id: id }).exec()
             .then(elemento => {
-                if (!elemento) {
+                // Como es por id solo se puede obtener un elemento
+                if (elemento.length === 0) {
                     return RESP._400(res, {
                         msj: 'No hubo coincidencia.',
                         err: `El id que ingresaste no coincide con ninguno en la bd: ${nombreDeObjeto}`,
                     });
                 }
 
+                // Retornamos el unico elemento que debe haber. El [0]
                 return RESP._200(res, null, [
-                    { tipo: nombreDeObjeto, datos: elemento },
+                    { tipo: nombreDeObjeto, datos: elemento[0] },
                 ]);
 
             })
@@ -87,6 +93,12 @@ const getById = function(modelo, app, nombreDeObjeto) {
                     err: err,
                 });
             });
+
+        // <!-- 
+        // =====================================
+        //  END BUSCAMOS CON FIND Y NO CON FINDBYID PARA QUE SE LANZE EL PRE HOOK
+        // =====================================
+        // -->
 
     });
 };

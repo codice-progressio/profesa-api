@@ -41,7 +41,7 @@ var trayectoSchema = new Schema({
     barnizado: barnizadoSchema,
     burato: buratoSchema,
     laser: laserSchema,
-    almacen: almacenDeBotonSchema,
+    almacenDeBoton: almacenDeBotonSchema,
 
 
     // Esta se guarda cuando se modifica la órden. 

@@ -9,7 +9,7 @@ var almacenDeBotonSchema = new Schema({
 
 
     cantidadDeBoton: {
-        min: [0, 'La cantidad no puede ser menor que 0.'],
+        min: [1, 'La cantidad no puede ser menor que 0.'],
         max: [999999, 'La cantidad no puede ser mayor que 999999.'],
         type: Number,
         required: [function() {

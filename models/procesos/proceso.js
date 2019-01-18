@@ -3,7 +3,8 @@ var Schema = mongoose.Schema;
 var uniqueValidator = require('mongoose-unique-validator');
 var gastoConsumoSchema = require('../costos/gastoConsumo');
 var FamiliaDeProcesos = require('../../models/procesos/familiaDeProcesos');
-var ModeloCompleto = require('../../models/modeloCompleto').default;
+var ModeloCompleto = require('../../models/modeloCompleto');
+var colores = require('../../utils/colors');
 
 var procesoSchema = new Schema({
     // orden: { type: Number, required: [true, 'Es necesario definir el órden.'] },
@@ -77,11 +78,40 @@ let eliminarRelacionados = function(next) {
 
 };
 
+/**
+ * Comprueba que el proceso que se esta borrando no se elimine.
+ *
+ * @param {*} next
+ */
+let noEliminarProcesosPorDefault = function(next) {
+    // Cargamos los procesos por defaul
+    mongoose.models.Defaults.find().then(resp => {
+            let idProcesoQueSeVaAEliminar = this._id;
+            for (const key in resp[0].PROCESOS) {
+                if (resp[0].PROCESOS.hasOwnProperty(key)) {
+                    const id = resp[0].PROCESOS[key];
+                    if (id.toString() === idProcesoQueSeVaAEliminar.toString()) {
+                        const err = new Error('Este proceso es vital para el sistema y no se puede eliminar');
+                        next(err);
+                        return;
+                    }
+                }
+            }
+            next();
+        })
+        .catch(err => {
+            next(err);
+        });
+
+};
+
 
 procesoSchema
     .pre('find', autoPopulate)
     .pre('findOne', autoPopulate)
+    .pre('remove', noEliminarProcesosPorDefault)
     .pre('remove', eliminarRelacionados);
+
 
 
 

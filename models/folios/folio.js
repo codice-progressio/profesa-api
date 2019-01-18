@@ -81,7 +81,7 @@ function trayectoDeOrden(folio) {
 
     // Datos para popular el folio. Es necesario buscarlo de nuevo para tener
     // toda la información que requerimos para el trayecto de las órdenes. 
-    const p = {
+    const populate = {
         path: 'folioLineas.modeloCompleto folioLineas.laserCliente folioLineas.procesos.proceso',
         populate: {
             path: 'modelo tamano color terminado familiaDeProcesos procesosEspeciales.proceso',
@@ -95,78 +95,152 @@ function trayectoDeOrden(folio) {
     };
 
     // Obtenemos la promesa. 
-    var folPopu = mongoose.models['Folio'].findById(folio._id).populate(p).exec();
 
-    folPopu.then(folioPopulado => {
+    Promise.all([
+            mongoose.models.Folio.findOne(folio._id).populate(populate).exec(),
+            new Promise((resolve, reject) => {
+                // Obtenemos los id por default para el departamento de 
+                // control de produccion y el de laser. 
+                mongoose.models.Defaults.find().exec()
+                    .then(resp => {
+                        // Obtenemos los id de los departamentos. 
+                        let idControlDeProduccion = resp[0].PROCESOS.CONTROL_DE_PRODUCCION;
+                        let idAlmacenDeBoton = resp[0].PROCESOS.ALMACEN_DE_BOTON;
+
+                        // Generamos las promesas para los deptos. 
+                        return Promise.all([
+                            mongoose.models.Proceso.findOne({ _id: idControlDeProduccion }).exec(),
+                            mongoose.models.Proceso.findOne({ _id: idAlmacenDeBoton }).exec(),
+                        ]);
+                    }).then(procesos => {
+                        // Separamaos los procesos para devolverlos en un  objeto
+
+                        resolve({
+                            controlDeProduccion: procesos[0],
+                            almacenDeBoton: procesos[1],
+                            laser: procesos[2]
+                        });
+
+                    })
+                    .catch(err => {
+                        reject(
+                            RESP.errorGeneral({
+                                msj: 'Hubo un error al obtener los defaults para este folio.',
+                                err: err,
+                            })
+                        );
+                    });
+            }),
+        ]).then(resp => {
+            // Separamos los resultados. 
+            let folioPopulado = resp[0];
+            let procesoControlDeProduccion = resp[1].controlDeProduccion;
+            let procesoAlmacenDeBoton = resp[1].almacenDeBoton;
+
+
             // Recorremos cada linea del folio para generar sus órdenes.
             for (let i = 0; i < folioPopulado.folioLineas.length; i++) {
                 const linea = folioPopulado.folioLineas[i];
-                // No puede ir para alamacen, debe tener las órdenes generadas y no debe tener el
+                // Debe tener las órdenes generadas y no debe tener el
                 // trayecto generado. 
-                if (!linea.almacen && linea.ordenesGeneradas && !linea.trayectoGenerado) {
-                    console.log(`5.${i}`);
-                    //No es de almacen y se generaron las órdenes. 
+                if (linea.ordenesGeneradas && !linea.trayectoGenerado) {
+
+                    // <!-- 
+                    // =====================================
+                    //  TODAS LAS ORDENES INCLUIDAS LAS DE ALMACEN
+                    //  DEBEN DE PASAR POR AQUI. LAS ORDENES DE ALMACEN
+                    //  TIENEN QUE LLEVAR POR LO MENOS EL CONTROL DE PRODUCCION
+                    //  Y LOS PROCESOS ESPECIALES QUE SE DEFINAN.length
+
+                    //  Si las ordenes van laseradas hay que comprobar 
+                    // que el departamento de laser tambien esta
+                    // asignado. 
+
+                    // =====================================
+                    // -->
+
                     // Definimos la trayectoria que ocupa cada órden.
-                    // A esta altura se supone que todo debe de pasar por 
-                    // producción en algún nivel. 
 
-                    // Populamos el folio.
-                    // Ahora recorremos todos los departamentos que tenemos 
-                    // los procesos.
                     //Recorremos cada órden.
-                    linea.ordenes.forEach(orden => {
+                    linea.ordenes.forEach(ordenParaModificar => {
 
-                        // Cargamos los procesos que vienen definimos en el modeloCompleto. 
-                        linea.modeloCompleto.familiaDeProcesos.procesos.forEach(f => {
-                            orden.trayectoNormal.push({
-                                orden: f.orden,
-                                departamento: f.proceso.departamento,
+                        //Si es de almacen agregamos control de produccion y surtir desde almacen. 
+
+                        if (linea.almacen) {
+                            // Creamos el objeto trayecto para control de produccion.
+                            let trayectoControlDeProduccion = {
+                                orden: 0,
+                                departamento: procesoControlDeProduccion.departamento
+                            };
+
+                            // Creamos el objeto trayecto para surtir desde almacen. 
+                            let trayectoSurtirDesdeAlmacen = {
+                                orden: 0.1,
+                                departamento: procesoAlmacenDeBoton.departamento
+                            };
+
+                            // Lo agregamos al trayectoNormal de la orden. 
+                            ordenParaModificar.trayectoNormal.push(trayectoControlDeProduccion);
+                            ordenParaModificar.trayectoNormal.push(trayectoSurtirDesdeAlmacen);
+
+                        } else {
+
+                            // COMO NO ES DE ALMACEN NO NECESITAMOS CARGAR ENTREGA DE ORDENES A
+                            // PROCESO DE CONTROL DE PRODUCCION (EL PROCESO) POR QUE LA FAMILIA DE
+                            // MODELOS SIEMPRE LO TRAE INCLUIDO. 
+
+                            // Cargamos los procesos que vienen definimos en el modeloCompleto. 
+                            linea.modeloCompleto.familiaDeProcesos.procesos.forEach(procesosDeLaFamilia => {
+                                ordenParaModificar.trayectoNormal.push({
+                                    orden: procesosDeLaFamilia.orden,
+                                    departamento: procesosDeLaFamilia.proceso.departamento,
+                                });
                             });
-                        });
 
-                        // Cargamos los procesos especiales extras del modelo. 
-                        linea.modeloCompleto.procesosEspeciales.forEach(proc => {
-                            orden.trayectoNormal.push({
-                                orden: proc.orden,
-                                departamento: proc.proceso.departamento,
+                            // Cargamos los procesos FIJOS extras propios del modelo completo.
+                            linea.modeloCompleto.procesosEspeciales.forEach(procesosDelModelo => {
+                                ordenParaModificar.trayectoNormal.push({
+                                    orden: procesosDelModelo.orden,
+                                    departamento: procesosDelModelo.proceso.departamento,
+                                });
                             });
-                        });
 
-                        // Cargamos los procesos que se definieron en el pedido. 
-                        linea.procesos.forEach(proc => {
-                            orden.trayectoNormal.push({
-                                orden: proc.orden,
-                                departamento: proc.proceso.departamento,
+                        }
+
+                        // Cargamos los procesos que se definieron en el pedido. Aqui vienen los 
+                        // que se guardan cuando el pedido se surte desde almacen. 
+                        linea.procesos.forEach(procesosDelPedido => {
+                            ordenParaModificar.trayectoNormal.push({
+                                orden: procesosDelPedido.orden,
+                                departamento: procesosDelPedido.proceso.departamento,
                             });
                         });
 
                         // Tomamos el primer departamento y lo volvemos como ubicacion
                         // actual.
-
-                        orden.trayectoNormal.sort(function(a, b) {
+                        ordenParaModificar.trayectoNormal.sort(function(a, b) {
                             return (a.orden - b.orden);
                         });
 
                         // Actualizamos la ubicación actual. 
-                        orden.ubicacionActual = {
-                            departamento: mongoose.Types.ObjectId(orden.trayectoNormal[0].departamento._id),
+                        ordenParaModificar.ubicacionActual = {
+                            departamento: mongoose.Types.ObjectId(ordenParaModificar.trayectoNormal[0].departamento._id),
                             entrada: new Date().toISOString(),
-                            orden: orden.trayectoNormal[0].orden
+                            orden: ordenParaModificar.trayectoNormal[0].orden
                         };
 
-                        if (orden.trayectoNormal.length > 1) {
-                            orden.siguienteDepartamento = {
-                                departamento: mongoose.Types.ObjectId(orden.trayectoNormal[1].departamento._id),
-                                orden: orden.trayectoNormal[1].orden
+                        if (ordenParaModificar.trayectoNormal.length > 1) {
+                            ordenParaModificar.siguienteDepartamento = {
+                                departamento: mongoose.Types.ObjectId(ordenParaModificar.trayectoNormal[1].departamento._id),
+                                orden: ordenParaModificar.trayectoNormal[1].orden
                                     // entrada: new Date().toISOString()
                             };
                         }
                     });
 
+
                     folioPopulado.trayectoGenerado = true;
                     folioPopulado.ordenesGeneradas = true;
-                } else {
-                    console.log(colores.warning('NO SE ORDENA POR QUE VA PARA ALMACEN =>>>') + 'No se ordena por que va para almacen.');
                 }
             }
             if (folioPopulado.trayectoGenerado) {

@@ -21,6 +21,7 @@ var laserSchema = new Schema({
         ]
     },
 
+    bl: { type: Number, required: [() => { return this.guardar; }, 'La velocidad es necesaria.'] },
     maquinaActual: { type: Schema.Types.ObjectId, ref: 'Maquina' },
 
 

@@ -26,11 +26,13 @@ const ordenSchema = new Schema({
     piezasFinales: { type: Number, min: 1 },
     observaciones: { type: String },
 
+    //El trayecto que se define para que siga la orden. 
     trayectoNormal: [trayecto],
 
     trayectoRecorrido: [trayecto],
 
     ubicacionActual: trayecto,
+
     //Si vuelve a este trayecto quiere decir
     // que se retoma el cause normal en ubicación.
     siguienteDepartamento: trayecto,

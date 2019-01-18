@@ -7,6 +7,8 @@ var transformacionSchema = new Schema({
     trabajando: { type: Boolean },
 
     cantidadDeBoton: {
+        min: [0, 'La cantidad no puede ser menor que 0.'],
+        max: [999999, 'La cantidad no puede ser mayor que 999999.'],
         type: Number,
         required: [function() {
                 console.log('Guardado esta en ' + this.guardar);

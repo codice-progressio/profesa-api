@@ -65,7 +65,12 @@ function generalError(dat) {
     var data = {
         ok: false,
         mensaje: dat.msj,
-        errorGeneral: dat.err,
+        // Si es un error generado desde un middleware se manda atravez del netx()
+        // con un new Error('El error'). Este objeto llega a atravez del err del catch
+        // del controler y lo captura. Aqui buscamos si contiene 'Error: ' para diferenciarlo
+        // de los errores construidos con {msj:'', err:err}. Si lo incluye solo convertimos
+        // a texto para que se muestre en el gui. 
+        errorGeneral: dat.err.toString().includes('Error:') ? dat.err.toString() : dat.err,
     };
 
     if (dat.masInfo) {

@@ -7,9 +7,10 @@ const URI_PRODUCTION = 'mongodb://localhost:27017/carrduci';
 const URI_DEVELOPMENT = 'mongodb://localhost:27017/hospitalDB';
 
 const ACCESS_CONTROL_ALLOW_ORIGIN = {
-    PRODUCTION: 'http://192.168.1.30',
+    PRODUCTION: 'http://192.168.1.149',
     DEVELOPMENT: 'http://localhost:4200'
-}
+};
+
 
 
 module.exports.enviroment = (env) => {

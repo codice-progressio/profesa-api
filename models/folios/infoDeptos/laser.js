@@ -9,7 +9,7 @@ var laserSchema = new Schema({
 
 
     cantidadDeBoton: {
-        min: [0, 'La cantidad no puede ser menor que 0.'],
+        min: [1, 'La cantidad no puede ser menor que 1.'],
         max: [999999, 'La cantidad no puede ser mayor que 999999.'],
         type: Number,
         required: [function() {
@@ -21,7 +21,12 @@ var laserSchema = new Schema({
         ]
     },
 
-    bl: { type: Number, required: [() => { return this.guardar; }, 'La velocidad es necesaria.'] },
+    bl: {
+        type: Number,
+        min: [1, 'La cantidad no puede ser menor que 1'],
+        max: [500, 'La cantidad no puede ser menor que 500'],
+        required: [() => { return this.guardar; }, 'La velocidad es necesaria.']
+    },
     maquinaActual: { type: Schema.Types.ObjectId, ref: 'Maquina' },
 
 

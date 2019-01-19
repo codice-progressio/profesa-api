@@ -36,6 +36,26 @@ var folioSchema = new Schema({
 folioSchema.plugin(uniqueValidator, { message: '\'{PATH}\' debe ser único.' });
 
 var autoPopulate = function(next) {
+
+
+    this.populate('cliente', 'sae nombre');
+    this.populate('vendedor', 'nombre');
+    this.populate({
+        path: 'folioLineas.modeloCompleto',
+        populate: {
+            path: 'modelo tamano color terminado'
+        }
+    });
+    this.populate('folioLineas.');
+    this.populate('folioLineas.ordenes.ubicacionActual.departamento');
+    this.populate('folioLineas.ordenes.ubicacionActual.laser.maquinaActual');
+
+
+    this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');
+    this.populate('folioLineas.ordenes.trayectoNormal.departamento');
+
+
+
     this.populate('cliente');
     next();
 };

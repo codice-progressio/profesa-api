@@ -47,16 +47,16 @@ Array.prototype.greaterThan0 = function(a) {
 // cors
 // ============================================
 
-function requireHTTPS(req, res, next) {
-    console.log('Entro a este midleware')
-        // The 'x-forwarded-proto' check is for Heroku
-    if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
-        return res.redirect('https://' + req.get('host') + req.url);
-    }
-    next();
-}
+// function requireHTTPS(req, res, next) {
+//     console.log('Entro a este midleware')
+//         // The 'x-forwarded-proto' check is for Heroku
+// //     if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
+// //         return res.redirect('https://' + req.get('host') + req.url);
+// //     }
+// //     next();
+// // }
 
-app.use(requireHTTPS);
+// app.use(requireHTTPS);
 
 app.use(function(req, res, next) {
 

@@ -2,6 +2,8 @@
 var express = require('express');
 
 var https = require('https');
+var fs = require('fs');
+
 
 
 var mongoose = require('mongoose');
@@ -83,8 +85,6 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // // Rutas - Middleware PARA SISTEMA CARRDUCI
 // // ============================================
 
-
-
 // Obtenemos el token
 app.use((req, res, next) => {
     // console.log('Esperando 5000 ms');
@@ -140,14 +140,10 @@ app.use(function(err, req, res, next) {
 });
 
 
-// ttps.createServer(options, app).listen(443);
-// Escuchar peticiones.
-// app.listen(ENVIROMENT.port, () => {
-//     console.log(ENVIROMENT.msj_mongoose_ok);
-//     defaults();
-// });
-
-https.createServer(app).listen(ENVIROMENT.port, () => {
+https.createServer({
+    key: fs.readFileSync('certificado/express-js.key'),
+    cert: fs.readFileSync('certificado/express-js.crt')
+}, app).listen(ENVIROMENT.port, () => {
     console.log(ENVIROMENT.msj_mongoose_ok);
     defaults();
 });

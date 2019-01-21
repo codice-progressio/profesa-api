@@ -1,5 +1,9 @@
 // Requires
 var express = require('express');
+
+var https = require('https');
+
+
 var mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 var colores = require('./utils/colors');
@@ -136,9 +140,14 @@ app.use(function(err, req, res, next) {
 });
 
 
-
+// ttps.createServer(options, app).listen(443);
 // Escuchar peticiones.
-app.listen(ENVIROMENT.port, () => {
+// app.listen(ENVIROMENT.port, () => {
+//     console.log(ENVIROMENT.msj_mongoose_ok);
+//     defaults();
+// });
+
+https.createServer(options, app).listen(ENVIROMENT.port, () => {
     console.log(ENVIROMENT.msj_mongoose_ok);
     defaults();
 });

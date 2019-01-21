@@ -25,7 +25,7 @@ var _PERMISOS = require('./middlewares/permisos').PERMISOS;
 // ============================================
 //  true = Producción
 //  false = Development
-var ENVIROMENT = db.enviroment(true);
+var ENVIROMENT = db.enviroment(false);
 // ============================================
 
 // Inicializar variables.
@@ -46,6 +46,17 @@ Array.prototype.greaterThan0 = function(a) {
 // ============================================
 // cors
 // ============================================
+
+function requireHTTPS(req, res, next) {
+    console.log('Entro a este midleware')
+        // The 'x-forwarded-proto' check is for Heroku
+    if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
+        return res.redirect('https://' + req.get('host') + req.url);
+    }
+    next();
+}
+
+app.use(requireHTTPS);
 
 app.use(function(req, res, next) {
 
@@ -84,6 +95,11 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // // ============================================
 // // Rutas - Middleware PARA SISTEMA CARRDUCI
 // // ============================================
+
+
+
+
+
 
 // Obtenemos el token
 app.use((req, res, next) => {

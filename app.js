@@ -25,7 +25,7 @@ var _PERMISOS = require('./middlewares/permisos').PERMISOS;
 // ============================================
 //  true = Producción
 //  false = Development
-var ENVIROMENT = db.enviroment(false);
+var ENVIROMENT = db.enviroment(true);
 // ============================================
 
 // Inicializar variables.

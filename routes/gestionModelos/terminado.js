@@ -6,8 +6,8 @@ var Terminado = require('../../models/terminado');
 var CRUD = require('../CRUD');
 CRUD.app = app;
 CRUD.modelo = Terminado;
-CRUD.nombreDeObjetoSingular = 'termiando';
-CRUD.nombreDeObjetoPlural = 'termiandos';
+CRUD.nombreDeObjetoSingular = 'terminado';
+CRUD.nombreDeObjetoPlural = 'terminados';
 CRUD.campoSortDefault = 'terminado';
 CRUD.camposActualizables = {
     // estandar: null,

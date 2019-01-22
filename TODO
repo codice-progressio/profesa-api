@@ -1,8 +1,34 @@
 FIX:
 
-    ☐ Comprobar que no se puedan agregar dos familias de procesos al mismo modelo. @started(19-01-22 06:50)
+    ✔ Comprobar que no se puedan agregar dos familias de procesos al mismo modelo. @started(19-01-22 08:45) @done(19-01-22 08:45) @lasted(40s)
 
 FEATURES:
+
+    Quimica:
+        ☐ Debe regristrar inicio de trabajo como transformacion y laser. 
+    \
+
+    Reportes:
+        ☐ Laser
+            Maquina que lo procesa.
+            Numero de folio
+            Numero de orden
+            Numerp de pedido
+            Gral... mod//tm
+            Marca laser
+            Cantidad
+            bl
+            Hora de inicio y hora de termino
+            Cambios inicio
+            Cambio finalizacion
+
+        ☐ Quimica
+            Numero de pedido.
+            Orden
+            Gral - Mod. tama...
+            Cantidad de ordenes
+            Fecha
+
    
     Sistema de alertas y notificaciones:
         ☐ Dashboard debe mostrar notificaciones y alertas.

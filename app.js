@@ -25,7 +25,8 @@ var _PERMISOS = require('./middlewares/permisos').PERMISOS;
 // ============================================
 //  true = Producción
 //  false = Development
-var ENVIROMENT = db.enviroment(true);
+
+var ENVIROMENT = db.enviroment(process.env.NODE_ENV === 'production');
 // ============================================
 
 // Inicializar variables.
@@ -43,20 +44,7 @@ Array.prototype.greaterThan0 = function(a) {
     return a.length >= 1;
 };
 
-// ============================================
-// cors
-// ============================================
 
-// function requireHTTPS(req, res, next) {
-//     console.log('Entro a este midleware')
-//         // The 'x-forwarded-proto' check is for Heroku
-// //     if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
-// //         return res.redirect('https://' + req.get('host') + req.url);
-// //     }
-// //     next();
-// // }
-
-// app.use(requireHTTPS);
 
 app.use(function(req, res, next) {
 
@@ -156,10 +144,36 @@ app.use(function(err, req, res, next) {
 });
 
 
-https.createServer({
-    key: fs.readFileSync('certificado/express-js.key'),
-    cert: fs.readFileSync('certificado/express-js.crt')
-}, app).listen(ENVIROMENT.port, () => {
-    console.log(ENVIROMENT.msj_mongoose_ok);
-    defaults();
-});
+// ============================================
+// NO BORRAR POR QUE PUEDE QUE NOS SIRVA MAS ADELANTE. 
+// ============================================
+
+// function requireHTTPS(req, res, next) {
+//     console.log('Entro a este midleware')
+//         // The 'x-forwarded-proto' check is for Heroku
+// //     if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
+// //         return res.redirect('https://' + req.get('host') + req.url);
+// //     }
+// //     next();
+// // }
+
+// app.use(requireHTTPS);
+
+if (ENVIROMENT.esModoProduccion) {
+    https.createServer({
+        key: fs.readFileSync('certificado/express-js.key'),
+        cert: fs.readFileSync('certificado/express-js.crt')
+    }, app).listen(ENVIROMENT.port, () => {
+        console.log(ENVIROMENT.msj_mongoose_ok);
+        defaults();
+    });
+
+} else {
+    console.log('estamos en modo desarrollo escuchando con app')
+        // Escuchar peticiones cuando estamos trabajando en modo desarollo.
+    app.listen(ENVIROMENT.port, () => {
+        console.log(ENVIROMENT.msj_mongoose_ok);
+        defaults();
+    });
+
+}

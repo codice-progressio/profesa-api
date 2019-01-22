@@ -8,7 +8,7 @@ const URI_DEVELOPMENT = 'mongodb://localhost:27017/hospitalDB';
 
 const ACCESS_CONTROL_ALLOW_ORIGIN = {
     PRODUCTION: 'https://192.168.1.149',
-    DEVELOPMENT: 'https://localhost:4200'
+    DEVELOPMENT: 'http://localhost:4200'
 };
 
 

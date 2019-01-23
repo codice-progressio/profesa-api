@@ -7,8 +7,9 @@ FEATURES:
     Quimica:
         ✔ Debe regristrar inicio de trabajo como transformacion y laser. @started(19-01-22 14:43) @done(19-01-22 14:43) @lasted(41s)
     \
+
     Maquinas:
-        ☐ Setear departamentos en los que puede enlistarse. 
+        ☐ Setear departamentos en los que puede enlistarse. @started(19-01-23 07:17)
 
     Procesos:
         ☐ Una familia siempre debe de tener entrega de ordenes a proceso. 

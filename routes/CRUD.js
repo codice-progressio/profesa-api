@@ -183,8 +183,6 @@ const post = function(modelo, app, nombreDeObjeto) {
         // Obtenemos el mdelo. 
         const datosAGrabar = new modelo(req.body);
 
-        console.log(datosAGrabar)
-
         datosAGrabar.save().then(resp => {
                 return RESP._200(res, `Se guardo de manera correcta el ${nombreDeObjeto}.`, [
                     { tipo: nombreDeObjeto, datos: resp },
@@ -330,6 +328,11 @@ module.exports = {
     get modelo() {
         return this._modelo;
     },
+    /**
+     * El schema que va a realizar la accion. 
+     * Es el que definimos para trabajar mongoose. 
+     * @param value El schema con que se va a trabajar. 
+     */
     set modelo(value) {
         this._modelo = value;
     },
@@ -338,6 +341,10 @@ module.exports = {
     get app() {
         return this._app;
     },
+    /**
+     *El servidor para gestionar la request completa. 
+     *@oaram El servidor que va a gestionar la request. 
+     */
     set app(value) {
         this._app = value;
     },
@@ -346,6 +353,12 @@ module.exports = {
     get nombreDeObjetoSingular() {
         return this._nombreDeObjetoSingular;
     },
+    /**
+     *El nombre del objeto en singular. Este sirve para los 
+     retornos que corresponden a un solo elemento. Este el 
+     el nombre que se colocara en el objeto que lo contiene. 
+     *@param value El nombre del objeto en singular. 
+     */
     set nombreDeObjetoSingular(value) {
         this._nombreDeObjetoSingular = value;
     },
@@ -353,6 +366,13 @@ module.exports = {
     get nombreDeObjetoPlural() {
         return this._nombreDeObjetoPlural;
     },
+    /**
+     *  /**
+     *El nombre del objeto en plural. Este sirve para los 
+     retornos que corresponden a varios elementos. Este el 
+     el nombre que se colocara en el objeto que lo contiene. 
+     *@param value El nombre del objeto en plural. 
+     */
     set nombreDeObjetoPlural(value) {
         this._nombreDeObjetoPlural = value;
     },
@@ -360,6 +380,14 @@ module.exports = {
     get campoSortDefault() {
         return this._campoSortDefault;
     },
+    /**
+     *El campo por medio del cual se ordenadara 
+     la lista de objetos obtenidas de una consulta.
+     Aplica para todoas las consultas que tengan mas 
+     de un elemento. 
+     *
+     @param value El campo para ordenar. 
+     */
     set campoSortDefault(value) {
         this._campoSortDefault = value;
     },
@@ -367,6 +395,12 @@ module.exports = {
     get camposDeBusqueda() {
         return this._camposDeBusqueda;
     },
+    /**
+     *Los campos en lo que se buscara el termino de busqueda.
+        Los campos que se listen aqui deben corresponder al nombre
+        dado en el schema y no pueden ser de tipo numericos. 
+     * @param value Un objeto de tipo ['campoDeBusqueda, otroCampoDeBusquedaNoNumerico']
+     */
     set camposDeBusqueda(value) {
         this._camposDeBusqueda = value;
     },
@@ -374,13 +408,19 @@ module.exports = {
     get camposActualizables() {
         return this._camposActualizables;
     },
+    /**
+     *Setea los campos que se van a actualizar.
+     Debe ser un objecto tipo { nombreDelCampo: null }
+     *@param value Un objeto con los campos que se van a actualizar. 
+     */
     set camposActualizables(value) {
         this._camposActualizables = value;
     },
 
 
     /**
-     * Ejecuta las funciones para el CRUD.
+     * Ejecuta las funciones para el CRUD. Esta tiene que ser la ultima operacion. 
+     * 
      *
      *
      * @param {*} DATOS Si se define acepta los siguientes parametros para ejectuar o no

@@ -22,15 +22,15 @@ var maquinaSchema = new Schema({
         ref: 'Orden'
     }],
 
-    // departamentos: {
-    //     type: {
-    //         type: Schema.Types.ObjectId,
-    //         ref: 'Departamento',
-    //     },
-    //     validate: [(a) => {
-    //         return a.length >= 1;
-    //     }, 'El campo debe tener por lo menos un departamento definido.']
-    // },
+    departamentos: {
+        type: [{
+            type: Schema.Types.ObjectId,
+            ref: 'Departamento',
+        }],
+        validate: [(a) => {
+            return a.length >= 1;
+        }, 'El campo debe tener por lo menos un departamento definido.']
+    },
 
 
     // Estos son los datos de trabajo de la maquina. 
@@ -46,17 +46,21 @@ var maquinaSchema = new Schema({
 
     gastos: {
         type: [gastoConsumo],
-        validate: [function(a) {
-            return a.length >= 1;
-        }, 'El campo debe tener por lo menos un gasto definido']
+        // validate: [function(a) {
+        //     return a.length >= 1;
+        // }, 'El campo debe tener por lo menos un gasto definido']
     },
 
-    costo: { type: Number, require: [true, "Para fines de costos este campo es obligatorio."], min: [1, 'La máquina no puede costar menos de un peso.'] },
+    costo: {
+        type: Number,
+        // require: [true, "Para fines de costos este campo es obligatorio."], 
+        // min: [1, 'La máquina no puede costar menos de un peso.'] 
+    },
     depreciacion: {
         type: Number,
-        require: [true, "Los años de depreciación son obligatorios."],
-        min: [0.83, 'El valor mínimo de depreciación es el equivalente a un mes en decimales. (.83)'],
-        max: [15, 'La máquina no se puede depreciar en más de 15 años.']
+        // require: [true, "Los años de depreciación son obligatorios."],
+        // min: [0.83, 'El valor mínimo de depreciación es el equivalente a un mes en decimales. (.83)'],
+        // max: [15, 'La máquina no se puede depreciar en más de 15 años.']
     },
     observaciones: { type: String }
 

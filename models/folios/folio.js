@@ -49,6 +49,8 @@ var autoPopulate = function(next) {
     this.populate('folioLineas.');
     this.populate('folioLineas.ordenes.ubicacionActual.departamento');
     this.populate('folioLineas.ordenes.ubicacionActual.laser.maquinaActual');
+    this.populate('folioLineas.ordenes.ubicacionActual.transformacion.maquinaActual');
+    this.populate('folioLineas.ordenes.ubicacionActual.materiales.maquinaActual');
 
 
     this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');

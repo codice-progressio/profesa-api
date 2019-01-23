@@ -5,9 +5,15 @@ FIX:
 FEATURES:
 
     Quimica:
-        ☐ Debe regristrar inicio de trabajo como transformacion y laser. 
+        ✔ Debe regristrar inicio de trabajo como transformacion y laser. @started(19-01-22 14:43) @done(19-01-22 14:43) @lasted(41s)
     \
+    Maquinas:
+        ☐ Setear departamentos en los que puede enlistarse. 
 
+    Procesos:
+        ☐ Una familia siempre debe de tener entrega de ordenes a proceso. 
+
+        
     Reportes:
         ☐ Laser
             Maquina que lo procesa.

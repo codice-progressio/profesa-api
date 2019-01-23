@@ -13,7 +13,7 @@ CRUD.camposActualizables = {
     // estandar: null,
 };
 
-
+hola
 
 CRUD.camposDeBusqueda = [
     'modelo',

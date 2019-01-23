@@ -13,7 +13,7 @@ CRUD.camposActualizables = {
     // estandar: null,
 };
 
-hola
+
 
 CRUD.camposDeBusqueda = [
     'modelo',
@@ -21,14 +21,6 @@ CRUD.camposDeBusqueda = [
 ];
 
 CRUD.crud();
-
-
-
-
-
-// Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
-module.exports = app;
-
 
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.

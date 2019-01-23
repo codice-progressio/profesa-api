@@ -24,12 +24,5 @@ CRUD.crud();
 
 
 
-
-
-// Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
-module.exports = app;
-
-
-
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app;

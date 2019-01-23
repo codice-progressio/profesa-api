@@ -63,7 +63,6 @@ app.post('/', (req, res) => {
     // Guardamos por defecto CONTROL DE PRODUCCIÓN como el primer proceso que se debe realizar en la familia. y
     // como primer departamento por defecto. 
     // Lo buscamos
-    console.log(` Estos datos deben mostrarse ${JSON.stringify(PROC)}`);
     const p = Proceso.findOne({ nombre: PROC.CONTROL_DE_PRODUCCION._n }).exec();
     p.then(procesoD => {
         if (!procesoD) {

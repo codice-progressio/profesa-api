@@ -46,15 +46,24 @@ var autoPopulate = function(next) {
             path: 'modelo tamano color terminado'
         }
     });
-    this.populate('folioLineas.');
-    this.populate('folioLineas.ordenes.ubicacionActual.departamento');
-    this.populate('folioLineas.ordenes.ubicacionActual.laser.maquinaActual');
-    this.populate('folioLineas.ordenes.ubicacionActual.transformacion.maquinaActual');
-    this.populate('folioLineas.ordenes.ubicacionActual.materiales.maquinaActual');
+
+    let populantes = [
+        'ubicacionActual',
+        'trayectoNormal',
+        'trayectoRecorrido',
+
+    ];
 
 
-    this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');
-    this.populate('folioLineas.ordenes.trayectoNormal.departamento');
+    populantes.forEach(pop => {
+        this.populate(`folioLineas.ordenes.${pop}.departamento`);
+        this.populate(`folioLineas.ordenes.${pop}.laser.maquinaActual`);
+        this.populate(`folioLineas.ordenes.${pop}.transformacion.maquinaActual`);
+        this.populate(`folioLineas.ordenes.${pop}.materiales.maquinaActual`);
+    });
+
+
+
 
 
 

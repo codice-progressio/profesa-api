@@ -1,3 +1,4 @@
+var compression = require('compression');
 // Requires
 var express = require('express');
 
@@ -44,7 +45,7 @@ Array.prototype.greaterThan0 = function(a) {
     return a.length >= 1;
 };
 
-
+app.use(compression());
 
 app.use(function(req, res, next) {
 

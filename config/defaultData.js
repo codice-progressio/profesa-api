@@ -11,6 +11,8 @@ let Proceso = require('../models/procesos/proceso');
 let bcrypt = require('bcryptjs');
 var DefaultModelDataModel = require('../config/defaultModelData');
 
+var controlDeActualizaciones = require('../config/controlDeActualizaciones');
+
 let Defaults = require('../models/configModels/default');
 
 
@@ -26,91 +28,72 @@ const USUARIO_SUPER_ADMIN = {
 
 const D = colores.info('DEFAULTS');
 module.exports = () => {
+
     console.log(D + colores.warning('Comprobando información.'));
 
-    // ============================================
-    // Debe existir un SUPER-ADMIN
-    // ============================================
+    Usuario.findOne({ nombre: USUARIO_SUPER_ADMIN.nombre }).exec()
+        .then(admin => {
 
-    Usuario.findOne({ nombre: USUARIO_SUPER_ADMIN.nombre }).exec().then(admin => {
+            return crearSuperAdmin(admin);
+        }).then((adminCreado) => {
 
-        return crearSuperAdmin(admin);
-    }).then((adminCreado) => {
-
-        if (!adminCreado) {
-            console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Se creo el usuario.");
-        } else {
-            console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Existe el usuario.");
-        }
-
-        DefaultModelDataModel.SUPER_ADMIN = adminCreado._id;
-        console.log(D + colores.info(adminCreado._id) + "Se almaceno el id");
-        // ============================================
-        // Deben existir los departamentos.
-        // ============================================
-
-        const promesas = [];
-        for (const depto in _DEPTOS) {
-            if (_DEPTOS.hasOwnProperty(depto)) {
-                const departamento = _DEPTOS[depto];
-                promesas.push(comprobarDepartamentos(departamento._n, depto));
+            if (!adminCreado) {
+                console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Se creo el usuario.");
+            } else {
+                console.log(D + colores.warning(_ROLE.SUPER_ADMIN) + "Existe el usuario.");
             }
-        }
 
-        return Promise.all(promesas);
+            DefaultModelDataModel.SUPER_ADMIN = adminCreado._id;
+            console.log(D + colores.info(adminCreado._id) + "Se almaceno el id");
+            // ============================================
+            // Deben existir los departamentos.
+            // ============================================
 
-    }).then(resp => {
-        resp.forEach(respuesta => {
-            console.log(D + colores.info('DEPARTAMENTOS') + respuesta);
+            const promesas = [];
+            for (const depto in _DEPTOS) {
+                if (_DEPTOS.hasOwnProperty(depto)) {
+                    const departamento = _DEPTOS[depto];
+                    promesas.push(comprobarDepartamentos(departamento._n, depto));
+                }
+            }
+
+            return Promise.all(promesas);
+
+        }).then(resp => {
+            resp.forEach(respuesta => {
+                console.log(D + colores.info('DEPARTAMENTOS') + respuesta);
+            });
+
+            // ============================================
+            // DEBE EXISTIR UN PROCESO DE CONTROL DE PRODUCCIÓN POR DEFECTO.
+            // ============================================
+
+            return Promise.all(procesosPorDefautl());
+
+        }).then(procesosDefaults => {
+
+            for (let i = 0; i < procesosDefaults.length; i++) {
+                const proc = procesosDefaults[i];
+                console.log(D + colores.info('PROCESOS') + proc);
+            }
+
+            // let d = new Defaults(DefaultModelDataModel);
+
+
+            return Defaults.findOneAndUpdate({}, DefaultModelDataModel);
+        }).then(defaults => {
+            console.log(D + colores.info('DEFAULTS') + 'Se actualizaron los id de los defaults.');
+
+            return gestionarActualizaciones(defaults);
+        }).then(resp => {
+            console.log(D + colores.info('ACTUALIZACIONES') + 'Se revisaron las actualizaciones.');
+
+        }).catch(err => {
+            console.log(colores.danger('ERROR COMPROBANDO DEFAULTS') + 'Hubo un error en la comprobación de valores por defecto.');
+            throw new Error(err);
         });
 
-        // ============================================
-        // DEBE EXISTIR UN PROCESO DE CONTROL DE PRODUCCIÓN POR DEFECTO.
-        // ============================================
-
-        return Promise.all(procesosPorDefautl());
-
-    }).then(procesosDefaults => {
-
-        for (let i = 0; i < procesosDefaults.length; i++) {
-            const proc = procesosDefaults[i];
-            console.log(D + colores.info('PROCESOS') + proc);
-        }
-
-        let d = new Defaults(DefaultModelDataModel);
-
-
-        return d.save();
-    }).then(resp => {
-        console.log(D + colores.info('DEFAULTS') + 'Se actualizaron los id de los defaults.');
-
-    }).catch(err => {
-        console.log(colores.danger('ERROR COMPROBANDO DEFAULTS') + 'Hubo un error en la comprobación de valores por defecto.');
-        throw new Error(err);
-    });
-
 };
-
-// function comprobarRolPorDefecto(role) {
-//     return new Promise((resolve, reject) => {
-//         Role.existe(role).then(roleEncontrado => {
-//             if (!roleEncontrado) {
-//                 const b = new Role();
-//                 b.role = role;
-//                 return b.save();
-//             }
-//             resolve(colores.success(role) + 'Existe en la BD.');
-//         }).then(roleGuardado => {
-//             resolve(colores.warning(role) + 'No existia se creo.');
-//         }).catch(err => {
-//             reject(RESP.errorGeneral({
-//                 msj: 'Hubo un error buscando el role.',
-//                 err: err,
-//             }));
-//         });
-//     });
-// }
-
 
 
 function crearSuperAdmin(adminExistente) {
@@ -268,6 +251,58 @@ function existeProceso(nombre, nombreDepto) {
                 msj: 'Hubo un error buscando el departamento.',
                 err: err,
             }));
+        });
+    });
+}
+
+
+/**
+ /**
+  *
+  *
+ * Ejecuta la gestion de actualizaciones para saber si la BD 
+ * ya cuenta con las actualizaciones necesarias. 
+ *
+ *
+ * @param {*} defaults Los valores por default. 
+ * @returns La promesa que revisa las actualizaciones. 
+ */
+function gestionarActualizaciones(defaults) {
+
+    return new Promise((resolve, reject) => {
+        // Revisamos si los default contienen la actualizacion. ]
+        let promesas = [];
+
+        if (!defaults.ACTUALIZACIONES) defaults.ACTUALIZACIONES = {};
+
+        for (const actualizacion in controlDeActualizaciones) {
+
+            if (defaults.ACTUALIZACIONES.hasOwnProperty(actualizacion)) {
+                // LA ACTUALIZACION YA ESTA ECHA. 
+                resolve();
+            } else {
+                // Guardamos la promesa de la actualizacion para ejecutarla.
+                promesas.push(controlDeActualizaciones[actualizacion]());
+                // Modificamos el objeto defaults para agregar la nueva actualizacion aplicada.
+                defaults.ACTUALIZACIONES = {
+                    [actualizacion]: true
+                };
+            }
+        }
+
+
+        // Ejecutamos todas las actualizacioones pendiente. 
+        Promise.all(promesas).then(resp => {
+
+            resp.forEach(r => {
+                console.log(`${colores.info('UPDATE')}  ${r}`);
+            });
+            // Guaramos los cambios echos al default. 
+            return defaults.save();
+        }).then(resp => {
+            resolve();
+        }).catch(err => {
+            reject(err);
         });
     });
 }

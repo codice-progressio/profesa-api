@@ -1,6 +1,9 @@
 var express = require('express');
 var app = express();
 var RESP = require('../../utils/respStatus');
+var Folio = require('../../models/folios/folio');
+var Default = require('../../models/configModels/default');
+
 
 
 // <!-- 
@@ -30,17 +33,99 @@ app.get('/laser', (req, res) => {
     // =====================================
     // -->
 
-    // Buscar todas las ordenes que se vayan a laserar.
-    // Filtrar por aquellas que no esten terminadas.
-    // Filtrar las que ya pasaron por laser. 
-    // Mostrar como pendiente de surtir si viene de alamcen
-    // Si viene de produccion mostrar departamentos faltantes. 
+    Promise.all([
+            Folio.find({
+                // Filtrar por aquellas que no esten terminadas.
+                terminado: false,
+                'folioLineas.ordenesGeneradas': true,
+                'folioLineas.laserCliente': { $ne: { $not: null } }
+            })
+            // Convertimos los resultado en objetos json
+            .lean()
+            .exec(),
+            Default.find().exec()
 
-    // RETORNAMOS ORDENES. 
+        ]).then(resp => {
 
-    return RESP._200(res, 'Mensaje para interfaz ó null', [
-        { tipo: 'El nombre que recivira el dato', datos: 'El dato u objeto' },
-    ]);
+
+            let foliosCoincidentes = resp[0]
+            let defatults = resp[1][0];
+
+            // Id del departamento de laser. 
+            let idLaserDepto = defatults.DEPARTAMENTOS.LASER;
+
+
+            // El objeto que contendra las ordenes que vamos a devolver. 
+            let ordenes = [];
+
+            // Cargamos las referencias en todos las ordenes
+            // por si las necesito en el GUI.
+            foliosCoincidentes.forEach(folio => {
+                folio.folioLineas.forEach(pedido => {
+                    pedido.ordenes.map(orden => {
+
+                        // Cargamos el nombre del vendedor. 
+                        orden.vendedor = folio.vendedor.nombre;
+                        // Cargamos la fecha del folio en la ord0en.
+                        orden.fechaDeFolio = folio.fechaFolio;
+
+                        // cargamos la referencia del folio
+                        orden.idFolio = folio._id;
+
+                        // Unimos todas las observaciones. 
+                        if (pedido.observaciones) orden.observacionesPedido = pedido.observaciones;
+                        if (folio.observaciones) orden.observacionesFolio = folio.observaciones;
+
+                    });
+
+                    ordenes = ordenes.concat(pedido.ordenes);
+                });
+            });
+            console.log(idLaserDepto)
+                // FILTRAR ORDENES QUE NO NECESITEMOS. 
+            ordenes = ordenes.filter(orden => {
+                // Si la orden ya paso por laser no debe aparecer. 
+                // Filtramos los trayectosRecorridos y si el resultado es diferente
+                // que cero quiere decir que ya paso por el departamento y devolvemos false para que no la agregue. 
+
+                return !orden.trayectoRecorrido.filter(trayecto => { return trayecto.departamento.toString() === idLaserDepto.toString(); }).length;
+            });
+
+
+
+
+
+
+
+            // Mostrar como pendiente de surtir si viene de alamcen
+            // Si viene de produccion mostrar departamentos faltantes.            
+
+
+
+
+            // RETORNAMOS ORDENES. 
+            return RESP._200(res, null, [
+                { tipo: 'ordenes', datos: ordenes },
+                { tipo: 'total', datos: ordenes.length },
+            ]);
+
+
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error al generar el reporte de laser.',
+                err: err,
+            });
+        });
+
+
+
+
+
+
+
+
 
 
 

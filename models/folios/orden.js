@@ -39,13 +39,6 @@ const ordenSchema = new Schema({
 
     nivelDeUrgencia: NVU.KEY,
 
-    //Esta fecha no la cargamos desde el principio. 
-    // La usamos solo como transporte para cuando 
-    // se filtran las órdenes por departamento. 
-    // si la modificamos desde el principio y la guardamos
-    // sería un problema despues modificar la fecha si 
-    // la del foio cambia. 
-    fechaFolio: { type: Date },
 
     //La máquina en que se esta trabajando actualmente. 
     maquinaActual: {
@@ -57,6 +50,15 @@ const ordenSchema = new Schema({
     terminada: { type: Boolean, value: false },
     porcentajeAvance: { type: Number, value: 0, max: 100, min: 0 },
 
+    // ESTOS DATOS SOLO REPITEN LO QUE YA HAY EN EL FOLIO Y EN EL PEDIDO
+    // LOS PUSIMOS AQUI MOTIVADOS PARA LOS REPORTES BUSCANDO OBTENER
+    // SOLO ORDENES SIN EL FOLIO COMPLETO. 
+    vendedor: { type: Schema.Types.ObjectId, ref: 'Usuario' },
+    fechaFolio: { type: Date },
+    idFolio: { type: Schema.Types.ObjectId, ref: 'Folio' },
+    observacionesPedido: { type: String },
+    observacionesFolio: { type: String },
+    desdeAlmacen: { type: Boolean },
 });
 
 

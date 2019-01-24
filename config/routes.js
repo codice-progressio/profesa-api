@@ -48,7 +48,7 @@ module.exports.ROUTES = {
         route: reportesRoute,
         roles: [],
         subRoutes: {}
-    }
+    },
 
 
 

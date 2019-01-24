@@ -62,40 +62,18 @@ app.get('/laser', (req, res) => {
             // por si las necesito en el GUI.
             foliosCoincidentes.forEach(folio => {
                 folio.folioLineas.forEach(pedido => {
-                    pedido.ordenes.map(orden => {
-
-                        // Cargamos el nombre del vendedor. 
-                        orden.vendedor = folio.vendedor.nombre;
-                        // Cargamos la fecha del folio en la ord0en.
-                        orden.fechaDeFolio = folio.fechaFolio;
-
-                        // cargamos la referencia del folio
-                        orden.idFolio = folio._id;
-
-                        // Unimos todas las observaciones. 
-                        if (pedido.observaciones) orden.observacionesPedido = pedido.observaciones;
-                        if (folio.observaciones) orden.observacionesFolio = folio.observaciones;
-
-                    });
-
                     ordenes = ordenes.concat(pedido.ordenes);
                 });
             });
-            console.log(idLaserDepto)
-                // FILTRAR ORDENES QUE NO NECESITEMOS. 
+
+            // FILTRAR ORDENES QUE NO NECESITEMOS. 
             ordenes = ordenes.filter(orden => {
                 // Si la orden ya paso por laser no debe aparecer. 
                 // Filtramos los trayectosRecorridos y si el resultado es diferente
                 // que cero quiere decir que ya paso por el departamento y devolvemos false para que no la agregue. 
-
-                return !orden.trayectoRecorrido.filter(trayecto => { return trayecto.departamento.toString() === idLaserDepto.toString(); }).length;
+                return !orden.trayectoRecorrido.filter(
+                    trayecto => { return trayecto.departamento._id.toString() === idLaserDepto.toString(); }).length;
             });
-
-
-
-
-
-
 
             // Mostrar como pendiente de surtir si viene de alamcen
             // Si viene de produccion mostrar departamentos faltantes.            
@@ -118,17 +96,6 @@ app.get('/laser', (req, res) => {
                 err: err,
             });
         });
-
-
-
-
-
-
-
-
-
-
-
 
 });
 

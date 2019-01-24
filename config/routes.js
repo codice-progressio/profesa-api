@@ -32,8 +32,26 @@ var materialRoutes = require('../routes/almacen/material');
 var hitRoutes = require('../routes/ingenieria/hit');
 var defaultsRoute = require('../routes/configCruds/defaults.crud');
 
-var R = require('../config/roles');
+var reportesRoute = require('../routes/reportes/reportes');
+
+var ROLES = require('../config/roles');
+
+
+
+
+
 module.exports.ROUTES = {
+
+    _REPORTES: {
+
+        url: '/reportes',
+        route: reportesRoute,
+        roles: [],
+        subRoutes: {}
+    }
+
+
+
     _DEFAULTS: {
         url: '/defaults',
         route: defaultsRoute,
@@ -53,13 +71,13 @@ module.exports.ROUTES = {
         url: '/folio',
         route: folioRoutes,
         roles: [
-            R.FOLIO_CONSULTAR,
+            ROLES.FOLIO_CONSULTAR,
         ],
         subRoutes: {
             _: {
                 url: '/',
                 roles: [
-                    R.CONTROL_DE_PRODUCCION_REGISTRAR_FOLIOS_ROLE
+                    ROLES.CONTROL_DE_PRODUCCION_REGISTRAR_FOLIOS_ROLE
                 ]
             }
         }
@@ -108,7 +126,7 @@ module.exports.ROUTES = {
         url: '/img',
         route: imagenesRoutes,
         roles: [
-            R.USER_ROLE,
+            ROLES.USER_ROLE,
         ],
         subRoutes: {
 

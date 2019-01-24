@@ -15,8 +15,10 @@ FEATURES:
         ✔ Una familia siempre debe de tener entrega de ordenes a proceso. @started(19-01-23 13:37) @done(19-01-23 14:28) @lasted(51m6s)
     
     Reportes:
-        ☐ Que las maquinas permitan guardar cambios e incidencias. @started(19-01-23 15:40)
-        ☐ Que se creen incidencias. @started(19-01-23 15:40)
+        ✘ Que las maquinas permitan guardar cambios e incidencias. @started(19-01-23 15:40) @cancelled(19-01-24 06:58) @wasted(15h18m10s)
+        ✘ Que se creen incidencias. @started(19-01-23 15:40) @cancelled(19-01-24 06:58) @wasted(15h18m10s)
+        ✘ Crear empleados @cancelled(19-01-24 06:59)
+
         ☐ Laser @started(19-01-23 14:33)
             Maquina que lo procesa.
             Numero de folio

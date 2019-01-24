@@ -80,6 +80,7 @@ folioSchema
         asignarNumeroDePedido(this);
         calcularPorcentajeDeAvance(this);
         verificarFolioTerminado(this);
+        cargarDatosGeneralesDeFolioYPedidoEnOrden(this);
         next();
     });
 
@@ -411,10 +412,15 @@ function calcularPorcentajeDeAvance(folio) {
 
 }
 
+/**
+ *Revisamos si el folio tiene todos sus pedidos como terminados. 
+ Si es asi entonces cambiamos la bandera a terminado. 
+ *
+ * @param {*} folio
+ */
 function verificarFolioTerminado(folio) {
-    console.log(`${colores.info('FOLIO MODELS')}  Verificando si el folio ya esta terminado `);
-    // Revisamos si el folio tiene todos sus pedidos como terminados. 
-    // Si es asi entonces cambiamos la bandera a terminado. 
+
+
     // Recorremos todos los pedidos.
     for (let i = 0; i < folio.folioLineas.length; i++) {
         const linea = folio.folioLineas[i];
@@ -425,7 +431,6 @@ function verificarFolioTerminado(folio) {
             const orden = linea.ordenes[o];
             // Si una sola orden no esta terminada 
             // basta para que el pedido y el folio no esten termiandos. 
-            console.log(` orden.terminada? ${orden.terminada}`);
             if (!orden.terminada) {
                 folio.terminado = false;
                 linea.terminado = false;
@@ -434,7 +439,36 @@ function verificarFolioTerminado(folio) {
             }
         }
     }
-    console.log(`${colores.info('FOLIO MODELS')}  folio.terminado? ${folio.terminado}`);
+
+}
+
+/**
+ * Carga los datos del folio y pedido en la oren para 
+ * acceso mas facil. 
+ *
+ * @param {*} folio
+ */
+function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
+    folio.folioLineas.forEach(pedido => {
+        pedido.ordenes.map(orden => {
+
+            // Cargamos el nombre del vendedor. 
+            orden.vendedor = folio.vendedor.nombre;
+            // Cargamos la fecha del folio en la ord0en.
+            orden.fechaDeFolio = folio.fechaFolio;
+
+            // cargamos la referencia del folio
+            orden.idFolio = folio._id;
+
+            // Unimos todas las observaciones. 
+            if (pedido.observaciones) orden.observacionesPedido = pedido.observaciones;
+            if (folio.observaciones) orden.observacionesFolio = folio.observaciones;
+
+            // Mostrar como pendiente de surtir si viene de alamcen
+            orden.desdeAlmacen = pedido.almacen;
+
+        });
+    });
 }
 
 module.exports = mongoose.model('Folio', folioSchema);

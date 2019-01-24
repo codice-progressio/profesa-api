@@ -452,10 +452,11 @@ function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
     folio.folioLineas.forEach(pedido => {
         pedido.ordenes.map(orden => {
 
-            // Cargamos el nombre del vendedor. 
-            orden.vendedor = folio.vendedor.nombre;
+            // Cargamos el vendedor. 
+            orden.vendedor = folio.vendedor;
+
             // Cargamos la fecha del folio en la ord0en.
-            orden.fechaDeFolio = folio.fechaFolio;
+            orden.fechaFolio = folio.fechaFolio;
 
             // cargamos la referencia del folio
             orden.idFolio = folio._id;

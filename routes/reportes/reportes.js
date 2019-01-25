@@ -63,17 +63,6 @@ app.get('/laser', (req, res) => {
             // El objeto que contendra las ordenes que vamos a devolver. 
             let ordenes = [];
 
-            // // Ordenes que ya estan disponibles para laserarse. 
-            // let disponibles = [];
-            // // Ordenes que se tiene que surtir desdse almacen. 
-            // let porSurtir = [];
-            // // Ordenes que ya estan surtidas o maquinadas 
-            // // pero tienen departamentos por delante todavia antes de laser.
-            // let departamentosPendientes = [];
-
-
-
-
             // Cargamos las referencias en todos las ordenes
             // por si las necesito en el GUI.
             foliosCoincidentes.forEach(folio => {
@@ -90,6 +79,7 @@ app.get('/laser', (req, res) => {
                 return !orden.trayectoRecorrido.filter(
                     trayecto => { return trayecto.departamento._id.toString() === idLaserDepto.toString(); }).length;
             });
+
 
             // LA ORDEN ESTA DISPONIBLE PARA TRABAJARSE SI EL DEPARTAMENTO ACTUAL EXISTE. 
             let ordenesAcomodadas = ubicarOrdenes(ordenes, idAlmacen, idLaserDepto);
@@ -149,7 +139,6 @@ function ubicarOrdenes(arrelgoDeOrdenesSinAcomodar, idAlmacen, idLaser) {
 
     arrelgoDeOrdenesSinAcomodar.forEach(ordenParaAcomodar => {
         // La orden esta en el departamento de laser?
-
         if (ordenParaAcomodar.ubicacionActual.departamento._id.toString() === idLaser.toString()) {
             // Si hay depto laser entonces es su ubicacion actual. 
 
@@ -206,13 +195,9 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
     let comenzarAContar = false;
     let contadorDeptosFaltantes = 0;
 
-    console.log('Empezamos a recorrer el trayecto normal para buscar donde estamos.')
-        // Recorremos todo el trayecto normal para ubicar en que paso estamos del trayecto. 
+    // Recorremos todo el trayecto normal para ubicar en que paso estamos del trayecto. 
     for (let i = 0; i < orden.trayectoNormal.length; i++) {
         const trayectoNormal = orden.trayectoNormal[i];
-        console.log('RECORRIDO NORMAL: ' + trayectoNormal.departamento.nombre + '     ORDEN: ' + trayectoNormal.orden);
-
-
 
         // Si llegamos a laser entonces nos detenemos en la busqueda. 
         if (trayectoNormal.departamento._id.toString() === idLaser.toString()) { console.log('break'); break; }
@@ -223,17 +208,11 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
             // Estamos en la ubicacion actual
             comenzarAContar = true;
 
-            console.log('Estamos aqui. Empezamos a contar. ')
-
-
         }
 
         // Contamos la distancia que falta para llegar a laser desde la ubicacion actual. 
         if (comenzarAContar) {
             contadorDeptosFaltantes++;
-
-            console.log(contadorDeptosFaltantes);
-
 
         };
 

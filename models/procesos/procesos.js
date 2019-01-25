@@ -10,7 +10,7 @@ const procesosSchema = {
         type: Schema.Types.ObjectId,
         ref: 'Proceso',
     },
-    orden: { type: Number, require: [true, 'No se definio el órden del proceso.'] }
+    orden: { type: String, require: [true, 'No se definio el órden del proceso.'] }
 };
 
 

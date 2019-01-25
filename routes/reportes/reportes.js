@@ -27,14 +27,6 @@ app.get('/laser', (req, res) => {
     // Mostrar la cantidad de ordenes pendientes
     // que tienen por laserar el departameno. 
 
-    // <!-- 
-    // =====================================
-    //  Que tenemos que hacer?
-    // =====================================
-    // -->
-
-
-
     Promise.all([
             Folio.find({
                 // Filtrar por aquellas que no esten terminadas.
@@ -44,6 +36,7 @@ app.get('/laser', (req, res) => {
                 'folioLineas.laserCliente': { $ne: null }
             })
             // Convertimos los resultado en objetos json
+            // ES NECESARIO HACERLO ASI PARA AGREGAR PROPIEDADES!!! OJO!!
             .lean()
             .exec(),
             Default.find().exec()
@@ -94,15 +87,8 @@ app.get('/laser', (req, res) => {
                 { tipo: 'departamentosPendientes', datos: ordenesAcomodadas.departamentosPendientes },
                 { tipo: 'porSurtir', datos: ordenesAcomodadas.porSurtir },
                 { tipo: 'trabajando', datos: ordenesAcomodadas.trabajando },
-
                 { tipo: 'total', datos: ordenes.length },
-                {
-                    tipo: 'totalSeparadas',
-                    datos: ordenesAcomodadas.disponibles.length +
-                        ordenesAcomodadas.departamentosPendientes.length +
-                        ordenesAcomodadas.porSurtir.length +
-                        ordenesAcomodadas.trabajando.length
-                },
+
             ]);
 
 
@@ -116,6 +102,36 @@ app.get('/laser', (req, res) => {
         });
 
 });
+
+app.get('/laser', (req, res, next) => {
+    // <!-- 
+    // =====================================
+    //  OBJETIVO DEL REPORTE. 
+    // =====================================
+    // -->
+
+    // Mostrar la cantidad de ordenes pendientes
+    // que tienen por transformar el departamento 
+
+    // <!-- 
+    // =====================================
+    //  Que tenemos que hacer?
+    // =====================================
+    // -->
+
+    Promise.all([
+        Folio.find({
+            // Filtrar por aquellas que no esten terminadas.
+            terminado: false,
+            'folioLineas.ordenesGeneradas': true,
+        }).exec()
+
+    ])
+
+
+
+});
+
 
 
 module.exports = app;

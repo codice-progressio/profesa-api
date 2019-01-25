@@ -250,11 +250,8 @@ function trayectoDeOrden(folio) {
 
                         // Tomamos el primer departamento y lo volvemos como ubicacion
                         // actual.
-                        ordenParaModificar.trayectoNormal.sort(function(a, b) {
-                            return (a.orden - b.orden);
-                        });
 
-                        // Actualizamos la ubicación actual. 
+
                         ordenParaModificar.ubicacionActual = {
                             departamento: mongoose.Types.ObjectId(ordenParaModificar.trayectoNormal[0].departamento._id),
                             entrada: new Date().toISOString(),

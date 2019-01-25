@@ -203,13 +203,13 @@ function trayectoDeOrden(folio) {
                         if (linea.almacen) {
                             // Creamos el objeto trayecto para control de produccion.
                             let trayectoControlDeProduccion = {
-                                orden: 0,
+                                orden: '0',
                                 departamento: procesoControlDeProduccion.departamento
                             };
 
                             // Creamos el objeto trayecto para surtir desde almacen. 
                             let trayectoSurtirDesdeAlmacen = {
-                                orden: 0.1,
+                                orden: '0.1',
                                 departamento: procesoAlmacenDeBoton.departamento
                             };
 
@@ -250,10 +250,45 @@ function trayectoDeOrden(folio) {
                             });
                         });
 
+
+                        // <!-- 
+                        // =====================================
+                        //  ORDENAR POR SI SE AGREGARON PROCESOS EXTRAS
+                        //  AL CREAR ELMODELO
+                        // =====================================
+                        // -->
+
+                        /* Es necesario que ordenesmos puesto que los procesos
+                            que se agregan unicamente para el pedido no vienen ordenados. 
+                            Generalmente son los que van trabajar asi. 
+                        */
+
+                        ordenParaModificar.trayectoNormal.sort((a, b) => {
+
+                            let entero_A = a.orden.split('.')[0];
+                            let entero_B = b.orden.split('.')[0];
+
+                            let decimal_A = a.orden.split('.')[1] ? a.orden.split('.')[1] : '0';
+                            let decimal_B = b.orden.split('.')[1] ? b.orden.split('.')[1] : '0';
+
+                            let x = Number(entero_A) - Number(entero_B);
+
+                            return x == 0 ? Number(decimal_A) - Number(decimal_B) : x;
+                        });
+
+                        // <!-- 
+                        // =====================================
+                        //  END ORDENAR POR SI SE AGREGARON PROCESOS EXTRAS
+                        //  AL CREAR ELMODELO
+                        // =====================================
+                        // -->
+
+
+
+
+                        // DEFINIMOS LA UBICACION ACTUAL
                         // Tomamos el primer departamento y lo volvemos como ubicacion
                         // actual.
-
-
                         ordenParaModificar.ubicacionActual = {
                             departamento: mongoose.Types.ObjectId(ordenParaModificar.trayectoNormal[0].departamento._id),
                             entrada: new Date().toISOString(),
@@ -324,7 +359,6 @@ function calcularNivel(folio) {
 
 function copiarModeloCompletoAOrden(folio) {
     let a = 'Copiando modelo completo a órden.';
-    console.log(colores.success(['DEBUG']) + a);
 
     // Recorremos todas las órdenes de todos los pedidos y copiamos
     // a la órden. 

@@ -48,7 +48,7 @@ var trayectoSchema = new Schema({
     entrada: { type: Date },
     salida: { type: Date },
     // Referente al orden secuencial de los departamentos. 
-    orden: { type: Number, require: [true, 'El órden es obligatorio.'] },
+    orden: { type: String, require: [true, 'El órden es obligatorio.'] },
 
     // El primer paso comenzar a trabajar una órden es recivirla en el proceso
     // actual donde esta. (trayecto).

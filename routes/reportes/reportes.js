@@ -200,7 +200,7 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
         const trayectoNormal = orden.trayectoNormal[i];
 
         // Si llegamos a laser entonces nos detenemos en la busqueda. 
-        if (trayectoNormal.departamento._id.toString() === idLaser.toString()) { console.log('break'); break; }
+        if (trayectoNormal.departamento._id.toString() === idLaser.toString()) { break; }
 
 
         // Buscamos la ubicacion actual. To string por que no compara!

@@ -206,24 +206,37 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
     let comenzarAContar = false;
     let contadorDeptosFaltantes = 0;
 
-
-    // Recorremos todo el trayecto normal para ubicar en que paso estamos del trayecto. 
+    console.log('Empezamos a recorrer el trayecto normal para buscar donde estamos.')
+        // Recorremos todo el trayecto normal para ubicar en que paso estamos del trayecto. 
     for (let i = 0; i < orden.trayectoNormal.length; i++) {
         const trayectoNormal = orden.trayectoNormal[i];
+        console.log('RECORRIDO NORMAL: ' + trayectoNormal.departamento.nombre + '     ORDEN: ' + trayectoNormal.orden);
+
+
 
         // Si llegamos a laser entonces nos detenemos en la busqueda. 
         if (trayectoNormal.departamento._id.toString() === idLaser.toString()) { console.log('break'); break; }
 
-        console.log('trayectoNormal.orden === ordenUbicacionActual=> ' + trayectoNormal.orden.toString() + ' === ' + ordenUbicacionActual.toString())
-            // Buscamos la ubicacion actual. To string por que no compara!
+
+        // Buscamos la ubicacion actual. To string por que no compara!
         if (trayectoNormal.orden.toString() === ordenUbicacionActual.toString()) {
             // Estamos en la ubicacion actual
             comenzarAContar = true;
+
+            console.log('Estamos aqui. Empezamos a contar. ')
+
+
         }
 
         // Contamos la distancia que falta para llegar a laser desde la ubicacion actual. 
-        if (comenzarAContar) contadorDeptosFaltantes++;
-        console.log('contadorDeptosFaltantes: ' + contadorDeptosFaltantes)
+        if (comenzarAContar) {
+            contadorDeptosFaltantes++;
+
+            console.log(contadorDeptosFaltantes);
+
+
+        };
+
 
     }
 

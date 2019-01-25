@@ -62,6 +62,8 @@ var autoPopulate = function(next) {
         this.populate(`folioLineas.ordenes.${pop}.materiales.maquinaActual`);
     });
 
+    this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');
+
 
 
 

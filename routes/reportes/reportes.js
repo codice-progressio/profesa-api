@@ -33,12 +33,15 @@ app.get('/laser', (req, res) => {
     // =====================================
     // -->
 
+
+
     Promise.all([
             Folio.find({
                 // Filtrar por aquellas que no esten terminadas.
                 terminado: false,
                 'folioLineas.ordenesGeneradas': true,
-                'folioLineas.laserCliente': { $ne: { $not: null } }
+                // $ne es no igual. !!! DAAA!!
+                'folioLineas.laserCliente': { $ne: null }
             })
             // Convertimos los resultado en objetos json
             .lean()
@@ -53,10 +56,23 @@ app.get('/laser', (req, res) => {
 
             // Id del departamento de laser. 
             let idLaserDepto = defatults.DEPARTAMENTOS.LASER;
+            let idAlmacen = defatults.DEPARTAMENTOS.ALMACEN;
+
 
 
             // El objeto que contendra las ordenes que vamos a devolver. 
             let ordenes = [];
+
+            // // Ordenes que ya estan disponibles para laserarse. 
+            // let disponibles = [];
+            // // Ordenes que se tiene que surtir desdse almacen. 
+            // let porSurtir = [];
+            // // Ordenes que ya estan surtidas o maquinadas 
+            // // pero tienen departamentos por delante todavia antes de laser.
+            // let departamentosPendientes = [];
+
+
+
 
             // Cargamos las referencias en todos las ordenes
             // por si las necesito en el GUI.
@@ -75,16 +91,28 @@ app.get('/laser', (req, res) => {
                     trayecto => { return trayecto.departamento._id.toString() === idLaserDepto.toString(); }).length;
             });
 
-            // Mostrar como pendiente de surtir si viene de alamcen
-            // Si viene de produccion mostrar departamentos faltantes.            
-
-
+            // LA ORDEN ESTA DISPONIBLE PARA TRABAJARSE SI EL DEPARTAMENTO ACTUAL EXISTE. 
+            let ordenesAcomodadas = ubicarOrdenes(ordenes, idAlmacen, idLaserDepto);
 
 
             // RETORNAMOS ORDENES. 
             return RESP._200(res, null, [
-                { tipo: 'ordenes', datos: ordenes },
+
+
+                // { tipo: 'ordenes', datos: ordenes },
+                { tipo: 'disponibles', datos: ordenesAcomodadas.disponibles },
+                { tipo: 'departamentosPendientes', datos: ordenesAcomodadas.departamentosPendientes },
+                { tipo: 'porSurtir', datos: ordenesAcomodadas.porSurtir },
+                { tipo: 'trabajando', datos: ordenesAcomodadas.trabajando },
+
                 { tipo: 'total', datos: ordenes.length },
+                {
+                    tipo: 'totalSeparadas',
+                    datos: ordenesAcomodadas.disponibles.length +
+                        ordenesAcomodadas.departamentosPendientes.length +
+                        ordenesAcomodadas.porSurtir.length +
+                        ordenesAcomodadas.trabajando.length
+                },
             ]);
 
 
@@ -99,4 +127,105 @@ app.get('/laser', (req, res) => {
 
 });
 
+
 module.exports = app;
+
+/**
+ *Ubica las ordenes en tres tipos de arregls. 
+
+ * @param {*} arrelgoDeOrdenesSinAcomodar
+ * @param {*} idAlmacen
+ * @returns
+ */
+function ubicarOrdenes(arrelgoDeOrdenesSinAcomodar, idAlmacen, idLaser) {
+
+    let arregloDeOrdenes = {
+        disponibles: [],
+        departamentosPendientes: [],
+        porSurtir: [],
+        trabajando: []
+    };
+
+
+    arrelgoDeOrdenesSinAcomodar.forEach(ordenParaAcomodar => {
+        // La orden esta en el departamento de laser?
+
+        if (ordenParaAcomodar.ubicacionActual.departamento._id.toString() === idLaser.toString()) {
+            // Si hay depto laser entonces es su ubicacion actual. 
+
+
+            //Esta trabajando ya?? Si tiene el depto agregado quiere decir que si.
+            if (ordenParaAcomodar.ubicacionActual.laser) {
+                arregloDeOrdenes.trabajando.push(ordenParaAcomodar);
+            } else {
+                // Entonces esta disponible. 
+                arregloDeOrdenes.disponibles.push(ordenParaAcomodar);
+            }
+        } else if (ordenParaAcomodar.desdeAlmacen) {
+            // La orden viene desde almacen (surtida desde almacen)
+
+            // Si el trayecto es superior a 2 esta surtida. 
+            if (2 <= ordenParaAcomodar.trayectoRecorrido.length) {
+                // Tiene departamentos por delante?
+
+                tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
+                arregloDeOrdenes.departamentosPendientes.push(ordenParaAcomodar);
+
+            } else {
+                // El trayecto no supera a dos, quiere decir que no se ha surtido.
+                arregloDeOrdenes.porSurtir.push(ordenParaAcomodar);
+            }
+        } else {
+            // La orden viene desde produccion. 
+            tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
+
+            arregloDeOrdenes.departamentosPendientes.push(ordenParaAcomodar);
+
+
+        }
+
+
+    });
+
+    return arregloDeOrdenes;
+
+}
+
+
+/**
+ * 
+ *
+ * @param {*} orden
+ * @param {*} idLaser
+ */
+function tieneDepartamentosPorDelante(orden, idLaser) {
+
+    // Obtenemos el orden de la ubicacion actual. 
+    let ordenUbicacionActual = orden.ubicacionActual.orden;
+
+    let comenzarAContar = false;
+    let contadorDeptosFaltantes = 0;
+
+
+    // Recorremos todo el trayecto normal para ubicar en que paso estamos del trayecto. 
+    for (let i = 0; i < orden.trayectoNormal.length; i++) {
+        const trayectoNormal = orden.trayectoNormal[i];
+
+        // Si llegamos a laser entonces nos detenemos en la busqueda. 
+        if (trayectoNormal.departamento._id.toString() === idLaser.toString()) { console.log('break'); break; }
+
+        console.log('trayectoNormal.orden === ordenUbicacionActual=> ' + trayectoNormal.orden.toString() + ' === ' + ordenUbicacionActual.toString())
+            // Buscamos la ubicacion actual. To string por que no compara!
+        if (trayectoNormal.orden.toString() === ordenUbicacionActual.toString()) {
+            // Estamos en la ubicacion actual
+            comenzarAContar = true;
+        }
+
+        // Contamos la distancia que falta para llegar a laser desde la ubicacion actual. 
+        if (comenzarAContar) contadorDeptosFaltantes++;
+        console.log('contadorDeptosFaltantes: ' + contadorDeptosFaltantes)
+
+    }
+
+    orden.pasosParaLlegarALaser = contadorDeptosFaltantes;
+}

@@ -573,6 +573,22 @@ app.put('/:idOrden', (req, res) => {
             // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
             datosDeOrdenYAvanzar(orden, datos, dep._v);
 
+            folio.save(err => {
+                if (err) {
+                    return RESP._500(res, {
+                        msj: 'Hubo un error actualizando el folio.',
+                        err: err,
+                    });
+
+                }
+
+                // return res.status(200).json({
+                //     ok: true,
+                // });
+                return RESP._200(res, 'Órden modificada correctamente.', [
+                    { tipo: 'todoCorrecto', datos: true },
+                ]);
+            });
 
             // ============================================
             //  TODO: OJO!!! ESTA PARTE TODAVÍA NO ESTA FUNCIONANDO.
@@ -581,41 +597,43 @@ app.put('/:idOrden', (req, res) => {
             // NO BORRAR!!!! NO BORRAR!!!!!!
 
 
-            let datosTransformacion = {
-                orden: orden,
-                departamento: departamento,
-                res: res,
-                callback: function() {
-                    //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
-                    folio.save(err => {
-                        if (err) {
-                            return RESP._500(res, {
-                                msj: 'Hubo un error actualizando el folio.',
-                                err: err,
-                            });
+            // let datosTransformacion = {
+            //     orden: orden,
+            //     departamento: departamento,
+            //     res: res,
+            //     callback: function() {
+            //         //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
+            //         folio.save(err => {
+            //             if (err) {
+            //                 return RESP._500(res, {
+            //                     msj: 'Hubo un error actualizando el folio.',
+            //                     err: err,
+            //                 });
 
-                        }
+            //             }
 
-                        // return res.status(200).json({
-                        //     ok: true,
-                        // });
-                        return RESP._200(res, 'Órden modificada correctamente.', [
-                            { tipo: 'todoCorrecto', datos: true },
-                        ]);
-                    });
+            //             // return res.status(200).json({
+            //             //     ok: true,
+            //             // });
+            //             return RESP._200(res, 'Órden modificada correctamente.', [
+            //                 { tipo: 'todoCorrecto', datos: true },
+            //             ]);
+            //         });
 
-                }
-            };
+            //     }
+            // };
 
 
-            if (!datosTransformacion.orden.ubicacionActual) {
-                //Si no tenemos más ubicaciónes entonces no es necesario 
-                // que hagamos la parte de transformación. 
-                datosTransformacion.orden.terminada = true;
-                datosTransformacion.callback();
-            } else {
-                asingarAMaquinaTransformacion(datosTransformacion);
-            }
+
+            // if (!datosTransformacion.orden.ubicacionActual) {
+            //     //Si no tenemos más ubicaciónes entonces no es necesario 
+            //     // que hagamos la parte de transformación. 
+            //     datosTransformacion.orden.terminada = true;
+            //     datosTransformacion.callback();
+            // } else {
+            //     console.log( )
+            //     // asingarAMaquinaTransformacion(datosTransformacion);
+            // }
         } else {
             return RESP._500(res, {
                 msj: 'Departamento no defindo como funcón en sistema. ',
@@ -699,7 +717,7 @@ function asingarAMaquinaTransformacion(datos) {
     // UbicacionActual = TRANSFORMACION
     if (datos.orden.ubicacionActual.departamento.nombre === DEPTO) {
         // Buscar máquinas asigandas a transformacion
-        Maquina.find({ departamentos: DEPTO }, (err, maquinasTransformacion) => {
+        Maquina.find({ 'departamentos.nombre': DEPTO }, (err, maquinasTransformacion) => {
 
             if (err) {
                 return RESP._500(datos.res, {

@@ -3,6 +3,7 @@ var app = express();
 var RESP = require('../../utils/respStatus');
 var Folio = require('../../models/folios/folio');
 var Default = require('../../models/configModels/default');
+var colores = require('../../utils/colors');
 
 
 
@@ -43,15 +44,12 @@ app.get('/laser', (req, res) => {
 
         ]).then(resp => {
 
-
             let foliosCoincidentes = resp[0]
             let defatults = resp[1][0];
 
             // Id del departamento de laser. 
             let idLaserDepto = defatults.DEPARTAMENTOS.LASER;
             let idAlmacen = defatults.DEPARTAMENTOS.ALMACEN;
-
-
 
             // El objeto que contendra las ordenes que vamos a devolver. 
             let ordenes = [];
@@ -103,7 +101,7 @@ app.get('/laser', (req, res) => {
 
 });
 
-app.get('/laser', (req, res, next) => {
+app.get('/transformacion', (req, res, next) => {
     // <!-- 
     // =====================================
     //  OBJETIVO DEL REPORTE. 
@@ -120,16 +118,240 @@ app.get('/laser', (req, res, next) => {
     // -->
 
     Promise.all([
-        Folio.find({
-            // Filtrar por aquellas que no esten terminadas.
-            terminado: false,
-            'folioLineas.ordenesGeneradas': true,
-        }).exec()
+            Folio.find({
+                // Filtrar por aquellas que no esten terminadas.
+                terminado: false,
+                // Que tengan las ordenes generadas.
+                'folioLineas.ordenesGeneradas': true,
+                // Si no va para almacen tiene que ir a transformacion. 
+                'folioLineas.almacen': false
+            })
+            .lean()
+            .exec(),
+            Default.find().exec()
+        ]).then(resp => {
 
-    ])
+            /**
+             * Los folios que coincidieron con los filtros especificados 
+             * en el find. 
+             */
+            let foliosCoincidentes = resp[0];
+            /**
+             * Los datos por default de donde queremos sacar informacion
+             * importante como los departamentos. 
+             */
+            let defatults = resp[1][0];
+
+            /**
+             * Id del departamento de laser. 
+             */
+            let idTransformacionDepto = defatults.DEPARTAMENTOS.TRANSFORMACION;
+
+            /**
+             * 
+             El objeto que contendra las ordenes que vamos a filtrar para eliminar
+              las que no queremos. Almacena el primer bouche de ordenes para que
+              despues las podamos ordenes. 
+             * 
+             */
+            let ordenesParaAcomodarPorPasos = [];
+
+            // Cargamos las referencias en todos las ordenes
+            // por si las necesito en el GUI.
+            foliosCoincidentes.forEach(folio => {
+                folio.folioLineas.forEach(pedido => {
+                    ordenesParaAcomodarPorPasos = ordenesParaAcomodarPorPasos.concat(pedido.ordenes);
+                });
+            });
+
+            /**
+             * Este objeto almacena las apariciones que hay del departamento de transformacion 
+             * en el trayectoNormal. 
+             * 
+             * La estructura que sigue es: 
+             * 
+             * objetoOrdenesPorAparicion[1] = [ordenesCon_Un_Pasos]
+             * objetoOrdenesPorAparicion[2] = [ordenesCon_Dos_Pasos]
+             * objetoOrdenesPorAparicion[n] = [ordenesCon_N_Pasos]
+             */
+            let objetoOrdenesPorAparicion = {}
 
 
+            ordenesParaAcomodarPorPasos.map(ordenParaAcomodarPorPaso => {
 
+                let cbFiltroTrayecto = (trayecto) => {
+                    return trayecto.departamento._id.toString() === idTransformacionDepto.toString();
+                };
+
+
+                /**
+                 * La cantidad de veces que aparece el departamento de transformacion en 
+                 * en el trayecto normal de la orden.
+                 * 
+                 */
+                let aparicionesDeTransformacion_TrayectoNormal = ordenParaAcomodarPorPaso.trayectoNormal.filter(cbFiltroTrayecto).length;
+
+                /**
+                 * La cantidad de apariciones del departamento de transformacion 
+                 * que aparece en el trayecto recorrido. 
+                 * 
+                 */
+                let aparicionesDeTransformacion_TrayectoRecorrido = ordenParaAcomodarPorPaso.trayectoRecorrido.filter(cbFiltroTrayecto).length;
+
+                // Almacenamos este dato por que lo vamos a ocupar mas adelante para buscar la posicion de
+                // la orden contra los pasos. 
+                ordenParaAcomodarPorPaso.pasosRealizados = aparicionesDeTransformacion_TrayectoRecorrido;
+
+
+                // Almacenamos la diferencia entre las apariciones. No eliminamos la orden por que 0 puede signifcar
+                // que se esta trabajando o que ya no se esta trabajando. Para eso hay que corroborar la ubicacion actual
+                // y se hace mas adelante. Si es positivo quiere decir que la orden se retransformo, como ahi que???
+                // CREAMOS LA PROPIEDAD NUEVA orden.pasosPendientes
+                ordenParaAcomodarPorPaso.pasosPendientes = aparicionesDeTransformacion_TrayectoNormal - aparicionesDeTransformacion_TrayectoRecorrido;
+
+                if (!objetoOrdenesPorAparicion[aparicionesDeTransformacion_TrayectoNormal]) {
+                    objetoOrdenesPorAparicion[aparicionesDeTransformacion_TrayectoNormal] = [];
+                }
+
+                // Agregamos la orden con su respectivo padre en base a la cantidad de apariciones de transformacion. 
+                objetoOrdenesPorAparicion[aparicionesDeTransformacion_TrayectoNormal].push(ordenParaAcomodarPorPaso);
+
+            });
+
+            // Cada orden hay que ubicarla segun la ubicacionActual con respecto al paso en el que este.
+            // Para eso tenemos que definir la cantidad de pasos que hay. Lo vamos a dejar dinamico
+            // para que me vuele. XPPP Espero que no de errores!~!
+
+            /**
+             * Este objeto contiene las propiedades de los pasos. Es dinamico y en el
+             * guardaremos de manera repetida las ordenes que vayan para cada cantidad de pasos
+             * de esta manera. 
+             *          
+             *          objetoContenedorDePasos[1] = { 
+             *                                          pedientes: [ordenesPara_1_Paso_pendiente] , 
+             *                                          trabajando: [ordenesPara_1_Paso_trabajando],
+             *                                          disponible: [ordenesPara_1_Paso_trabajando] 
+             *                                        }
+             *          objetoContenedorDePasos[n] = { 
+             *                                          pedientes: [ordenesPara_n_Paso_pendiente] , 
+             *                                          trabajando: [ordenesPara_n_Paso_trabajando],
+             *                                          disponible: [ordenesPara_n_Paso_trabajando] 
+             *                                        }
+             * 
+             */
+            let objetoContenedorDePasos = {}
+
+            /**
+             * Obtenemos la clave de mayor valor desdeObjetoOrdenesPorAparacion. Esto equivale
+             * al mayor numero de pasos que que una orden tiene en esta consulta. Si la
+             * clave de mayor es 3 entonces en esta consulta solo habra 3 pasos. Si fuera 5 
+             * seria 5, etc.
+             */
+            let claveDeMayorValor = Number(Object.keys(objetoOrdenesPorAparicion).sort().pop());
+
+            // Creamos los espacios para cada paso.
+            for (let i = 1; i < claveDeMayorValor + 1; i++) {
+                objetoContenedorDePasos[i] = {
+                    /** 
+                     * Ordenes que estan pendientes de llegar y que tienen departamentos
+                     * por delante aun para poder realizar este paso de transformacion. 
+                     */
+                    pendientes: [],
+                    /**
+                     * Ordenes que estan trabajandose actualmente en alguna maquina del 
+                     * departamento de transformacion.  
+                     */
+                    trabajando: [],
+                    /**
+                     * Ordenes que ya estan en tranformacion pero que todavia no se les 
+                     * asigna una maquina en la cual estan trabajando. 
+                     */
+                    disponibles: []
+                };
+            }
+
+            /** Recorremos las ordenes separadas por cantidad de apariciones y despues vamos a revisar
+             * En que paso se encuentran. Si tenemos una orden que tiene tres pasos pero ya termino 
+             * el primero entonces debe aparecer en segundo y tercer paso unicamente.
+             */
+            for (const n_pasoKey in objetoContenedorDePasos) {
+                if (objetoContenedorDePasos.hasOwnProperty(n_pasoKey)) {
+                    /**
+                     * Contiene las ordenes que corresponden a un paso. Pueden ser
+                     * primer paso, segundo, etc. Empieza en ese orden hasta llegar
+                     * al ultimo paso que se obtuvo de analizar las ordenes. ESTE ES 
+                     * EL QUE TENEMOS QUE CARGAR.
+                     */
+                    const objeto_OrdenesDeEstePaso = objetoContenedorDePasos[n_pasoKey];
+
+
+                    // NOS DISPONEMOS A GREGAR ORDENES DE primerPaso, n_pasoKey, etc.
+                    for (const cantidadDePasosKey in objetoOrdenesPorAparicion) {
+                        if (objetoOrdenesPorAparicion.hasOwnProperty(cantidadDePasosKey)) {
+                            /**
+                             * Obtenemos un arreglo delimitado por la cantidad de apariciones que tiene la orden
+                             * en el trayecto normal del departamento de transformacion. Por ejemplo
+                             * las que tienen tres pasos en tranformacion. || El objeto que contiene es arreglo
+                             * se corre uno por uno y se carga aqui el arreglo.
+                             * No son necesariamente consecutivos. Si no hay ordenes con segundo paso
+                             * pero si con primero y tercero entonces el seguno paso nunca saldra en cantidadDePasosKey
+                             * por que no existe esa llave y mucho menos se cargara en esta variable. 
+                             */
+                            const arregloDeOrdenesPorAparicion = objetoOrdenesPorAparicion[cantidadDePasosKey];
+
+                            /*jshint loopfunc: true */
+                            arregloDeOrdenesPorAparicion.forEach(ordenParaUbicar => {
+                                // Esta orden tiene esta n cantidad de pasos para que se pueda almacenar?
+                                if (n_pasoKey <= cantidadDePasosKey) {
+                                    // Esta orden tiene pasos pendientes?
+                                    if (ordenParaUbicar.pasosPendientes > 0) {
+
+                                        // Si los pasos realizados son menores o iguales a 
+                                        // n_pasoKey que estamos filtrando entonces seguimos. 
+                                        // Es necesario corregir con mas uno por que los pasos 
+                                        // realizados se calculan desde el trayecto recorrido donde
+                                        // 0 trayectos de departamentos registrados equivalen al primer
+                                        // paso de transformacion. Por eso, aqui ajustamos. 
+                                        if (ordenParaUbicar.pasosRealizados + 1 <= n_pasoKey) {
+                                            // ESTE PASO NO ESTA TERMINADO PERO PUEDE QUE ESTE TRABAJANDOSE LA ORDEN.
+                                            if (ubicacionActualDeLaOrdenEsEstePaso(ordenParaUbicar, n_pasoKey, idTransformacionDepto)) {
+                                                // Esta trabjandose? o esta disponible
+                                                if (ordenParaUbicar.ubicacionActual.transformacion) {
+                                                    if (ordenParaUbicar.ubicacionActual.transformacion.trabajando) {
+                                                        objeto_OrdenesDeEstePaso.trabajando.push(ordenParaUbicar);
+                                                    } else {
+                                                        objeto_OrdenesDeEstePaso.disponibles.push(ordenParaUbicar);
+                                                    }
+                                                } else {
+                                                    // Esta disponible por que estamos en este departamento
+                                                    objeto_OrdenesDeEstePaso.disponibles.push(ordenParaUbicar);
+                                                }
+                                            } else {
+                                                objeto_OrdenesDeEstePaso.pendientes.push(ordenParaUbicar);
+                                            }
+                                        } // ELSE Si los pasos son mayores quiere decir que ya pasamos
+                                        // por este paso y pues no hacemos nada con la orden.
+                                    }
+                                } // ELSENo se almacena si no tiene pasos sufientes para el n_pasoKey en el que estamos. 
+                            });
+                        }
+                    }
+                }
+            }
+
+            return RESP._200(res, 'pruebas', [
+                { tipo: 'objetoContenedorDePasos', datos: objetoContenedorDePasos },
+                { tipo: 'objetoOrdenesPorAparicion', datos: objetoOrdenesPorAparicion },
+            ]);
+
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error generando el reporte de transformacion.',
+                err: err,
+            });
+        });
 });
 
 
@@ -236,4 +458,65 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
     }
 
     orden.pasosParaLlegarALaser = contadorDeptosFaltantes;
+}
+
+
+
+/**
+ * Verifica si la orden se encuentra en el departamento de transformacion y
+ * revisa si es el n_pasoKey. Si la orden esta en primer paso pero el n_pasoKey
+ * corresponde al segundo paso entonces devuelve false. 
+ * 
+ * Comprobamos que la ubicacion actual sea el departamento de transformacion. Si no es, 
+ * regresamos false por que en esta orden estamos evaluando en que numero de paso esta
+ * ubicada la orden cuando ya llego a algun paso de transformacion. Si no ha llegado a ninguno
+ * solo necesitamos poner la orden como pendiente. 
+ * 
+ * MODIFICAMOS LA ORDEN PARA AGREGAR LOS PASOS A LOS QUE ESTA?????
+ *
+ * @param {*} orden La orden que se va a evaluar. 
+ * @param {*} n_pasoKey El paso. (Primer paso, segundo paso, etc.)
+ * @param {*} idTransformacionDepto El id del departamento de transformacion. 
+ * @returns True si se encuentra en este paso, false si no se encuentra en este paso. 
+ */
+function ubicacionActualDeLaOrdenEsEstePaso(orden, n_pasoKey, idTransformacionDepto) {
+    // Es necesario ubicar en que paso estamos para saver si se agrega o no
+
+    // Comprobamos que la ubicacion actual sea el departamento de transformacion. Si no es, 
+    // regresamos false por que en esta orden estamos evaluando en que numero de paso esta
+    // ubicada la orden cuando ya llego a algun paso de transformacion. Si no ha llegado a ninguno
+    // solo necesitamos poner la orden como pendiente. 
+    if (orden.ubicacionActual.departamento._id.toString() === idTransformacionDepto.toString()) {
+        // Estamos en transformacion. Pero en que paso?
+        // Para resolver eso necesitamos contar la cantidad de 
+        // registros del departamento de transformacion en el trayecto recorrido
+        //
+
+        /**
+         * El numero de pasos actuales realizados que estan registrados en trayecto recorrido. 
+         * Este conteo debe de empezarse en 0 y no en uno por que cuando hay 0 
+         * apariciones de el departamento de transformacion en el trayecto recorrido
+         * quiere decir que aun no se empieza a trabajar el primer paso. 
+         */
+        let numeroDePasosActualesRegistrados = orden.trayectoRecorrido.filter(trayecto => {
+            return trayecto.departamento._id.toString() === idTransformacionDepto.toString();
+        }).length;
+
+        // Sumamos uno por que tenemos que corregir contra n_pasoKey.
+        // n_pasoKey empieza a contar desde uno y para encontrar el primer paso
+        // en numeroDePasosActualesRegistrados tenemos que tener 0 registros en
+        // trayecto recorrido. De ahi el ajuste. 
+        numeroDePasosActualesRegistrados++;
+
+        // Una vez echa la correccion comparamos. n_pasosKey debe <= a numeroDePasosActualesRegistrados
+        // para que este paso este trabajando o disponible. 
+        return n_pasoKey <= numeroDePasosActualesRegistrados;
+
+
+    }
+    // No estamos ubicados en el departamento y por tanto 
+    // no se sanala como trabajando ni pendiente. 
+    return false;
+
+
 }

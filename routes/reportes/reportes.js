@@ -341,7 +341,6 @@ app.get('/transformacion', (req, res, next) => {
 
             return RESP._200(res, 'pruebas', [
                 { tipo: 'objetoContenedorDePasos', datos: objetoContenedorDePasos },
-                { tipo: 'objetoOrdenesPorAparicion', datos: objetoOrdenesPorAparicion },
             ]);
 
 
@@ -405,17 +404,10 @@ function ubicarOrdenes(arrelgoDeOrdenesSinAcomodar, idAlmacen, idLaser) {
         } else {
             // La orden viene desde produccion. 
             tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
-
             arregloDeOrdenes.departamentosPendientes.push(ordenParaAcomodar);
-
-
         }
-
-
     });
-
     return arregloDeOrdenes;
-
 }
 
 

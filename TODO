@@ -1,6 +1,8 @@
 FIX:
 
     ✔ Comprobar que no se puedan agregar dos familias de procesos al mismo modelo. @started(19-01-22 08:45) @done(19-01-22 08:45) @lasted(40s)
+    Procesos:
+        ☐ El proceso de cargar material no debe poder repetirse. 
 
 FEATURES:
 
@@ -32,33 +34,31 @@ FEATURES:
             Cambios inicio
             Cambio finalizacion
 
-        ☐ Quimica @started(19-01-28 07:18)
+        ✔ Quimica @started(19-01-28 07:18) @done(19-01-28 14:52) @lasted(7h34m33s)
             Numero de pedido.
             Orden
             Gral - Mod. tama...
             Cantidad de ordenes
             Fecha
 
-    Filtrado de defectos:
-        
-   
    
         
     Logs:
+        ☐ Quitar los logs por console.log.
         ☐ Agregar hora y fecha a todos los logs. 
         
     Reporte de defectos:
         ☐ Reporte de defectos.
         ☐ Alertas de tiempo de espera. 
         
-        Seleccion:
-            ☐ Quebrado
-            ☐ Reves
-            ☐ Despostillados
-            ☐ Sin Laser
-            ☐ Sin hoyos
-            ☐ Otrosb(Especificar que defecto en un campo)
-            ☐ Efecto malo
+    Seleccion:
+        ☐ Quebrado
+        ☐ Reves
+        ☐ Despostillados
+        ☐ Sin Laser
+        ☐ Sin hoyos
+        ☐ Otrosb(Especificar que defecto en un campo)
+        ☐ Efecto malo
             
     Historial de folio:
         ☐ Mostrar el historial de folios

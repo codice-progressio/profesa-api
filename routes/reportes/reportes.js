@@ -325,9 +325,11 @@ app.get('/transformacion', (req, res, next) => {
                                                 } else {
                                                     // Esta disponible por que estamos en este departamento
                                                     objeto_OrdenesDeEstePaso.disponibles.push(ordenParaUbicar);
+                                                    tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
                                                 }
                                             } else {
                                                 objeto_OrdenesDeEstePaso.pendientes.push(ordenParaUbicar);
+                                                tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
                                             }
                                         } // ELSE Si los pasos son mayores quiere decir que ya pasamos
                                         // por este paso y pues no hacemos nada con la orden.
@@ -511,4 +513,87 @@ function ubicacionActualDeLaOrdenEsEstePaso(orden, n_pasoKey, idTransformacionDe
     return false;
 
 
+}
+
+
+/**
+ * Cuenta los departamentos que tiene por antes de llegar a n_PasoKey( Primer paso, segundo, etc.) Tomando
+ * como referencia el departamento de transforamcion y el paso actual donde se encuentra la orden. 
+ * 
+ * ESTA FUNCION AGREGA UNA PROPIEDAD A ORDEN DE TIPO departamentosAntesDePaso[n_pasoKey] = numeroDeDeptosFaltantesParaElPaso
+ *
+ * @param {*} orden
+ * @param {*} idTransformacionDepto
+ * @param {*} n_pasoKey
+ */
+function tieneDepartamentosAntesDe_N_Paso(orden, idTransformacionDepto, n_pasoKey) {
+
+    /**
+     * Obtenemos el orden de la ubicacion actual. 
+     * @type {Trayecto}
+     */
+    let ordenUbicacionActual = orden.ubicacionActual.orden;
+
+    /**
+     * Define si el contador de deptos debe empezar a sumarse.
+     * Se utiliza cuando se encuentra la ubicacionActual
+     * dentro del trayectoNormal
+     * @type {Boolean}
+     */
+    let comenzarAContar = false;
+
+    /**
+     * El numero de departamento que faltan para llegar
+     * a la ubicacion deseda. En este caso es el n_pasoKey
+     */
+    let contadorDeptosFaltantes = 0;
+
+    if (!orden.departamentosAntesDePaso) {
+        orden.departamentosAntesDePaso = {}
+    }
+
+    /**
+     * Segun el paso obtenemos la ubicacion del departamento de tranformacion
+     * que queremos buscar. EJEMPLO:
+     * Queremos encontrar el segundo paso, entonces buscamos su
+     * orden dentro del trayecto normal. 
+     * @type { Trayecto[] }
+     */
+    let cantidadDePasosEnTrayectoNormal = orden.trayectoNormal.filter(trayecto => {
+        return trayecto.departamento._id.toString() === idTransformacionDepto.toString();
+    });
+
+    /**
+     * La ubicacion dentro del trayectoNormal del n_pasoKey que nos interesa ubicar.
+     * @type {Trayecto} 
+     */
+    let ubicacionDeOrdenDe_n_Paso = cantidadDePasosEnTrayectoNormal[n_pasoKey - 1];
+
+    // Recorremos todo el trayecto normal para ubicar en que paso estamos del trayecto. 
+    for (let i = 0; i < orden.trayectoNormal.length; i++) {
+        /**
+         * El trayecto normal que queremos comparar. 
+         */
+        const trayectoNormal = orden.trayectoNormal[i];
+
+        // Que paso estamos buscando??
+        // estaos aqui!!!!
+        // Si ya encontramos el paso que nos interesa nos detenemos. 
+        if (trayectoNormal.orden.toString() === ubicacionDeOrdenDe_n_Paso.orden.toString()) break;
+
+        // Buscamos la ubicacion actual. To string por que no compara!
+        if (trayectoNormal.orden.toString() === ordenUbicacionActual.toString()) {
+            // Estamos en la ubicacion actual
+            comenzarAContar = true;
+        }
+
+        // Contamos la distancia que falta para llegar a laser desde la ubicacion actual. 
+        if (comenzarAContar) {
+            contadorDeptosFaltantes++;
+        }
+    }
+
+    // Creamos un objeto que contenga la informacion de los pasos faltantes segun el 
+    // paso para despues mandarla a llamar de manera facil. 
+    orden.departamentosAntesDePaso[n_pasoKey] = contadorDeptosFaltantes;
 }

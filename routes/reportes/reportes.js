@@ -325,11 +325,11 @@ app.get('/transformacion', (req, res, next) => {
                                                 } else {
                                                     // Esta disponible por que estamos en este departamento
                                                     objeto_OrdenesDeEstePaso.disponibles.push(ordenParaUbicar);
-                                                    tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
+                                                    ordenParaUbicar.departamentosAntesDePaso[n_pasoKey] = tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
                                                 }
                                             } else {
                                                 objeto_OrdenesDeEstePaso.pendientes.push(ordenParaUbicar);
-                                                tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
+                                                ordenParaUbicar.departamentosAntesDePaso[n_pasoKey] = tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
                                             }
                                         } // ELSE Si los pasos son mayores quiere decir que ya pasamos
                                         // por este paso y pues no hacemos nada con la orden.
@@ -354,6 +354,173 @@ app.get('/transformacion', (req, res, next) => {
             });
         });
 });
+
+app.get('/quimica', (req, res, next) => {
+
+    /** 
+     * =====================================
+     *  OBJETIVO DEL REPORTE. 
+     * =====================================
+     * -->
+     *
+     * Mostrar la cantidad de ordenes pendientes
+     * que tienen por hacer materiales. 
+     *
+     * <!-- 
+     * =====================================
+     *  Que vamos a obtener?
+     * =====================================
+     * 
+     * Filtrar todos los folios que no son de almacen.
+     * Filtrar todos los pedidos que tienen pendiente el departamento de quimica.
+     * Sumar lo que esta pendiente. 
+     * Sumar lo que se esta trabajando. 
+     * 
+     * 
+     * 
+     */
+    Promise.all([
+        Folio.find({
+            // Filtrar por aquellas que no esten terminadas.
+            terminado: false,
+            // Que tengan las ordenes generadas.
+            'folioLineas.ordenesGeneradas': true,
+            // Si no va para almacen tiene que ir a quimica. 
+            'folioLineas.almacen': false
+        })
+        .lean()
+        .exec(),
+        Default.find().exec()
+    ]).then(resp => {
+
+        /**
+         * Los folios que coincidieron con los filtros especificados 
+         * en el find. 
+         */
+        let foliosCoincidentes = resp[0];
+        /**
+         * Los datos por default de donde queremos sacar informacion
+         * importante como los departamentos. 
+         */
+        let defatults = resp[1][0];
+
+        /**
+         * Id del departamento de quimica. 
+         * @type { String }
+         */
+        let idQuimica = defatults.DEPARTAMENTOS.MATERIALES.toString();
+
+        /**
+         * Las ordenes obtenidas de los folios sin filtrar. 
+         * @type {Orden []}
+         */
+        let ordenesSinFiltrar = []
+
+        foliosCoincidentes.forEach(folio => {
+            folio.folioLineas.forEach(pedido => {
+                ordenesSinFiltrar = ordenesSinFiltrar.concat(pedido.ordenes);
+            });
+        });
+
+
+        /**
+         *  Las ordenes que estan pendientes de trabajarse en quimica.
+         * @type { Orden [] }
+         */
+        let ordenesPendientes = ordenesSinFiltrar.filter(orden => {
+
+            // Comprobamos que esta orden no este ubicada en el departamento
+            // de materiales. 
+
+            // Esta en el departamento???
+            if (orden.ubicacionActual.departamento._id.toString() === idQuimica) {
+                // Si esta el departamento entoces no esta pendiente.
+                // Debe de estar disponible pero esto se filtra mas adelante.
+                return false;
+            }
+
+            /**
+             * Si no esta en materiales quiere decir que puede que ya haya pasado
+             * el departamento o que aun no llegue. Para eso comprobamos 
+             * el trayecto recorrido Buscamos las ordenes que no tengan a quimica 
+             * entre su trayecto recorrido. 
+             * 
+             */
+
+
+            // Filtramos el trayecto recorrido para buscar alguna coincidencia del 
+            // departmanento de quimica.
+            let aparicionDeDepto = orden.trayectoRecorrido.filter(trayecto => {
+                return trayecto.departamento._id.toString() === idQuimica;
+            });
+
+            // Si no hay apariciones ( lenght === 0 ) quiere decir que esta orden esta pendiente. 
+            return !aparicionDeDepto.length;
+        });
+
+        /**
+         * Las ordenes que se estan trabajando en quimica. Estas son las que tienen ubicacionActual
+         * en quimica y que estan senaladas como trabajando.
+         * @type { Orden [] }
+         */
+        let ordenesTrabajandose = ordenesSinFiltrar.filter(orden => {
+
+            let estaEnQuimica = orden.ubicacionActual.departamento._id.toString() === idQuimica;
+            if (estaEnQuimica) {
+                if (orden.ubicacionActual.materiales) {
+                    return orden.ubicacionActual.materiales.trabajando;
+                }
+            }
+            return false;
+        });
+
+        /**
+         * Las ordenes que se estan en el departamento pero que no se estan trabajando. 
+         * @type { Orden [] }
+         */
+
+        let ordenesDisponibles = ordenesSinFiltrar.filter(orden => {
+
+            let estaEnQuimica = orden.ubicacionActual.departamento._id.toString() === idQuimica;
+            if (estaEnQuimica) {
+                // Este if es un safe por que si no existe el departamento nos manda a volar todo
+                // el codigo. 
+                if (orden.ubicacionActual.materiales) {
+                    // si existe materiales quiere decir que ya esta disponible, pero
+                    // no si se esta trabajando
+                    if (orden.ubicacionActual.materiales.trabajando) {
+                        // La orden esta trabajando entonces no debe estar disponible. 
+                        return false;
+                    } else {
+                        return true;
+                    }
+                }
+                // Esta ubicada en materiales y por tando esta disponible. 
+                return true;
+            }
+            // Si no esta en quimica no puede estar disponible. 
+            return false;
+        });
+
+
+        return RESP._200(res, null, [
+            { tipo: 'pendientes', datos: ordenesPendientes },
+            { tipo: 'trabajando', datos: ordenesTrabajandose },
+            { tipo: 'disponibles', datos: ordenesDisponibles },
+            { tipo: 'TOTAL', datos: ordenesPendientes.length + ordenesTrabajandose.length + ordenesDisponibles.length },
+            { tipo: 'ordenesSinFiltrar', datos: ordenesSinFiltrar.length },
+
+        ]);
+
+
+    }).catch(err => {
+        return RESP._500(res, {
+            msj: 'Hubo un error al generar el reporte de Quimica.',
+            err: err,
+        });
+    });
+});
+
 
 
 
@@ -395,8 +562,7 @@ function ubicarOrdenes(arrelgoDeOrdenesSinAcomodar, idAlmacen, idLaser) {
             // Si el trayecto es superior a 2 esta surtida. 
             if (2 <= ordenParaAcomodar.trayectoRecorrido.length) {
                 // Tiene departamentos por delante?
-
-                tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
+                ordenParaAcomodar.pasosParaLlegarALaser = tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
                 arregloDeOrdenes.departamentosPendientes.push(ordenParaAcomodar);
 
             } else {
@@ -405,7 +571,7 @@ function ubicarOrdenes(arrelgoDeOrdenesSinAcomodar, idAlmacen, idLaser) {
             }
         } else {
             // La orden viene desde produccion. 
-            tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
+            ordenParaAcomodar.pasosParaLlegarALaser = tieneDepartamentosPorDelante(ordenParaAcomodar, idLaser);
             arregloDeOrdenes.departamentosPendientes.push(ordenParaAcomodar);
         }
     });
@@ -414,10 +580,12 @@ function ubicarOrdenes(arrelgoDeOrdenesSinAcomodar, idAlmacen, idLaser) {
 
 
 /**
- * 
+ * Busca los departamentos que tenga por delante el departamento de laser. 
  *
  * @param {*} orden
  * @param {*} idLaser
+ * @returns El numero de departamentos faltantes. 
+ * 
  */
 function tieneDepartamentosPorDelante(orden, idLaser) {
 
@@ -451,7 +619,7 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
 
     }
 
-    orden.pasosParaLlegarALaser = contadorDeptosFaltantes;
+    return contadorDeptosFaltantes;
 }
 
 
@@ -466,7 +634,6 @@ function tieneDepartamentosPorDelante(orden, idLaser) {
  * ubicada la orden cuando ya llego a algun paso de transformacion. Si no ha llegado a ninguno
  * solo necesitamos poner la orden como pendiente. 
  * 
- * MODIFICAMOS LA ORDEN PARA AGREGAR LOS PASOS A LOS QUE ESTA?????
  *
  * @param {*} orden La orden que se va a evaluar. 
  * @param {*} n_pasoKey El paso. (Primer paso, segundo paso, etc.)
@@ -520,11 +687,10 @@ function ubicacionActualDeLaOrdenEsEstePaso(orden, n_pasoKey, idTransformacionDe
  * Cuenta los departamentos que tiene por antes de llegar a n_PasoKey( Primer paso, segundo, etc.) Tomando
  * como referencia el departamento de transforamcion y el paso actual donde se encuentra la orden. 
  * 
- * ESTA FUNCION AGREGA UNA PROPIEDAD A ORDEN DE TIPO departamentosAntesDePaso[n_pasoKey] = numeroDeDeptosFaltantesParaElPaso
- *
  * @param {*} orden
  * @param {*} idTransformacionDepto
  * @param {*} n_pasoKey
+ * @returns La cantindad de departamentos faltanes contra los n_pasoKey
  */
 function tieneDepartamentosAntesDe_N_Paso(orden, idTransformacionDepto, n_pasoKey) {
 
@@ -595,5 +761,5 @@ function tieneDepartamentosAntesDe_N_Paso(orden, idTransformacionDepto, n_pasoKe
 
     // Creamos un objeto que contenga la informacion de los pasos faltantes segun el 
     // paso para despues mandarla a llamar de manera facil. 
-    orden.departamentosAntesDePaso[n_pasoKey] = contadorDeptosFaltantes;
+    return contadorDeptosFaltantes;
 }

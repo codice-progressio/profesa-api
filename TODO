@@ -44,21 +44,21 @@ FEATURES:
    
         
     Logs:
-        ☐ Quitar los logs por console.log.
-        ☐ Agregar hora y fecha a todos los logs. 
+        ✘ Quitar los logs por console.log. @cancelled(19-01-29 06:34)
+        ✘ Agregar hora y fecha a todos los logs. @cancelled(19-01-29 06:34)
         
     Reporte de defectos:
-        ☐ Reporte de defectos.
-        ☐ Alertas de tiempo de espera. 
+        ☐ Reporte de defectos. === Necesita aclaracion.
+        ☐ Alertas de tiempo de espera. === Necesita aclaracion. 
         
-    Seleccion:
-        ☐ Quebrado
-        ☐ Reves
-        ☐ Despostillados
-        ☐ Sin Laser
-        ☐ Sin hoyos
-        ☐ Otrosb(Especificar que defecto en un campo)
-        ☐ Efecto malo
+        Seleccion:
+            ✔ Quebrado @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Reves @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Despostillados @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Sin Laser @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Sin hoyos @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Otrosb(Especificar que defecto en un campo) @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Efecto malo @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
             
     Historial de folio:
         ☐ Mostrar el historial de folios

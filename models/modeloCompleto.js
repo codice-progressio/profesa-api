@@ -11,6 +11,8 @@ var Color = require('../models/colores/color');
 var Terminado = require('../models/terminado');
 
 
+var loteSchema = require('../models/almacenProductoTerminado/lote');
+
 var colores = require('../utils/colors');
 
 var marcaLaser = require('../models/marcaLaser');
@@ -94,6 +96,19 @@ var modeloCompletoSchema = new Schema({
         type: Number,
         min: [0.01, 'El espesor mínimo debe ser 0.01']
     },
+
+
+    /**
+     * La existencia de boton en el almacen. 
+     * Esta se actualiza automaticamente cuando se 
+     * se guarda la salida de boton o entra un nuevo lote. 
+     */
+    existencia: { type: Number },
+
+    /**
+     * Los lotes de este boton. Ver schema para mas info. 
+     */
+    lotes: [loteSchema]
 
 
 
@@ -272,8 +287,6 @@ let eliminarLineasDeFoliosRelacionadas = function(next) {
             throw new Error(err);
         });
 };
-
-
 
 
 // El orden de es importante sobre todo cuando son el mismo hook. 

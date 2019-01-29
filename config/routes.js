@@ -28,7 +28,6 @@ var modeloRoutes = require('../routes/gestionModelos/modelo');
 var tamanoRoutes = require('../routes/gestionModelos/tamano');
 var colorRoutes = require('../routes/gestionModelos/color');
 var terminadoRoutes = require('../routes/gestionModelos/terminado');
-var materialRoutes = require('../routes/almacen/material');
 var hitRoutes = require('../routes/ingenieria/hit');
 var defaultsRoute = require('../routes/configCruds/defaults.crud');
 
@@ -244,14 +243,6 @@ module.exports.ROUTES = {
     },
 
 
-    _MATERIAL: {
-        url: '/material',
-        route: materialRoutes,
-        roles: [],
-        subRoutes: {
-
-        }
-    },
 
     _HIT: {
         url: '/hit',
@@ -262,4 +253,4 @@ module.exports.ROUTES = {
         }
     },
 
-}
+};

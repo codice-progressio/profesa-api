@@ -29,6 +29,6 @@ var devolucionLoteSchema = new Schema({
         }
     },
     observaciones: { type: String }
-});
+}, { timestamps: true });
 
 module.exports = devolucionLoteSchema;

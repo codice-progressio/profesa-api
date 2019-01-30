@@ -51,30 +51,30 @@ const LoteSchema = new Schema({
 
 }, { timestap: true, _id: null, });
 
-let addSalida = function(cantidad, cliente) {
-    this.salidas.push({
-        cantidad: cantidad,
-        cliente: cliente
-    });
-    this.existencia -= cantidad;
+/**
+ *Agrega una salida a este lote. 
+ *
+ * @param {*} sal El objeto salida que se 
+ * agregara. 
+ */
+let addSalida = function(sal) {
+    this.salidas.push(sal);
+    this.existencia -= sal.cantidad;
 
 };
 
-let addDevolucion = function(cantidad, cliente, observaciones) {
-    this.devoluciones.push({
-        cantidad: cantidad,
-        cliente: cliente,
-        observaciones: observaciones
-    });
-    this.existencia += cantidad;
-
+/**
+ *Agreaga una devolucion a este lote. 
+ *
+ * @param {*} dev El objeto devolucion que se
+ * agregara. 
+ */
+let addDevolucion = function(dev) {
+    this.devoluciones.push(dev);
+    this.existencia += dev.cantidad;
 };
-
-
 
 LoteSchema.methods.addSalida = addSalida;
 LoteSchema.methods.addDevolucion = addDevolucion;
-
-
 
 module.exports = LoteSchema;

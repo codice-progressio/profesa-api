@@ -73,8 +73,9 @@ let addSalida = function(sal) {
  */
 let addDevolucion = function(dev) {
     this.validandoDevolucion = true;
+    dev.validando = true;
     this.devoluciones.push(dev);
-    this.existencia += (-1 * dev.cantidad);
+    this.existencia += dev.cantidad;
 };
 
 LoteSchema.methods.addSalida = addSalida;

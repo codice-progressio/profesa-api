@@ -134,6 +134,8 @@ app.post('/devolucion', (req, res) => {
                     err: 'El id del modelo completo que ingresaste no existe.',
                 });
             }
+            let lote = mc.lotes.id(idLote);
+            if (!lote) throw new Error('No existe el id del lote.');
             mc.lotes.id(idLote).addDevolucion(devolucion);
             return mc.save();
 

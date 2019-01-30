@@ -49,7 +49,7 @@ const LoteSchema = new Schema({
     salidas: [salidaLoteSchema],
     devoluciones: [devolucionesLoteSchema],
 
-    validandoDevolucion: { type: Boolean, default: false }
+    validandoDevolucion: { type: Boolean, default: false },
 
 }, { timestap: true });
 
@@ -60,6 +60,7 @@ const LoteSchema = new Schema({
  * agregara. 
  */
 let addSalida = function(sal) {
+    sal.validando = true;
     this.salidas.push(sal);
     this.existencia -= sal.cantidad;
 

@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
-
 const Schema = mongoose.Schema;
 
+const salidaLoteSchema = new Schema({
 
-var salidaLoteSchema = new Schema({
-
+    /**
+     * Se utiliza para que no se validen todos los volres
+     * del array cada vez que los guardamos. Asi nos saltamos la 
+     * validacions para las demas entradas que estamos
+     * manejando al par con este objeto ( Se hace desde lote.js en el methods.addSalida )
+     */
+    validando: { type: Boolean, default: false },
     /**
      * El cliente al que se le va a surtir el boton. 
      */
@@ -15,7 +20,7 @@ var salidaLoteSchema = new Schema({
                 validator: function(v) {
                     return new Promise((resolve, reject) => {
                         // El valor minimo no puede ser menor que 1;
-                        resolve(1 < v);
+                        resolve(1 <= v);
                     });
                 },
                 msg: 'El valor que ingresaste ( {VALUE} ) es menor que el permitido ( 1 ).'
@@ -38,12 +43,39 @@ var salidaLoteSchema = new Schema({
                         // Si estmamos validando una devolucion entonces no entramos aqui. 
                         cb(true);
                     } else {
-                        let existencia = this.parent().existencia;
-                        // Corregimos por que se aplica el pre donde calcula los totales
-                        // en el pre save. Que es antes de entrar a validar. Por tanto 
-                        // sumamos el valor ingresado para volver a la existencia actual. 
-                        let msjError = `El valor que ingresaste ( ${v} ) es mayor que la existencia ( ${ existencia + v } ) de este lote.`;
-                        cb(existencia > v, msjError)
+                        if (this.validando) {
+                            // Corregimos por que se aplica el pre donde calcula los totales
+                            // en el pre save. Que es antes de entrar a validar. Por tanto 
+                            // sumamos el valor ingresado para volver a la existencia actual. 
+                            let existencia = this.parent().existencia + v;
+
+                            let msjError = '';
+                            let pasoValidacion = true;
+
+                            /**
+                             * El lote no tiene existencia. 
+                             */
+                            if (existencia <= 0) {
+                                msjError = `Este lote no tiene existencias.`;
+                                pasoValidacion = false;
+
+                            } else if (existencia < v) {
+                                /**
+                                 * Si la existencia es menor 
+                                 * que la cantidad que va a dar salida
+                                 * manda error.  
+                                 *  
+                                 * */
+                                msjError = `El valor que ingresaste ( ${v} ) es mayor que la existencia ( ${ existencia } ) de este lote.`;
+                                pasoValidacion = false;
+                            }
+                            this.validando = false;
+                            cb(pasoValidacion, msjError);
+
+                        } else {
+                            cb(true);
+                        }
+
                     };
                 },
             },

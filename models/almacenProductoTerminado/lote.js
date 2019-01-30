@@ -16,14 +16,9 @@ var LoteSchema = new Schema({
     /**`
      * Estos  valores on solo para guardar la referencia del lote. 
      */
-    folio: {
+    orden: {
         type: Schema.Types.ObjectId,
-        ref: 'Folio',
-    },
-
-    pedido: {
-        type: Schema.Types.ObjectId,
-        ref: 'Folio.folioLinea',
+        ref: 'Folio.folioLinea.ordenes',
     },
 
     numero: { type: String },

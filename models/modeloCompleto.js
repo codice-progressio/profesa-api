@@ -108,7 +108,9 @@ var modeloCompletoSchema = new Schema({
     /**
      * Los lotes de este boton. Ver schema para mas info. 
      */
-    lotes: [loteSchema]
+    lotes: [loteSchema],
+
+    actualizarLotesYExistencias: { type: Boolean }
 
 
 
@@ -288,6 +290,28 @@ let eliminarLineasDeFoliosRelacionadas = function(next) {
         });
 };
 
+/**
+ *Esta funcion se encarga de actualizar las existencias del modelo que se grabe
+  y la de los lotes. 
+ *
+ * @param {*} next
+ */
+let actualizarExistencias = function(next) {
+    // Recorremos todos los lotes y sumamos sus existencias
+    // para modificar la existencia total. 
+    let existenciaTotal = 0;
+
+    this.lotes.forEach(lote => {
+        existenciaTotal += lote.existencia;
+    });
+
+    this.existencia = existenciaTotal;
+
+    next();
+
+
+};
+
 
 // El orden de es importante sobre todo cuando son el mismo hook. 
 
@@ -295,9 +319,10 @@ modeloCompletoSchema
     .pre('findOne', autoPopulate)
     .pre('find', autoPopulate)
     // Este orden de save es importante. 
-    .pre('save', autoPopulate)
-    .pre('save', generarNombreCompleto)
-    .pre('remove', eliminarLineasDeFoliosRelacionadas);
 
+.pre('save', autoPopulate)
+    .pre('save', generarNombreCompleto)
+    .pre('save', actualizarExistencias)
+    .pre('remove', eliminarLineasDeFoliosRelacionadas);
 
 module.exports = mongoose.model('ModeloCompleto', modeloCompletoSchema);

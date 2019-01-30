@@ -32,6 +32,7 @@ var hitRoutes = require('../routes/ingenieria/hit');
 var defaultsRoute = require('../routes/configCruds/defaults.crud');
 
 var reportesRoute = require('../routes/reportes/reportes');
+var almacenDeProductoTermiandoRoutes = require('../routes/almacenProductoTerminado/almacenProductoTerminado');
 
 var ROLES = require('../config/roles');
 
@@ -40,6 +41,14 @@ var ROLES = require('../config/roles');
 
 
 module.exports.ROUTES = {
+
+    _ALMACEN_DE_PRODUCTO_TERMINADO: {
+
+        url: '/almacenDeProductoTerminado',
+        route: almacenDeProductoTermiandoRoutes,
+        roles: [],
+        subRoutes: {}
+    },
 
     _REPORTES: {
 

@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 
 var devolucionLoteSchema = new Schema({
 
-    fecha: { type: Date },
+    cliente: { type: Schema.Types.ObjectId, ref: 'Cliente', required: [true, 'El cliente es necesario'] },
     cantidad: {
         type: Number,
         min: [1, 'El valor que ingresaste ( {VALUE} ) es menor que el permitido ( {MIN} ).'],
@@ -27,7 +27,8 @@ var devolucionLoteSchema = new Schema({
             },
             message: me => `${me.value} supera la cantidad original del lote junto con las existencias.`
         }
-    }
+    },
+    observaciones: { type: String }
 });
 
 module.exports = devolucionLoteSchema;

@@ -51,6 +51,29 @@ const LoteSchema = new Schema({
 
 }, { timestap: true, _id: null, });
 
+let addSalida = function(cantidad, cliente) {
+    this.salidas.push({
+        cantidad: cantidad,
+        cliente: cliente
+    });
+    this.existencia -= cantidad;
+
+};
+
+let addDevolucion = function(cantidad, cliente, observaciones) {
+    this.devoluciones.push({
+        cantidad: cantidad,
+        cliente: cliente,
+        observaciones: observaciones
+    });
+    this.existencia += cantidad;
+
+};
+
+
+
+LoteSchema.methods.addSalida = addSalida;
+LoteSchema.methods.addDevolucion = addDevolucion;
 
 
 

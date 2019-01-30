@@ -18,6 +18,6 @@ var salidaLoteSchema = new Schema({
         }, 'El valor que ingresaste ( {VALUE} ) supera la existencia actual: {MAX}']
     }
 
-});
+}, { timestamps: true });
 
 module.exports = salidaLoteSchema;

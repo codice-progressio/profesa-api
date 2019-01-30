@@ -9,6 +9,26 @@ var ModeloCompleto = require('../../models/modeloCompleto');
 
 
 
+var CRUD = require('../CRUD');
+CRUD.app = app;
+CRUD.modelo = ModeloCompleto;
+CRUD.nombreDeObjetoSingular = 'modeloCompleto';
+CRUD.nombreDeObjetoPlural = 'modelosCompletos';
+CRUD.campoSortDefault = 'nombreCompleto';
+
+
+
+CRUD.camposDeBusqueda = [
+    'nombreCompleto',
+];
+
+
+CRUD.crud([
+    'getBuscar',
+]);
+
+
+
 
 
 /** 

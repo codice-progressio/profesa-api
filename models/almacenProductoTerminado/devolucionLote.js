@@ -30,7 +30,6 @@ var devolucionLoteSchema = new Schema({
             {
                 isAsync: true,
                 validator: function(v, cb) {
-                    console.log(this.validando);
                     if (!this.validando) {
                         cb(true);
                     } else {

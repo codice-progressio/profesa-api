@@ -325,10 +325,12 @@ app.get('/transformacion', (req, res, next) => {
                                                 } else {
                                                     // Esta disponible por que estamos en este departamento
                                                     objeto_OrdenesDeEstePaso.disponibles.push(ordenParaUbicar);
+                                                    if (!ordenParaUbicar.departamentosAntesDePaso) ordenParaUbicar.departamentosAntesDePaso = {}
                                                     ordenParaUbicar.departamentosAntesDePaso[n_pasoKey] = tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
                                                 }
                                             } else {
                                                 objeto_OrdenesDeEstePaso.pendientes.push(ordenParaUbicar);
+                                                if (!ordenParaUbicar.departamentosAntesDePaso) ordenParaUbicar.departamentosAntesDePaso = {}
                                                 ordenParaUbicar.departamentosAntesDePaso[n_pasoKey] = tieneDepartamentosAntesDe_N_Paso(ordenParaUbicar, idTransformacionDepto, n_pasoKey);
                                             }
                                         } // ELSE Si los pasos son mayores quiere decir que ya pasamos

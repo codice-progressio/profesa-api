@@ -120,9 +120,6 @@ var modeloCompletoSchema = new Schema({
 let generarNombreCompleto = function(next) {
     // Obtenemos los id. 
 
-    console.log('Entro aqui: Generar nombre completo');
-
-
     Promise.all([
             Modelo.findById(this.modelo).exec(),
             Tamano.findById(this.tamano).exec(),
@@ -138,13 +135,12 @@ let generarNombreCompleto = function(next) {
             this.nombreCompleto += this.laserAlmacen ? '-' + this.laserAlmacen.laser : '';
             this.nombreCompleto += this.versionModelo ? '-' + this.versionModelo : '';
 
-            console.log(` Paso por aqui ${JSON.stringify(this)}`);
+
             next();
 
         })
         .catch(err => {
-            console.log(`${colores.danger('ERROR')}  Hubo un error guardando el nombre completo: ${err}`);
-            throw err;
+            next(err);
         });
 
 };
@@ -155,8 +151,6 @@ let generarNombreCompleto = function(next) {
 
 
 var autoPopulate = function(next) {
-
-    console.log('Entro aqui autopopulate');
 
     this.populate('modelo', 'modelo', null, { sort: { modelo: -1 } });
     this.populate('tamano', 'tamano estandar', null, { sort: { tamano: -1 } });
@@ -237,8 +231,7 @@ modeloCompletoSchema.statics.eliminarRelacionados = function(IDElemento, campo, 
             next();
         })
         .catch(err => {
-            console.log(`${colores.danger('ERROR')}  Hubo un error eliminando los datos relacionados: ${err}`);
-            throw err;
+            next(err);
         });
 
 
@@ -276,7 +269,7 @@ function eliminarModelosCompletosAutorizadosDeClientesRelacionados(mcIDs, eliC) 
  * @param {*} next
  */
 let eliminarLineasDeFoliosRelacionadas = function(next) {
-    console.log('Estamos eliminando cualquier cosa relacionada con los modelos completos a excepción de sus partes.');
+
     Promise.all([
             eliminarPedidosRelacionados([this._id], { $pull: { folioLineas: { modeloCompleto: { $in: [this._id] } } } }),
             eliminarModelosCompletosAutorizadosDeClientesRelacionados([this._id], { $pull: { modelosCompletosAutorizados: { modeloCompleto: { $in: [this._id] } } } }),
@@ -285,8 +278,7 @@ let eliminarLineasDeFoliosRelacionadas = function(next) {
             console.log(colores.info('DATOS ELIMINADOS') + 'Se eliminaron los datos modelo autorizado para el cliente y pedidos existentes relacionados con este modelo:' + this.nombreCompleto)
             next();
         }).catch(err => {
-            console.log(colores.danger('ERROR EN MIDDLEWARE=>') + err);
-            throw new Error(err);
+            next(err);
         });
 };
 

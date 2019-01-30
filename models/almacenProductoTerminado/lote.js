@@ -21,7 +21,8 @@ var LoteSchema = new Schema({
         ref: 'Folio.folioLinea.ordenes',
     },
 
-    numero: { type: String },
+
+    numero: { type: String, required: [true, 'Es necesario que definas el numero de lote.'] },
 
     //----------------------------------------------------------------
 
@@ -32,11 +33,11 @@ var LoteSchema = new Schema({
      * producto terminado el lote y segundo 
      * cuando hay una salida o devolucionl 
      */
-    existencia: { type: Number },
+    existencia: { type: Number, required: [true, 'Es necesario definir la existencia.'] },
     /**
      * La cantidad del lote que entro.
      */
-    cantidadEntrada: { type: Number },
+    cantidadEntrada: { type: Number, required: [true, 'Es necesario definir la cantidad que entro en este lote.'] },
 
     /**
      * El registro de las salidas que va teniendo el lote. 

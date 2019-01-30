@@ -89,8 +89,11 @@ app.post('/salida', (req, res) => {
                     err: 'El id del modelo completo que ingresaste no existe.',
                 });
             }
-            // Buscamos su lote. 
-            mc.lotes.id(idLote).addSalida(salida);
+            // Guardamos el id
+            let lote = mc.lotes.id(idLote);
+            if (!lote) throw new Error('No existe el id del lote.');
+
+            lote.addSalida(salida);
             return mc.save();
         })
         .then(mcModificado => {

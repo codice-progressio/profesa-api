@@ -49,7 +49,7 @@ const LoteSchema = new Schema({
     salidas: [salidaLoteSchema],
     devoluciones: [devolucionesLoteSchema]
 
-}, { timestap: true, _id: null, });
+}, { timestap: true });
 
 /**
  *Agrega una salida a este lote. 

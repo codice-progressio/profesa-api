@@ -24,12 +24,14 @@ var devolucionLoteSchema = new Schema({
                     // La cantidad de devolucion junto con la existenca no puede superar
                     // el tamano del lote.
                     let cantidadEntrada = this.parent().cantidadEntrada;
-                    let existencia = this.parent().existencia - v;
+                    let existencia = this.parent().existencia + v;
 
                     let msg = `El valor que ingresaste ( ${ v } ) supera la cantidad original del lote junto con las existencias.
-                    Cantidad original: ${ cantidadEntrada }. Existencia: ${ existencia }`;
+                    Cantidad original del lote: ${ cantidadEntrada }. 
+                    Existencia actual: ${ existencia }`;
 
-                    cb(cantidadEntrada < existencia, msg);
+                    // cb(cantidadEntrada < existencia, msg);
+                    cb(false, msg);
 
                 },
             }

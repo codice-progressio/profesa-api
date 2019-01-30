@@ -47,7 +47,9 @@ const LoteSchema = new Schema({
      * El registro de las salidas que va teniendo el lote. 
      */
     salidas: [salidaLoteSchema],
-    devoluciones: [devolucionesLoteSchema]
+    devoluciones: [devolucionesLoteSchema],
+
+    validandoDevolucion: { type: Boolean, default: false }
 
 }, { timestap: true });
 
@@ -70,6 +72,7 @@ let addSalida = function(sal) {
  * agregara. 
  */
 let addDevolucion = function(dev) {
+    this.validandoDevolucion = true;
     this.devoluciones.push(dev);
     this.existencia += (-1 * dev.cantidad);
 };

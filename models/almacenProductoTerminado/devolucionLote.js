@@ -29,6 +29,7 @@ var devolucionLoteSchema = new Schema({
                     let msg = `El valor que ingresaste ( ${ v } ) supera la cantidad original del lote junto con las existencias.
                     Cantidad original del lote: ${ cantidadEntrada }. 
                     Existencia actual: ${ existencia }`;
+                    this.parent().validandoDevolucion = false;
 
                     // cb(cantidadEntrada < existencia, msg);
                     cb(false, msg);

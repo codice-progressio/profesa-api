@@ -34,12 +34,17 @@ var salidaLoteSchema = new Schema({
                  * @param {any} cb El callback que genera mongoose y que nos permite agregar el mensaje personalizado.
                  */
                 validator: function(v, cb) {
-                    let existencia = this.parent().existencia;
-                    // Corregimos por que se aplica el pre donde calcula los totales
-                    // en el pre save. Que es antes de entrar a validar. Por tanto 
-                    // sumamos el valor ingresado para volver a la existencia actual. 
-                    let msjError = `El valor que ingresaste ( ${v} ) es mayor que la existencia ( ${ existencia + v } ) de este lote.`;
-                    cb(existencia > v, msjError)
+                    if (this.parent().validandoDevolucion) {
+                        // Si estmamos validando una devolucion entonces no entramos aqui. 
+                        cb(true);
+                    } else {
+                        let existencia = this.parent().existencia;
+                        // Corregimos por que se aplica el pre donde calcula los totales
+                        // en el pre save. Que es antes de entrar a validar. Por tanto 
+                        // sumamos el valor ingresado para volver a la existencia actual. 
+                        let msjError = `El valor que ingresaste ( ${v} ) es mayor que la existencia ( ${ existencia + v } ) de este lote.`;
+                        cb(existencia > v, msjError)
+                    };
                 },
             },
         ]

@@ -15,14 +15,16 @@ var CONSTANSTES = require('../utils/constantes');
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
  * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
  * @param {*} campoSortDefault El campo por defecto que se ordenara. 
+ * @param {*} select Un string con los campos para el select. 
  * @return {total, [datos], msj } Retorna el objeto con la estructura comun y los datos consultados. Incluye el total de elementos de la bd. 
  */
-const get = function(modelo, app, nombreDeObjeto, campoSortDefault) {
+const get = function(modelo, app, nombreDeObjeto, campoSortDefault, select) {
     app.get('/', (req, res, next) => {
         const CONSULTAS = CONSTANSTES.consultas(req.query, campoSortDefault);
 
         Promise.all([
                 modelo.find()
+                .select(select)
                 .limit(CONSULTAS.limite)
                 .skip(CONSULTAS.desde)
                 .sort({
@@ -54,8 +56,9 @@ const get = function(modelo, app, nombreDeObjeto, campoSortDefault) {
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
  * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
+ * @param {*} select  Un string con los campos para el select. 
  */
-const getById = function(modelo, app, nombreDeObjeto) {
+const getById = function(modelo, app, nombreDeObjeto, select) {
     app.get('/:id', (req, res, next) => {
         const id = req.params.id;
 
@@ -72,6 +75,7 @@ const getById = function(modelo, app, nombreDeObjeto) {
         // =====================================
         // -->
         modelo.findOne({ _id: id }).exec()
+            .select(select)
             .then(elemento => {
 
                 if (!elemento) {
@@ -114,10 +118,11 @@ const getById = function(modelo, app, nombreDeObjeto) {
  * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
  * @param {*} camposDeBusqueda Un arreglo donde se deben enlistar los campos de busqueda que se utilizaran en la busqueda.
  * @param {*} campoSortDefault El campo por defecto que se ordenara. 
+ * @param {*} select  Un string con los campos para el select. 
  * @return {total, [datos], msj } Retorna el objeto con la estructura comun y los datos consultados. Incluye el total de elementos de la bd. 
 
  */
-const getBuscar = function(modelo, app, nombreDeObjeto, camposDeBusqueda, campoSortDefault) {
+const getBuscar = function(modelo, app, nombreDeObjeto, camposDeBusqueda, campoSortDefault, select) {
 
     app.get('/buscar/:termino', (req, res, next) => {
         const CONSULTAS = CONSTANSTES.consultas(req.query, campoSortDefault);
@@ -143,6 +148,7 @@ const getBuscar = function(modelo, app, nombreDeObjeto, camposDeBusqueda, campoS
                 modelo.find().or(arregloParaBusqueda).countDocuments(),
                 // Obtenemos los documentos. 
                 modelo.find()
+                .select(select)
                 .or(arregloParaBusqueda)
                 .limit(CONSULTAS.limite)
                 .skip(CONSULTAS.desde)
@@ -417,6 +423,19 @@ module.exports = {
         this._camposActualizables = value;
     },
 
+    _excluir: null,
+    get excluir() {
+        return this._excluir;
+    },
+    /**
+     *Los campos que se van a excluir de las consultas.
+     *@param {String []} Un arreglo con los campos que se van a excluir. 
+     */
+    set excluir(value) {
+        this._excluir = value;
+    },
+
+
 
     /**
      * Ejecuta las funciones para el CRUD. Esta tiene que ser la ultima operacion. 
@@ -433,9 +452,21 @@ module.exports = {
 
         fun = {};
 
-        fun.get = () => { get(this.modelo, this.app, this.nombreDeObjetoPlural, this.campoSortDefault); };
-        fun.getById = () => { getById(this.modelo, this.app, this.nombreDeObjetoSingular); };
-        fun.getBuscar = () => { getBuscar(this.modelo, this.app, this.nombreDeObjetoPlural, this.camposDeBusqueda, this.campoSortDefault); };
+        /**
+         * La cadena en donde se aplicaran los campos
+         * para excluir. 
+         */
+        let cadenaParaExcluir = '';
+        if (this.excluir) {
+            // Si hay un elemento excluir definido
+            // aplicamos un menos a cada objeto del arreglo
+            // y luego lo unimos en una cadena
+            cadenaParaExcluir = this.excluir.map(x => x = '-' + x).join(' ');
+        }
+
+        fun.get = () => { get(this.modelo, this.app, this.nombreDeObjetoPlural, this.campoSortDefault, cadenaParaExcluir); };
+        fun.getById = () => { getById(this.modelo, this.app, this.nombreDeObjetoSingular, cadenaParaExcluir); };
+        fun.getBuscar = () => { getBuscar(this.modelo, this.app, this.nombreDeObjetoPlural, this.camposDeBusqueda, this.campoSortDefault, cadenaParaExcluir); };
         fun.post = () => { post(this.modelo, this.app, this.nombreDeObjetoSingular); };
         fun.put = () => { put(this.modelo, this.app, this.nombreDeObjetoPlural, this.camposActualizables); };
         fun.delete = () => { deletee(this.modelo, this.app, this.nombreDeObjetoPlural); };

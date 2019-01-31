@@ -238,6 +238,29 @@ modeloCompletoSchema.statics.eliminarRelacionados = function(IDElemento, campo, 
 };
 
 /**
+ * Retorna solo los datos necesarios para el 
+ * almacen de producto terminado. Evitamos
+ * que se mande informacion que no nos interesa
+ * mostrar. 
+ *
+ *
+ * @param {*} next
+ * @returns
+ */
+modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
+    let n = {
+        existencia: this.existencia,
+        nombreCompleto: this.nombreCompleto,
+        lotes: this.lotes,
+    };
+    return n;
+};
+
+
+
+
+
+/**
  *Busca y elimina los pedidos que esten relacionados con el id del modelo completo que se le
  pase como parametro. Debe ser un arreglo de id de modelo completo. 
  *
@@ -303,6 +326,7 @@ let actualizarExistencias = function(next) {
 
 
 };
+
 
 
 // El orden de es importante sobre todo cuando son el mismo hook. 

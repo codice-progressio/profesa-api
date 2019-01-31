@@ -27,7 +27,7 @@ app.post('/', (req, res) => {
         .then(mcActualizado => {
 
             return RESP._200(res, `Se guardo el lote para el modelo ${mcActualizado.nombreCompleto}`, [
-                { tipo: 'modeloCompleto', datos: mcActualizado },
+                { tipo: 'modeloCompleto', datos: mcActualizado.getCamposParaAlmacen() },
             ]);
 
         })

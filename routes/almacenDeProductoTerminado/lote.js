@@ -63,7 +63,7 @@ app.delete('/:idModeloCompleto/:idLote', (req, res) => {
         })
         .then(mcActualizado => {
             return RESP._200(res, 'Se elimino el lote de manera correcta.', [
-                { tipo: 'modeloCompleto', datos: mcActualizado },
+                { tipo: 'modeloCompleto', datos: mcActualizado.getCamposParaAlmacen() },
             ]);
 
         })
@@ -75,10 +75,6 @@ app.delete('/:idModeloCompleto/:idLote', (req, res) => {
         });
 
 });
-
-
-
-
 
 
 module.exports = app;

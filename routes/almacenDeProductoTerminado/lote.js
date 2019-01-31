@@ -76,5 +76,4 @@ app.delete('/:idModeloCompleto/:idLote', (req, res) => {
 
 });
 
-
 module.exports = app;

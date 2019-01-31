@@ -32,12 +32,12 @@ var hitRoutes = require('../routes/ingenieria/hit');
 var defaultsRoute = require('../routes/configCruds/defaults.crud');
 
 var reportesRoute = require('../routes/reportes/reportes');
-var almacenDeProductoTermiandoRoutes = require('../routes/almacenProductoTerminado/almacenProductoTerminado');
+var almacenDeProductoTerminadoRoute = require('../routes/almacenDeProductoTerminado/almacenDeProductoTerminado');
+var loteRoute = require('../routes/almacenDeProductoTerminado/lote');
+var devolucionRoute = require('../routes/almacenDeProductoTerminado/devolucion');
+var salidaRoute = require('../routes/almacenDeProductoTerminado/salida');
 
 var ROLES = require('../config/roles');
-
-
-
 
 
 module.exports.ROUTES = {
@@ -45,10 +45,35 @@ module.exports.ROUTES = {
     _ALMACEN_DE_PRODUCTO_TERMINADO: {
 
         url: '/almacenDeProductoTerminado',
-        route: almacenDeProductoTermiandoRoutes,
+        route: almacenDeProductoTerminadoRoute,
         roles: [],
         subRoutes: {}
     },
+
+    _ALMACEN_DE_PRODUCTO_TERMINADO_LOTE: {
+
+        url: '/almacenDeProductoTerminado/lote',
+        route: loteRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
+    _ALMACEN_DE_PRODUCTO_TERMINADO_SALIDA: {
+
+        url: '/almacenDeProductoTerminado/salida',
+        route: salidaRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
+    _ALMACEN_DE_PRODUCTO_TERMINADO_DEVOLUCION: {
+
+        url: '/almacenDeProductoTerminado/devolucion',
+        route: devolucionRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
 
     _REPORTES: {
 

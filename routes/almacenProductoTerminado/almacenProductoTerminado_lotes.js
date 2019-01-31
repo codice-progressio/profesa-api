@@ -4,84 +4,36 @@ let RESP = require('../../utils/respStatus');
 let colores = require('../../utils/colors');
 var CONSTANSTES = require('../../utils/constantes');
 
-
 var ModeloCompleto = require('../../models/modeloCompleto');
-
-
-
 var CRUD = require('../CRUD');
+
 CRUD.app = app;
 CRUD.modelo = ModeloCompleto;
 CRUD.nombreDeObjetoSingular = 'modeloCompleto';
 CRUD.nombreDeObjetoPlural = 'modelosCompletos';
 CRUD.campoSortDefault = 'nombreCompleto';
-
-
-
 CRUD.camposDeBusqueda = [
     'nombreCompleto',
 ];
+CRUD.excluir = [
+    'medias',
+    'modelo',
+    'tamano',
+    'color',
+    'terminado',
+    'laserAlmacen',
+    'versionModelo',
+    'familiaDeProcesos',
+    'procesosEspeciales',
+    'porcentajeDeMerma',
+    'espesor',
+    'actualizarLotesYExistencias'
+];
 
-
-CRUD.crud([
-    'getBuscar',
-]);
-
-
-
-
-
-/** 
- * Obtenemos todas las existencias de los modelos.
- * 
- */
-app.get('/', (req, res, next) => {
-
-    let campoSort = req.query.sort | 'nombreCompleto';
-
-    const CONSULTAS = CONSTANSTES.consultas(req.query, campoSort);
-
-
-
-    Promise.all([
-            ModeloCompleto.find()
-            .select(` 
-                -medias
-                -modelo
-                -tamano
-                -color
-                -terminado
-                -laserAlmacen
-                -versionModelo
-                -familiaDeProcesos
-                -procesosEspeciales
-                -porcentajeDeMerma
-                -espesor
-                -actualizarLotesYExistencias
-            
-            `)
-            .limit(CONSULTAS.limite)
-            .skip(CONSULTAS.desde)
-            .sort({
-                [CONSULTAS.campo]: CONSULTAS.sort
-            })
-            .exec(),
-            ModeloCompleto.countDocuments()
-        ]).then(resp => {
-            return RESP._200(res, null, [
-                { tipo: 'modelosCompletos', datos: resp[0] },
-                { tipo: 'total', datos: resp[1] },
-            ]);
-
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error al obtener todas las existencias de los modelos.',
-                err: err,
-            });
-        });
-});
-
+CRUD.crud(
+    'get',
+    'getBuscar'
+);
 
 /**
  * Guardar nuevo lote. 
@@ -214,12 +166,5 @@ app.post('/devolucion', (req, res) => {
         });
 
 });
-
-
-
-
-
-
-
 
 module.exports = app;

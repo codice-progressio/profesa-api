@@ -50,6 +50,7 @@ const LoteSchema = new Schema({
     devoluciones: [devolucionesLoteSchema],
 
     validandoDevolucion: { type: Boolean, default: false },
+    observaciones: { type: String }
 
 }, { timestap: true });
 

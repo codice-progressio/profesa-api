@@ -44,7 +44,7 @@ app.post('/', (req, res) => {
         })
         .then(mcModificado => {
             return RESP._200(res, 'Se registro la salida.', [
-                { tipo: 'modeloCompleto', datos: mcModificado },
+                { tipo: 'modeloCompleto', datos: mcModificado.getCamposParaAlmacen() },
             ]);
         })
         .catch(err => {

@@ -38,7 +38,7 @@ app.post('/', (req, res) => {
         })
         .then(mcModificado => {
             return RESP._200(res, 'Se registro la devolucion de manera correcta.', [
-                { tipo: 'modeloCompleto', datos: mcModificado },
+                { tipo: 'modeloCompleto', datos: mcModificado.getCamposParaAlmacen() },
             ]);
 
         })

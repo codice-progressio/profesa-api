@@ -9,7 +9,7 @@ const salidaLoteSchema = new Schema({
      * validacions para las demas entradas que estamos
      * manejando al par con este objeto ( Se hace desde lote.js en el methods.addSalida )
      */
-    validando: { type: Boolean, default: false },
+    validando: { type: Boolean, default: false, select: false },
     /**
      * El cliente al que se le va a surtir el boton. 
      */

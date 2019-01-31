@@ -13,7 +13,7 @@ var devolucionLoteSchema = new Schema({
      * desde el metodo en lote.js addDevolucion ponemos este valor en tru
      * para solo validar este elemento del array. Los demas pasan bien. 
      */
-    validando: { type: Boolean, default: false },
+    validando: { type: Boolean, default: false, select: false },
 
     cliente: { type: Schema.Types.ObjectId, ref: 'Cliente', required: [true, 'El cliente es necesario'] },
     cantidad: {

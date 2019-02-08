@@ -5,6 +5,8 @@ FIX:
         ☐ El proceso de cargar material no debe poder repetirse. 
 
 FEATURES:
+    Teñido:
+        ☐ Crear departamento de tenido. @started(19-02-08 07:52)
 
     Quimica:
         ✔ Debe regristrar inicio de trabajo como transformacion y laser. @started(19-01-22 14:43) @done(19-01-22 14:43) @lasted(41s)

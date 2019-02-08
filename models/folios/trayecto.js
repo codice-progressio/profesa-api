@@ -15,6 +15,7 @@ var metalizadoSchema = require('./infoDeptos/metalizado');
 var barnizadoSchema = require('./infoDeptos/barnizado');
 var buratoSchema = require('./infoDeptos/burato');
 var laserSchema = require('./infoDeptos/laser');
+var tenidoSchema = require('./infoDeptos/tenido');
 var almacenDeBotonSchema = require('./infoDeptos/almacenDeBoton');
 
 
@@ -42,6 +43,7 @@ var trayectoSchema = new Schema({
     burato: buratoSchema,
     laser: laserSchema,
     almacenDeBoton: almacenDeBotonSchema,
+    tenido: tenidoSchema,
 
 
     // Esta se guarda cuando se modifica la órden. 

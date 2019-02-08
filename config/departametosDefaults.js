@@ -16,6 +16,7 @@ const DEPARTAMENTOS = {
     BURATO: { _v: 'BURATO', _n: 'BURATO', _vm: 'burato' },
     LASER: { _v: 'LASER', _n: 'LASER', _vm: 'laser' },
     ALMACEN_DE_BOTON: { _v: 'ALMACEN_DE_BOTON', _n: 'ALMACEN DE BOTON', _vm: 'almacenDeBoton' },
+    tenido: { _v: 'TENIDO', _n: 'TEÑIDO', _vm: 'tenido' },
 
 };
 module.exports = DEPARTAMENTOS;

@@ -74,8 +74,9 @@ const getById = function(modelo, app, nombreDeObjeto, select) {
         //  BUSCAMOS CON FINDONE Y NO CON FINDBYID PARA QUE SE LANZE EL PRE HOOK
         // =====================================
         // -->
-        modelo.findOne({ _id: id }).exec()
+        modelo.findOne({ _id: id })
             .select(select)
+            .exec()
             .then(elemento => {
 
                 if (!elemento) {

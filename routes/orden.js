@@ -728,147 +728,147 @@ function avanzarCamino(orden, depto) {
 
 
 
-function asingarAMaquinaTransformacion(datos) {
-    //Comprobamos que el trayecto actual se corresponda a 
-    // TRANSFORMACIÓN.
+// function asingarAMaquinaTransformacion(datos) {
+//     //Comprobamos que el trayecto actual se corresponda a 
+//     // TRANSFORMACIÓN.
 
-    const DEPTO = CONST.DEPARTAMENTOS.TRANSFORMACION._n;
+//     const DEPTO = CONST.DEPARTAMENTOS.TRANSFORMACION._n;
 
-    let maquinasconProduccion = [];
-    let maquinasSinProduccion = [];
+//     let maquinasconProduccion = [];
+//     let maquinasSinProduccion = [];
 
 
-    // UbicacionActual = TRANSFORMACION
-    if (datos.orden.ubicacionActual.departamento.nombre === DEPTO) {
-        // Buscar máquinas asigandas a transformacion
-        Maquina.find({ 'departamentos.nombre': DEPTO }, (err, maquinasTransformacion) => {
+//     // UbicacionActual = TRANSFORMACION
+//     if (datos.orden.ubicacionActual.departamento.nombre === DEPTO) {
+//         // Buscar máquinas asigandas a transformacion
+//         Maquina.find({ 'departamentos.nombre': DEPTO }, (err, maquinasTransformacion) => {
 
-            if (err) {
-                return RESP._500(datos.res, {
-                    msj: 'Hubo un error buscando las máquinas.',
-                    err: err
-                });
-            }
+//             if (err) {
+//                 return RESP._500(datos.res, {
+//                     msj: 'Hubo un error buscando las máquinas.',
+//                     err: err
+//                 });
+//             }
 
-            // Hay máquinas?
-            if (!maquinasTransformacion) {
-                RESP._400(res, {
-                    msj: 'No hay máquinas asignadas a ' + DEPTO,
-                    err: 'Es necesario asignar máquinas a este departamento.',
-                    masInfo: [{
-                        infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
-                        dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
-                    }]
-                });
-            }
+//             // Hay máquinas?
+//             if (!maquinasTransformacion) {
+//                 RESP._400(res, {
+//                     msj: 'No hay máquinas asignadas a ' + DEPTO,
+//                     err: 'Es necesario asignar máquinas a este departamento.',
+//                     masInfo: [{
+//                         infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
+//                         dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
+//                     }]
+//                 });
+//             }
 
-            //Separar por las que tienen producción. 
-            maquinasConProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length > 0);
+//             //Separar por las que tienen producción. 
+//             maquinasConProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length > 0);
 
-            //Maquinas que no tiene producción. 
-            maquinasSinProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length === 0);
+//             //Maquinas que no tiene producción. 
+//             maquinasSinProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length === 0);
 
-            if (maquinasConProduccion > 0) {
+//             if (maquinasConProduccion > 0) {
 
-                //Agregamos máquina con pedido igual.
-                let maquinasConPedidoIgual = [];
-                maquinasConPedidoIgual = maquinasConProduccion.filter(maquina => {
+//                 //Agregamos máquina con pedido igual.
+//                 let maquinasConPedidoIgual = [];
+//                 maquinasConPedidoIgual = maquinasConProduccion.filter(maquina => {
 
-                    for (let i = 0; i < maquina.ordenes.length; i++) {
-                        const orden = maquina.ordenes[i];
-                        return orden.pedido === datos.orden.pedido;
-                    }
+//                     for (let i = 0; i < maquina.ordenes.length; i++) {
+//                         const orden = maquina.ordenes[i];
+//                         return orden.pedido === datos.orden.pedido;
+//                     }
 
-                });
+//                 });
 
-                //¿Hay maquinas con pedido igual?
-                if (maquinasConPedidoIgual > 0) {
-                    filtrarMaquina(maquinasConPedidoIgual, datos);
-                } else {
-                    // Tomamos una máquina con producción. 
-                    let maquinaConModeloIgual = [];
-                    maquinaConModeloIgual = maquinasConProduccion.filter(maquina => {
-                        for (let i = 0; i < maquina.ordenes.length; i++) {
-                            const orden = maquina.ordenes[i];
-                            return orden.modeloCompleto === datos.orden.modeloCompleto;
-                        }
-                    });
+//                 //¿Hay maquinas con pedido igual?
+//                 if (maquinasConPedidoIgual > 0) {
+//                     filtrarMaquina(maquinasConPedidoIgual, datos);
+//                 } else {
+//                     // Tomamos una máquina con producción. 
+//                     let maquinaConModeloIgual = [];
+//                     maquinaConModeloIgual = maquinasConProduccion.filter(maquina => {
+//                         for (let i = 0; i < maquina.ordenes.length; i++) {
+//                             const orden = maquina.ordenes[i];
+//                             return orden.modeloCompleto === datos.orden.modeloCompleto;
+//                         }
+//                     });
 
-                    //¿Hay máquinas con modeloIgual?
-                    if (maquinaConModeloIgual > 0) {
-                        filtrarMaquina(maquinaConModeloIgual, datos);
-                    } else {
-                        // Tomamos una máquina con proudcción. 
-                        let maquinaConTamanoIgual = [];
-                        maquinaConTamanoIgual = maquinasconProduccion.filter(maquina => {
-                            for (let i = 0; i < maquina.ordenes.length; i++) {
-                                const orden = maquina.ordenes[i];
-                                return orden.modeloCompleto.tamano.tamano === datos.orden.modeloCompleto.tamano.tamano;
-                            }
-                        });
+//                     //¿Hay máquinas con modeloIgual?
+//                     if (maquinaConModeloIgual > 0) {
+//                         filtrarMaquina(maquinaConModeloIgual, datos);
+//                     } else {
+//                         // Tomamos una máquina con proudcción. 
+//                         let maquinaConTamanoIgual = [];
+//                         maquinaConTamanoIgual = maquinasconProduccion.filter(maquina => {
+//                             for (let i = 0; i < maquina.ordenes.length; i++) {
+//                                 const orden = maquina.ordenes[i];
+//                                 return orden.modeloCompleto.tamano.tamano === datos.orden.modeloCompleto.tamano.tamano;
+//                             }
+//                         });
 
-                        // ¿Hay máquinas con tamaño igual?
-                        if (maquinaConTamanoIgual > 0) {
-                            filtrarMaquina(maquinaConTamanoIgual, datos);
-                        } else {
-                            //Tomamos una máquina de producción
-                            datos.maquina = maquinasSinProduccion[0];
-                            anadirOrdenAMaquinaYGrabar(datos);
-                        }
-                    }
-                }
-            } else {
-                //Tomamos una máquina sin producción
-                datos.maquina = maquinasSinProduccion[0];
-                anadirOrdenAMaquinaYGrabar(datos);
-            }
-        });
-    } else {
-        // FIN
-        //Si no es el departamento que nos interesa ejecutamos la función de grabado.
-        datos.callback();
-    }
-}
+//                         // ¿Hay máquinas con tamaño igual?
+//                         if (maquinaConTamanoIgual > 0) {
+//                             filtrarMaquina(maquinaConTamanoIgual, datos);
+//                         } else {
+//                             //Tomamos una máquina de producción
+//                             datos.maquina = maquinasSinProduccion[0];
+//                             anadirOrdenAMaquinaYGrabar(datos);
+//                         }
+//                     }
+//                 }
+//             } else {
+//                 //Tomamos una máquina sin producción
+//                 datos.maquina = maquinasSinProduccion[0];
+//                 anadirOrdenAMaquinaYGrabar(datos);
+//             }
+//         });
+//     } else {
+//         // FIN
+//         //Si no es el departamento que nos interesa ejecutamos la función de grabado.
+//         datos.callback();
+//     }
+// }
 
-function anadirOrdenAMaquinaYGrabar(datos) {
+// function anadirOrdenAMaquinaYGrabar(datos) {
 
-    // Añadimos la órden a la máquina.
-    Maquina.findOne({ _id: datos.maquina._id }, (err, maquinaParaModificar) => {
+//     // Añadimos la órden a la máquina.
+//     Maquina.findOne({ _id: datos.maquina._id }, (err, maquinaParaModificar) => {
 
-        return RESP._500(datos.res, {
-            msj: 'Hubo un error buscando la máquina.',
-            err: err,
-        });
+//         return RESP._500(datos.res, {
+//             msj: 'Hubo un error buscando la máquina.',
+//             err: err,
+//         });
 
-        maquinaParaModificar.ordenes.push(datos.orden);
-        // Añadimos la máquina actual a la órden. 
-        orden.maquinaActual = maquinaParaModificar;
-        // Guardamos los cambios echos en la máquina. 
-        maquinaParaModificar.save(err => {
-            if (err) {
-                return RESP._500(datos.res, {
-                    msj: 'Hubo un error guardando las modificaciones de la máquina',
-                    err: err,
-                });
-            }
-            //FIN
-            datos.callback();
-        });
+//         maquinaParaModificar.ordenes.push(datos.orden);
+//         // Añadimos la máquina actual a la órden. 
+//         orden.maquinaActual = maquinaParaModificar;
+//         // Guardamos los cambios echos en la máquina. 
+//         maquinaParaModificar.save(err => {
+//             if (err) {
+//                 return RESP._500(datos.res, {
+//                     msj: 'Hubo un error guardando las modificaciones de la máquina',
+//                     err: err,
+//                 });
+//             }
+//             //FIN
+//             datos.callback();
+//         });
 
-    });
-}
+//     });
+// }
 
-function filtrarMaquina(arrayDeMaquinas, datos) {
-    // Filtramos la máquina con menor cantidad de órdenes.
-    let maquinaConMenorCantidadDeOrdenes =
-        arrayDeMaquinas.sort(
-            (a, b) => {
-                return a.ordenes.length - b.ordenes.length;
-            })[0];
-    datos.maquina = maquinaConMenorCantidadDeOrdenes;
-    anadirOrdenAMaquinaYGrabar(datos);
+// function filtrarMaquina(arrayDeMaquinas, datos) {
+//     // Filtramos la máquina con menor cantidad de órdenes.
+//     let maquinaConMenorCantidadDeOrdenes =
+//         arrayDeMaquinas.sort(
+//             (a, b) => {
+//                 return a.ordenes.length - b.ordenes.length;
+//             })[0];
+//     datos.maquina = maquinaConMenorCantidadDeOrdenes;
+//     anadirOrdenAMaquinaYGrabar(datos);
 
-}
+// }
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app;

@@ -16,6 +16,7 @@ const defaults = {
         BURATO: '',
         LASER: '',
         ALMACEN_DE_BOTON: '',
+        TENIDO: ''
     },
     PROCESOS: {
         CONTROL_DE_PRODUCCION: '',

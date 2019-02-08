@@ -1,14 +1,18 @@
 //Esto es necesario
-var express = require('express');
-var app = express();
-var colores = require('../utils/colors');
-var NVU = require('../config/nivelesDeUrgencia');
+const express = require('express');
+const app = express();
+const colores = require('../utils/colors');
+const NVU = require('../config/nivelesDeUrgencia');
 
-var Folio = require('../models/folios/folio');
-var Departamento = require('../models/departamento');
-var RESP = require('../utils/respStatus');
-var CONST = require('../utils/constantes');
-var Maquina = require('../models/maquina');
+const Folio = require('../models/folios/folio');
+const Departamento = require('../models/departamento');
+const RESP = require('../utils/respStatus');
+const CONST = require('../utils/constantes');
+const Maquina = require('../models/maquina');
+const Default = require('../models/configModels/default');
+
+
+
 
 
 
@@ -45,17 +49,22 @@ function esDeptoActual(orden, depto) {
 // una orden a una maquina antes de empezar a a trabajar.
 app.put('/', (req, res) => {
     const id_de_la_orden = req.body._id;
-    const depto = req.body.departamento;
-    const depto_ = Departamento.obtener(depto);
+    /**
+     * Obtenemos el id del departamento. Con este 
+     * id buscamos los datos que nos interesan. 
+     * 
+     */
+    const idDepto = req.body.departamento;
+    const depto_ = Departamento.obtener(idDepto);
     const deptoTrabajado = req.body.deptoTrabajado;
     var mensajeGeneral = '';
 
-    if (!depto_) {
-        return RESP._400(res, {
-            msj: `Parece que el departamento ${depto} no esta registrado.`,
-            err: 'Comunicale este error a tu administrador.',
-        });
-    }
+    // if (!depto_) {
+    //     return RESP._400(res, {
+    //         msj: `Parece que el departamento ${idDepto} no esta registrado.`,
+    //         err: 'Comunicale este error a tu administrador.',
+    //     });
+    // }
 
     // ============================================
     // Parametros varios para trabajo de órden. 
@@ -65,7 +74,7 @@ app.put('/', (req, res) => {
 
     Promise.all([
         existeFolioConOrden(id_de_la_orden),
-        existeDepartamento(depto)
+        existeDepartamento(idDepto)
     ]).then(respuestas => {
         const fol = respuestas[0];
         const departamento = respuestas[1];
@@ -160,18 +169,25 @@ function existeFolioConOrden(id) {
 
 }
 
-// ============================================
-// Obtiene la órden de un departamento dado.
-// ============================================
 
+/**
+ * Obtiene la órden de un departamento dado.
+ * 
+ */
 app.get('/:idOrden/:departamento', (req, res) => {
 
+    /**
+     * El id de la orden que queremos obtener. 
+     */
     const idOrden = req.params.idOrden;
-    const departamento = (req.params.departamento).toUpperCase();
+    /**
+     * El departamento donde se encuentra. 
+     */
+    const idDepartamento = req.params.departamento
 
     Promise.all([
         orden(idOrden),
-        existeDepartamento(departamento),
+        existeDepartamento(idDepartamento),
     ]).then(respuestas => {
 
         const orden = respuestas[0][0];
@@ -224,10 +240,15 @@ app.get('/:idOrden/:departamento', (req, res) => {
     });
 });
 
+/** 
+ * Buscamos un folio que contenga la órden con el id que le pasemos
+ * como parametro. Esto nos devuelve todo el folio pero solo la linea
+ * que necesitamos. 
+ * @param {*} idOrden
+ * @returns La orden por su id.  
+ * 
+ */
 function orden(idOrden) {
-    // Buscamos un folio que contenga la órden con el id que le pasemos
-    // como parametro. Esto nos devuelve todo el folio pero solo la linea
-    // que necesitamos. 
     const uno = {
         'folioLineas.ordenes': { '$elemMatch': { _id: idOrden } },
     };
@@ -276,16 +297,28 @@ function orden(idOrden) {
 
 }
 
-function existeDepartamento(departamento) {
+
+/**
+ * Busca si el id que se le pase como parametro esta registrado
+ * dentro de los departamentos y obtiene toda su informacion.
+ * Estos departamentos tienen que existir dentro de los defautl.
+ *
+ * @param {*} idDepto
+ */
+function existeDepartamento(idDepto) {
+
     return new Promise((resolve, reject) => {
-        Departamento.existe(departamento).then(departamentoEncontrado => {
-                if (!departamentoEncontrado) {
+        Departamento.findById(idDepto).exec()
+            .then(resp => {
+                if (!resp) {
                     reject(RESP.errorGeneral({
-                        msj: 'No existe el departamento.',
-                        err: 'El departamento que ingresaste no existe o no esta registrado.',
+                        msj: `No existe el id que ingresaste. ${idDepto}`,
+                        err: 'Parece que id del departamento que ingresaste no esta registrado. ',
                     }));
+                } else {
+                    resolve(resp)
                 }
-                resolve(departamentoEncontrado);
+
             })
             .catch(err => {
                 reject(RESP.errorGeneral({
@@ -293,8 +326,6 @@ function existeDepartamento(departamento) {
                     err: err,
                 }));
             });
-
-
     });
 }
 
@@ -302,15 +333,9 @@ function existeDepartamento(departamento) {
 // OBTIENE LA LISTA DE ÓRDENES POR DEPARTAMENTO.
 // ============================================
 app.get('/:depto', (req, res) => {
-    const depto = (req.params.depto).toUpperCase();
+    const idDepto = req.params.depto
 
-    Departamento.existe(depto).then(departamento => {
-        if (!departamento) {
-            return RESP._400(res, {
-                msj: 'Error al buscar el departamento.',
-                err: 'El departamento que ingresaste no existe.',
-            });
-        }
+    existeDepartamento(idDepto).then(departamento => {
 
         // Primero buscamos todos los folios que tengan órdenes actuales en ese departamento
         const busqueda = {
@@ -356,7 +381,7 @@ app.get('/:depto', (req, res) => {
                         // ARRIBA POR FOLIOS!!! Y NO POR ORDENES!! DE MANERA QUE TODAS LAS ÓRDENES DEL 
                         // FOLIO SE VAN A MOSTRAR!!! ESTEN EN EL DEPTO QUE ESTEN. 
                         if (orden.terminada === true) return false;
-                        if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento.nombre === depto) {
+                        if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento.nombre === idDepto) {
 
                             var ordenO = orden.toObject();
                             ordenO.fechaFolio = folio.fechaFolio;
@@ -469,21 +494,17 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
     console.log(arreglo);
 
 
-    // Comprobamos que el deparatmento esta la bd y tiene su id.
-    Departamento.existe(CONST.DEPARTAMENTOS.CONTROL_DE_PRODUCCION._n)
-        .then(deptoExistente => {
-            if (!deptoExistente) {
-                return RESP._400(res, {
-                    msj: 'El departamento no existe. ',
-                    err: 'CONTROL DE PRODUCCION NO ESTA REGISTRADO.',
-                });
-            }
+    // Obtenemos los defautls:
 
+    Default.find().exec().
+    then(defaults => {
+            const d = defaults[0];
             return Folio.find({
                 // Buscamos los folios que contengan los id. 
                 'folioLineas.ordenes._id': { $in: arreglo },
                 // y que esten en el departamento. 
-                'folioLineas.ordenes.ubicacionActual.departamento': deptoExistente._id
+                'folioLineas.ordenes.ubicacionActual.departamento': d.DEPARTAMENTOS.CONTROL_DE_PRODUCCION
+
             }).exec()
 
         })
@@ -537,23 +558,26 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
 
 
 app.put('/:idOrden', (req, res) => {
-    //Hay que saber para que depto es.
-    let depto = req.query.depto;
-
-    //Este camino modificado debe ser 
-    // intercepado por el guard y si no es un usuario 
-    // con permiso suficiente no se debe ejecutar este
-    // controller. 
+    /**
+     * El departamento del cual se agregara un registro. 
+     * 
+     */
+    let idDepto = req.query.depto;
+    /** 
+     *Este camino modificado debe ser 
+     * intercepado por el guard y si no es un usuario 
+     * con permiso suficiente no se debe ejecutar este
+     * controller. 
+     * */
     const caminoModificadoAutorizado = req.query.caminoModificado;
 
-    depto = depto.replace(/\'/g, '');
     const datos = req.body;
 
     // Obtenemos el id de la órden.
     const id = req.params.idOrden;
     Promise.all([
         existeFolioConOrden(id),
-        existeDepartamento(depto)
+        existeDepartamento(idDepto)
     ]).then(respuestas => {
         const folio = respuestas[0];
         const departamento = respuestas[1];
@@ -561,7 +585,7 @@ app.put('/:idOrden', (req, res) => {
 
 
         const orden = buscarOrdenDentroDeFolio(folio, id);
-        var dep = Departamento.obtener(depto)
+        const dep = Departamento.obtener(departamento.nombre)
         console.log(`${colores.info('DEPTO OBTENIDO')} Departamento obtenido ${JSON.stringify(dep)}`)
         if (dep) {
 

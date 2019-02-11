@@ -155,8 +155,6 @@ function existeFolioConOrden(id) {
                     err: 'El id de la órden que ingresaste no existe.',
                 }));
             }
-            console.log(folioEncontrado);
-
             resolve(folioEncontrado);
         }).catch(err => {
             reject(RESP.errorGeneral({
@@ -335,31 +333,28 @@ function existeDepartamento(idDepto) {
 app.get('/:depto', (req, res) => {
     const idDepto = req.params.depto
 
-    existeDepartamento(idDepto).then(departamento => {
+    Departamento.findOne({ _id: idDepto }).then(departamento => {
+
+        if (!idDepto) {
+            return RESP._500(res, {
+                msj: 'El departamento no existe. ',
+                err: 'El id del departamento que ingresaste no existe.',
+            });
+        }
 
         // Primero buscamos todos los folios que tengan órdenes actuales en ese departamento
         const busqueda = {
-            // El la busqueda departamento no esta populado por eso buscamos en .departamento y no
-            // en .departamento._id
+
             'folioLineas.ordenes.ubicacionActual.departamento': departamento._id,
             // Si la órden no esta terminada si la tomanos en cuenta. 
             'folioLineas.ordenes.terminada': false
 
         };
 
-        return Folio.find(busqueda)
-            .populate('folioLineas.ordenes.ubicacionActual.departamento')
-            .populate({
-                path: 'folioLineas.modeloCompleto',
-                populate: {
-                    path: 'modelo tamano color terminado marcaLaser'
-                }
-            }).populate('folioLineas.laserCliente').exec();
+        return Folio.find(busqueda).exec();
 
     }).then(folios => {
-
-
-        //    Creamos la estrucutura para guardar las órdenes por nivel. 
+        // Creamos la estrucutura para guardar las órdenes por nivel. 
         const ordenes = {};
         for (var n in NVU.LV) {
             ordenes[NVU.LV[n]] = [];
@@ -381,7 +376,8 @@ app.get('/:depto', (req, res) => {
                         // ARRIBA POR FOLIOS!!! Y NO POR ORDENES!! DE MANERA QUE TODAS LAS ÓRDENES DEL 
                         // FOLIO SE VAN A MOSTRAR!!! ESTEN EN EL DEPTO QUE ESTEN. 
                         if (orden.terminada === true) return false;
-                        if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento.nombre === idDepto) {
+                        // Comparamos por el id del departamento. 
+                        if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento._id.toString() === idDepto.toString()) {
 
                             var ordenO = orden.toObject();
                             ordenO.fechaFolio = folio.fechaFolio;
@@ -471,7 +467,6 @@ app.post('/', (req, res, next) => {
         folioEncontrado.save((err, folioGrabado) => {
 
             if (err) {
-                console.log(err);
                 return RESP._500(res, {
                     msj: 'Hubo un error grabando el folio.',
                     err: err,
@@ -491,9 +486,6 @@ app.post('/', (req, res, next) => {
 
 app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
     const arreglo = req.body;
-    console.log(arreglo);
-
-
     // Obtenemos los defautls:
 
     Default.find().exec().
@@ -517,8 +509,6 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
             }
 
             // Filtramos las ordenes para modificarlas. 
-
-            console.log('Cantidad de folios encontrados: ' + foliosEncontrados.length);
 
             foliosEncontrados.forEach(x => {
                 arreglo.forEach(_id => {
@@ -581,7 +571,6 @@ app.put('/:idOrden', (req, res) => {
     ]).then(respuestas => {
         const folio = respuestas[0];
         const departamento = respuestas[1];
-        console.log('Dentor de la promesa.');
 
 
         const orden = buscarOrdenDentroDeFolio(folio, id);
@@ -670,8 +659,6 @@ app.put('/:idOrden', (req, res) => {
 
         }
     }).catch(err => {
-        console.log(err);
-
         return RESP._500(res, err);
     });
 

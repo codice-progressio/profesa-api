@@ -55,16 +55,10 @@ app.put('/', (req, res) => {
      * 
      */
     const idDepto = req.body.departamento;
-    const depto_ = Departamento.obtener(idDepto);
+    let depto_;
     const deptoTrabajado = req.body.deptoTrabajado;
     var mensajeGeneral = '';
 
-    // if (!depto_) {
-    //     return RESP._400(res, {
-    //         msj: `Parece que el departamento ${idDepto} no esta registrado.`,
-    //         err: 'Comunicale este error a tu administrador.',
-    //     });
-    // }
 
     // ============================================
     // Parametros varios para trabajo de órden. 
@@ -79,6 +73,8 @@ app.put('/', (req, res) => {
         const fol = respuestas[0];
         const departamento = respuestas[1];
 
+        // Obtenemos las variables del departamento.
+        depto_ = Departamento.obtener(departamento.nombre);
         // Se encuentra en este departamento. 
         let orden = buscarOrdenDentroDeFolio(fol, id_de_la_orden);
 

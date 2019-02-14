@@ -254,18 +254,18 @@ function obtenerMenu(ROLE) {
             titulo: 'Registros',
             icono: 'fa fa-file-text',
             submenu: [
-                { titulo: 'Control de produccion', url: '/produccion/controlDeProduccion' },
                 { titulo: 'Almacen de boton', url: '/produccion/almacenDeBoton' },
+                { titulo: 'Barnizado', url: '/produccion/barnizado' },
+                { titulo: 'Burato', url: '/produccion/burato' },
+                { titulo: 'Control de produccion', url: '/produccion/controlDeProduccion' },
+                { titulo: 'Empaque', url: '/produccion/empaque' },
                 { titulo: 'Materiales', url: '/produccion/materiales' },
                 { titulo: 'Pastilla', url: '/produccion/pastilla' },
-                { titulo: 'Transformacion', url: '/produccion/transformacion' },
                 { titulo: 'Laser', url: '/produccion/laser' },
-                { titulo: 'Pulido', url: '/produccion/pulido' },
-                { titulo: 'Seleccion', url: '/produccion/seleccion' },
-                { titulo: 'Empaque', url: '/produccion/empaque' },
-                { titulo: 'Burato', url: '/produccion/burato' },
                 { titulo: 'Metalizado', url: '/produccion/metalizado' },
-                { titulo: 'Barnizado', url: '/produccion/barnizado' },
+                { titulo: 'Seleccion', url: '/produccion/seleccion' },
+                { titulo: 'Transformacion', url: '/produccion/transformacion' },
+                { titulo: 'Pulido', url: '/produccion/pulido' },
                 { titulo: 'Producto terminado', url: '/produccion/productoTerminado' },
             ]
         },
@@ -286,6 +286,7 @@ function obtenerMenu(ROLE) {
         }
     }
 
+
     // Agregamos los administradordes. 
 
     for (const menu in MENUS) {
@@ -295,6 +296,17 @@ function obtenerMenu(ROLE) {
                 element.roles.push(CONST.ROLES.ADMIN_ROLE);
                 element.roles.push(CONST.ROLES.SUPER_ADMIN);
             }
+
+            // Ordenamos alfabeticamente los menus. 
+            element.submenu.sort(
+                function compare(a, b) {
+                    if (a.titulo < b.titulo)
+                        return -1;
+                    if (a.titulo > b.titulo)
+                        return 1;
+                    return 0;
+                }
+            )
         }
     }
 

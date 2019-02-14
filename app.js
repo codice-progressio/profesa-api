@@ -93,7 +93,8 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // Obtenemos el token
 app.use((req, res, next) => {
 
-    const espera = ((Math.random() * 3) * 1000);
+    const espera = ((Math.random() * 2) * 1000);
+    // const espera = 0;
     console.log(`Esperando ${espera} ms`);
 
     setTimeout(function() {

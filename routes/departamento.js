@@ -7,8 +7,8 @@ var Departamento = require("../models/departamento");
 var CRUD = require('../routes/CRUD');
 CRUD.app = app;
 CRUD.modelo = Departamento;
-CRUD.nombreDeObjetoSingular = 'departmento';
-CRUD.nombreDeObjetoPlural = 'departmentos';
+CRUD.nombreDeObjetoSingular = 'departamento';
+CRUD.nombreDeObjetoPlural = 'departamentos';
 CRUD.campoSortDefault = 'nombre';
 CRUD.camposActualizables = {
     nombre: null,

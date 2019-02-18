@@ -5,6 +5,7 @@ var Proceso = require('../models/procesos/proceso');
 var colores = require('../utils/colors');
 var NombreAnteriorMaquinaShchema = require('../models/nombreAnteriorMaquina');
 var Schema = mongoose.Schema;
+var Folio = require('../models/folios/folio');
 
 
 // var orden_DatosDeTrabajoEnMaquina = new Schema({
@@ -178,6 +179,9 @@ var almacenarNombreAntiguo = function(next) {
         next();
     }
 };
+
+
+
 
 /**
  *Elimina las relaciones que haya con la maquina. 

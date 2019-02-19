@@ -93,26 +93,26 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // Obtenemos el token
 app.use((req, res, next) => {
 
-    const espera = ((Math.random() * 2) * 1000);
-    // const espera = 0;
-    console.log(`Esperando ${espera} ms`);
+    // const espera = ((Math.random() * 2) * 1000);
+    // // const espera = 0;
+    // console.log(`Esperando ${espera} ms`);
 
-    setTimeout(function() {
-
-
-        console.log(`${new Date()}|` + colores.success('PETICION RECIVIDA') + colores.danger(req.method) + colores.info(req.originalUrl));
-
-        if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
-            req.token = req.headers.authorization.split(' ')[1];
-        } else if (req.query && req.query.token) {
-            req.token = req.query.token;
-        }
-        next();
+    // setTimeout(function() {
 
 
+    console.log(`${new Date()}|` + colores.success('PETICION RECIVIDA') + colores.danger(req.method) + colores.info(req.originalUrl));
+
+    if (req.headers.authorization && req.headers.authorization.split(' ')[0] === 'Bearer') {
+        req.token = req.headers.authorization.split(' ')[1];
+    } else if (req.query && req.query.token) {
+        req.token = req.query.token;
+    }
+    next();
 
 
-    }, espera);
+
+
+    // }, espera);
 });
 
 // NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.

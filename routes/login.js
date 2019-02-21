@@ -230,6 +230,8 @@ function obtenerMenu(ROLE) {
             icono: 'fas fa-gears',
             submenu: [
                 { titulo: 'Procesos', url: '/procesos' },
+                { titulo: 'Familias de procesos', url: '/familiaDeProcesos' },
+                { titulo: 'Maquinas', url: '/maquinas' },
                 // { titulo: 'Costos de proceso', url: '/procesos/costos' },
                 { titulo: 'Modelos', url: '/procesos/modelos' },
                 { titulo: 'Hit', url: '/hits' },

@@ -114,10 +114,12 @@ app.post('/:idFolio', (req, res) => {
             }
 
             if (!autorizado) {
-                return RESP._400(res, {
-                    msj: 'Modelo no autorizado.',
-                    err: msj,
-                });
+                // return RESP._400(res, {
+                //     msj: 'Modelo no autorizado.',
+                //     err: msj,
+                // });
+
+                throw new Error(`Modelo no autorizado : ${msj}`)
             }
 
 

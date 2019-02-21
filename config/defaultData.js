@@ -80,7 +80,7 @@ module.exports = () => {
             // let d = new Defaults(DefaultModelDataModel);
 
 
-            return Defaults.findOneAndUpdate({}, DefaultModelDataModel);
+            return Defaults.findOneAndUpdate({}, DefaultModelDataModel, { upsert: true, new: true, setDefaultsOnInsert: true });
         }).then(defaults => {
             console.log(D + colores.info('DEFAULTS') + 'Se actualizaron los id de los defaults.');
 

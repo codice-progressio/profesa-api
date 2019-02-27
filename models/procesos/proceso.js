@@ -18,10 +18,10 @@ var procesoSchema = new Schema({
     // pasos: [pasoSchema],
     observaciones: { type: String },
     // especial: { type: Boolean, value: false },
-    gastos: {
-        type: [gastoConsumoSchema],
-        // validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un gasto definido']
-    },
+    // gastos: {
+    //     type: [gastoConsumoSchema],
+    //     // validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un gasto definido']
+    // },
     maquinas: [{ type: Schema.Types.ObjectId, ref: 'Maquina' }],
 
     // Si el proceso corresponde a una cadena que requiere producirse este 
@@ -38,7 +38,7 @@ procesoSchema.plugin(uniqueValidator, { message: ' \'{PATH}\' debe ser único.' 
 
 let autoPopulate = function(next) {
     this.populate('departamento');
-    this.populate('gastos.gasto');
+    // this.populate('gastos.gasto');
     this.populate({
         path: 'maquinas',
         populate: { path: 'gastos.gasto' }

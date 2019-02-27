@@ -21,8 +21,7 @@ CRUD.camposActualizables = {
 CRUD.camposDeBusqueda = [
     'nombre',
     'clave',
-    'nombresAnteriores.nombre',
-    'nombresAnteriores.clave',
+    'numeroDeSerie',
     'observaciones',
 
 ];

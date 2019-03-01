@@ -21,6 +21,7 @@ CRUD.camposActualizables = {
     procesos: "",
     nombre: "",
     soloParaProductoTerminado: "",
+    observaciones: null,
 
 };
 

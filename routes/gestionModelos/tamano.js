@@ -10,6 +10,7 @@ CRUD.nombreDeObjetoSingular = 'tamano';
 CRUD.nombreDeObjetoPlural = 'tamanos';
 CRUD.campoSortDefault = 'tamano';
 CRUD.camposActualizables = {
+    tamano: null,
     estandar: null,
 };
 
@@ -17,7 +18,6 @@ CRUD.camposActualizables = {
 
 CRUD.camposDeBusqueda = [
     'tamano',
-    'estandar'
 
 ];
 

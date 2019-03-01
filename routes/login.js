@@ -230,10 +230,15 @@ function obtenerMenu(ROLE) {
             icono: 'fas fa-gears',
             submenu: [
                 { titulo: 'Procesos', url: '/procesos' },
-                { titulo: 'Familias de procesos', url: '/familiaDeProcesos' },
+                { titulo: 'Procesos - Familias', url: '/familiaDeProcesos' },
+                { titulo: 'Modelos', url: '/modelos' },
+                { titulo: 'Tamanos', url: '/tamanos' },
+                { titulo: 'Colores', url: '/colores' },
+                { titulo: 'Terminados', url: '/terminados' },
+                { titulo: 'Modelos completos', url: '/modelosCompletos' },
                 { titulo: 'Maquinas', url: '/maquinas' },
+
                 // { titulo: 'Costos de proceso', url: '/procesos/costos' },
-                { titulo: 'Modelos', url: '/procesos/modelos' },
                 { titulo: 'Hit', url: '/hits' },
             ]
         },

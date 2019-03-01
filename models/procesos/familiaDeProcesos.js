@@ -18,7 +18,8 @@ let familiaDeProcesosSchema = new Schema({
     }],
     nombre: { type: String, required: [true, 'El nombre es requerido.'] },
     // Familias que requieren que el producto este terminado para poderse asignar. 
-    soloParaProductoTerminado: { type: Boolean, default: false }
+    soloParaProductoTerminado: { type: Boolean, default: false },
+    observaciones: String
 });
 
 let autoPopulate = function(next) {
@@ -40,16 +41,12 @@ let eliminarRelacionados = function(next) {
 
     // Obtenemos el id de la familia. 
     var idFamilia = this._conditions._id;
-    console.log('El id que vamos a elimiar ' + idFamilia);
-
 
     // Buscamos todos los modelos completos relacionados. 
 
-    console.log('Estamos en el hook de eliminar relaciones');
 
     ModeloCompleto.deleteMany({ familiaDeProcesos: idFamilia })
         .then(resp => {
-            console.log(` la respuesta ${JSON.stringify(resp)}`);
             console.log(colores.info('DATOS RELACIONADOS ELIMINADOS') + 'Se eliminaron los modelos completos relacionados a esta familia.');
             next();
         })
@@ -129,6 +126,8 @@ var comprobarQueLaFamiliaTieneElProcesoEntregaDeOrdenesAProduccion = function(ne
 familiaDeProcesosSchema
     .pre('findOneAndRemove', eliminarRelacionados)
     .pre('find', autoPopulate)
+    .pre('findOne', autoPopulate)
+    .pre('findById', autoPopulate)
     // El orden es importante por que estamos suponiendo que hay un _id a la 
     // hora de comprobar este pre. 
     .pre('save', comprobarQueLaFamiliaTieneElProcesoEntregaDeOrdenesAProduccion);

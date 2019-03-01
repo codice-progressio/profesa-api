@@ -10,7 +10,7 @@ CRUD.nombreDeObjetoSingular = 'terminado';
 CRUD.nombreDeObjetoPlural = 'terminados';
 CRUD.campoSortDefault = 'terminado';
 CRUD.camposActualizables = {
-    // estandar: null,
+    terminado: null
 };
 
 

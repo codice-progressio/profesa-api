@@ -11,13 +11,14 @@ CRUD.nombreDeObjetoPlural = 'colores';
 CRUD.campoSortDefault = 'color';
 CRUD.camposActualizables = {
     receta: null,
+    color: null
 };
 
 
 
 CRUD.camposDeBusqueda = [
     'color',
-    'receta',
+    // 'receta',
 
 ];
 

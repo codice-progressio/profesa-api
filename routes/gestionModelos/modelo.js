@@ -10,7 +10,7 @@ CRUD.nombreDeObjetoSingular = 'modelo';
 CRUD.nombreDeObjetoPlural = 'modelos';
 CRUD.campoSortDefault = 'modelo';
 CRUD.camposActualizables = {
-    // estandar: null,
+    modelo: null
 };
 
 

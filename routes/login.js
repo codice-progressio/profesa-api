@@ -239,7 +239,7 @@ function obtenerMenu(ROLE) {
                 { titulo: 'Maquinas', url: '/maquinas' },
 
                 // { titulo: 'Costos de proceso', url: '/procesos/costos' },
-                { titulo: 'Hit', url: '/hits' },
+                // { titulo: 'Hit', url: '/hits' },
             ]
         },
         ADMINISTRADOR: {

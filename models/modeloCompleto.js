@@ -110,7 +110,10 @@ var modeloCompletoSchema = new Schema({
      */
     lotes: [loteSchema],
 
-    actualizarLotesYExistencias: { type: Boolean }
+    actualizarLotesYExistencias: { type: Boolean },
+
+    esBaston: { type: Boolean, required: [true, 'Es necesario definir si el modelo es de baston.'] }
+
 
 
 

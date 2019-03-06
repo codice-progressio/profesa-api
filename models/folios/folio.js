@@ -63,6 +63,8 @@ var autoPopulate = function(next) {
     });
 
     this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');
+    this.populate('folioLineas.ordenes.modeloCompleto');
+
 
 
 

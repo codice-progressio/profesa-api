@@ -160,6 +160,14 @@ app.get('/transformacion', (req, res, next) => {
             // por si las necesito en el GUI.
             foliosCoincidentes.forEach(folio => {
                 folio.folioLineas.forEach(pedido => {
+
+                    pedido.ordenes.map((orden) => {
+                        orden['cliente'] = folio.cliente.nombre
+                        orden['observacionesFolio'] = folio.observaciones
+                        orden['observacionesPedido'] = pedido.observaciones
+                        orden['laserCliente'] = pedido.laserCliente
+                    })
+
                     ordenesParaAcomodarPorPasos = ordenesParaAcomodarPorPasos.concat(pedido.ordenes);
                 });
             });

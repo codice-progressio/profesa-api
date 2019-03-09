@@ -8,24 +8,27 @@ var ArticuloSchema = new Schema({
     codigoInterno: { type: String },
     almacen: {
         type: Schema.Types.ObjectId,
-        ref: 'Proveedor',
+        ref: 'AlmacenDescripcion',
+        required: [true, 'Es necesario definir el almacen.']
     },
 
-    descripcion: { type: String },
+    descripcion: String,
     proveedores = [{
         proveedor: {
             type: Schema.Types.ObjectId,
             ref: 'Proveedor',
+            require: [true, 'El proveedor es necesario.']
         },
-        precio: { type: Number },
+        precio: { type: Number, require: [true, 'Es necesario que definas el precio'] },
         // Esta divisa la debe de contener el proveedor. 
         divisa: {
             type: Schema.Types.ObjectId,
             ref: 'Divsa',
+            require: [true, 'La moneda es necesaria.']
         }
     }],
     existencia: {
-        total: { type: Number },
+        total: Number,
         salidas: [{
             fecha: Date,
             cantidad: Number,

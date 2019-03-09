@@ -6,7 +6,7 @@ FIX:
 
 FEATURES:
     Teñido:
-        ☐ Crear departamento de tenido. @started(19-02-08 07:52)
+        ☐ Crear departamento de tenido. 
 
     Quimica:
         ✔ Debe regristrar inicio de trabajo como transformacion y laser. @started(19-01-22 14:43) @done(19-01-22 14:43) @lasted(41s)
@@ -76,7 +76,7 @@ FEATURES:
             
             ☐ Almacen de materiales.
             ☐ Almacen de refacciones.
-                ☐ Datos del proveedor:;
+                ☐ Datos del proveedor:; @started(19-03-08 15:17)
                 Nombre
                 Razon social
                 Domicilio completo
@@ -108,6 +108,11 @@ FEATURES:
                 Unidad de medida. 
                 =>Tipo de articulo
                     EJEMPLO Refaccion, resina, etc.
+            Alamacenes:
+                Ubicacion
+                Descripciones
+                Datos interesantes. 
+                
             
             Ficha de compra:
                 ☐ Datos de la requisicion

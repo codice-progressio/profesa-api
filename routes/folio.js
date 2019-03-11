@@ -340,6 +340,73 @@ app.post('/ordenesImpresas', (req, res, next) => {
 // END Senalar como impreso un folio.
 // ============================================
 
+// <!-- 
+// ===
+// === === === === === === === === === === === =
+// Obtiene todos los folios por el id del cliente. ===
+//     === === === === === === === === === === === =
+//     -->
+
+
+app.get('/cliente/:id', (req, res) => {
+
+    const CONSULTAS = _CONST.consultas(req.query, 'fechaEntrega');
+
+
+    let busqueda = {
+        cliente: req.params.id,
+        terminado: false
+    }
+
+    Promise.all([
+            Folio
+            .find(busqueda)
+            .limit(CONSULTAS.limite)
+            .skip(CONSULTAS.desde)
+            .sort({
+                [CONSULTAS.campo]: CONSULTAS.sort
+            })
+            .exec(),
+            Folio
+            .find(busqueda)
+            .countDocuments(),
+
+        ]).then(resp => {
+
+            if (resp[0].length === 0) {
+
+                return RESP._400(res, {
+                    msj: 'Este cliente no tiene folios.',
+                    err: 'No hay folios registrados en produccion para este cliente. ',
+                });
+
+            }
+            console.log(resp)
+            return RESP._200(res, null, [
+                { tipo: 'folios', datos: resp[0] },
+                { tipo: 'total', datos: resp[1] },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando los folios del cliente.',
+                err: err,
+            });
+        });
+
+
+
+
+
+})
+
+// <!-- 
+// =====================================
+//  END Obtiene todos los folios por el id del cliente. 
+// =====================================
+// -->
+
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app;

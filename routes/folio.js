@@ -53,31 +53,10 @@ app.get('/', (req, res, next) => {
         ];
     }
 
-
-
-    // console.log(`${colores.info('DEBUG FOLIOS TERMINADOS')}  terminados? ${terminados}`);
-    // console.log(`${colores.info('DEBUG FOLIOS CON ORDENES')}  ORDENES? ${conOrdenes}`);
-    // console.log(`${colores.info('DEBUG FOLIOS filtros')}  filtros: ${JSON.stringify(filtros)}`);
-
-
     Folio.find(filtros)
         .sort({ fechaEntrega: '1' })
         .skip(desde)
         .limit(limite)
-        // Es importante que el modelo se importe con 
-        // require de otra manera el populate dara error.
-        .populate('cliente', 'sae nombre')
-        .populate('vendedor', 'nombre')
-        .populate({
-            path: 'folioLineas.modeloCompleto',
-            populate: {
-                path: 'modelo tamano color terminado'
-            }
-        })
-        .populate('folioLineas.')
-        .populate('folioLineas.ordenes.ubicacionActual.departamento')
-        .populate('folioLineas.ordenes.siguienteDepartamento.departamento')
-        .populate('folioLineas.ordenes.trayectoNormal.departamento')
         .exec().then(folios => {
 
             // Contamos los datos totales que hay registrados, 
@@ -107,44 +86,8 @@ app.get('/', (req, res, next) => {
 // ============================================
 
 app.get('/:id', (req, res) => {
-
     var id = req.params.id;
-    // Popular
-    const populate = {
-        path: 'folioLineas.modeloCompleto folioLineas. ',
-        populate: {
-            path: 'modelo tamano color terminado  familiaDeProcesos procesosEspeciales.proceso',
-            populate: {
-                path: 'procesos.proceso departamento',
-                populate: {
-                    path: 'departamento'
-                }
-            }
-        }
-    };
-
     Folio.findById(id)
-        // .populate('cliente', 'sae nombre')
-        .populate('folioLineas.ordenes.trayectoNormal.departamento')
-        .populate({
-            path: 'cliente',
-            populate: {
-                path: 'laserados '
-
-            }
-        })
-        .populate('vendedor', 'nombre')
-        .populate({
-            path: 'folioLineas',
-            populate: {
-                path: 'modeloCompleto ',
-                populate: {
-                    path: ' modelo tamano color terminado'
-                }
-            }
-        })
-        .populate({ path: 'folioLineas.procesos.proceso', populate: { path: 'departamento' } })
-        .populate(populate)
         .exec()
         .then(folioEncontrado => {
             if (!folioEncontrado) {
@@ -181,7 +124,6 @@ app.get('/:id', (req, res) => {
 // ============================================
 
 app.put('/:id', (req, res) => {
-    console.log(colores.info('/hospital') + '[put] Funcionando.');
     var id = req.params.id;
     var body = req.body;
 
@@ -198,7 +140,6 @@ app.put('/:id', (req, res) => {
 
     Folio.findOneAndUpdate({ '_id': id }, set, (err, folioModificado) => {
         if (err) {
-            console.log(colores.danger('Error PUT - folio') + 'Error al buscar folio. =>' + err);
             return res.status(500).json({
                 ok: false,
                 mensaje: 'Error al buscar folio.',
@@ -274,7 +215,6 @@ app.delete('/:id', (req, res) => {
     Folio.findByIdAndRemove(id, (err, folioBorrado) => {
         if (err) {
             var msj = 'Error al borrar folio';
-            console.log(colores.danger('Error DELETE - Folio') + `${msj} =>` + err);
             return res.status(500).json({
                 ok: false,
                 mensaje: `${msj}`,
@@ -284,7 +224,6 @@ app.delete('/:id', (req, res) => {
 
         if (!folioBorrado) {
             var msj2 = 'No existe un folio con ese id.';
-            console.log(colores.danger('Error DELETE - Folio') + `${msj2} =>` + err);
             return res.status(400).json({
                 ok: false,
                 mensaje: msj2,
@@ -381,7 +320,6 @@ app.get('/cliente/:id', (req, res) => {
                 });
 
             }
-            console.log(resp)
             return RESP._200(res, null, [
                 { tipo: 'folios', datos: resp[0] },
                 { tipo: 'total', datos: resp[1] },

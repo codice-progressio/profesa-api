@@ -428,9 +428,19 @@ app.get('/quimica', (req, res, next) => {
 
         foliosCoincidentes.forEach(folio => {
             folio.folioLineas.forEach(pedido => {
+                // Agregamos a todas las ordenes el cliente.
+                pedido.ordenes.forEach((orden) => {
+                    orden['cliente'] = folio.cliente
+                    orden['laserCliente'] = pedido.laserCliente
+
+                    // No necesitamos cargar los modelos completos autorizados!
+                    delete orden['cliente'].modelosCompletosAutorizados
+                })
                 ordenesSinFiltrar = ordenesSinFiltrar.concat(pedido.ordenes);
             });
         });
+
+
 
 
         /**
@@ -517,8 +527,8 @@ app.get('/quimica', (req, res, next) => {
             { tipo: 'pendientes', datos: ordenesPendientes },
             { tipo: 'trabajando', datos: ordenesTrabajandose },
             { tipo: 'disponibles', datos: ordenesDisponibles },
-            { tipo: 'TOTAL', datos: ordenesPendientes.length + ordenesTrabajandose.length + ordenesDisponibles.length },
-            { tipo: 'ordenesSinFiltrar', datos: ordenesSinFiltrar.length },
+            // { tipo: 'TOTAL', datos: ordenesPendientes.length + ordenesTrabajandose.length + ordenesDisponibles.length },
+            // { tipo: 'ordenesSinFiltrar', datos: ordenesSinFiltrar.length },
 
         ]);
 

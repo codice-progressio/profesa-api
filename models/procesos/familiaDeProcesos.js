@@ -60,16 +60,19 @@ let eliminarRelacionados = function(next) {
 /**
  *Esta funcion revisa si la familia tiene el proceso Entrega de ordenes a produccion
  como primera opcion. Simpre debe ser asi y por tanto si no lo tiene manda error. 
+ Y tambien los procesos de empaque y producto terminado respectivamente al final 
  *
  * @param {*} next
  */
-var comprobarQueLaFamiliaTieneElProcesoEntregaDeOrdenesAProduccion = function(next) {
+var comprobarQueLaFamiliaTieneElProcesoObligatorios = function(next) {
 
     // Obtenemos los id por default. 
 
     mongoose.models.Defaults.find().exec().then(defaults => {
-            // Obtenemos el id que nos interesa. 
+            console.log('estamos aqui')
+                // Obtenemos el id que nos interesa. 
             let idControlDeProduccion = defaults[0].PROCESOS.CONTROL_DE_PRODUCCION;
+
 
             let i_fueraDeOrden;
 
@@ -115,10 +118,98 @@ var comprobarQueLaFamiliaTieneElProcesoEntregaDeOrdenesAProduccion = function(ne
         .catch(err => {
             next(err);
         });
-
-
-
 };
+
+
+/**
+ *Esta funcion se encarga de comprobar que el proceso de empaque y producto terminado
+ se encuentren en todas las familias de procesos y que sean los dos ultimos en el orden
+ mencionado. 
+ *
+ * @param {*} next
+ */
+function comprobarEmpaqueYProductoTerminado(next) {
+    mongoose.models.Defaults.find().exec().then(defaults => {
+            /**
+             * El id del proceso de empaque final. 
+             */
+            let idEmpaque = defaults[0].PROCESOS.EMPAQUE.toString();
+
+            /**
+             * El id del producto terminado. (El proceso que debe ser final. );
+             */
+            let idProductoTerminado = defaults[0].PROCESOS.PRODUCTO_TERMINADO.toString();
+
+            return Promise.all([
+                mongoose.models.Proceso.findById(idEmpaque).exec(),
+                mongoose.models.Proceso.findById(idProductoTerminado).exec()
+            ])
+
+        }).then((resp) => {
+            let procesoEmpaque = resp[0]
+            let procesoProductoTerminado = resp[1]
+
+            // El orden es importante.
+            this.procesos = agregarProcesoAlFinal(procesoEmpaque, this.procesos);
+            this.procesos = agregarProcesoAlFinal(procesoProductoTerminado, this.procesos);
+            next();
+
+        })
+        .catch(err => {
+            next(err);
+        });
+
+}
+
+
+
+/**
+ *Agrega al final el proceso que se le pase como paramentro. Si existe, lo recorre.
+ * @param {*} procesoAAgregar El proceso que se quiere agregar al final. 
+ * @param {*} procesos La lista de procesos que se quiere modificar. 
+ * @returns La lista de procesos modificada. 
+ */
+function agregarProcesoAlFinal(procesoAAgregar, procesos) {
+
+    /**
+     * Define si existe el proceso dentro del arreglo por lo menos una vez. 
+     * Si asi es lo va a recorrer. La cantidad de existencias que haya. 
+     */
+    let existe = false
+        /**
+         * La posicion donde se encuentra la coincidencia que se va a acomodar. 
+         */
+    let posicion = 0
+
+    // Recorremos todo el arreglo buscando el proceso. 
+    for (let i = 0; i < procesos.length; i++) {
+        const proceso = procesos[i];
+        if (proceso.proceso._id.toString() === procesoAAgregar._id.toString()) {
+            existe = true
+            posicion = i
+        }
+
+    }
+
+    if (existe) {
+        // es el ultimo?
+        if (posicion !== procesos.length) {
+            // No es el ultimo, lo movemos al ultimo cortando. 
+            // OJO!!! Se obtiene un arreglo y no directamente el objeto de tipo
+            // procesos. Para poder acceder al objeto hay que obtener el primer elemento del 
+            // array
+            let proceso = procesos.splice(posicion, 1)[0]
+            procesos.push(proceso)
+        }
+        // Es el ultimo, no hacemos nada. 
+    } else {
+        // No existe. Lo creamos. 
+        procesos.push({ proceso: procesoAAgregar, orden: 0 });
+    }
+
+    return procesos;
+}
+
 
 
 
@@ -130,7 +221,8 @@ familiaDeProcesosSchema
     .pre('findById', autoPopulate)
     // El orden es importante por que estamos suponiendo que hay un _id a la 
     // hora de comprobar este pre. 
-    .pre('save', comprobarQueLaFamiliaTieneElProcesoEntregaDeOrdenesAProduccion);
+    .pre('save', comprobarQueLaFamiliaTieneElProcesoObligatorios)
+    .pre('save', comprobarEmpaqueYProductoTerminado);
 
 
 

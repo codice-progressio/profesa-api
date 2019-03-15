@@ -58,7 +58,21 @@ app.get('/laser', (req, res) => {
             // por si las necesito en el GUI.
             foliosCoincidentes.forEach(folio => {
                 folio.folioLineas.forEach(pedido => {
+                    pedido.ordenes.map((orden) => {
+
+                        orden['cliente'] = folio.cliente
+                        orden['laserCliente'] = pedido.laserCliente
+                        orden['observacionesFolio'] = folio.observaciones
+                        orden['observacionesPedido'] = pedido.observaciones
+
+                        delete orden['cliente'].modelosCompletosAutorizados
+
+
+                    })
+
                     ordenes = ordenes.concat(pedido.ordenes);
+
+
                 });
             });
 

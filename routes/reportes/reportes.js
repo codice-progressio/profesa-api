@@ -62,8 +62,8 @@ app.get('/laser', (req, res) => {
 
                         orden['cliente'] = folio.cliente
                         orden['laserCliente'] = pedido.laserCliente
-                        orden['observacionesFolio'] = folio.observaciones
-                        orden['observacionesPedido'] = pedido.observaciones
+                        orden['observacionesFolio'] = folio.observaciones ? folio.observaciones : null
+                        orden['observacionesPedido'] = pedido.observaciones ? pedido.observaciones : null
 
                         delete orden['cliente'].modelosCompletosAutorizados
 

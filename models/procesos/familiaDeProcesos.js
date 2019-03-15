@@ -162,6 +162,17 @@ function comprobarEmpaqueYProductoTerminado(next) {
 }
 
 
+/** 
+ * Esta funcion es para agregar procecesos al final de una lista de de 'procesos'.
+ * Recordando que es un objeto diferente de proceso. Procesos contiene el numero de orden
+ * y el proceso. 
+ * 
+ * Llama a la funcion que esta aqui mismo pero para que se pueda utlizar por fuera. 
+ * 
+ */
+familiaDeProcesosSchema.statics.agregarProcesoAlFinal = function(procesoAAgregar, procesos) {
+    return agregarProcesoAlFinal(procesoAAgregar, procesos)
+}
 
 /**
  *Agrega al final el proceso que se le pase como paramentro. Si existe, lo recorre.
@@ -170,7 +181,6 @@ function comprobarEmpaqueYProductoTerminado(next) {
  * @returns La lista de procesos modificada. 
  */
 function agregarProcesoAlFinal(procesoAAgregar, procesos) {
-
     /**
      * Define si existe el proceso dentro del arreglo por lo menos una vez. 
      * Si asi es lo va a recorrer. La cantidad de existencias que haya. 
@@ -193,7 +203,7 @@ function agregarProcesoAlFinal(procesoAAgregar, procesos) {
 
     if (existe) {
         // es el ultimo?
-        if (posicion !== procesos.length) {
+        if (posicion !== procesos.length - 1) {
             // No es el ultimo, lo movemos al ultimo cortando. 
             // OJO!!! Se obtiene un arreglo y no directamente el objeto de tipo
             // procesos. Para poder acceder al objeto hay que obtener el primer elemento del 

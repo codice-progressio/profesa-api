@@ -30,7 +30,6 @@ var Tenido = [{
 
 function comprobarCantidadesDeTenido(value) {
     var total = 0;
-    console.log(JSON.stringify(value));
     value.forEach(e => {
         // Sumamos todas las cantidades que se pasaron. 
         total += e.cantidad;

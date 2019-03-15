@@ -35,7 +35,7 @@ var folioSchema = new Schema({
 
 folioSchema.plugin(uniqueValidator, { message: '\'{PATH}\' debe ser único.' });
 
-var autoPopulate = function(next) {
+let autoPopulate = function(next) {
 
 
     this.populate('cliente', 'sae nombre');
@@ -54,7 +54,6 @@ var autoPopulate = function(next) {
 
     ];
 
-
     populantes.forEach(pop => {
         this.populate(`folioLineas.ordenes.${pop}.departamento`);
         this.populate(`folioLineas.ordenes.${pop}.laser.maquinaActual`);
@@ -64,16 +63,72 @@ var autoPopulate = function(next) {
 
     this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');
     this.populate('folioLineas.ordenes.modeloCompleto');
-
-
-
-
-
-
+    this.populate('folioLineas.procesos.proceso');
 
     this.populate('cliente');
     next();
 };
+
+
+/**
+ *Agrega el proceso de empaque de producto y remision de producto terminado 
+ al pedido nuevo que se este guardando que viene desde almacen. 
+ *
+ * @param {*} next
+ */
+function agregarProcesosFinalesPedidosDeAlmacen(next) {
+    // Comprobamos todos los pedidos que vienen. Asi evitamos purrunes. 
+    // Cargamos los procesos por defecto. 
+    mongoose.models.Defaults.find().exec().then(defaults => {
+            /**
+             * El id del proceso de empaque final. 
+             */
+            let idEmpaque = defaults[0].PROCESOS.EMPAQUE.toString();
+
+            /**
+             * El id del producto terminado. (El proceso que debe ser final. );
+             */
+            let idProductoTerminado = defaults[0].PROCESOS.PRODUCTO_TERMINADO.toString();
+
+            return Promise.all([
+                mongoose.models.Proceso.findById(idEmpaque).exec(),
+                mongoose.models.Proceso.findById(idProductoTerminado).exec()
+            ])
+
+        }).then((resp) => {
+            let procesoEmpaque = resp[0]
+            let procesoProductoTerminado = resp[1]
+
+            // El orden es importante.
+            let FamiliaDeProcesos = mongoose.models.FamiliaDeProcesos;
+
+            this.folioLineas.map((linea) => {
+                // Tiene que ser de almacen. 
+                if (linea.almacen) {
+                    // Es de almacen. 
+                    // Revisamos los procesos que tiene agregadados recordando 
+                    // que todos cuando un pedido se genera para surtir de almacen
+                    // solo se toman en cuenta los que estan agregados directamente 
+                    // al pedido y no los del modelo. 
+
+                    linea.procesos = FamiliaDeProcesos.agregarProcesoAlFinal(procesoEmpaque, linea.procesos)
+                    linea.procesos = FamiliaDeProcesos.agregarProcesoAlFinal(procesoProductoTerminado, linea.procesos)
+
+                    for (let i = 0; i < linea.procesos.length; i++) {
+                        const procesos = linea.procesos[i];
+                        procesos.orden = `0.${i + 2}`
+                    }
+                }
+            })
+            next();
+        })
+        .catch(err => {
+            next(err);
+        });
+}
+
+
+
 folioSchema
     .pre('find', autoPopulate)
     .pre('findOne', autoPopulate)
@@ -86,7 +141,9 @@ folioSchema
         verificarFolioTerminado(this);
         cargarDatosGeneralesDeFolioYPedidoEnOrden(this);
         next();
-    });
+    })
+    .pre('save', agregarProcesosFinalesPedidosDeAlmacen)
+
 
 folioSchema.post('save', function() {
     // Si la linea se surte de almacen entonces la trayectoria tiene 

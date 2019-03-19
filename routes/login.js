@@ -213,6 +213,7 @@ function obtenerMenu(ROLE) {
             icono: 'fa fa-pie-chart',
             submenu: [
                 { titulo: 'Historial de folios', url: '/folios/historial' },
+                { titulo: 'Historial de pedidos', url: '/pedidos/historial' },
                 { titulo: 'Laser', url: '/reportes/laser' },
                 { titulo: 'Tranformacion', url: '/reportes/transformacion' },
                 { titulo: 'Quimica', url: '/reportes/quimica' },

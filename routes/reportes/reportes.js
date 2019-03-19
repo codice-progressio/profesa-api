@@ -797,3 +797,56 @@ function tieneDepartamentosAntesDe_N_Paso(orden, idTransformacionDepto, n_pasoKe
     // paso para despues mandarla a llamar de manera facil. 
     return contadorDeptosFaltantes;
 }
+
+
+
+app.get('/historial/pedidos', (req, res) => {
+
+    // Obtenemos todos los parametros. 
+
+    let parametros = req.query;
+
+
+    let objetoDeBusqueda = {
+        terminado: false,
+        numeroDeFolio: parametros.folio,
+        'folioLineas.pedido': parametros.pedido,
+        'folioLineas.modelo._id': parametros.modelo,
+        'folioLineas.tamano._id': parametros.tamano,
+        'folioLineas.color._id': parametros.color,
+        'folioLineas.terminado._id': parametros.terminado,
+        'cliente._id': parametros.cliente,
+        'vendedor._id': parametros.vendedor,
+    }
+
+    // Eliminar vacios
+    let keys = Object.keys(objetoDeBusqueda)
+
+    for (let i = 0; i < keys.length; i++) {
+        const key = keys[i];
+        if (!objetoDeBusqueda[key]) {
+            delete objetoDeBusqueda[key]
+        }
+    }
+
+
+    // desdeEl: parametros.desdeEl,
+    // hasta: parametros.hasta,
+    // orden: parametros.orden 
+    console.log(objetoDeBusqueda)
+
+    Folio.find(objetoDeBusqueda, { 'folioLineas.$.pedido': '1-0' }).then(folios => {
+
+            return RESP._200(res, null, [
+                { tipo: 'folios', datos: folios },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error filtrando los folios',
+                err: err,
+            });
+        });
+
+})

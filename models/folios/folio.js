@@ -28,7 +28,8 @@ var folioSchema = new Schema({
     porcentajeAvance: { type: Number, min: 0, max: 100 },
     ordenesGeneradas: { type: Boolean, default: false },
     impreso: { type: Boolean, default: false },
-    terminado: { type: Boolean, default: false }
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: Date
 
 
 }, { collection: 'folios', timestamps: true });
@@ -530,6 +531,9 @@ function verificarFolioTerminado(folio) {
                 break;
             }
         }
+
+        // Todo esta terminado
+        folio.fechaDeTermino = new Date()
     }
 
 }

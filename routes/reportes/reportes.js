@@ -806,89 +806,88 @@ function tieneDepartamentosAntesDe_N_Paso(orden, idTransformacionDepto, n_pasoKe
 app.get('/historial/pedidos', (req, res) => {
 
     // Obtenemos todos los parametros. 
-
     let parametros = req.query;
-
 
     // Cargamos los objetos de busqueda para obtener 
     // los parametros que mandamos por el query. 
     let objetoDeBusqueda = {
-            /**
-             * Define si se va a buscar dentro de los folios terminados
-             * o los que todavia estan en produccion. 
-             */
-            terminado: parametros.foliosTerminados == '0' ? false : parametros.foliosTerminados === '1' ? true : undefined,
-            /**
-             * El id del folio que se quiere buscar.
-             */
-            numeroDeFolio: parametros.folio,
-            /**
-             * El id del pedido que se quiere buscar.
-             */
-            folioLineas_pedido: parametros.pedido,
-            /**
-             * El id del modelo que se quiere buscar.
-             */
-            folioLineas_modelo: parametros.modelo,
-            /**
-             * El id del tamano que se quiere buscar.
-             */
-            folioLineas_tamano: parametros.tamano,
-            /**
-             * El id del color que se quiere buscar.
-             */
-            folioLineas_color: parametros.color,
-            /**
-             * El id del terminado que se quiere buscar.
-             */
-            folioLineas_terminado: parametros.terminado,
-            /**
-             * El id del cliente
-             */
-            cliente: parametros.cliente,
-            /**
-             * El id del vendedor. 
-             */
-            vendedor: parametros.vendedor,
-            /**
-             * La cantidad de registros que se van a mostrar. 
-             */
-            limite: parametros.limite,
-            /**
-             * Cantidad de resgistros que se va a saltar. Se usa con skip. 
-             */
-            desde: parametros.desde,
-            // fechas
-            /**
-             * La fecha de creacion desde donde se va a empezar a filtrar. 
-             */
-            fechaCreacionDesdeEl: parametros.fechaCreacionDesdeEl,
-            /**
-             * La fecha de creacion hasta la cual se va a filtrar. 
-             */
-            fechaCreacionHasta: parametros.fechaCreacionHasta,
-            /**
-             * La fecha de entrega estimada desde donde se va a empezar a filtrar. 
-             */
-            fechaEntregaEstimadaDesdeEl: parametros.fechaEntregaEstimadaDesdeEl,
-            /**
-             * La fecha de entrega hasta la cual se va a filtrar. 
-             */
-            fechaEntregaEstimadaHasta: parametros.fechaEntregaEstimadaHasta,
-            /**
-             * La fecha de finalizacion desde donde se va a empezar a filtrar. 
-             */
-            fechaFinalizacionFolioDesdeEl: parametros.fechaFinalizacionFolioDesdeEl,
-            /**
-             * La fecha de finalizacion hasta la cual se va a filtrar. 
-             */
-            fechaFinalizacionFolioHasta: parametros.fechaFinalizacionFolioHasta,
-            /**
-             * Los campos para ordenar. Se utiliza la notacioin tipo campo1#-1@campo2#+1
-             */
-            sortCampos: parametros.sortCampos
-        }
-        // Eliminar vacios
+        /**
+         * Define si se va a buscar dentro de los folios terminados
+         * o los que todavia estan en produccion. 
+         */
+        terminado: parametros.foliosTerminados == '0' ? false : parametros.foliosTerminados === '1' ? true : undefined,
+        /**
+         * El id del folio que se quiere buscar.
+         */
+        numeroDeFolio: parametros.folio,
+        /**
+         * El id del pedido que se quiere buscar.
+         */
+        folioLineas_pedido: parametros.pedido,
+        /**
+         * El id del modelo que se quiere buscar.
+         */
+        folioLineas_modelo: parametros.modelo,
+        /**
+         * El id del tamano que se quiere buscar.
+         */
+        folioLineas_tamano: parametros.tamano,
+        /**
+         * El id del color que se quiere buscar.
+         */
+        folioLineas_color: parametros.color,
+        /**
+         * El id del terminado que se quiere buscar.
+         */
+        folioLineas_terminado: parametros.terminado,
+        /**
+         * El id del cliente
+         */
+        cliente: parametros.cliente,
+        /**
+         * El id del vendedor. 
+         */
+        vendedor: parametros.vendedor,
+        /**
+         * La cantidad de registros que se van a mostrar. 
+         */
+        limite: parametros.limite,
+        /**
+         * Cantidad de resgistros que se va a saltar. Se usa con skip. 
+         */
+        desde: parametros.desde,
+        // fechas
+        /**
+         * La fecha de creacion desde donde se va a empezar a filtrar. 
+         */
+        fechaCreacionDesdeEl: parametros.fechaCreacionDesdeEl,
+        /**
+         * La fecha de creacion hasta la cual se va a filtrar. 
+         */
+        fechaCreacionHasta: parametros.fechaCreacionHasta,
+        /**
+         * La fecha de entrega estimada desde donde se va a empezar a filtrar. 
+         */
+        fechaEntregaEstimadaDesdeEl: parametros.fechaEntregaEstimadaDesdeEl,
+        /**
+         * La fecha de entrega hasta la cual se va a filtrar. 
+         */
+        fechaEntregaEstimadaHasta: parametros.fechaEntregaEstimadaHasta,
+        /**
+         * La fecha de finalizacion desde donde se va a empezar a filtrar. 
+         */
+        fechaFinalizacionFolioDesdeEl: parametros.fechaFinalizacionFolioDesdeEl,
+        /**
+         * La fecha de finalizacion hasta la cual se va a filtrar. 
+         */
+        fechaFinalizacionFolioHasta: parametros.fechaFinalizacionFolioHasta,
+        /**
+         * Los campos para ordenar. Se utiliza la notacioin tipo campo1#-1@campo2#+1
+         */
+        sortCampos: parametros.sortCampos
+    }
+
+    // Eliminar vacios
     let keys = Object.keys(objetoDeBusqueda)
         // Quitamos todos los parametros de los cuales 
         // no se recivio nada. Nos brincamos el primer
@@ -901,14 +900,10 @@ app.get('/historial/pedidos', (req, res) => {
         }
     }
 
-    console.log(Object.keys(objetoDeBusqueda))
-
-
     /**
      * Este arreglo contiene los diferentes pasos de filtro del aggregate. 
      */
     let arregloRedact = []
-
 
     if (!objetoDeBusqueda.hasOwnProperty('terminado')) {
         return RESP._500(res, {
@@ -946,6 +941,7 @@ app.get('/historial/pedidos', (req, res) => {
         if (objetoDeBusqueda.hasOwnProperty('fechaCreacionDesdeEl')) {
             obCreacion.$match.fechaFolio.$gte = new Date(objetoDeBusqueda.fechaCreacionDesdeEl)
         }
+
         if (objetoDeBusqueda.hasOwnProperty('fechaCreacionHasta')) {
             obCreacion.$match.fechaFolio.$lte = new Date(objetoDeBusqueda.fechaCreacionHasta)
         }
@@ -1013,9 +1009,6 @@ app.get('/historial/pedidos', (req, res) => {
 
     }
 
-
-
-
     // <!-- 
     // =====================================
     //  END Filtros de fechas
@@ -1045,9 +1038,9 @@ app.get('/historial/pedidos', (req, res) => {
         // Si hay pedido pero no hay numero de folio entones hacemos un match con folioLineas.pedido.
         // De esta manera
         if (!objetoDeBusqueda.hasOwnProperty('numeroDeFolio')) {
+
             // Si no hay pedido, buscamos que solo coincida contra el pedido de manera
             // que solo se muestre el folio que contiene el pedido. 
-
             arregloRedact.push({ $match: { 'folioLineas.pedido': objetoDeBusqueda.folioLineas_pedido } })
 
         }
@@ -1084,19 +1077,15 @@ app.get('/historial/pedidos', (req, res) => {
         }, )
     }
 
-
     // <!-- 
     // =====================================
     //  ESTA SECCION ES EL LOOKUP-> POPULATE PERO DESDE MONGODB
     // =====================================
     // -->
 
-
     // Esta seccion de aqui se encarga de cargar de manera propia de mongoDB las referencias
     // contenidas dentro de folioLineas.modeloCompleto. 
     // Es una especia de populate. 
-
-
 
     /**
      * Un arreglo que contiene la agrupacion y proyeccion para volver a
@@ -1297,7 +1286,6 @@ app.get('/historial/pedidos', (req, res) => {
 
         for (let i = 0; i < lv1.length; i++) {
             const element = lv1[i];
-            console.log(element)
             let c = element.split('>')[0]
             let o = element.split('>')[1]
 
@@ -1316,11 +1304,6 @@ app.get('/historial/pedidos', (req, res) => {
             });
         }
 
-        console.log(lv2)
-
-
-
-
         arregloRedact.push({ $sort: lv2 })
     }
 
@@ -1338,14 +1321,12 @@ app.get('/historial/pedidos', (req, res) => {
     }
 
 
-
     // <!-- 
     // =====================================
     //  END Sort, Limit & skip
     // =====================================
     // -->
 
-    console.log(JSON.stringify(arregloRedact))
 
     Folio.aggregate(arregloRedact).then(folios => {
             return RESP._200(res, null, [

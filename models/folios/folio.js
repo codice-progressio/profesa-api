@@ -29,7 +29,8 @@ var folioSchema = new Schema({
     ordenesGeneradas: { type: Boolean, default: false },
     impreso: { type: Boolean, default: false },
     terminado: { type: Boolean, default: false },
-    fechaTerminado: Date
+    fechaTerminado: Date,
+    cantidadProducida: {type: Number, default: 0 }
 
 
 }, { collection: 'folios', timestamps: true });
@@ -519,7 +520,12 @@ function verificarFolioTerminado(folio) {
         const linea = folio.folioLineas[i];
         // Recorremos todas las ordenes.
         folio.terminado = true;
+        folio.fechaTerminado = new Date()
         linea.terminado = true;
+        linea.fechaTerminado = new Date()
+
+
+
         for (let o = 0; o < linea.ordenes.length; o++) {
             const orden = linea.ordenes[o];
             // Si una sola orden no esta terminada 
@@ -527,13 +533,12 @@ function verificarFolioTerminado(folio) {
             if (!orden.terminada) {
                 folio.terminado = false;
                 linea.terminado = false;
-                // Break por que hay que comprobar los demas pedidos.
+                folio.fechaTerminado = null,
+                    linea.fechaTerminado = null
+                    // Break por que hay que comprobar los demas pedidos.
                 break;
             }
         }
-
-        // Todo esta terminado
-        folio.fechaDeTermino = new Date()
     }
 
 }
@@ -566,6 +571,30 @@ function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
 
         });
     });
+}
+
+/**
+ *Suma las ordenes terminadas a los pedidos y los folios. 
+ *
+ * @param {*} folio
+ */
+function sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas( folio ) {
+
+    folio.folioLineas.map( (pedido)=>{
+        pedido.ordenes.map( (orden)=>{
+            
+            if( orden.terminada ){
+                let trayectoEmpaque = orden.trayectoNormal.filter( (o)=> )
+                folio.cantidadProducida+= ordenes
+
+            }
+            
+
+
+        })
+    })
+
+
 }
 
 module.exports = mongoose.model('Folio', folioSchema);

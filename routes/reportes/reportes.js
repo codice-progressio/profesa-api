@@ -1156,8 +1156,68 @@ app.get('/historial/pedidos', (req, res) => {
             }
         },
 
+
+
         // ESTO ES MUY NECESARIO. Necesitamos que modelo completo no sea un arra. 
         { $unwind: { path: "$folioLineas.modeloCompleto", preserveNullAndEmptyArrays: true } },
+
+        // Cargamos las referencias para el modelo, tamano, color, terminado.
+        {
+            $lookup: {
+                // Modelo
+                from: 'modelos',
+                localField: 'folioLineas.modeloCompleto.modelo',
+                foreignField: '_id',
+                as: 'folioLineas.modeloCompleto.modelo'
+            }
+        }, { $unwind: { path: "$folioLineas.modeloCompleto.modelo", preserveNullAndEmptyArrays: true } }, {
+            $lookup: {
+                from: 'tamanos',
+                localField: 'folioLineas.modeloCompleto.tamano',
+                foreignField: '_id',
+                as: 'folioLineas.modeloCompleto.tamano'
+            }
+        }, { $unwind: { path: "$folioLineas.modeloCompleto.tamano", preserveNullAndEmptyArrays: true } },
+
+        {
+            $lookup: {
+                from: 'colores',
+                localField: 'folioLineas.modeloCompleto.color',
+                foreignField: '_id',
+                as: 'folioLineas.modeloCompleto.color'
+            }
+        }, { $unwind: { path: "$folioLineas.modeloCompleto.color", preserveNullAndEmptyArrays: true } }, {
+            $lookup: {
+                from: 'terminados',
+                localField: 'folioLineas.modeloCompleto.terminado',
+                foreignField: '_id',
+                as: 'folioLineas.modeloCompleto.terminado'
+            }
+        }, { $unwind: { path: "$folioLineas.modeloCompleto.terminado", preserveNullAndEmptyArrays: true } }
+
+        , {
+            $lookup: {
+                from: 'clientes',
+                localField: 'cliente',
+                foreignField: '_id',
+                as: 'cliente'
+            }
+        }, { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
+
+        {
+            $lookup: {
+                from: 'usuarios',
+                localField: 'vendedor',
+                foreignField: '_id',
+                as: 'vendedor'
+            }
+        }, {
+            // Quitamos el password. 
+            $project: { "vendedor.password": 0 }
+        }, {
+            // Unimos ahora si todo. 
+            $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true }
+        },
 
     )
 

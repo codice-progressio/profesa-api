@@ -85,7 +85,9 @@ const folioLineaSchema = new Schema({
     // Este proceso debe afectar al órden en que se estable las órdenes. 
     procesos: [procesosSchema],
     observaciones: { type: String },
-    terminado: { type: Boolean, default: false }
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: Date,
+    cantidadProducida: {type: Number, default: 0 }
 
     // Esto de aqui es para que mongose no escriba
     //  folioLineas en vez de folioLineaes

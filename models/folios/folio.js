@@ -30,7 +30,7 @@ var folioSchema = new Schema({
     impreso: { type: Boolean, default: false },
     terminado: { type: Boolean, default: false },
     fechaTerminado: Date,
-    cantidadProducida: {type: Number, default: 0 }
+    cantidadProducida: { type: Number, default: 0 }
 
 
 }, { collection: 'folios', timestamps: true });
@@ -578,17 +578,17 @@ function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
  *
  * @param {*} folio
  */
-function sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas( folio ) {
+function sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas(folio) {
 
-    folio.folioLineas.map( (pedido)=>{
-        pedido.ordenes.map( (orden)=>{
-            
-            if( orden.terminada ){
-                let trayectoEmpaque = orden.trayectoNormal.filter( (o)=> )
-                folio.cantidadProducida+= ordenes
+    folio.folioLineas.map((pedido) => {
+        pedido.ordenes.map((orden) => {
+
+            if (orden.terminada) {
+                // let trayectoEmpaque = orden.trayectoNormal.filter( (o)=> )
+                folio.cantidadProducida += ordenes
 
             }
-            
+
 
 
         })

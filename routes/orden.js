@@ -39,7 +39,7 @@ function esDeptoActual(orden, depto) {
 // ============================================
 // Recive la órden que se le pase. 
 // ============================================
-// Todos los departamentos necesitan recivir las 
+// Todos los departamentos necesitan recibir las 
 // órdenes antes de empezar a trabajarlas. 
 // 
 // Se se pasa req.query.empezarATrabajar en true
@@ -211,9 +211,9 @@ app.get('/:idOrden/:departamento', (req, res) => {
             let msj_Err = '';
             if (tamanoTrayecto > 0) {
                 const deptoAnterior = orden.trayectoRecorrido[tamanoTrayecto - 1];
-                msj_Err = `Esta órden ya fue terminada por el departamento de ${deptoAnterior.departamento.nombre}, pero es necesario que la recivas para poder empezar a trabajarla.`;
+                msj_Err = `Esta órden ya fue terminada por el departamento de ${deptoAnterior.departamento.nombre}, pero es necesario que la recibas para poder empezar a trabajarla.`;
             } else {
-                const EsteDepto = `Para poder registrarla es necesario que la recivas primero.`;
+                const EsteDepto = `Para poder registrarla es necesario que la recibas primero.`;
                 msj_Err = `La órden todavía no ha sido entregada para empezar su producción. ` + EsteDepto;
             }
             return RESP._400(res, {
@@ -477,10 +477,10 @@ app.post('/', (req, res, next) => {
 
 // ============================================
 // Modifica las ordenes que se le pasen para 
-// recivirlas y entregaras en el depto. Control de produccion.
+// recibirlas y entregaras en el depto. Control de produccion.
 // ============================================
 
-app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
+app.put('/controlDeProduccionRecibirYEntregar', (req, res, next) => {
     const arreglo = req.body;
     // Obtenemos los defautls:
 
@@ -528,7 +528,7 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
         })
         .catch(err => {
             return RESP._500(res, {
-                msj: 'Hubo un error buscando las ordenes para recivirlas y entregarlas.',
+                msj: 'Hubo un error buscando las ordenes para recibirlas y entregarlas.',
                 err: err,
             });
         });
@@ -571,7 +571,6 @@ app.put('/:idOrden', (req, res) => {
 
         const orden = buscarOrdenDentroDeFolio(folio, id);
         const dep = Departamento.obtener(departamento.nombre)
-        console.log(`${colores.info('DEPTO OBTENIDO')} Departamento obtenido ${JSON.stringify(dep)}`)
         if (dep) {
 
             // ============================================
@@ -580,7 +579,7 @@ app.put('/:idOrden', (req, res) => {
 
             // schemaParaOrden[depto](orden, datos, departamento);
             // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
-            datosDeOrdenYAvanzar(orden, datos, dep._v);
+            datosDeOrdenYAvanzar(orden, datos, dep._vm);
 
             folio.save(err => {
                 if (err) {
@@ -663,6 +662,7 @@ app.put('/:idOrden', (req, res) => {
 
 
 function datosDeOrdenYAvanzar(orden, datos, depto) {
+
     orden.ubicacionActual[depto] = datos;
     avanzarCamino(orden);
 }
@@ -685,7 +685,7 @@ function avanzarCamino(orden, depto) {
             // como trayecto recorrido
             orden.trayectoRecorrido.push(ubicacionActual);
             orden.ubicacionActual = orden.siguienteDepartamento;
-            //No se da entrada por que hay que recivir la órden. 
+            //No se da entrada por que hay que recibir la órden. 
 
 
             // Si hay todavía un departamento en el trayecto normal

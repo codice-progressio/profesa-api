@@ -52,7 +52,7 @@ var trayectoSchema = new Schema({
     // Referente al orden secuencial de los departamentos. 
     orden: { type: String, require: [true, 'El órden es obligatorio.'] },
 
-    // El primer paso comenzar a trabajar una órden es recivirla en el proceso
+    // El primer paso comenzar a trabajar una órden es recibirla en el proceso
     // actual donde esta. (trayecto).
     recivida: { type: Boolean, default: false },
     // La fecha en que se recive. 

@@ -84,7 +84,7 @@ exports.verificarADMIN_ROLE = function(req, res, next) {
 exports.verificarADMIN_o_MismoUsuario = function(req, res, next) {
     var usuario = req.usuario;
     //Este tiene que vernid de la petición que se recive, 
-    // en este caso la vamos a recivir desde el put. 
+    // en este caso la vamos a recibir desde el put. 
     var id = req.params.id;
     var superPoderes =
         contieneElRole(usuario, CONST.ROLES.ADMIN_ROLE) ||

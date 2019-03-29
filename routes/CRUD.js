@@ -13,7 +13,7 @@ var CONSTANSTES = require('../utils/constantes');
  *
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
- * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
+ * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
  * @param {*} campoSortDefault El campo por defecto que se ordenara. 
  * @param {*} select Un string con los campos para el select. 
  * @return {total, [datos], msj } Retorna el objeto con la estructura comun y los datos consultados. Incluye el total de elementos de la bd. 
@@ -55,7 +55,7 @@ const get = function(modelo, app, nombreDeObjeto, campoSortDefault, select) {
  *
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
- * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
+ * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
  * @param {*} select  Un string con los campos para el select. 
  */
 const getById = function(modelo, app, nombreDeObjeto, select) {
@@ -116,7 +116,7 @@ const getById = function(modelo, app, nombreDeObjeto, select) {
  *
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
- * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
+ * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del get es en plurar (usuarios, modelos, tamanos, etc.)
  * @param {*} camposDeBusqueda Un arreglo donde se deben enlistar los campos de busqueda que se utilizaran en la busqueda.
  * @param {*} campoSortDefault El campo por defecto que se ordenara. 
  * @param {*} select  Un string con los campos para el select. 
@@ -182,7 +182,7 @@ const getBuscar = function(modelo, app, nombreDeObjeto, camposDeBusqueda, campoS
  * 
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
- * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
+ * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
  * @return { [datos], msj } Retorna el objeto con la estructura comun y los datos consultados.  
  */
 const post = function(modelo, app, nombreDeObjeto) {
@@ -215,7 +215,7 @@ const post = function(modelo, app, nombreDeObjeto) {
  *
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
- * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
+ * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
  * @param {*} objetoDeActualizacion El objeto que contiene la estrucutura de los datos que se van a actualizar. Es un objeto con los datos vacios. 
  * @return { [dato], msj } Retorna el objeto original y un mensaje de confirmacion.  
  * 
@@ -279,7 +279,7 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
  *
  * @param {*} modelo El modelo (schema) para realizar la consulta. 
  * @param {*} app El app que se llamaca con express() y que luego se exporta en el route. 
- * @param {*} nombreDeObjeto El nombre que recivira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
+ * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
  */
 const deletee = function(modelo, app, nombreDeObjeto) {
 

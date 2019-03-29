@@ -1,12 +1,13 @@
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
-var uniqueValidator = require('mongoose-unique-validator');
-var colores = require('../../utils/colors');
-var folioLineaSchema = require('./folioLinea');
-var NVU = require('../../config/nivelesDeUrgencia');
-var Schema = mongoose.Schema;
+let uniqueValidator = require('mongoose-unique-validator');
+let colores = require('../../utils/colors');
+let folioLineaSchema = require('./folioLinea');
+let NVU = require('../../config/nivelesDeUrgencia');
+let Schema = mongoose.Schema;
+let CONST = require('../../utils/constantes');
 
-var RESP = require('../../utils/respStatus');
+let RESP = require('../../utils/respStatus');
 
 // schmea. (key) no es obligatorio el nivel en el folio.
 delete NVU.KEY.required;
@@ -14,7 +15,7 @@ delete NVU.KEY.required;
 
 NVU.KEY.default = NVU.LV.A; //ALMACEN
 
-var folioSchema = new Schema({
+let folioSchema = new Schema({
 
     numeroDeFolio: { type: String, unique: true, required: [true, 'El folio es necesario'] },
     cliente: { type: Schema.Types.ObjectId, ref: 'Cliente', required: [true, 'El cliente es necesario'] },
@@ -142,6 +143,7 @@ folioSchema
         calcularPorcentajeDeAvance(this);
         verificarFolioTerminado(this);
         cargarDatosGeneralesDeFolioYPedidoEnOrden(this);
+        sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas(this)
         next();
     })
     .pre('save', agregarProcesosFinalesPedidosDeAlmacen)
@@ -579,22 +581,26 @@ function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
  * @param {*} folio
  */
 function sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas(folio) {
-
+    console.log(' estamos en sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas')
     folio.folioLineas.map((pedido) => {
+        console.log('revisando pedidos ')
         pedido.ordenes.map((orden) => {
-
+            console.log('revisando ordenes')
+            console.log('la orden esta terminada? ', orden.terminada)
             if (orden.terminada) {
-                // let trayectoEmpaque = orden.trayectoNormal.filter( (o)=> )
-                folio.cantidadProducida += ordenes
+                orden.trayectoRecorrido.map((trayecto) => {
+                    console.log('trayecto => ', trayecto)
 
+
+                    if (trayecto.departamento.nombre = CONST.DEPARTAMENTOS.EMPAQUE._n) {
+
+                        folio.cantidadProducida += trayecto.cantidadDeBoton
+
+                    }
+                })
             }
-
-
-
         })
     })
-
-
 }
 
 module.exports = mongoose.model('Folio', folioSchema);

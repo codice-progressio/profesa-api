@@ -164,19 +164,26 @@ app.use(function(err, req, res, next) {
 
 if (ENVIROMENT.esModoProduccion) {
     https.createServer({
-        key: fs.readFileSync('certificado/express-js.key'),
-        cert: fs.readFileSync('certificado/express-js.crt')
+        key: fs.readFileSync('certificado/api.192.168.1.149.key'),
+        cert: fs.readFileSync('certificado/api.192.168.1.149.crt')
     }, app).listen(ENVIROMENT.port, () => {
         console.log(ENVIROMENT.msj_mongoose_ok);
         defaults();
     });
 
 } else {
-    console.log('estamos en modo desarrollo escuchando con app')
-        // Escuchar peticiones cuando estamos trabajando en modo desarollo.
-    app.listen(ENVIROMENT.port, () => {
+
+    https.createServer({
+        key: fs.readFileSync('certificado/api.localhost.key'),
+        cert: fs.readFileSync('certificado/api.localhost.crt')
+    }, app).listen(ENVIROMENT.port, () => {
         console.log(ENVIROMENT.msj_mongoose_ok);
         defaults();
     });
+    //     // Escuchar peticiones cuando estamos trabajando en modo desarollo.
+    // app.listen(ENVIROMENT.port, () => {
+    //     console.log(ENVIROMENT.msj_mongoose_ok);
+    //     defaults();
+    // });
 
 }

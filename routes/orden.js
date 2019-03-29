@@ -580,7 +580,7 @@ app.put('/:idOrden', (req, res) => {
 
             // schemaParaOrden[depto](orden, datos, departamento);
             // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
-            datosDeOrdenYAvanzar(orden, datos, dep._v);
+            datosDeOrdenYAvanzar(orden, datos, dep._vm);
 
             folio.save(err => {
                 if (err) {

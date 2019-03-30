@@ -1271,7 +1271,7 @@ app.get('/historial/pedidos', (req, res) => {
         if (objetoDeBusqueda.hasOwnProperty('folioLineas_modelo')) {
             arregloRedact.push(
                 // Buscamos la coincidencia con el modelo
-                { $match: { 'folioLineas.modeloCompleto.modelo': ObjectId(objetoDeBusqueda.folioLineas_modelo) } },
+                { $match: { 'folioLineas.modeloCompleto.modelo._id': ObjectId(objetoDeBusqueda.folioLineas_modelo) } },
             )
         }
 
@@ -1279,15 +1279,15 @@ app.get('/historial/pedidos', (req, res) => {
         if (objetoDeBusqueda.hasOwnProperty('folioLineas_tamano')) {
             arregloRedact.push(
                 // Buscamos la coincidencia con el tamano
-                { $match: { 'folioLineas.modeloCompleto.tamano': ObjectId(objetoDeBusqueda.folioLineas_tamano) } },
+                { $match: { 'folioLineas.modeloCompleto.tamano._id': ObjectId(objetoDeBusqueda.folioLineas_tamano) } },
             )
         }
 
         // color
-        if (objetoDeBusqueda.hasOwnProperty('folioLineas_color')) {
+        if (objetoDeBusqueda.hasOwnProperty('folioLineas_color._id')) {
             arregloRedact.push(
                 // Buscamos la coincidencia con el color
-                { $match: { 'folioLineas.modeloCompleto.color': ObjectId(objetoDeBusqueda.folioLineas_color) } },
+                { $match: { 'folioLineas.modeloCompleto.color._id': ObjectId(objetoDeBusqueda.folioLineas_color) } },
             )
         }
 
@@ -1295,7 +1295,7 @@ app.get('/historial/pedidos', (req, res) => {
         if (objetoDeBusqueda.hasOwnProperty('folioLineas_terminado')) {
             arregloRedact.push(
                 // Buscamos la coincidencia con el terminado
-                { $match: { 'folioLineas.modeloCompleto.terminado': ObjectId(objetoDeBusqueda.folioLineas_terminado) } },
+                { $match: { 'folioLineas.modeloCompleto.terminado._id': ObjectId(objetoDeBusqueda.folioLineas_terminado) } },
             )
         }
 

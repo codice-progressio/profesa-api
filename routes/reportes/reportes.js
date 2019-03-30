@@ -1284,7 +1284,7 @@ app.get('/historial/pedidos', (req, res) => {
         }
 
         // color
-        if (objetoDeBusqueda.hasOwnProperty('folioLineas_color._id')) {
+        if (objetoDeBusqueda.hasOwnProperty('folioLineas_color')) {
             arregloRedact.push(
                 // Buscamos la coincidencia con el color
                 { $match: { 'folioLineas.modeloCompleto.color._id': ObjectId(objetoDeBusqueda.folioLineas_color) } },

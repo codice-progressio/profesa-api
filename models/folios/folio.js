@@ -576,26 +576,30 @@ function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
 }
 
 /**
- *Suma las ordenes terminadas a los pedidos y los folios. 
+ *Suma la cantidad registrada en empaque a los campos de cantidadProducida del 
+ pedido y del folio de manera recursiva. Esto se hace para cada orden que esta terminada. 
  *
  * @param {*} folio
  */
 function sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas(folio) {
-    console.log(' estamos en sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas')
+    // Es nesario que pongamos en 0 el contador por que si se van terminando diferentes 
+    // ordenes cada vez se va a sumar todo. 
+    folio.cantidadProducida = 0;
     folio.folioLineas.map((pedido) => {
-        console.log('revisando pedidos ')
+        // Tambien reiniciamos la cantidadProducida del pedido por la misma razon 
+        // que reiniciamos la del folio. 
+        pedido.cantidadProducida = 0;
         pedido.ordenes.map((orden) => {
-            console.log('revisando ordenes')
-            console.log('la orden esta terminada? ', orden.terminada)
+            // Para cada orden revisamos que este terminada.
             if (orden.terminada) {
+                // Obtenemos cada trayecto. 
                 orden.trayectoRecorrido.map((trayecto) => {
-                    console.log('trayecto => ', trayecto)
-
-
-                    if (trayecto.departamento.nombre = CONST.DEPARTAMENTOS.EMPAQUE._n) {
-
-                        folio.cantidadProducida += trayecto.cantidadDeBoton
-
+                    // Si el trayecto corresponde al departamento de empaque, lo sumamos. 
+                    if (trayecto.departamento.nombre === CONST.DEPARTAMENTOS.EMPAQUE._n) {
+                        // Esta es la razon por la cual tenemos que reiniciar el contador. Este codigo
+                        // siempre recorre el folio y vuelve a sumar todas las cantidades. 
+                        folio.cantidadProducida += trayecto.empaque.cantidadDeBoton
+                        pedido.cantidadProducida += trayecto.empaque.cantidadDeBoton
                     }
                 })
             }

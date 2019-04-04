@@ -1,43 +1,45 @@
 //importar rutas.
-var appRoutes = require('../routes/app');
-var usuarioRoutes = require('../routes/usuario');
-var loginRoutes = require('../routes/login');
-var hospitalRoutes = require('../routes/hospital');
-var medicoRoutes = require('../routes/medico');
-var busquedaRoutes = require('../routes/busqueda');
-var uploadRoutes = require('../routes/upload');
-var imagenesRoutes = require('../routes/imagenes');
+let appRoutes = require('../routes/app');
+let usuarioRoutes = require('../routes/usuario');
+let loginRoutes = require('../routes/login');
+let hospitalRoutes = require('../routes/hospital');
+let medicoRoutes = require('../routes/medico');
+let busquedaRoutes = require('../routes/busqueda');
+let uploadRoutes = require('../routes/upload');
+let imagenesRoutes = require('../routes/imagenes');
 
 // ============================================
 // IMPORTAR RUTAS PARA SISTEMA CARRDUCI
 // ============================================
 
-var folioRoutes = require('../routes/folio');
-var folioLineaRoutes = require('../routes/folioLinea');
-var modeloCompletoRoutes = require('../routes/gestionModelos/modeloCompleto');
-var clienteRoutes = require('../routes/cliente');
-var departamentoRoutes = require('../routes/departamento');
-var procesoRoutes = require('../routes/proceso');
-var familiaDeProcesosRoutes = require('../routes/familiaDeProcesos');
-var ordenRoutes = require('../routes/orden');
-var trayectoriaRoutes = require('../routes/trayectoria');
-var maquinaRoutes = require('../routes/maquina');
-var gastoRoutes = require('../routes/gasto');
+let folioRoutes = require('../routes/folio');
+let folioLineaRoutes = require('../routes/folioLinea');
+let modeloCompletoRoutes = require('../routes/gestionModelos/modeloCompleto');
+let clienteRoutes = require('../routes/cliente');
+let departamentoRoutes = require('../routes/departamento');
+let procesoRoutes = require('../routes/proceso');
+let familiaDeProcesosRoutes = require('../routes/familiaDeProcesos');
+let ordenRoutes = require('../routes/orden');
+let trayectoriaRoutes = require('../routes/trayectoria');
+let maquinaRoutes = require('../routes/maquina');
+let gastoRoutes = require('../routes/gasto');
 
-var modeloRoutes = require('../routes/gestionModelos/modelo');
-var tamanoRoutes = require('../routes/gestionModelos/tamano');
-var colorRoutes = require('../routes/gestionModelos/color');
-var terminadoRoutes = require('../routes/gestionModelos/terminado');
-var hitRoutes = require('../routes/ingenieria/hit');
-var defaultsRoute = require('../routes/configCruds/defaults.crud');
+let modeloRoutes = require('../routes/gestionModelos/modelo');
+let tamanoRoutes = require('../routes/gestionModelos/tamano');
+let colorRoutes = require('../routes/gestionModelos/color');
+let terminadoRoutes = require('../routes/gestionModelos/terminado');
+let hitRoutes = require('../routes/ingenieria/hit');
+let defaultsRoute = require('../routes/configCruds/defaults.crud');
 
-var reportesRoute = require('../routes/reportes/reportes');
-var almacenDeProductoTerminadoRoute = require('../routes/almacenDeProductoTerminado/almacenDeProductoTerminado');
-var loteRoute = require('../routes/almacenDeProductoTerminado/lote');
-var devolucionRoute = require('../routes/almacenDeProductoTerminado/devolucion');
-var salidaRoute = require('../routes/almacenDeProductoTerminado/salida');
+let reportesRoute = require('../routes/reportes/reportes');
+let almacenDeProductoTerminadoRoute = require('../routes/almacenDeProductoTerminado/almacenDeProductoTerminado');
+let loteRoute = require('../routes/almacenDeProductoTerminado/lote');
+let devolucionRoute = require('../routes/almacenDeProductoTerminado/devolucion');
+let salidaRoute = require('../routes/almacenDeProductoTerminado/salida');
 
-var ROLES = require('../config/roles');
+let folioNewRoutes = require('../routes/folio.route')
+
+let ROLES = require('../config/roles');
 
 
 module.exports.ROUTES = {
@@ -100,6 +102,9 @@ module.exports.ROUTES = {
         roles: [],
         subRoutes: {}
     },
+
+
+
     _FOLIO: {
         url: '/folio',
         route: folioRoutes,
@@ -115,6 +120,17 @@ module.exports.ROUTES = {
             }
         }
     },
+    _FOLIO_NEW: {
+        url: '/folios',
+        route: folioNewRoutes,
+        roles: [
+
+        ]
+    },
+
+
+
+
     _USUARIO: {
         url: '/usuario',
         route: usuarioRoutes,

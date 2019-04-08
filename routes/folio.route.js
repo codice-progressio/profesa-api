@@ -41,9 +41,6 @@ CRUD.camposDeBusqueda = [
 
 ];
 
-CRUD.crud(
-    'post', 'put', 'deletee',
-);
 
 
 app.get('/', (req, res) => {
@@ -93,11 +90,11 @@ app.get('/', (req, res) => {
         /**
          * La cantidad de registros que se van a mostrar. 
          */
-        limite: query.limite,
+        limite: query.limite | 5,
         /**
          * Cantidad de resgistros que se va a saltar. Se usa con skip. 
          */
-        desde: query.desde,
+        desde: query.desde | 0,
         // fechas
         /**
          * La fecha de creacion desde donde se va a empezar a filtrar. 
@@ -124,10 +121,17 @@ app.get('/', (req, res) => {
          */
         fechaFinalizacionFolioHasta: query.fechaFinalizacionFolioHasta,
         /**
-         * Los campos para ordenar. Se utiliza la notacioin tipo campo1#-1@campo2#+1
+         * Los campos para ordenar. Se utiliza la notacioin tipo campo1>-1@campo2>1
          */
-        sortCampos: query.sortCampos
+        sortCampos: query.sortCampos,
+        /**
+         * Define si se muestran los folios con ordenes generadas o no. 
+         */
+        ordenesGeneradas: query.ordenesGeneradas
+
     }
+
+    console.log(query.ordenesGeneradas == 1 ? true : query.ordenesGeneradas == 0 ? false : false)
 
     // Eliminar vacios
     let keys = Object.keys(objetoDeBusqueda)
@@ -148,9 +152,17 @@ app.get('/', (req, res) => {
     let arregloRedact = []
 
 
-    if (objetoDeBusqueda.terminado) {
-        arregloRedact.push({ $match: { terminado: objetoDeBusqueda.terminado } })
+    let arregloAnd = []
+
+    if (objetoDeBusqueda.ordenesGeneradas) {
+        arregloAnd.push({ ordenesGeneradas: query.ordenesGeneradas == 1 ? true : query.ordenesGeneradas == 0 ? false : false })
     }
+
+    if (objetoDeBusqueda.terminado) {
+        arregloAnd.push({ terminado: { $ne: objetoDeBusqueda.terminado } })
+    }
+
+    if (arregloAnd.length > 0) arregloRedact.push({ $match: { $and: arregloAnd } })
 
     // <!-- 
     // =====================================
@@ -165,54 +177,70 @@ app.get('/', (req, res) => {
          * Guarda la construccion para la busqueda de la fecha de creacion
          */
         let obCreacion = {
-            $match: {
-                fechaFolio: {
-                    $gte: new Date(),
-                    $lte: new Date()
-                }
+
+            fechaFolio: {
+                $gte: new Date(),
+                $lte: new Date()
             }
+
         }
 
         if (objetoDeBusqueda.hasOwnProperty('fechaCreacionDesdeEl')) {
-            obCreacion.$match.fechaFolio.$gte = new Date(objetoDeBusqueda.fechaCreacionDesdeEl)
+            obCreacion.fechaFolio.$gte = new Date(objetoDeBusqueda.fechaCreacionDesdeEl)
         }
 
         if (objetoDeBusqueda.hasOwnProperty('fechaCreacionHasta')) {
-            obCreacion.$match.fechaFolio.$lte = new Date(objetoDeBusqueda.fechaCreacionHasta)
+            obCreacion.fechaFolio.$lte = new Date(objetoDeBusqueda.fechaCreacionHasta)
         }
 
-        if (!objetoDeBusqueda.hasOwnProperty('fechaCreacionDesdeEl')) delete obCreacion.$match.fechaFolio.$gte
-        if (!objetoDeBusqueda.hasOwnProperty('fechaCreacionHasta')) delete obCreacion.$match.fechaFolio.$lte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaCreacionDesdeEl')) delete obCreacion.fechaFolio.$gte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaCreacionHasta')) delete obCreacion.fechaFolio.$lte
 
-        arregloRedact.push(obCreacion)
+        if (arregloRedact.length > 0) {
+
+            arregloRedact[0].$match.$and.push(obCreacion)
+
+        } else {
+
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
+        }
 
     }
+
     // fechaEntregaEstimada
     if (objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaDesdeEl') || objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaHasta')) {
 
         /**
          * Guarda la construccion para la busqueda de la fecha de creacion
          */
-        let obCreacionEntregaEstimada = {
-            $match: {
-                fechaEntrega: {
-                    $gte: new Date(),
-                    $lte: new Date()
-                }
+        let obCreacion = {
+
+            fechaEntrega: {
+                $gte: new Date(),
+                $lte: new Date()
             }
+
         }
 
         if (objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaDesdeEl')) {
-            obCreacionEntregaEstimada.$match.fechaEntrega.$gte = new Date(objetoDeBusqueda.fechaEntregaEstimadaDesdeEl)
+            obCreacion.fechaEntrega.$gte = new Date(objetoDeBusqueda.fechaEntregaEstimadaDesdeEl)
         }
+
         if (objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaHasta')) {
-            obCreacionEntregaEstimada.$match.fechaEntrega.$lte = new Date(objetoDeBusqueda.fechaEntregaEstimadaHasta)
+            obCreacion.fechaEntrega.$lte = new Date(objetoDeBusqueda.fechaEntregaEstimadaHasta)
         }
 
-        if (!objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaDesdeEl')) delete obCreacionEntregaEstimada.$match.fechaEntrega.$gte
-        if (!objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaHasta')) delete obCreacionEntregaEstimada.$match.fechaEntrega.$lte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaDesdeEl')) delete obCreacion.fechaEntrega.$gte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaEntregaEstimadaHasta')) delete obCreacion.fechaEntrega.$lte
 
-        arregloRedact.push(obCreacionEntregaEstimada)
+        if (arregloRedact.length > 0) {
+
+            arregloRedact[0].$match.$and.push(obCreacion)
+
+        } else {
+
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
+        }
 
     }
     // fechaFinalizacionFolio
@@ -221,38 +249,41 @@ app.get('/', (req, res) => {
         /**
          * Guarda la construccion para la busqueda de la fecha de creacion
          */
-        let obFinalizacionFolio = {
-            $match: {
-                fechaTerminado: {
-                    $gte: new Date(),
-                    $lte: new Date()
-                }
+        let obCreacion = {
+
+            fechaTerminado: {
+                $gte: new Date(),
+                $lte: new Date()
             }
+
         }
 
         if (objetoDeBusqueda.hasOwnProperty('fechaFinalizacionFolioDesdeEl')) {
-            obFinalizacionFolio.$match.fechaTerminado.$gte = new Date(objetoDeBusqueda.fechaFinalizacionFolioDesdeEl)
+            obCreacion.fechaTerminado.$gte = new Date(objetoDeBusqueda.fechaFinalizacionFolioDesdeEl)
         }
+
         if (objetoDeBusqueda.hasOwnProperty('fechaFinalizacionFolioHasta')) {
-            obFinalizacionFolio.$match.fechaTerminado.$lte = new Date(objetoDeBusqueda.fechaFinalizacionFolioHasta)
+            obCreacion.fechaTerminado.$lte = new Date(objetoDeBusqueda.fechaFinalizacionFolioHasta)
         }
 
-        if (!objetoDeBusqueda.hasOwnProperty('fechaFinalizacionFolioDesdeEl')) delete obFinalizacionFolio.$match.fechaTerminado.$gte
-        if (!objetoDeBusqueda.hasOwnProperty('fechaFinalizacionFolioHasta')) delete obFinalizacionFolio.$match.fechaTerminado.$lte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaFinalizacionFolioDesdeEl')) delete obCreacion.fechaTerminado.$gte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaFinalizacionFolioHasta')) delete obCreacion.fechaTerminado.$lte
 
-        arregloRedact.push(obFinalizacionFolio)
+        if (arregloRedact.length > 0) {
+
+            arregloRedact[0].$match.$and.push(obCreacion)
+
+        } else {
+
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
+        }
 
     }
 
-    // <!-- 
-    // =====================================
-    //  END Filtros de fechas
-    // =====================================
-    // -->
 
     //folio
     if (objetoDeBusqueda.hasOwnProperty('numeroDeFolio')) {
-        arregloRedact.push({ $match: { 'numeroDeFolio': objetoDeBusqueda.numeroDeFolio } })
+        arregloRedact.push({ $match: { 'numeroDeFolio': { $regex: objetoDeBusqueda.numeroDeFolio, $options: 'gi' } } })
     }
 
     // Cliente
@@ -307,6 +338,8 @@ app.get('/', (req, res) => {
                 fechaEntrega: true,
                 vendedor: true,
                 observaciones: true,
+                porcentajeAvance: true,
+                cantidadProducida: true
             }
         }, )
     }
@@ -345,6 +378,9 @@ app.get('/', (req, res) => {
                     fechaEntrega: '$fechaEntrega',
                     vendedor: '$vendedor',
                     observaciones: '$observaciones',
+                    porcentajeAvance: '$porcentajeAvance',
+                    cantidadProducida: '$cantidadProducida',
+                    fechaTerminado: '$fechaTerminado',
                 },
 
                 folioLineas: { $push: '$folioLineas' }
@@ -368,6 +404,9 @@ app.get('/', (req, res) => {
                 vendedor: '$_id.vendedor',
                 observaciones: '$_id.observaciones',
                 folioLineas: '$folioLineas',
+                porcentajeAvance: '$_id.porcentajeAvance',
+                cantidadProducida: '$_id.cantidadProducida',
+                fechaTerminado: '$_id.fechaTerminado',
             }
         }
     ]
@@ -543,7 +582,7 @@ app.get('/', (req, res) => {
     //  Sort, Limit & skip
     // =====================================
     // -->
-    if (objetoDeBusqueda.hasOwnProperty('sortCampos ')) {
+    if (objetoDeBusqueda.hasOwnProperty('sortCampos')) {
 
         /**
          * Los campos por los cuales se puede ordenar. 
@@ -601,18 +640,42 @@ app.get('/', (req, res) => {
         arregloRedact.push({ $sort: lv2 })
     }
 
-    if (objetoDeBusqueda.hasOwnProperty('desde')) {
-        arregloRedact.push({ "$skip": Number(objetoDeBusqueda.desde) })
-    }
+    /**
+     * Agregamos los resultados hasta ahora para contarlos y poder paginar. 
+     * La idea aqui es agrupar todo bajo un _id null y crear un nueva propiedad
+     * llamada total donde se suman todos los elementos. Despues creamos el paramentro folios 
+     * y asigamos el $$ROOT para mantener los datos. 
+     */
+    arregloRedact.push({ $group: { _id: null, total: { $sum: 1 }, folios: { $push: '$$ROOT' } } })
 
-    if (objetoDeBusqueda.hasOwnProperty('limite')) {
 
-        let limiteP = Number(objetoDeBusqueda.limite);
-        // if (objetoDeBusqueda.hasOwnProperty('desde')) {
-        //     limiteP += Number(objetoDeBusqueda.desde)
-        // }
-        arregloRedact.push({ "$limit": Number(limiteP) })
-    }
+    /**
+     * Una vez que tenemos el total es necesario restringir la cantidad de elemento que vamos a devolver. 
+     * Para eso utilizamos $project...
+     * 
+     */
+    arregloRedact.push({
+        $project: {
+            // Este define que si se muestre la propiedad total. 
+            total: 1,
+            // Ahora le dicimos que si muetre la propiedad folios pero...
+            folios: {
+                // Primero la vamos a cortar. 
+                $slice: [
+                    // Le decimos el arreglo que va cortar. 
+                    '$folios',
+                    // Desde donde va a empezar a cortar. 
+                    Number(objetoDeBusqueda.desde),
+                    // Hasta donde va a dejar de cortar. 
+                    Number(objetoDeBusqueda.limite)
+                    // Para estos elememntos previamente ya habiamos 
+                    // definido que si no llega desde o limite damos
+                    // valores por defecto para usar el paginador. 
+                ]
+            }
+        }
+    })
+
 
 
     // <!-- 
@@ -623,8 +686,11 @@ app.get('/', (req, res) => {
 
 
     Folio.aggregate(arregloRedact).then(folios => {
+
+            console.log('el folio=> ', )
             return RESP._200(res, null, [
-                { tipo: 'folios', datos: folios },
+                { tipo: 'total', datos: folios[0] ? folios[0].total : 0 },
+                { tipo: 'folios', datos: folios[0] ? folios[0].folios : [] },
             ]);
         })
         .catch(err => {
@@ -635,6 +701,11 @@ app.get('/', (req, res) => {
         });
 
 })
+
+CRUD.crud(
+    'post', 'put', 'deletee', 'getById'
+);
+
 
 
 

@@ -241,12 +241,18 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
                     });
                 }
 
+                console.log('reps======', resp.folioLineas[0].laserCliente);
+
+
                 // Cargamos los datos para modificar con el objeto defido para ello. 
                 for (const key in objetoDeActualizacion) {
                     if (objetoDeActualizacion.hasOwnProperty(key)) {
                         resp[key] = req.body[key];
                     }
                 }
+
+                console.log('aaaa', resp.folioLineas[0].laserCliente);
+                console.log('222222222', resp)
 
                 // Guardamos las modificaciones. 
                 return resp.save();
@@ -443,10 +449,12 @@ module.exports = {
      * 
      *
      *
-     * @param {*} DATOS Si se define acepta los siguientes parametros para ejectuar o no
-     * los patterns:
+     * @param {*} DATOS Si se define acepta los siguientes parametros que corresponde
+     * con las operaciones basicas del CRUD. Solo se agrega un solo valor solo se ejecutara
+     * ese. Es necesario definir todos los que se quieran ejecutar o ninguno. Las
+     * operaciones permitidas son:
      *  
-     *  'get', 'getById', 'getBuscar', 'post', 'put', 'deletee',   
+     *  ```'get', 'getById', 'getBuscar', 'post', 'put', 'delete' ```  
      * 
      */
     crud: function(...DATOS) {
@@ -455,7 +463,8 @@ module.exports = {
 
         /**
          * La cadena en donde se aplicaran los campos
-         * para excluir. 
+         * para excluir. Esto significa que no va a retornar dentro de la consulta
+         * ese campo. Es como definir un find({ }, { -campoQueSeExcluye})
          */
         let cadenaParaExcluir = '';
         if (this.excluir) {

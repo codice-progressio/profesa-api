@@ -26,6 +26,9 @@ var Tenido = [{
         require: [true, 'Es necesario que definas la cantidad a teñir.'],
         min: [1, "La cantidad mínima a teñir es 1."]
     },
+    observaciones: String,
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: Date
 }];
 
 function comprobarCantidadesDeTenido(value) {
@@ -85,9 +88,10 @@ const folioLineaSchema = new Schema({
     // Este proceso debe afectar al órden en que se estable las órdenes. 
     procesos: [procesosSchema],
     observaciones: { type: String },
+    observacionesVendedor: { type: String },
     terminado: { type: Boolean, default: false },
     fechaTerminado: Date,
-    cantidadProducida: {type: Number, default: 0 }
+    cantidadProducida: { type: Number, default: 0 }
 
     // Esto de aqui es para que mongose no escriba
     //  folioLineas en vez de folioLineaes

@@ -20,17 +20,18 @@ CRUD.camposActualizables = {
 
     // numeroDeFolio: null ,
     cliente: null,
-    fechaFolio: null,
-    fechaEntrega: null,
+    // fechaFolio: null,
+    // fechaEntrega: null,
     vendedor: null,
     observaciones: null,
+    observacionesVendedor: null,
     folioLineas: null,
     nivelDeUrgencia: null,
     porcentajeAvance: null,
-    ordenesGeneradas: null,
-    impreso: null,
+    // ordenesGeneradas: null,
+    // impreso: null,
     terminado: null,
-    fechaTerminado: null,
+    // fechaTerminado: null,
     cantidadProducida: null
 
 };
@@ -40,6 +41,62 @@ CRUD.camposDeBusqueda = [
     'observaciones',
 
 ];
+
+
+CRUD.crud(
+    'delete', 'post', 'getById', 'put'
+);
+
+
+
+app.post('/enviarAProduccion', (req, res) => {
+
+    let msj = ''
+
+    Folio.findById(req.body._id).then(folio => {
+
+            if (!folio) {
+                return RESP._400(res, {
+                    msj: 'No existe el folio.',
+                    err: 'El id que ingresaste no coincide contra ninguno en la base de datos.',
+
+                });
+            }
+
+            if (folio.ordenesGeneradas) {
+                return RESP._400(res, {
+                    msj: 'Imposible retornar al vendedor.',
+                    err: 'Este folio ya tiene las ordenes generadas y no puede ser modificado por el vendedor. Es necesario cancerlo y crear uno nuevo.',
+                });
+            }
+
+            if (req.body.entregarAProduccion) {
+                folio.entregarAProduccion = true
+                folio.fechaDeEntregaAProduccion = new Date()
+                msj = 'Este folio se mando a produccir de manera correcta.'
+            } else {
+                folio.entregarAProduccion = false
+                folio.fechaDeEntregaAProduccion = null
+                msj = 'Se retorno este folio al vendedor.'
+            }
+
+
+            return folio.save()
+
+        }).then(folioGrabado => {
+            return RESP._200(res, msj, [
+                { tipo: 'folio', datos: folioGrabado },
+            ]);
+
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: 'Hubo un error buscando el folio.',
+                err: err,
+            });
+        });
+
+})
 
 
 
@@ -127,11 +184,22 @@ app.get('/', (req, res) => {
         /**
          * Define si se muestran los folios con ordenes generadas o no. 
          */
-        ordenesGeneradas: query.ordenesGeneradas
+        ordenesGeneradas: query.ordenesGeneradas,
+        /**
+         * Filtra los folios que ya fueron entregados por los vendedores a produccion. 
+         */
+        entregarAProduccion: query.entregarAProduccion,
+        /**
+         * La fecha de entrega a produccion desde donde se va a empezar a filtrar. 
+         */
+        fechaDeEntregaAProduccionDesdeEl: query.fechaDeEntregaAProduccionDesdeEl,
+        /**
+         * La fecha de entrega a produccion hasta donde se va a filtrar. 
+         */
+        fechaDeEntregaAProduccionHasta: query.fechaDeEntregaAProduccionHasta,
 
     }
 
-    console.log(query.ordenesGeneradas == 1 ? true : query.ordenesGeneradas == 0 ? false : false)
 
     // Eliminar vacios
     let keys = Object.keys(objetoDeBusqueda)
@@ -158,6 +226,10 @@ app.get('/', (req, res) => {
         arregloAnd.push({ ordenesGeneradas: query.ordenesGeneradas == 1 ? true : query.ordenesGeneradas == 0 ? false : false })
     }
 
+    if (objetoDeBusqueda.entregarAProduccion) {
+        arregloAnd.push({ entregarAProduccion: query.entregarAProduccion == 1 ? true : query.entregarAProduccion == 0 ? false : false })
+    }
+
     if (objetoDeBusqueda.terminado) {
         arregloAnd.push({ terminado: { $ne: objetoDeBusqueda.terminado } })
     }
@@ -169,6 +241,43 @@ app.get('/', (req, res) => {
     //  Filtros de fechas
     // =====================================
     // -->
+
+    // fechaDeEntregaAProduccion
+    if (objetoDeBusqueda.hasOwnProperty('fechaDeEntregaAProduccionDesdeEl') || objetoDeBusqueda.hasOwnProperty('fechaDeEntregaAProduccionHasta')) {
+
+        /**
+         * Guarda la construccion para la busqueda de la fecha de creacion
+         */
+        let obCreacion = {
+
+            fechaDeEntregaAProduccion: {
+                $gte: new Date(),
+                $lte: new Date()
+            }
+
+        }
+
+        if (objetoDeBusqueda.hasOwnProperty('fechaDeEntregaAProduccionDesdeEl')) {
+            obCreacion.fechaFolio.$gte = new Date(objetoDeBusqueda.fechaDeEntregaAProduccionDesdeEl)
+        }
+
+        if (objetoDeBusqueda.hasOwnProperty('fechaDeEntregaAProduccionHasta')) {
+            obCreacion.fechaFolio.$lte = new Date(objetoDeBusqueda.fechaDeEntregaAProduccionHasta)
+        }
+
+        if (!objetoDeBusqueda.hasOwnProperty('fechaDeEntregaAProduccionDesdeEl')) delete obCreacion.fechaFolio.$gte
+        if (!objetoDeBusqueda.hasOwnProperty('fechaDeEntregaAProduccionHasta')) delete obCreacion.fechaFolio.$lte
+
+        if (arregloRedact.length > 0) {
+
+            arregloRedact[0].$match.$and.push(obCreacion)
+
+        } else {
+
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
+        }
+
+    }
 
     // fechaCreacion
     if (objetoDeBusqueda.hasOwnProperty('fechaCreacionDesdeEl') || objetoDeBusqueda.hasOwnProperty('fechaCreacionHasta')) {
@@ -378,9 +487,12 @@ app.get('/', (req, res) => {
                     fechaEntrega: '$fechaEntrega',
                     vendedor: '$vendedor',
                     observaciones: '$observaciones',
+                    observacionesVendedor: '$observacionesVendedor',
                     porcentajeAvance: '$porcentajeAvance',
                     cantidadProducida: '$cantidadProducida',
                     fechaTerminado: '$fechaTerminado',
+                    fechaDeEntregaAProduccion: '$fechaDeEntregaAProduccion',
+                    entregarAProduccion: '$entregarAProduccion',
                 },
 
                 folioLineas: { $push: '$folioLineas' }
@@ -403,10 +515,13 @@ app.get('/', (req, res) => {
                 fechaEntrega: '$_id.fechaEntrega',
                 vendedor: '$_id.vendedor',
                 observaciones: '$_id.observaciones',
+                observacionesVendedor: '$_id.observacionesVendedor',
                 folioLineas: '$folioLineas',
                 porcentajeAvance: '$_id.porcentajeAvance',
                 cantidadProducida: '$_id.cantidadProducida',
                 fechaTerminado: '$_id.fechaTerminado',
+                fechaDeEntregaAProduccion: '$_id.fechaDeEntregaAProduccion',
+                entregarAProduccion: '$_id.entregarAProduccion',
             }
         }
     ]
@@ -599,6 +714,7 @@ app.get('/', (req, res) => {
                 'vendedor',
                 'observaciones',
                 'folioLineas',
+                'fechaDeEntregaAProduccion',
             ]
             // Separamos los valores
         let lv1 = objetoDeBusqueda.sortCampos.split('@');
@@ -701,12 +817,6 @@ app.get('/', (req, res) => {
         });
 
 })
-
-CRUD.crud(
-    'post', 'put', 'deletee', 'getById'
-);
-
-
 
 
 

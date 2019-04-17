@@ -8,8 +8,8 @@ let Schema = mongoose.Schema;
 let CONST = require('../../utils/constantes');
 
 let RESP = require('../../utils/respStatus');
-
-// schmea. (key) no es obligatorio el nivel en el folio.
+let AutoIncrement = require('mongoose-sequence')(mongoose)
+    // schmea. (key) no es obligatorio el nivel en el folio.
 delete NVU.KEY.required;
 //Para este folio el nivel de urgencia por default debe ser almacen.
 
@@ -17,12 +17,19 @@ NVU.KEY.default = NVU.LV.A; //ALMACEN
 
 let folioSchema = new Schema({
 
-    numeroDeFolio: { type: String, unique: true, required: [true, 'El folio es necesario'] },
+    numeroDeFolio: { type: Number, unique: true },
     cliente: { type: Schema.Types.ObjectId, ref: 'Cliente', required: [true, 'El cliente es necesario'] },
-    fechaFolio: { type: Schema.Types.Date, required: [true, 'La fecha es necesaria'] },
-    fechaEntrega: { type: Schema.Types.Date },
+    fechaFolio: { type: Date, default: Date.now },
+    fechaEntrega: { type: Date, default: null },
     vendedor: { type: Schema.Types.ObjectId, ref: 'Usuario', required: [true, 'El vendedor es necesario'] },
     observaciones: { type: String },
+    observacionesVendedor: { type: String },
+    /**
+     * Esta bandera se pone en true cuando las modificaciones al folio se terminador
+     * y se pasa el control a control de produccion. 
+     */
+    entregarAProduccion: { type: Boolean, default: false },
+    fechaDeEntregaAProduccion: { type: Date, required: [() => { return this.entregarAProduccion }, 'Es necesario que definas la fecha de entrega a produccion.'] },
     // folioLineas: [{ type: Schema.Types.Mixed, ref: 'FolioLinea' }]
     folioLineas: [folioLineaSchema],
     nivelDeUrgencia: NVU.KEY,
@@ -30,13 +37,14 @@ let folioSchema = new Schema({
     ordenesGeneradas: { type: Boolean, default: false },
     impreso: { type: Boolean, default: false },
     terminado: { type: Boolean, default: false },
-    fechaTerminado: Date,
+    fechaTerminado: { type: Date, default: null },
     cantidadProducida: { type: Number, default: 0 }
 
 
 }, { collection: 'folios', timestamps: true });
 
 folioSchema.plugin(uniqueValidator, { message: '\'{PATH}\' debe ser único.' });
+folioSchema.plugin(AutoIncrement, { id: 'numeroDeFolio_seq', inc_field: 'numeroDeFolio' })
 
 let autoPopulate = function(next) {
 
@@ -147,6 +155,24 @@ folioSchema
         next();
     })
     .pre('save', agregarProcesosFinalesPedidosDeAlmacen)
+    .post('save', (folio) => {
+        var schema = mongoose.model('Folio', folioSchema);
+        schema.findById(folio._id).lean().then((folio) => {
+
+                asignarNumeroDePedido(folio)
+
+
+                return schema.findByIdAndUpdate(folio._id, folio)
+
+            }).then(resp => {
+                console.log('terminado')
+            })
+            .catch(err => {
+                console.log('Hubo un error modificando el numero de los pedidos. ')
+                throw err
+            });
+
+    })
 
 
 folioSchema.post('save', function() {
@@ -516,6 +542,9 @@ function calcularPorcentajeDeAvance(folio) {
  */
 function verificarFolioTerminado(folio) {
 
+    // Si no hemos generado las ordenes del folio no es necesario
+    // hacer esta comprobacion.
+    if (!folio.ordenesGeneradas) return
 
     // Recorremos todos los pedidos.
     for (let i = 0; i < folio.folioLineas.length; i++) {

@@ -112,7 +112,7 @@ var modeloCompletoSchema = new Schema({
 
     actualizarLotesYExistencias: { type: Boolean },
 
-    esBaston: { type: Boolean, required: [true, 'Es necesario definir si el modelo es de baston.'] }
+    esBaston: { type: Boolean, required: [true, 'Es necesario definir si el modelo es de baston.'], default: false }
 
 
 
@@ -135,8 +135,8 @@ let generarNombreCompleto = function(next) {
             let terminado = resp[3];
 
             this.nombreCompleto = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}`;
-            this.nombreCompleto += this.laserAlmacen ? '-' + this.laserAlmacen.laser : '';
-            this.nombreCompleto += this.versionModelo ? '-' + this.versionModelo : '';
+            this.nombreCompleto += this.laserAlmacen.laser.length > 0 ? '-' + this.laserAlmacen.laser : '';
+            this.nombreCompleto += this.versionModelo.split('').length > 0 ? '-' + this.versionModelo : '';
 
 
             next();

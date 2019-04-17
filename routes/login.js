@@ -224,8 +224,11 @@ function obtenerMenu(ROLE) {
             titulo: 'Control de Producción',
             icono: 'fas fa-project-diagram',
             submenu: [
-                { titulo: 'Registro de folios', url: '/folios' },
-                { titulo: 'Seguimiento', url: '/produccion' },
+                // { titulo: 'Registro de folios', url: '/folios' },
+                // { titulo: 'Seguimiento', url: '/produccion' },
+                { titulo: 'Revision de folios', url: '/folios/revision' },
+                { titulo: 'Seguimientos', url: '/folios/seguimiento' },
+
             ]
         },
         GESTION_DE_PROCESOS: {

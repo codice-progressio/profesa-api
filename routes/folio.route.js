@@ -1,20 +1,20 @@
 // Este es dl nuevo route para el folio.
 
 //Esto es necesario
-var express = require("express");
-var app = express();
-var Folio = require("../models/folios/folio");
-var RESP = require("../utils/respStatus");
+var express = require("express")
+var app = express()
+var Folio = require("../models/folios/folio")
+var RESP = require("../utils/respStatus")
 
-const mongoose = require("mongoose");
-const ObjectId = mongoose.Types.ObjectId;
+const mongoose = require("mongoose")
+const ObjectId = mongoose.Types.ObjectId
 
-var CRUD = require("./CRUD");
-CRUD.app = app;
-CRUD.modelo = Folio;
-CRUD.nombreDeObjetoSingular = "folio";
-CRUD.nombreDeObjetoPlural = "folios";
-CRUD.campoSortDefault = "fechaEntrega";
+var CRUD = require("./CRUD")
+CRUD.app = app
+CRUD.modelo = Folio
+CRUD.nombreDeObjetoSingular = "folio"
+CRUD.nombreDeObjetoPlural = "folios"
+CRUD.campoSortDefault = "fechaEntrega"
 CRUD.camposActualizables = {
     // numeroDeFolio: null ,
     cliente: null,
@@ -31,14 +31,19 @@ CRUD.camposActualizables = {
     terminado: null,
     // fechaTerminado: null,
     cantidadProducida: null
-};
+}
 
-CRUD.camposDeBusqueda = ["numeroDeFolio", "observaciones"];
+CRUD.camposDeBusqueda = ["numeroDeFolio", "observaciones"]
 
-CRUD.crud("delete", "post", "getById", "put");
+CRUD.crud("delete", "post", "getById", "put")
 
+/**
+ * Senala el folio listo para produccion o no dependiendo de
+ * que valor tenga la bandera. que se le pase como parametro.
+ *
+ */
 app.post("/enviarAProduccion", (req, res) => {
-    let msj = "";
+    let msj = ""
 
     Folio.findById(req.body._id)
         .then(folio => {
@@ -46,44 +51,80 @@ app.post("/enviarAProduccion", (req, res) => {
                 return RESP._400(res, {
                     msj: "No existe el folio.",
                     err: "El id que ingresaste no coincide contra ninguno en la base de datos."
-                });
+                })
             }
 
             if (folio.ordenesGeneradas) {
                 return RESP._400(res, {
                     msj: "Imposible retornar al vendedor.",
                     err: "Este folio ya tiene las ordenes generadas y no puede ser modificado por el vendedor. Es necesario cancerlo y crear uno nuevo."
-                });
+                })
             }
 
             if (req.body.entregarAProduccion) {
-                folio.entregarAProduccion = true;
-                folio.fechaDeEntregaAProduccion = new Date();
-                msj = "Este folio se mando a produccir de manera correcta.";
+                folio.entregarAProduccion = true
+                folio.fechaDeEntregaAProduccion = new Date()
+                msj = "Este folio se mando a produccir de manera correcta."
             } else {
-                folio.entregarAProduccion = false;
-                folio.fechaDeEntregaAProduccion = null;
-                msj = "Se retorno este folio al vendedor.";
+                folio.entregarAProduccion = false
+                folio.fechaDeEntregaAProduccion = null
+                msj = "Se retorno este folio al vendedor."
             }
 
-            return folio.save();
+            return folio.save()
         })
         .then(folioGrabado => {
-            return RESP._200(res, msj, [{ tipo: "folio", datos: folioGrabado }]);
+            return RESP._200(res, msj, [{ tipo: "folio", datos: folioGrabado }])
         })
         .catch(err => {
             return RESP._500(res, {
                 msj: "Hubo un error buscando el folio.",
                 err: err
-            });
-        });
-});
+            })
+        })
+})
 
+/**
+ * Senala el folio con ordenes impresas.
+ */
+app.post("/ordenesImpresas", (req, res, next) => {
+    Folio.findById(req.body._id)
+        .then(folioEncontrado => {
+            if (!folioEncontrado) {
+                return RESP._400(res, {
+                    msj: "No existe el folio.",
+                    err: "El id del folio que ingresaste no existe."
+                })
+            }
+            folioEncontrado.impreso = true
+            return folioEncontrado.save()
+        })
+        .then(folioGrabado => {
+            return RESP._200(res, null, [{ tipo: "folio", datos: folioGrabado }])
+        })
+        .catch(err => {
+            return RESP._500(res, {
+                msj: "Hubo un error buscando el folio para senalarlo como impreso",
+                err: err
+            })
+        })
+})
+
+/**
+ *
+ * El filtro general para los folios. No es nesario definir otro, automaticamente
+ * toma los datos de los paramentros y hace la busqueda. Si no se definie ninguno
+ * retorna todas las coincidencias.
+ *
+ *
+ * Hay que ver todos los paramentros que tiene. Por que si son bastantes.
+ *
+ */
 app.get("/", (req, res) => {
     // Obtenemos todos los parametros.
-    let query = req.query;
-    // Cargamos los objetos de busqueda para obtener
-    // los parametros que mandamos por el query.
+    let query = req.query
+        // Cargamos los objetos de busqueda para obtener
+        // los parametros que mandamos por el query.
     let objetoDeBusqueda = {
         /**
          * Define si se va a buscar dentro de los folios terminados
@@ -179,27 +220,27 @@ app.get("/", (req, res) => {
          * La fecha de entrega a produccion hasta donde se va a filtrar.
          */
         fechaDeEntregaAProduccionHasta: query.fechaDeEntregaAProduccionHasta
-    };
+    }
 
     // Eliminar vacios
-    let keys = Object.keys(objetoDeBusqueda);
-    // Quitamos todos los parametros de los cuales
-    // no se recivio nada. Nos brincamos el primer
-    // parametro (foliosTermianados) por que al ser un boleano lo mandamos
-    // a volar siempre que sea false
+    let keys = Object.keys(objetoDeBusqueda)
+        // Quitamos todos los parametros de los cuales
+        // no se recivio nada. Nos brincamos el primer
+        // parametro (foliosTermianados) por que al ser un boleano lo mandamos
+        // a volar siempre que sea false
     for (let i = 0; i < keys.length; i++) {
-        const key = keys[i];
+        const key = keys[i]
         if (objetoDeBusqueda[key] === undefined) {
-            delete objetoDeBusqueda[key];
+            delete objetoDeBusqueda[key]
         }
     }
 
     /**
      * Este arreglo contiene los diferentes pasos de filtro del aggregate.
      */
-    let arregloRedact = [];
+    let arregloRedact = []
 
-    let arregloAnd = [];
+    let arregloAnd = []
 
     if (objetoDeBusqueda.ordenesGeneradas) {
         arregloAnd.push({
@@ -208,7 +249,7 @@ app.get("/", (req, res) => {
                 query.ordenesGeneradas == 0 ?
                 false :
                 false
-        });
+        })
     }
 
     if (objetoDeBusqueda.entregarAProduccion) {
@@ -218,15 +259,15 @@ app.get("/", (req, res) => {
                 query.entregarAProduccion == 0 ?
                 false :
                 false
-        });
+        })
     }
 
     if (objetoDeBusqueda.terminado) {
-        arregloAnd.push({ terminado: { $ne: objetoDeBusqueda.terminado } });
+        arregloAnd.push({ terminado: { $ne: objetoDeBusqueda.terminado } })
     }
 
     if (arregloAnd.length > 0)
-        arregloRedact.push({ $match: { $and: arregloAnd } });
+        arregloRedact.push({ $match: { $and: arregloAnd } })
 
     // <!--
     // =====================================
@@ -247,29 +288,29 @@ app.get("/", (req, res) => {
                 $gte: new Date(),
                 $lte: new Date()
             }
-        };
+        }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionDesdeEl")) {
             obCreacion.fechaFolio.$gte = new Date(
                 objetoDeBusqueda.fechaDeEntregaAProduccionDesdeEl
-            );
+            )
         }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionHasta")) {
             obCreacion.fechaFolio.$lte = new Date(
                 objetoDeBusqueda.fechaDeEntregaAProduccionHasta
-            );
+            )
         }
 
         if (!objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionDesdeEl"))
-            delete obCreacion.fechaFolio.$gte;
+            delete obCreacion.fechaFolio.$gte
         if (!objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionHasta"))
-            delete obCreacion.fechaFolio.$lte;
+            delete obCreacion.fechaFolio.$lte
 
         if (arregloRedact.length > 0) {
-            arregloRedact[0].$match.$and.push(obCreacion);
+            arregloRedact[0].$match.$and.push(obCreacion)
         } else {
-            arregloRedact.push({ $match: { $and: [obCreacion] } });
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
         }
     }
 
@@ -286,29 +327,27 @@ app.get("/", (req, res) => {
                 $gte: new Date(),
                 $lte: new Date()
             }
-        };
+        }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaCreacionDesdeEl")) {
             obCreacion.fechaFolio.$gte = new Date(
                 objetoDeBusqueda.fechaCreacionDesdeEl
-            );
+            )
         }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaCreacionHasta")) {
-            obCreacion.fechaFolio.$lte = new Date(
-                objetoDeBusqueda.fechaCreacionHasta
-            );
+            obCreacion.fechaFolio.$lte = new Date(objetoDeBusqueda.fechaCreacionHasta)
         }
 
         if (!objetoDeBusqueda.hasOwnProperty("fechaCreacionDesdeEl"))
-            delete obCreacion.fechaFolio.$gte;
+            delete obCreacion.fechaFolio.$gte
         if (!objetoDeBusqueda.hasOwnProperty("fechaCreacionHasta"))
-            delete obCreacion.fechaFolio.$lte;
+            delete obCreacion.fechaFolio.$lte
 
         if (arregloRedact.length > 0) {
-            arregloRedact[0].$match.$and.push(obCreacion);
+            arregloRedact[0].$match.$and.push(obCreacion)
         } else {
-            arregloRedact.push({ $match: { $and: [obCreacion] } });
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
         }
     }
 
@@ -325,29 +364,29 @@ app.get("/", (req, res) => {
                 $gte: new Date(),
                 $lte: new Date()
             }
-        };
+        }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaDesdeEl")) {
             obCreacion.fechaEntrega.$gte = new Date(
                 objetoDeBusqueda.fechaEntregaEstimadaDesdeEl
-            );
+            )
         }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaHasta")) {
             obCreacion.fechaEntrega.$lte = new Date(
                 objetoDeBusqueda.fechaEntregaEstimadaHasta
-            );
+            )
         }
 
         if (!objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaDesdeEl"))
-            delete obCreacion.fechaEntrega.$gte;
+            delete obCreacion.fechaEntrega.$gte
         if (!objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaHasta"))
-            delete obCreacion.fechaEntrega.$lte;
+            delete obCreacion.fechaEntrega.$lte
 
         if (arregloRedact.length > 0) {
-            arregloRedact[0].$match.$and.push(obCreacion);
+            arregloRedact[0].$match.$and.push(obCreacion)
         } else {
-            arregloRedact.push({ $match: { $and: [obCreacion] } });
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
         }
     }
     // fechaFinalizacionFolio
@@ -363,29 +402,29 @@ app.get("/", (req, res) => {
                 $gte: new Date(),
                 $lte: new Date()
             }
-        };
+        }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioDesdeEl")) {
             obCreacion.fechaTerminado.$gte = new Date(
                 objetoDeBusqueda.fechaFinalizacionFolioDesdeEl
-            );
+            )
         }
 
         if (objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioHasta")) {
             obCreacion.fechaTerminado.$lte = new Date(
                 objetoDeBusqueda.fechaFinalizacionFolioHasta
-            );
+            )
         }
 
         if (!objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioDesdeEl"))
-            delete obCreacion.fechaTerminado.$gte;
+            delete obCreacion.fechaTerminado.$gte
         if (!objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioHasta"))
-            delete obCreacion.fechaTerminado.$lte;
+            delete obCreacion.fechaTerminado.$lte
 
         if (arregloRedact.length > 0) {
-            arregloRedact[0].$match.$and.push(obCreacion);
+            arregloRedact[0].$match.$and.push(obCreacion)
         } else {
-            arregloRedact.push({ $match: { $and: [obCreacion] } });
+            arregloRedact.push({ $match: { $and: [obCreacion] } })
         }
     }
 
@@ -398,21 +437,21 @@ app.get("/", (req, res) => {
                     $options: "gi"
                 }
             }
-        });
+        })
     }
 
     // Cliente
     if (objetoDeBusqueda.hasOwnProperty("cliente")) {
         arregloRedact.push({
             $match: { cliente: ObjectId(objetoDeBusqueda.cliente) }
-        });
+        })
     }
 
     // vendedor
     if (objetoDeBusqueda.hasOwnProperty("vendedor")) {
         arregloRedact.push({
             $match: { vendedor: ObjectId(objetoDeBusqueda.vendedor) }
-        });
+        })
     }
 
     // Buscamos todas las coincidencias con el pedido y solo dejamos el pedido del folio que coincide.
@@ -424,7 +463,7 @@ app.get("/", (req, res) => {
             // que solo se muestre el folio que contiene el pedido.
             arregloRedact.push({
                 $match: { "folioLineas.pedido": objetoDeBusqueda.folioLineas_pedido }
-            });
+            })
         }
 
         arregloRedact.push({
@@ -457,7 +496,7 @@ app.get("/", (req, res) => {
                 porcentajeAvance: true,
                 cantidadProducida: true
             }
-        });
+        })
     }
 
     // <!--
@@ -529,7 +568,7 @@ app.get("/", (req, res) => {
                 entregarAProduccion: "$_id.entregarAProduccion"
             }
         }
-    ];
+    ]
 
     arregloRedact.push(
         // El arreglo lo separamos en propieades folioLineas. Despues lo vamos a jutar.
@@ -633,10 +672,10 @@ app.get("/", (req, res) => {
             // Unimos ahora si todo.
             $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true }
         }
-    );
+    )
 
     // Unimos todo de nuevo
-    arregloRedact = arregloRedact.concat(agruparYProyectarFolio);
+    arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
 
     // <!--
     // =====================================
@@ -645,209 +684,412 @@ app.get("/", (req, res) => {
     // -->
 
     arregloRedact.push(
-        // Separamos las lineas
-        { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
-        // Cargamos el id de la familia
-        {
-            $lookup: {
-                from: "familiadeprocesos",
-                localField: "folioLineas.modeloCompleto.familiaDeProcesos",
-                foreignField: "_id",
-                as: "folioLineas.modeloCompleto.familiaDeProcesos"
-            }
-        },
-        // Hack para que familia sea un objeto.
-        {
-            $unwind: {
-                path: "$folioLineas.modeloCompleto.familiaDeProcesos",
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        // Separamos los procesos
-        {
-            $unwind: {
-                path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos",
-                preserveNullAndEmptyArrays: true
-            }
-        },
-
-        {
-            $lookup: {
-                from: "procesos",
-                localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
-                foreignField: "_id",
-                as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso"
-            }
-        }, {
-            $lookup: {
-                from: "procesos",
-                localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre",
-                foreignField: "_id",
-                as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre"
-            }
-        },
-        // Hack para que proceso sea un objeto.
-        {
-            $unwind: {
-                path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
-                preserveNullAndEmptyArrays: true
-            }
-        }, {
-            $unwind: {
-                path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre",
-                preserveNullAndEmptyArrays: true
-            }
-        },
-        // Cargamos los departamentos
-        {
-            $lookup: {
-                from: "departamentos",
-                localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento",
-                foreignField: "_id",
-                as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento"
-            }
-        }, {
-            $lookup: {
-                from: "departamentos",
-                localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento",
-                foreignField: "_id",
-                as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento"
-            }
-        },
-        // Hack para que departamento sea un objeto.
-        {
-            $unwind: {
-                path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento",
-                preserveNullAndEmptyArrays: true
-            }
-        }, {
-            $unwind: {
-                path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento",
-                preserveNullAndEmptyArrays: true
-            }
-        },
-
-
-
-      // Expandimos tambien las maquinass para rellenarlas. 
-
-    {
-        $unwind: {
-            path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas",
-            preserveNullAndEmptyArrays: true
-        }
-    },
-
-    {
-        $lookup: {
-            from: "maquinas",
-            localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas",
-            foreignField: "_id",
-            as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas"
-        }
-    },
-
-    {
-        $unwind: {
-            path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas",
-            preserveNullAndEmptyArrays: true
-        }
-    },
-
-    // Reagrupamos las maquinas en base a los procesos a los que pertenecen y a los id del 
-    // pedido. 
-
-    {
-        $group: {
-            _id: {
-                pedido: "$folioLineas._id",
-                proceso: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso._id"
-            },
-            folio: {
-                $first: "$$ROOT"
-            },
-            pedido: {
-                $first: "$$ROOT.folioLineas"
-            },
-            maquinas: {
-                $push: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas"
-            }
-        }
-    },
-
-    {
-        $addFields: {
-            "pedido.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas": "$maquinas"
-        }
-    },
-
-    // //   Agrupamos primero para obtener los procesos que corresponden a cada pedido.
-    // //   Cada pedido debe tener un modeloEspecifico, por lo tanto tiene una familia que
-    // // a su vez tiene los procesos (no proceso). Estos los agrupamos a la altura del pedido
-    // //   para depues agregarselos al pedido.
-
-
-    {
-        $group: {
-            _id: "$pedido._id",
-            folio: {
-                //   Este es para preservar la informacion del folio.
-                $first: "$$ROOT.folio"
-            },
-            pedido: {
-                $first: "$$ROOT.pedido"
-            },
-
-            procesos: {
-                $push: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos"
-            }
-        }
-    },
-
-        {
-            $addFields: {
-                // Anadimos los procesos a la familia sustituyendo
-                // Los que actualmente tiene
-                "pedido.modeloCompleto.familiaDeProcesos.procesos": "$$ROOT.procesos"
-            }
-        },
-
-        {
-            //   Ahora agrupamos todo por el id del folio para que los pedidos
-            // que tengan el mismo folio queden juntos.
-            $group: {
-                _id: "$$ROOT.folio._id",
-                folio: { $first: "$$ROOT.folio" },
-                //   Hace que los pedidos de un mismo folio se agrupen
-                // bajo el mismo arreglo.
-                pedidos: {
-                    $push: "$$ROOT.pedido"
+            // Separamos las lineas
+            { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
+            // Cargamos el id de la familia
+            {
+                $lookup: {
+                    from: "familiadeprocesos",
+                    localField: "folioLineas.modeloCompleto.familiaDeProcesos",
+                    foreignField: "_id",
+                    as: "folioLineas.modeloCompleto.familiaDeProcesos"
                 }
-            }
-        },
+            },
+            // Hack para que familia sea un objeto.
+            {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            // Separamos los procesos
+            {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
 
-        {
-            //   Sobreescribimos los pedidos del folio
-            // con los que habiamos modificado
-            $addFields: {
-                "folio.folioLineas": "$$ROOT.pedidos"
-            }
-        },
+            {
+                $lookup: {
+                    from: "procesos",
+                    localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
+                    foreignField: "_id",
+                    as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso"
+                }
+            }, {
+                $lookup: {
+                    from: "procesos",
+                    localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre",
+                    foreignField: "_id",
+                    as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre"
+                }
+            },
+            // Hack para que proceso sea un objeto.
+            {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
+                    preserveNullAndEmptyArrays: true
+                }
+            }, {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            // Cargamos los departamentos
+            {
+                $lookup: {
+                    from: "departamentos",
+                    localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento",
+                    foreignField: "_id",
+                    as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento"
+                }
+            }, {
+                $lookup: {
+                    from: "departamentos",
+                    localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento",
+                    foreignField: "_id",
+                    as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento"
+                }
+            },
+            // Hack para que departamento sea un objeto.
+            {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento",
+                    preserveNullAndEmptyArrays: true
+                }
+            }, {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
 
-        {
-            // Por ultimo hacemos que que la estructura principal sea el folio que estaba
-            // en el grupo. Esta funcion ignora las propiedases _id y pedidos que
-            // estabamos arrastrando y pone como raiz el folio. Esto aplica para
-            // cada uno de los los folios de manera que obtenemos el arreglo de folios
-            // que teniamos al principio.
-            $replaceRoot: { newRoot: "$folio" }
-        }
-    );
-    // <!--
-    // =====================================
-    //  END Popular familias de proceso y departamentos
-    // =====================================
-    // -->
+            // Expandimos tambien las maquinass para rellenarlas.
+
+            {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            {
+                $lookup: {
+                    from: "maquinas",
+                    localField: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas",
+                    foreignField: "_id",
+                    as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas"
+                }
+            },
+
+            {
+                $unwind: {
+                    path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Reagrupamos las maquinas en base a los procesos a los que pertenecen y a los id del
+            // pedido.
+
+            {
+                $group: {
+                    _id: {
+                        pedido: "$folioLineas._id",
+                        proceso: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso._id"
+                    },
+                    folio: {
+                        $first: "$$ROOT"
+                    },
+                    pedido: {
+                        $first: "$$ROOT.folioLineas"
+                    },
+                    maquinas: {
+                        $push: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas"
+                    }
+                }
+            },
+
+            {
+                $addFields: {
+                    "pedido.modeloCompleto.familiaDeProcesos.procesos.proceso.maquinas": "$maquinas"
+                }
+            },
+
+            // //   Agrupamos primero para obtener los procesos que corresponden a cada pedido.
+            // //   Cada pedido debe tener un modeloEspecifico, por lo tanto tiene una familia que
+            // // a su vez tiene los procesos (no proceso). Estos los agrupamos a la altura del pedido
+            // //   para depues agregarselos al pedido.
+
+            {
+                $group: {
+                    _id: "$pedido._id",
+                    folio: {
+                        //   Este es para preservar la informacion del folio.
+                        $first: "$$ROOT.folio"
+                    },
+                    pedido: {
+                        $first: "$$ROOT.pedido"
+                    },
+
+                    procesos: {
+                        $push: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos"
+                    }
+                }
+            },
+
+            {
+                $addFields: {
+                    // Anadimos los procesos a la familia sustituyendo
+                    // Los que actualmente tiene
+                    "pedido.modeloCompleto.familiaDeProcesos.procesos": "$$ROOT.procesos"
+                }
+            },
+
+            {
+                //   Ahora agrupamos todo por el id del folio para que los pedidos
+                // que tengan el mismo folio queden juntos.
+                $group: {
+                    _id: "$$ROOT.folio._id",
+                    folio: { $first: "$$ROOT.folio" },
+                    //   Hace que los pedidos de un mismo folio se agrupen
+                    // bajo el mismo arreglo.
+                    pedidos: {
+                        $push: "$$ROOT.pedido"
+                    }
+                }
+            },
+
+            {
+                //   Sobreescribimos los pedidos del folio
+                // con los que habiamos modificado
+                $addFields: {
+                    "folio.folioLineas": "$$ROOT.pedidos"
+                }
+            },
+
+            {
+                // Por ultimo hacemos que que la estructura principal sea el folio que estaba
+                // en el grupo. Esta funcion ignora las propiedases _id y pedidos que
+                // estabamos arrastrando y pone como raiz el folio. Esto aplica para
+                // cada uno de los los folios de manera que obtenemos el arreglo de folios
+                // que teniamos al principio.
+                $replaceRoot: { newRoot: "$folio" }
+            },
+
+            // <!--
+            // =====================================
+            //  Lookup para trayectos en orden
+            // =====================================
+
+            // Deshacemos el arreglo de folioLineas.
+            { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
+            // Deshacemos el arreglo de las ordenes.
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            // Deshacemos el arreglo del trayecto normal.
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes.trayectoNormal",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            // Deshacemos e arreglo del trayecto recorrido.
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes.trayectoRecorrido",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Cargamos los departaemtos del trayecto normal
+
+            {
+                $lookup: {
+                    from: "departamentos",
+                    localField: "folioLineas.ordenes.trayectoNormal.departamento",
+                    foreignField: "_id",
+                    as: "folioLineas.ordenes.trayectoNormal.departamento"
+                }
+            },
+            // Quitamos el arreglo que se hizo en trayecto normal del departamento.
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes.trayectoNormal.departamento",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Cargamos los departamentos del trayectoRecorrido
+            {
+                $lookup: {
+                    from: "departamentos",
+                    localField: "folioLineas.ordenes.trayectoRecorrido.departamento",
+                    foreignField: "_id",
+                    as: "folioLineas.ordenes.trayectoRecorrido.departamento"
+                }
+            },
+            // Deshacemos el arreglo que se hizo en trayectorecorrido del departamento
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes.trayectoRecorrido.departamento",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Cargamos el departamento de ubicacion actual.
+            {
+                $lookup: {
+                    from: "departamentos",
+                    localField: "folioLineas.ordenes.ubicacionActual.departamento",
+                    foreignField: "_id",
+                    as: "folioLineas.ordenes.ubicacionActual.departamento"
+                }
+            },
+
+            // Deshacemos el arreglo de ubicacion actual.
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes.ubicacionActual.departamento",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // cargamos los departamentos de siguiente departamaneto.
+            {
+                $lookup: {
+                    from: "departamentos",
+                    localField: "folioLineas.ordenes.siguienteDepartamento.departamento",
+                    foreignField: "_id",
+                    as: "folioLineas.ordenes.siguienteDepartamento.departamento"
+                }
+            },
+            // Deshacemos el arreglo.
+            {
+                $unwind: {
+                    path: "$folioLineas.ordenes.siguienteDepartamento.departamento",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+
+            // Agrupamos todo por ordenes.
+
+            {
+                $group: {
+                    _id: "$folioLineas.ordenes._id",
+                    folio: { $first: "$$ROOT" },
+                    pedido: { $first: "$$ROOT.folioLineas" },
+
+                    trayectoNormal: {
+                        // No aplicamos condicion aqui por que siempre se generan ordenes
+                        // con trayecto normal.
+                        $push: "$folioLineas.ordenes.trayectoNormal"
+                    },
+                    trayectoRecorrido: {
+                        $push: {
+                            // Esta condicion del push es para forzar a que se agraven
+                            // los elementos del arreglo como nulo si asi lo estan.
+                            $cond: {
+                                if: {
+                                    $not: { $ifNull: ["$folioLineas.ordenes.trayectoNormal", true] }
+                                },
+                                // Si no estan nulos se guarda el trayeco dentro del arreglo.
+                                then: "$folioLineas.ordenes.trayectoNormal",
+                                else: null
+                            }
+                        }
+                    }
+                }
+            },
+
+            {
+                $project: {
+                    _id: "$_id",
+                    folio: "$folio",
+                    pedido: "$pedido",
+                    trayectoNormal: {
+                        // Filtramos los nulos. Estos
+                        // dos arreglos no pueden llevar nulos.
+                        $filter: {
+                            input: "$trayectoNormal",
+                            as: "trayecto",
+                            // Si no es nulo lo dejamos.
+                            cond: { $ne: ["$$trayecto", null] }
+                        }
+                    },
+                    trayectoRecorrido: {
+                        // Tambien filtramos.
+                        $filter: {
+                            input: "$trayectoRecorrido",
+                            as: "trayecto",
+                            cond: { $ne: ["$$trayecto", null] }
+                        }
+                    }
+                }
+            },
+            // Agregamos lso trayectos a las ordenes.
+
+            {
+                $addFields: {
+                    "pedido.ordenes.trayectoNormal": "$$ROOT.trayectoNormal",
+                    "pedido.ordenes.trayectoRecorrido": "$$ROOT.trayectoRecorrido"
+                }
+            },
+
+            // Agrupamos por pedido y pushamos las ordenes.
+            {
+                $group: {
+                    _id: "$pedido._id",
+
+                    folio: { $first: "$$ROOT.folio" },
+                    pedido: { $first: "$$ROOT.pedido" },
+
+                    ordenes: { $push: "$$ROOT.pedido.ordenes" }
+                }
+            }, {
+                $addFields: {
+                    "pedido.ordenes": "$$ROOT.ordenes"
+                }
+            },
+
+            // Agrupamos por folios.
+            {
+                $group: {
+                    _id: "$folio._id",
+
+                    folio: { $first: "$$ROOT.folio" },
+                    folioLineas: { $push: "$pedido" }
+                }
+            }, {
+                $addFields: {
+                    "folio.folioLineas": "$$ROOT.folioLineas"
+                }
+            },
+
+            {
+                // Volvemos a la estuctura original .
+                $replaceRoot: { newRoot: "$folio" }
+            }
+
+            // -->
+
+            // <!--
+            // =====================================
+            //  END Lookup para trayectos en orden
+            // =====================================
+            // -->
+        )
+        // <!--
+        // =====================================
+        //  END Popular familias de proceso y departamentos
+        // =====================================
+        // -->
 
     // arregloRedact = arregloRedact.concat(agruparYProyectarFolio);
 
@@ -870,17 +1112,17 @@ app.get("/", (req, res) => {
         "folioLineas_tamano",
         "folioLineas_color",
         "folioLineas_terminado"
-    ];
+    ]
 
-    let generarUwind = false;
+    let generarUwind = false
 
-    let llavesActuales = Object.keys(objetoDeBusqueda).join(" ");
+    let llavesActuales = Object.keys(objetoDeBusqueda).join(" ")
     for (let i = 0; i < arregloDeDisparadoresDeUnwind.length; ++i) {
-        const element = arregloDeDisparadoresDeUnwind[i];
+        const element = arregloDeDisparadoresDeUnwind[i]
 
         if (llavesActuales.includes(element)) {
-            generarUwind = true;
-            break;
+            generarUwind = true
+            break
         }
     }
 
@@ -889,7 +1131,7 @@ app.get("/", (req, res) => {
         // Separamos cada linea en sus respectivos objetos.
         arregloRedact.push({
             $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-        });
+        })
 
         // Modelo
         if (objetoDeBusqueda.hasOwnProperty("folioLineas_modelo")) {
@@ -902,7 +1144,7 @@ app.get("/", (req, res) => {
                         )
                     }
                 }
-            );
+            )
         }
 
         // tamano
@@ -916,7 +1158,7 @@ app.get("/", (req, res) => {
                         )
                     }
                 }
-            );
+            )
         }
 
         // color
@@ -930,7 +1172,7 @@ app.get("/", (req, res) => {
                         )
                     }
                 }
-            );
+            )
         }
 
         // terminado
@@ -944,11 +1186,11 @@ app.get("/", (req, res) => {
                         )
                     }
                 }
-            );
+            )
         }
 
         // Volvemos a juntar todo
-        arregloRedact = arregloRedact.concat(agruparYProyectarFolio);
+        arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
     }
 
     // <!--
@@ -961,60 +1203,60 @@ app.get("/", (req, res) => {
          * Los campos por los cuales se puede ordenar.
          */
         let camposSorteables = [
-            "nivelDeUrgencia",
-            "ordenesGeneradas",
-            "impreso",
-            "terminado",
-            "numeroDeFolio",
-            "cliente",
-            "fechaFolio",
-            "fechaEntrega",
-            "vendedor",
-            "observaciones",
-            "folioLineas",
-            "fechaDeEntregaAProduccion"
-        ];
-        // Separamos los valores
-        let lv1 = objetoDeBusqueda.sortCampos.split("@");
+                "nivelDeUrgencia",
+                "ordenesGeneradas",
+                "impreso",
+                "terminado",
+                "numeroDeFolio",
+                "cliente",
+                "fechaFolio",
+                "fechaEntrega",
+                "vendedor",
+                "observaciones",
+                "folioLineas",
+                "fechaDeEntregaAProduccion"
+            ]
+            // Separamos los valores
+        let lv1 = objetoDeBusqueda.sortCampos.split("@")
 
         for (let i = 0; i < lv1.length; i++) {
-            const ele = lv1[i].toString().trim();
-            const regex = /.*>(-|)1/gm;
+            const ele = lv1[i].toString().trim()
+            const regex = /.*>(-|)1/gm
             if (!regex.test(ele)) {
                 return RESP._500(res, {
                     msj: "El elemento para ordenar no coincide con el patron aceptado. ",
                     err: `'${ele}' = Patron aceptado => ${regex.toString()}`
-                });
+                })
             }
         }
 
-        let lv2 = {};
+        let lv2 = {}
 
         for (let i = 0; i < lv1.length; i++) {
-            const element = lv1[i];
-            let c = element.split(">")[0];
-            let o = element.split(">")[1];
+            const element = lv1[i]
+            let c = element.split(">")[0]
+            let o = element.split(">")[1]
 
-            lv2[c] = Number(o);
+            lv2[c] = Number(o)
         }
 
-        let llavesLv2 = Object.keys(lv2);
+        let llavesLv2 = Object.keys(lv2)
 
         let inexistentes = llavesLv2.filter(x => {
-            return !camposSorteables.join(" ").includes(x);
-        });
+            return !camposSorteables.join(" ").includes(x)
+        })
 
-        let t = inexistentes.length;
+        let t = inexistentes.length
         if (t > 0) {
             return RESP._500(res, {
                 msj: `${t > 1 ? "Los campos" : "El campo"} '${inexistentes.join(
           ", "
         )}' no ${t > 1 ? "son validos" : "es valido."} `,
                 err: "Es necesario que corrijas el filtro para poder continuar."
-            });
+            })
         }
 
-        arregloRedact.push({ $sort: lv2 });
+        arregloRedact.push({ $sort: lv2 })
     }
 
     /**
@@ -1025,7 +1267,7 @@ app.get("/", (req, res) => {
      */
     arregloRedact.push({
         $group: { _id: null, total: { $sum: 1 }, folios: { $push: "$$ROOT" } }
-    });
+    })
 
     /**
      * Una vez que tenemos el total es necesario restringir la cantidad de elemento que vamos a devolver.
@@ -1052,7 +1294,7 @@ app.get("/", (req, res) => {
                 ]
             }
         }
-    });
+    })
 
     // <!--
     // =====================================
@@ -1062,19 +1304,19 @@ app.get("/", (req, res) => {
 
     Folio.aggregate(arregloRedact)
         .then(folios => {
-            console.log("el folio=> ", folios);
+            console.log("el folio=> ", folios)
             return RESP._200(res, null, [
                 { tipo: "borrar", datos: folios },
                 { tipo: "total", datos: folios[0] ? folios[0].total : 0 },
                 { tipo: "folios", datos: folios[0] ? folios[0].folios : [] }
-            ]);
+            ])
         })
         .catch(err => {
             return RESP._500(res, {
                 msj: "Hubo un error filtrando los folios",
                 err: err
-            });
-        });
-});
+            })
+        })
+})
 
-module.exports = app;
+module.exports = app

@@ -17,7 +17,7 @@ const ordenSchema = new Schema({
     // El valor de la órden de la suma del folio, el órden del pedido y el numero de esta órden.
     orden: { type: String },
 
-    numeroDeOrden: { type: Number, min: 1, required: [true, 'El número de órden es obligatorio'] },
+    numeroDeOrden: { type: Number, required: [true, 'El número de órden es obligatorio'] },
     //La cantidad de la órden. Si media, una completa ó fracción. Antes era el 0.5 de 1
     unidad: { type: Number, min: 0.0001, max: 1, required: [true, 'La únidad de esta órden es requerida.'] },
     piezasTeoricas: { type: Number, min: 1, required: [true, 'Es necesario definir la cantidad esperada de esta órden.'] },

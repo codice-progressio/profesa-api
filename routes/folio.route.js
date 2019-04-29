@@ -1061,210 +1061,209 @@ app.get("/", (req, res) => {
   // =====================================
   // -->
 
-  // // Como ya tenemos los datos referenciados de modeloCompleto ahora buscamos
-  // // por cada uno en particular.
+  // Como ya tenemos los datos referenciados de modeloCompleto ahora buscamos
+  // por cada uno en particular.
 
-  // // Estos dos son necesarios por que hay que convertir el id de un string
+  // Estos dos son necesarios por que hay que convertir el id de un string
 
-  // // Si hay alguno de los siguientes dentro del objeto de busqueda aplicamos
-  // // el unwind para que no se haga por cada elemento que queremos buscar
+  // Si hay alguno de los siguientes dentro del objeto de busqueda aplicamos
+  // el unwind para que no se haga por cada elemento que queremos buscar
 
-  // const arregloDeDisparadoresDeUnwind = [
-  //     "folioLineas_modelo",
-  //     "folioLineas_tamano",
-  //     "folioLineas_color",
-  //     "folioLineas_terminado"
-  // ]
+  const arregloDeDisparadoresDeUnwind = [
+      "folioLineas_modelo",
+      "folioLineas_tamano",
+      "folioLineas_color",
+      "folioLineas_terminado"
+  ]
 
-  // let generarUwind = false
+  let generarUwind = false
 
-  // let llavesActuales = Object.keys(objetoDeBusqueda).join(" ")
-  // for (let i = 0; i < arregloDeDisparadoresDeUnwind.length; ++i) {
-  //     const element = arregloDeDisparadoresDeUnwind[i]
+  let llavesActuales = Object.keys(objetoDeBusqueda).join(" ")
+  for (let i = 0; i < arregloDeDisparadoresDeUnwind.length; ++i) {
+      const element = arregloDeDisparadoresDeUnwind[i]
 
-  //     if (llavesActuales.includes(element)) {
-  //         generarUwind = true
-  //         break
-  //     }
-  // }
+      if (llavesActuales.includes(element)) {
+          generarUwind = true
+          break
+      }
+  }
 
-  // if (generarUwind) {
-  //     // No podemos hacer un match dentro de un arreglo.
-  //     // Separamos cada linea en sus respectivos objetos.
-  //     arregloRedact.push({
-  //         $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-  //     })
+  if (generarUwind) {
+      // No podemos hacer un match dentro de un arreglo.
+      // Separamos cada linea en sus respectivos objetos.
+      arregloRedact.push({
+          $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
+      })
 
-  //     // Modelo
-  //     if (objetoDeBusqueda.hasOwnProperty("folioLineas_modelo")) {
-  //         arregloRedact.push(
-  //             // Buscamos la coincidencia con el modelo
-  //             {
-  //                 $match: {
-  //                     "folioLineas.modeloCompleto.modelo._id": ObjectId(
-  //                         objetoDeBusqueda.folioLineas_modelo
-  //                     )
-  //                 }
-  //             }
-  //         )
-  //     }
+      // Modelo
+      if (objetoDeBusqueda.hasOwnProperty("folioLineas_modelo")) {
+          arregloRedact.push(
+              // Buscamos la coincidencia con el modelo
+              {
+                  $match: {
+                      "folioLineas.modeloCompleto.modelo._id": ObjectId(
+                          objetoDeBusqueda.folioLineas_modelo
+                      )
+                  }
+              }
+          )
+      }
 
-  //     // tamano
-  //     if (objetoDeBusqueda.hasOwnProperty("folioLineas_tamano")) {
-  //         arregloRedact.push(
-  //             // Buscamos la coincidencia con el tamano
-  //             {
-  //                 $match: {
-  //                     "folioLineas.modeloCompleto.tamano._id": ObjectId(
-  //                         objetoDeBusqueda.folioLineas_tamano
-  //                     )
-  //                 }
-  //             }
-  //         )
-  //     }
+      // tamano
+      if (objetoDeBusqueda.hasOwnProperty("folioLineas_tamano")) {
+          arregloRedact.push(
+              // Buscamos la coincidencia con el tamano
+              {
+                  $match: {
+                      "folioLineas.modeloCompleto.tamano._id": ObjectId(
+                          objetoDeBusqueda.folioLineas_tamano
+                      )
+                  }
+              }
+          )
+      }
 
-  //     // color
-  //     if (objetoDeBusqueda.hasOwnProperty("folioLineas_color")) {
-  //         arregloRedact.push(
-  //             // Buscamos la coincidencia con el color
-  //             {
-  //                 $match: {
-  //                     "folioLineas.modeloCompleto.color._id": ObjectId(
-  //                         objetoDeBusqueda.folioLineas_color
-  //                     )
-  //                 }
-  //             }
-  //         )
-  //     }
+      // color
+      if (objetoDeBusqueda.hasOwnProperty("folioLineas_color")) {
+          arregloRedact.push(
+              // Buscamos la coincidencia con el color
+              {
+                  $match: {
+                      "folioLineas.modeloCompleto.color._id": ObjectId(
+                          objetoDeBusqueda.folioLineas_color
+                      )
+                  }
+              }
+          )
+      }
 
-  //     // terminado
-  //     if (objetoDeBusqueda.hasOwnProperty("folioLineas_terminado")) {
-  //         arregloRedact.push(
-  //             // Buscamos la coincidencia con el terminado
-  //             {
-  //                 $match: {
-  //                     "folioLineas.modeloCompleto.terminado._id": ObjectId(
-  //                         objetoDeBusqueda.folioLineas_terminado
-  //                     )
-  //                 }
-  //             }
-  //         )
-  //     }
+      // terminado
+      if (objetoDeBusqueda.hasOwnProperty("folioLineas_terminado")) {
+          arregloRedact.push(
+              // Buscamos la coincidencia con el terminado
+              {
+                  $match: {
+                      "folioLineas.modeloCompleto.terminado._id": ObjectId(
+                          objetoDeBusqueda.folioLineas_terminado
+                      )
+                  }
+              }
+          )
+      }
 
-  //     // Volvemos a juntar todo
-  //     arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
-  // }
+      // Volvemos a juntar todo
+      arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
+  }
 
-  // // <!--
-  // // =====================================
-  // //  Sort, Limit & skip
-  // // =====================================
-  // // -->
-  // if (objetoDeBusqueda.hasOwnProperty("sortCampos")) {
-  //     /**
-  //      * Los campos por los cuales se puede ordenar.
-  //      */
-  //     let camposSorteables = [
-  //             "nivelDeUrgencia",
-  //             "ordenesGeneradas",
-  //             "impreso",
-  //             "terminado",
-  //             "numeroDeFolio",
-  //             "cliente",
-  //             "fechaFolio",
-  //             "fechaEntrega",
-  //             "vendedor",
-  //             "observaciones",
-  //             "folioLineas",
-  //             "fechaDeEntregaAProduccion"
-  //         ]
-  //         // Separamos los valores
-  //     let lv1 = objetoDeBusqueda.sortCampos.split("@")
+  // <!--
+  // =====================================
+  //  Sort, Limit & skip
+  // =====================================
+  // -->
+  if (objetoDeBusqueda.hasOwnProperty("sortCampos")) {
+      /**
+       * Los campos por los cuales se puede ordenar.
+       */
+      let camposSorteables = [
+              "nivelDeUrgencia",
+              "ordenesGeneradas",
+              "impreso",
+              "terminado",
+              "numeroDeFolio",
+              "cliente",
+              "fechaFolio",
+              "fechaEntrega",
+              "vendedor",
+              "observaciones",
+              "folioLineas",
+              "fechaDeEntregaAProduccion"
+          ]
+          // Separamos los valores
+      let lv1 = objetoDeBusqueda.sortCampos.split("@")
 
-  //     for (let i = 0; i < lv1.length; i++) {
-  //         const ele = lv1[i].toString().trim()
-  //         const regex = /.*>(-|)1/gm
-  //         if (!regex.test(ele)) {
-  //             return RESP._500(res, {
-  //                 msj: "El elemento para ordenar no coincide con el patron aceptado. ",
-  //                 err: `'${ele}' = Patron aceptado => ${regex.toString()}`
-  //             })
-  //         }
-  //     }
+      for (let i = 0; i < lv1.length; i++) {
+          const ele = lv1[i].toString().trim()
+          const regex = /.*>(-|)1/gm
+          if (!regex.test(ele)) {
+              return RESP._500(res, {
+                  msj: "El elemento para ordenar no coincide con el patron aceptado. ",
+                  err: `'${ele}' = Patron aceptado => ${regex.toString()}`
+              })
+          }
+      }
 
-  //     let lv2 = {}
+      let lv2 = {}
 
-  //     for (let i = 0; i < lv1.length; i++) {
-  //         const element = lv1[i]
-  //         let c = element.split(">")[0]
-  //         let o = element.split(">")[1]
+      for (let i = 0; i < lv1.length; i++) {
+          const element = lv1[i]
+          let c = element.split(">")[0]
+          let o = element.split(">")[1]
 
-  //         lv2[c] = Number(o)
-  //     }
+          lv2[c] = Number(o)
+      }
 
-  //     let llavesLv2 = Object.keys(lv2)
+      let llavesLv2 = Object.keys(lv2)
 
-  //     let inexistentes = llavesLv2.filter(x => {
-  //         return !camposSorteables.join(" ").includes(x)
-  //     })
+      let inexistentes = llavesLv2.filter(x => {
+          return !camposSorteables.join(" ").includes(x)
+      })
 
-  //     let t = inexistentes.length
-  //     if (t > 0) {
-  //         return RESP._500(res, {
-  //             msj: `${t > 1 ? "Los campos" : "El campo"} '${inexistentes.join(
-  //       ", "
-  //     )}' no ${t > 1 ? "son validos" : "es valido."} `,
-  //             err: "Es necesario que corrijas el filtro para poder continuar."
-  //         })
-  //     }
+      let t = inexistentes.length
+      if (t > 0) {
+          return RESP._500(res, {
+              msj: `${t > 1 ? "Los campos" : "El campo"} '${inexistentes.join(
+        ", "
+      )}' no ${t > 1 ? "son validos" : "es valido."} `,
+              err: "Es necesario que corrijas el filtro para poder continuar."
+          })
+      }
 
-  //     arregloRedact.push({ $sort: lv2 })
-  // }
+      arregloRedact.push({ $sort: lv2 })
+  }
 
-  // /**
-  //  * Agregamos los resultados hasta ahora para contarlos y poder paginar.
-  //  * La idea aqui es agrupar todo bajo un _id null y crear un nueva propiedad
-  //  * llamada total donde se suman todos los elementos. Despues creamos el paramentro folios
-  //  * y asigamos el $$ROOT para mantener los datos.
-  //  */
-  // arregloRedact.push({
-  //     $group: { _id: null, total: { $sum: 1 }, folios: { $push: "$$ROOT" } }
-  // })
+  /**
+   * Agregamos los resultados hasta ahora para contarlos y poder paginar.
+   * La idea aqui es agrupar todo bajo un _id null y crear un nueva propiedad
+   * llamada total donde se suman todos los elementos. Despues creamos el paramentro folios
+   * y asigamos el $$ROOT para mantener los datos.
+   */
+  arregloRedact.push({
+      $group: { _id: null, total: { $sum: 1 }, folios: { $push: "$$ROOT" } }
+  })
 
-  // /**
-  //  * Una vez que tenemos el total es necesario restringir la cantidad de elemento que vamos a devolver.
-  //  * Para eso utilizamos $project...
-  //  *
-  //  */
-  // arregloRedact.push({
-  //     $project: {
-  //         // Este define que si se muestre la propiedad total.
-  //         total: 1,
-  //         // Ahora le dicimos que si muetre la propiedad folios pero...
-  //         folios: {
-  //             // Primero la vamos a cortar.
-  //             $slice: [
-  //                 // Le decimos el arreglo que va cortar.
-  //                 "$folios",
-  //                 // Desde donde va a empezar a cortar.
-  //                 Number(objetoDeBusqueda.desde),
-  //                 // Hasta donde va a dejar de cortar.
-  //                 Number(objetoDeBusqueda.limite)
-  //                 // Para estos elememntos previamente ya habiamos
-  //                 // definido que si no llega desde o limite damos
-  //                 // valores por defecto para usar el paginador.
-  //             ]
-  //         }
-  //     }
-  // })
+  /**
+   * Una vez que tenemos el total es necesario restringir la cantidad de elemento que vamos a devolver.
+   * Para eso utilizamos $project...
+   *
+   */
+  arregloRedact.push({
+      $project: {
+          // Este define que si se muestre la propiedad total.
+          total: 1,
+          // Ahora le dicimos que si muetre la propiedad folios pero...
+          folios: {
+              // Primero la vamos a cortar.
+              $slice: [
+                  // Le decimos el arreglo que va cortar.
+                  "$folios",
+                  // Desde donde va a empezar a cortar.
+                  Number(objetoDeBusqueda.desde),
+                  // Hasta donde va a dejar de cortar.
+                  Number(objetoDeBusqueda.limite)
+                  // Para estos elememntos previamente ya habiamos
+                  // definido que si no llega desde o limite damos
+                  // valores por defecto para usar el paginador.
+              ]
+          }
+      }
+  })
 
-  // // <!--
-  // // =====================================
-  // //  END Sort, Limit & skip
-  // // =====================================
-  // // -->
+  // <!--
+  // =====================================
+  //  END Sort, Limit & skip
+  // =====================================
+  // -->
 
-  console.log("arreglo", arregloRedact)
 
   let error = err => {
     return RESP._500(res, {
@@ -1286,7 +1285,6 @@ app.get("/", (req, res) => {
     ])
       .then(resp => {
         return RESP._200(res, null, [
-          { tipo: "NO ESTA USANDO EL ARREGLO", datos: "SIN ARREGLO" },
           { tipo: "folios", datos: resp[0] },
           { tipo: "total", datos: resp[1] }
         ])
@@ -1296,7 +1294,6 @@ app.get("/", (req, res) => {
     Folio.aggregate(arregloRedact)
       .then(folios => {
         return RESP._200(res, null, [
-          { tipo: "info", datos: folios },
           { tipo: "total", datos: folios[0] ? folios[0].total : 0 },
           { tipo: "folios", datos: folios[0] ? folios[0].folios : [] }
         ])

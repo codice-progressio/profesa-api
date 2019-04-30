@@ -25,5 +25,8 @@
         "mongoose-sequence": "^5.0.1",
         "mongoose-unique-validator": "^2.0.2",
         "nodemon": "^1.18.11"
+    },
+    "devDependencies": {
+        "eslint": "^5.16.0"
     }
 }

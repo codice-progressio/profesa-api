@@ -46,7 +46,7 @@ app.post("/enviarAProduccion", (req, res) => {
   let msj = ""
 
   Folio.findById(req.body._id)
-    .then(folio => {
+    .then((folio) => {
       if (!folio) {
         return RESP._400(res, {
           msj: "No existe el folio.",
@@ -75,10 +75,10 @@ app.post("/enviarAProduccion", (req, res) => {
 
       return folio.save()
     })
-    .then(folioGrabado => {
+    .then((folioGrabado) => {
       return RESP._200(res, msj, [{ tipo: "folio", datos: folioGrabado }])
     })
-    .catch(err => {
+    .catch((err) => {
       return RESP._500(res, {
         msj: "Hubo un error buscando el folio.",
         err: err
@@ -89,9 +89,9 @@ app.post("/enviarAProduccion", (req, res) => {
 /**
  * Senala el folio con ordenes impresas.
  */
-app.post("/ordenesImpresas", (req, res, next) => {
+app.post("/ordenesImpresas", (req, res) => {
   Folio.findById(req.body._id)
-    .then(folioEncontrado => {
+    .then((folioEncontrado) => {
       if (!folioEncontrado) {
         return RESP._400(res, {
           msj: "No existe el folio.",
@@ -101,10 +101,10 @@ app.post("/ordenesImpresas", (req, res, next) => {
       folioEncontrado.impreso = true
       return folioEncontrado.save()
     })
-    .then(folioGrabado => {
+    .then((folioGrabado) => {
       return RESP._200(res, null, [{ tipo: "folio", datos: folioGrabado }])
     })
-    .catch(err => {
+    .catch((err) => {
       return RESP._500(res, {
         msj: "Hubo un error buscando el folio para senalarlo como impreso",
         err: err
@@ -435,12 +435,12 @@ app.get("/", (req, res) => {
 
   //folio
   if (objetoDeBusqueda.hasOwnProperty("numeroDeFolio")) {
+    if (isNaN(objetoDeBusqueda.numeroDeFolio))
+       throw "El numero de folio debe ser un numero valido."
+
     arregloRedact.push({
       $match: {
-        numeroDeFolio: {
-          $regex: objetoDeBusqueda.numeroDeFolio,
-          $options: "gi"
-        }
+        numeroDeFolio: Number(objetoDeBusqueda.numeroDeFolio)
       }
     })
   }
@@ -1031,13 +1031,12 @@ app.get("/", (req, res) => {
   arregloRedact.push(
     {
       $project: {
-        folio: '$$ROOT',
+        folio: "$$ROOT",
         ordenes: {
           $filter: {
             input: "$folioLineas.ordenes",
             as: "orden",
-            cond: { $ifNull: ['$$orden._id', false] }
-          
+            cond: { $ifNull: ["$$orden._id", false] }
           }
         }
       }
@@ -1048,18 +1047,79 @@ app.get("/", (req, res) => {
       }
     },
     {
-      $replaceRoot: { newRoot: '$folio'}
+      $replaceRoot: { newRoot: "$folio" }
     }
   )
 
   arregloRedact = arregloRedact.concat($group_Folios_1)
-
 
   // <!--
   // =====================================
   //  END NUEVA SECCION
   // =====================================
   // -->
+
+  /**
+   * Un arreglo que contiene la agrupacion y proyeccion para volver a
+   * la estructura original del folio. Es necesario hacer un concat()
+   * al array arregloRedact para agregar cada uno.
+   */
+  let agruparYProyectarFolio = [
+    {
+      // Una vez que cargamos los datos ahora hay que volver a agrupar. Primero hacemos un grupo
+      // que contenga todos los datos del folio. Este es el id. En este grupo tambien se agregan
+      // Las folio lineas.
+
+      $group: {
+        _id: {
+          _id: "$_id",
+          nivelDeUrgencia: "$nivelDeUrgencia",
+          ordenesGeneradas: "$ordenesGeneradas",
+          impreso: "$impreso",
+          terminado: "$terminado",
+          numeroDeFolio: "$numeroDeFolio",
+          cliente: "$cliente",
+          fechaFolio: "$fechaFolio",
+          fechaEntrega: "$fechaEntrega",
+          vendedor: "$vendedor",
+          observaciones: "$observaciones",
+          observacionesVendedor: "$observacionesVendedor",
+          porcentajeAvance: "$porcentajeAvance",
+          cantidadProducida: "$cantidadProducida",
+          fechaTerminado: "$fechaTerminado",
+          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+          entregarAProduccion: "$entregarAProduccion"
+        },
+
+        folioLineas: { $push: "$folioLineas" }
+      }
+    },
+
+    // Proyectamos todo para volver a tener la estructura original.
+
+    {
+      $project: {
+        _id: "$_id._id",
+        nivelDeUrgencia: "$_id.nivelDeUrgencia",
+        ordenesGeneradas: "$_id.ordenesGeneradas",
+        impreso: "$_id.impreso",
+        terminado: "$_id.terminado",
+        numeroDeFolio: "$_id.numeroDeFolio",
+        cliente: "$_id.cliente",
+        fechaFolio: "$_id.fechaFolio",
+        fechaEntrega: "$_id.fechaEntrega",
+        vendedor: "$_id.vendedor",
+        observaciones: "$_id.observaciones",
+        observacionesVendedor: "$_id.observacionesVendedor",
+        folioLineas: "$folioLineas",
+        porcentajeAvance: "$_id.porcentajeAvance",
+        cantidadProducida: "$_id.cantidadProducida",
+        fechaTerminado: "$_id.fechaTerminado",
+        fechaDeEntregaAProduccion: "$_id.fechaDeEntregaAProduccion",
+        entregarAProduccion: "$_id.entregarAProduccion"
+      }
+    }
+  ]
 
   // Como ya tenemos los datos referenciados de modeloCompleto ahora buscamos
   // por cada uno en particular.
@@ -1070,89 +1130,89 @@ app.get("/", (req, res) => {
   // el unwind para que no se haga por cada elemento que queremos buscar
 
   const arregloDeDisparadoresDeUnwind = [
-      "folioLineas_modelo",
-      "folioLineas_tamano",
-      "folioLineas_color",
-      "folioLineas_terminado"
+    "folioLineas_modelo",
+    "folioLineas_tamano",
+    "folioLineas_color",
+    "folioLineas_terminado"
   ]
 
   let generarUwind = false
 
   let llavesActuales = Object.keys(objetoDeBusqueda).join(" ")
   for (let i = 0; i < arregloDeDisparadoresDeUnwind.length; ++i) {
-      const element = arregloDeDisparadoresDeUnwind[i]
+    const element = arregloDeDisparadoresDeUnwind[i]
 
-      if (llavesActuales.includes(element)) {
-          generarUwind = true
-          break
-      }
+    if (llavesActuales.includes(element)) {
+      generarUwind = true
+      break
+    }
   }
 
   if (generarUwind) {
-      // No podemos hacer un match dentro de un arreglo.
-      // Separamos cada linea en sus respectivos objetos.
-      arregloRedact.push({
-          $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-      })
+    // No podemos hacer un match dentro de un arreglo.
+    // Separamos cada linea en sus respectivos objetos.
+    arregloRedact.push({
+      $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
+    })
 
-      // Modelo
-      if (objetoDeBusqueda.hasOwnProperty("folioLineas_modelo")) {
-          arregloRedact.push(
-              // Buscamos la coincidencia con el modelo
-              {
-                  $match: {
-                      "folioLineas.modeloCompleto.modelo._id": ObjectId(
-                          objetoDeBusqueda.folioLineas_modelo
-                      )
-                  }
-              }
-          )
-      }
+    // Modelo
+    if (objetoDeBusqueda.hasOwnProperty("folioLineas_modelo")) {
+      arregloRedact.push(
+        // Buscamos la coincidencia con el modelo
+        {
+          $match: {
+            "folioLineas.modeloCompleto.modelo._id": ObjectId(
+              objetoDeBusqueda.folioLineas_modelo
+            )
+          }
+        }
+      )
+    }
 
-      // tamano
-      if (objetoDeBusqueda.hasOwnProperty("folioLineas_tamano")) {
-          arregloRedact.push(
-              // Buscamos la coincidencia con el tamano
-              {
-                  $match: {
-                      "folioLineas.modeloCompleto.tamano._id": ObjectId(
-                          objetoDeBusqueda.folioLineas_tamano
-                      )
-                  }
-              }
-          )
-      }
+    // tamano
+    if (objetoDeBusqueda.hasOwnProperty("folioLineas_tamano")) {
+      arregloRedact.push(
+        // Buscamos la coincidencia con el tamano
+        {
+          $match: {
+            "folioLineas.modeloCompleto.tamano._id": ObjectId(
+              objetoDeBusqueda.folioLineas_tamano
+            )
+          }
+        }
+      )
+    }
 
-      // color
-      if (objetoDeBusqueda.hasOwnProperty("folioLineas_color")) {
-          arregloRedact.push(
-              // Buscamos la coincidencia con el color
-              {
-                  $match: {
-                      "folioLineas.modeloCompleto.color._id": ObjectId(
-                          objetoDeBusqueda.folioLineas_color
-                      )
-                  }
-              }
-          )
-      }
+    // color
+    if (objetoDeBusqueda.hasOwnProperty("folioLineas_color")) {
+      arregloRedact.push(
+        // Buscamos la coincidencia con el color
+        {
+          $match: {
+            "folioLineas.modeloCompleto.color._id": ObjectId(
+              objetoDeBusqueda.folioLineas_color
+            )
+          }
+        }
+      )
+    }
 
-      // terminado
-      if (objetoDeBusqueda.hasOwnProperty("folioLineas_terminado")) {
-          arregloRedact.push(
-              // Buscamos la coincidencia con el terminado
-              {
-                  $match: {
-                      "folioLineas.modeloCompleto.terminado._id": ObjectId(
-                          objetoDeBusqueda.folioLineas_terminado
-                      )
-                  }
-              }
-          )
-      }
+    // terminado
+    if (objetoDeBusqueda.hasOwnProperty("folioLineas_terminado")) {
+      arregloRedact.push(
+        // Buscamos la coincidencia con el terminado
+        {
+          $match: {
+            "folioLineas.modeloCompleto.terminado._id": ObjectId(
+              objetoDeBusqueda.folioLineas_terminado
+            )
+          }
+        }
+      )
+    }
 
-      // Volvemos a juntar todo
-      arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
+    // Volvemos a juntar todo
+    arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
   }
 
   // <!--
@@ -1161,64 +1221,64 @@ app.get("/", (req, res) => {
   // =====================================
   // -->
   if (objetoDeBusqueda.hasOwnProperty("sortCampos")) {
-      /**
-       * Los campos por los cuales se puede ordenar.
-       */
-      let camposSorteables = [
-              "nivelDeUrgencia",
-              "ordenesGeneradas",
-              "impreso",
-              "terminado",
-              "numeroDeFolio",
-              "cliente",
-              "fechaFolio",
-              "fechaEntrega",
-              "vendedor",
-              "observaciones",
-              "folioLineas",
-              "fechaDeEntregaAProduccion"
-          ]
-          // Separamos los valores
-      let lv1 = objetoDeBusqueda.sortCampos.split("@")
+    /**
+     * Los campos por los cuales se puede ordenar.
+     */
+    let camposSorteables = [
+      "nivelDeUrgencia",
+      "ordenesGeneradas",
+      "impreso",
+      "terminado",
+      "numeroDeFolio",
+      "cliente",
+      "fechaFolio",
+      "fechaEntrega",
+      "vendedor",
+      "observaciones",
+      "folioLineas",
+      "fechaDeEntregaAProduccion"
+    ]
+    // Separamos los valores
+    let lv1 = objetoDeBusqueda.sortCampos.split("@")
 
-      for (let i = 0; i < lv1.length; i++) {
-          const ele = lv1[i].toString().trim()
-          const regex = /.*>(-|)1/gm
-          if (!regex.test(ele)) {
-              return RESP._500(res, {
-                  msj: "El elemento para ordenar no coincide con el patron aceptado. ",
-                  err: `'${ele}' = Patron aceptado => ${regex.toString()}`
-              })
-          }
+    for (let i = 0; i < lv1.length; i++) {
+      const ele = lv1[i].toString().trim()
+      const regex = /.*>(-|)1/gm
+      if (!regex.test(ele)) {
+        return RESP._500(res, {
+          msj: "El elemento para ordenar no coincide con el patron aceptado. ",
+          err: `'${ele}' = Patron aceptado => ${regex.toString()}`
+        })
       }
+    }
 
-      let lv2 = {}
+    let lv2 = {}
 
-      for (let i = 0; i < lv1.length; i++) {
-          const element = lv1[i]
-          let c = element.split(">")[0]
-          let o = element.split(">")[1]
+    for (let i = 0; i < lv1.length; i++) {
+      const element = lv1[i]
+      let c = element.split(">")[0]
+      let o = element.split(">")[1]
 
-          lv2[c] = Number(o)
-      }
+      lv2[c] = Number(o)
+    }
 
-      let llavesLv2 = Object.keys(lv2)
+    let llavesLv2 = Object.keys(lv2)
 
-      let inexistentes = llavesLv2.filter(x => {
-          return !camposSorteables.join(" ").includes(x)
+    let inexistentes = llavesLv2.filter((x) => {
+      return !camposSorteables.join(" ").includes(x)
+    })
+
+    let t = inexistentes.length
+    if (t > 0) {
+      return RESP._500(res, {
+        msj: `${t > 1 ? "Los campos" : "El campo"} '${inexistentes.join(
+          ", "
+        )}' no ${t > 1 ? "son validos" : "es valido."} `,
+        err: "Es necesario que corrijas el filtro para poder continuar."
       })
+    }
 
-      let t = inexistentes.length
-      if (t > 0) {
-          return RESP._500(res, {
-              msj: `${t > 1 ? "Los campos" : "El campo"} '${inexistentes.join(
-        ", "
-      )}' no ${t > 1 ? "son validos" : "es valido."} `,
-              err: "Es necesario que corrijas el filtro para poder continuar."
-          })
-      }
-
-      arregloRedact.push({ $sort: lv2 })
+    arregloRedact.push({ $sort: lv2 })
   }
 
   /**
@@ -1228,7 +1288,7 @@ app.get("/", (req, res) => {
    * y asigamos el $$ROOT para mantener los datos.
    */
   arregloRedact.push({
-      $group: { _id: null, total: { $sum: 1 }, folios: { $push: "$$ROOT" } }
+    $group: { _id: null, total: { $sum: 1 }, folios: { $push: "$$ROOT" } }
   })
 
   /**
@@ -1237,25 +1297,25 @@ app.get("/", (req, res) => {
    *
    */
   arregloRedact.push({
-      $project: {
-          // Este define que si se muestre la propiedad total.
-          total: 1,
-          // Ahora le dicimos que si muetre la propiedad folios pero...
-          folios: {
-              // Primero la vamos a cortar.
-              $slice: [
-                  // Le decimos el arreglo que va cortar.
-                  "$folios",
-                  // Desde donde va a empezar a cortar.
-                  Number(objetoDeBusqueda.desde),
-                  // Hasta donde va a dejar de cortar.
-                  Number(objetoDeBusqueda.limite)
-                  // Para estos elememntos previamente ya habiamos
-                  // definido que si no llega desde o limite damos
-                  // valores por defecto para usar el paginador.
-              ]
-          }
+    $project: {
+      // Este define que si se muestre la propiedad total.
+      total: 1,
+      // Ahora le dicimos que si muetre la propiedad folios pero...
+      folios: {
+        // Primero la vamos a cortar.
+        $slice: [
+          // Le decimos el arreglo que va cortar.
+          "$folios",
+          // Desde donde va a empezar a cortar.
+          Number(objetoDeBusqueda.desde),
+          // Hasta donde va a dejar de cortar.
+          Number(objetoDeBusqueda.limite)
+          // Para estos elememntos previamente ya habiamos
+          // definido que si no llega desde o limite damos
+          // valores por defecto para usar el paginador.
+        ]
       }
+    }
   })
 
   // <!--
@@ -1264,8 +1324,7 @@ app.get("/", (req, res) => {
   // =====================================
   // -->
 
-
-  let error = err => {
+  let error = (err) => {
     return RESP._500(res, {
       msj: "Hubo un error filtrando los folios",
       err: err
@@ -1283,7 +1342,7 @@ app.get("/", (req, res) => {
         .skip(objetoDeBusqueda.desde)
         .countDocuments()
     ])
-      .then(resp => {
+      .then((resp) => {
         return RESP._200(res, null, [
           { tipo: "folios", datos: resp[0] },
           { tipo: "total", datos: resp[1] }
@@ -1292,7 +1351,7 @@ app.get("/", (req, res) => {
       .catch(error)
   } else {
     Folio.aggregate(arregloRedact)
-      .then(folios => {
+      .then((folios) => {
         return RESP._200(res, null, [
           { tipo: "total", datos: folios[0] ? folios[0].total : 0 },
           { tipo: "folios", datos: folios[0] ? folios[0].folios : [] }

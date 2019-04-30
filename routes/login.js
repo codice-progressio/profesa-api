@@ -1,8 +1,6 @@
 var express = require('express');
 var app = express();
 
-// Requires
-var colores = require('../utils/colors');
 var bcrypt = require('bcryptjs');
 var Usuario = require('../models/usuario');
 var jwt = require('jsonwebtoken');
@@ -90,7 +88,7 @@ app.post('/google', async(req, res) => {
                 return res.status(400).send({
                     ok: false,
                     mensaje: 'Debe de usar su autenticación normal',
-                    error: error.message
+                    // error: error.message
                 });
             } else {
                 var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 });
@@ -141,8 +139,7 @@ app.post('/google', async(req, res) => {
 
 app.post('/', (req, res) => {
 
-    var body = req.body;
-    console.log(`${colores.info('PROBANDO EL LOGIN')}  Entramos al login ${req}`);
+    var body = req.body
     Usuario.findOne({ email: body.email }).exec().then(usuarioDB => {
 
         if (!usuarioDB) {
@@ -229,6 +226,7 @@ function obtenerMenu(ROLE) {
                 { titulo: 'Revision de folios', url: '/folios/revision' },
                 { titulo: 'Seguimientos', url: '/folios/seguimiento' },
 
+
             ]
         },
         GESTION_DE_PROCESOS: {
@@ -247,6 +245,15 @@ function obtenerMenu(ROLE) {
 
                 // { titulo: 'Costos de proceso', url: '/procesos/costos' },
                 // { titulo: 'Hit', url: '/hits' },
+            ]
+        },
+
+        VENTAS: {
+            roles: [],
+            titulo: 'Ventas',
+            icono: 'fas fa-file-contract',
+            submenu: [
+                { titulo: 'Mis folios', url: '/ventas/misFolios' },
             ]
         },
         ADMINISTRADOR: {

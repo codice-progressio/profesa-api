@@ -248,9 +248,9 @@ app.get("/", (req, res) => {
   if (objetoDeBusqueda.ordenesGeneradas) {
     arregloAnd.push({
       ordenesGeneradas:
-        query.ordenesGeneradas == 1
+        objetoDeBusqueda.ordenesGeneradas == 1
           ? true
-          : query.ordenesGeneradas == 0
+          : objetoDeBusqueda.ordenesGeneradas == 0
           ? false
           : false
     })

@@ -18,7 +18,7 @@ var CONSTANSTES = require("../utils/constantes");
  * @return {total, [datos], msj } Retorna el objeto con la estructura comun y los datos consultados. Incluye el total de elementos de la bd.
  */
 const get = function(modelo, app, nombreDeObjeto, campoSortDefault, select) {
-    app.get("/", (req, res, next) => {
+    app.get("/", (req, res) => {
         const CONSULTAS = CONSTANSTES.consultas(req.query, campoSortDefault);
 
         Promise.all([
@@ -57,7 +57,7 @@ const get = function(modelo, app, nombreDeObjeto, campoSortDefault, select) {
  * @param {*} select  Un string con los campos para el select.
  */
 const getById = function(modelo, app, nombreDeObjeto, select) {
-    app.get("/:id", (req, res, next) => {
+    app.get("/:id", (req, res) => {
         const id = req.params.id;
 
         if (!id) {
@@ -123,7 +123,7 @@ const getBuscar = function(
     campoSortDefault,
     select
 ) {
-    app.get("/buscar/:termino", (req, res, next) => {
+    app.get("/buscar/:termino", (req, res) => {
         const CONSULTAS = CONSTANSTES.consultas(req.query, campoSortDefault);
         // El termino de busqueda que se va a aplicar.
         const termino = req.params.termino;
@@ -184,7 +184,7 @@ const getBuscar = function(
  * @return { [datos], msj } Retorna el objeto con la estructura comun y los datos consultados.
  */
 const post = function(modelo, app, nombreDeObjeto) {
-    app.post("/", (req, res, next) => {
+    app.post("/", (req, res) => {
         // Obtenemos el mdelo.
         const datosAGrabar = new modelo(req.body);
 
@@ -220,7 +220,7 @@ const post = function(modelo, app, nombreDeObjeto) {
  *
  */
 const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
-    app.put("/", (req, res, next) => {
+    app.put("/", (req, res) => {
         const id = req.body._id;
         if (!id) {
             return RESP._400(res, {
@@ -278,7 +278,7 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
  * @param {*} nombreDeObjeto El nombre que recibira el objet. En el caso del post es en singular (usuario, modelo, tamano, etc.)
  */
 const deletee = function(modelo, app, nombreDeObjeto) {
-    app.delete("/:id", (req, res, next) => {
+    app.delete("/:id", (req, res) => {
         const id = req.params.id;
 
         if (!id) {
@@ -319,7 +319,6 @@ const deletee = function(modelo, app, nombreDeObjeto) {
     });
 };
 
-var modelo;
 
 module.exports = {
     _modelo: null,
@@ -441,7 +440,7 @@ module.exports = {
      *
      */
     crud: function(...DATOS) {
-        fun = {};
+        let fun = {};
 
         /**
          * La cadena en donde se aplicaran los campos
@@ -490,7 +489,7 @@ module.exports = {
             put(
                 this.modelo,
                 this.app,
-                this.nombreDeObjetoPlural,
+                this.nombreDeObjetoSingular,
                 this.camposActualizables
             );
         };
@@ -519,9 +518,7 @@ module.exports = {
                 const element = fun[key];
                 element();
             } else {
-                console.log(
-                    `${colores.info("CRUD REPOSITORY")}  No existe la propiedad: ${key}`
-                );
+                throw `${colores.info("CRUD REPOSITORY")}  No existe la propiedad: ${key}`
             }
         }
     }

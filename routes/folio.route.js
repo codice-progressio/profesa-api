@@ -37,6 +37,26 @@ CRUD.camposDeBusqueda = ["numeroDeFolio", "observaciones"]
 
 CRUD.crud("delete", "post", "getById", "put")
 
+app.get("/folioImpreso/:id", (req, res) => {
+  Folio.findById(req.params.id)
+    .then((folio) => {
+      if (!folio) throw "No existe el folio."
+      folio.impreso = true
+      return folio.save()
+    })
+    .then(() => {
+      return RESP._200(res, "El folio se marco como impreso", [
+        //  { tipo: 'folio', datos: folio },
+      ])
+    })
+    .catch((err) => {
+      return RESP._500(res, {
+        msj: "Hubo un error marcando el folio como impreso. ",
+        err: err
+      })
+    })
+})
+
 /**
  * Senala el folio listo para produccion o no dependiendo de
  * que valor tenga la bandera. que se le pase como parametro.
@@ -132,12 +152,7 @@ app.get("/", (req, res) => {
      * Define si se va a buscar dentro de los folios terminados
      * o los que todavia estan en produccion.
      */
-    terminado:
-      query.foliosTerminados == "0"
-        ? false
-        : query.foliosTerminados === "1"
-        ? true
-        : undefined,
+    folioTerminado: query.foliosTerminados,
     /**
      * El id del folio que se quiere buscar.
      */
@@ -267,8 +282,20 @@ app.get("/", (req, res) => {
     })
   }
 
-  if (objetoDeBusqueda.terminado) {
-    arregloAnd.push({ terminado: { $ne: objetoDeBusqueda.terminado } })
+  if (objetoDeBusqueda.folioTerminado) {
+    let conversion =
+      objetoDeBusqueda.folioTerminado == "0"
+        ? false
+        : objetoDeBusqueda.folioTerminado === "1"
+        ? true
+        : -1
+
+    if (conversion === -1) {
+      throw `El valor del filtro para folios terminados no es valido val:(${
+        objetoDeBusqueda.folioTerminado
+      })`
+    }
+    arregloAnd.push({ terminado:  conversion })
   }
 
   if (arregloAnd.length > 0)
@@ -436,7 +463,7 @@ app.get("/", (req, res) => {
   //folio
   if (objetoDeBusqueda.hasOwnProperty("numeroDeFolio")) {
     if (isNaN(objetoDeBusqueda.numeroDeFolio))
-       throw "El numero de folio debe ser un numero valido."
+      throw "El numero de folio debe ser un numero valido."
 
     arregloRedact.push({
       $match: {

@@ -290,21 +290,21 @@ function obtenerMenu(ROLE) {
                 { titulo: 'Producto terminado', url: '/produccion/productoTerminado' },
             ]
         },
-        // CHUCHERIAS: {
-        //     roles: [
-        //         CONST.ROLES.SUPER_ADMIN,
-        //     ],
-        //     titulo: 'SUPER-ADMIN',
-        //     icono: 'fa fa-user tada inifinite animated',
-        //     submenu: [
-        //         { titulo: 'Hospitales', url: '/hospitales' },
-        //         { titulo: 'Médicos', url: '/medicos' },
-        //         { titulo: 'ProgressBar', url: '/progress' },
-        //         { titulo: 'Gráficas', url: '/graficas1' },
-        //         { titulo: 'Promesas', url: '/promesas' },
-        //         { titulo: 'rxjs', url: '/rxjs' },
-        //     ]
-        // }
+        CHUCHERIAS: {
+            roles: [
+                CONST.ROLES.SUPER_ADMIN,
+            ],
+            titulo: 'SUPER-ADMIN',
+            icono: 'fa fa-user tada inifinite animated',
+            submenu: [
+                { titulo: 'Hospitales', url: '/hospitales' },
+                { titulo: 'Médicos', url: '/medicos' },
+                { titulo: 'ProgressBar', url: '/progress' },
+                { titulo: 'Gráficas', url: '/graficas1' },
+                { titulo: 'Promesas', url: '/promesas' },
+                { titulo: 'rxjs', url: '/rxjs' },
+            ]
+        }
     }
 
 

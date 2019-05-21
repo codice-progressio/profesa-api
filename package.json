@@ -1,7 +1,7 @@
 {
     "name": "carrduci-sys-api",
-    "version": "0.4.0",
-    "description": "API server carrduciSYS",
+    "version": "1.0.0",
+    "description": "API server CARRDUCIsys",
     "main": "index.js",
     "scripts": {
         "start": "nodemon app.js",

@@ -87,16 +87,20 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 
 // Obtenemos el token
 app.use((req, res, next) => {
-  const espera = Math.random() * 2 * 5000
+  // const espera = Math.random() * 2 * 5000
   // const espera = 0;
 //   console.log(`Esperando ${espera} ms`)
 //   setTimeout(function() {
+  if (!ENVIROMENT.esModoProduccion)
+  {
     console.log(
       `${new Date()}|` +
         colores.success("PETICION RECIVIDA") +
         colores.danger(req.method) +
         colores.info(req.originalUrl)
     )
+    
+  }
 
     if (
       req.headers.authorization &&

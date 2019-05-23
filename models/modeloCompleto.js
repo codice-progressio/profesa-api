@@ -11,6 +11,8 @@ var Color = require('../models/colores/color');
 var Terminado = require('../models/terminado');
 
 
+var loteSchema = require('../models/almacenProductoTerminado/lote');
+
 var colores = require('../utils/colors');
 
 var marcaLaser = require('../models/marcaLaser');
@@ -96,15 +98,30 @@ var modeloCompletoSchema = new Schema({
     },
 
 
+    /**
+     * La existencia de boton en el almacen. 
+     * Esta se actualiza automaticamente cuando se 
+     * se guarda la salida de boton o entra un nuevo lote. 
+     */
+    existencia: { type: Number },
+
+    /**
+     * Los lotes de este boton. Ver schema para mas info. 
+     */
+    lotes: [loteSchema],
+
+    actualizarLotesYExistencias: { type: Boolean },
+
+    esBaston: { type: Boolean, required: [true, 'Es necesario definir si el modelo es de baston.'], default: false }
+
+
+
 
 }, { collection: 'modelosCompletos' });
 
 
 let generarNombreCompleto = function(next) {
     // Obtenemos los id. 
-
-    console.log('Entro aqui: Generar nombre completo');
-
 
     Promise.all([
             Modelo.findById(this.modelo).exec(),
@@ -118,16 +135,15 @@ let generarNombreCompleto = function(next) {
             let terminado = resp[3];
 
             this.nombreCompleto = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}`;
-            this.nombreCompleto += this.laserAlmacen ? '-' + this.laserAlmacen.laser : '';
-            this.nombreCompleto += this.versionModelo ? '-' + this.versionModelo : '';
+            this.nombreCompleto += this.laserAlmacen.laser.length > 0 ? '-' + this.laserAlmacen.laser : '';
+            this.nombreCompleto += this.versionModelo.split('').length > 0 ? '-' + this.versionModelo : '';
 
-            console.log(` Paso por aqui ${JSON.stringify(this)}`);
+
             next();
 
         })
         .catch(err => {
-            console.log(`${colores.danger('ERROR')}  Hubo un error guardando el nombre completo: ${err}`);
-            throw err;
+            next(err);
         });
 
 };
@@ -138,8 +154,6 @@ let generarNombreCompleto = function(next) {
 
 
 var autoPopulate = function(next) {
-
-    console.log('Entro aqui autopopulate');
 
     this.populate('modelo', 'modelo', null, { sort: { modelo: -1 } });
     this.populate('tamano', 'tamano estandar', null, { sort: { tamano: -1 } });
@@ -220,12 +234,34 @@ modeloCompletoSchema.statics.eliminarRelacionados = function(IDElemento, campo, 
             next();
         })
         .catch(err => {
-            console.log(`${colores.danger('ERROR')}  Hubo un error eliminando los datos relacionados: ${err}`);
-            throw err;
+            next(err);
         });
 
 
 };
+
+/**
+ * Retorna solo los datos necesarios para el 
+ * almacen de producto terminado. Evitamos
+ * que se mande informacion que no nos interesa
+ * mostrar. 
+ *
+ *
+ * @param {*} next
+ * @returns
+ */
+modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
+    let n = {
+        existencia: this.existencia,
+        nombreCompleto: this.nombreCompleto,
+        lotes: this.lotes,
+    };
+    return n;
+};
+
+
+
+
 
 /**
  *Busca y elimina los pedidos que esten relacionados con el id del modelo completo que se le
@@ -259,7 +295,7 @@ function eliminarModelosCompletosAutorizadosDeClientesRelacionados(mcIDs, eliC) 
  * @param {*} next
  */
 let eliminarLineasDeFoliosRelacionadas = function(next) {
-    console.log('Estamos eliminando cualquier cosa relacionada con los modelos completos a excepción de sus partes.');
+
     Promise.all([
             eliminarPedidosRelacionados([this._id], { $pull: { folioLineas: { modeloCompleto: { $in: [this._id] } } } }),
             eliminarModelosCompletosAutorizadosDeClientesRelacionados([this._id], { $pull: { modelosCompletosAutorizados: { modeloCompleto: { $in: [this._id] } } } }),
@@ -268,11 +304,31 @@ let eliminarLineasDeFoliosRelacionadas = function(next) {
             console.log(colores.info('DATOS ELIMINADOS') + 'Se eliminaron los datos modelo autorizado para el cliente y pedidos existentes relacionados con este modelo:' + this.nombreCompleto)
             next();
         }).catch(err => {
-            console.log(colores.danger('ERROR EN MIDDLEWARE=>') + err);
-            throw new Error(err);
+            next(err);
         });
 };
 
+/**
+ *Esta funcion se encarga de actualizar las existencias del modelo que se grabe
+  y la de los lotes. 
+ *
+ * @param {*} next
+ */
+let actualizarExistencias = function(next) {
+    // Recorremos todos los lotes y sumamos sus existencias
+    // para modificar la existencia total. 
+    let existenciaTotal = 0;
+
+    this.lotes.forEach(lote => {
+        existenciaTotal += lote.existencia;
+    });
+
+    this.existencia = existenciaTotal;
+
+    next();
+
+
+};
 
 
 
@@ -282,9 +338,10 @@ modeloCompletoSchema
     .pre('findOne', autoPopulate)
     .pre('find', autoPopulate)
     // Este orden de save es importante. 
-    .pre('save', autoPopulate)
-    .pre('save', generarNombreCompleto)
-    .pre('remove', eliminarLineasDeFoliosRelacionadas);
 
+.pre('save', autoPopulate)
+    .pre('save', generarNombreCompleto)
+    .pre('save', actualizarExistencias)
+    .pre('remove', eliminarLineasDeFoliosRelacionadas);
 
 module.exports = mongoose.model('ModeloCompleto', modeloCompletoSchema);

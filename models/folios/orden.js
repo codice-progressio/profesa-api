@@ -17,7 +17,7 @@ const ordenSchema = new Schema({
     // El valor de la órden de la suma del folio, el órden del pedido y el numero de esta órden.
     orden: { type: String },
 
-    numeroDeOrden: { type: Number, min: 1, required: [true, 'El número de órden es obligatorio'] },
+    numeroDeOrden: { type: Number, required: [true, 'El número de órden es obligatorio'] },
     //La cantidad de la órden. Si media, una completa ó fracción. Antes era el 0.5 de 1
     unidad: { type: Number, min: 0.0001, max: 1, required: [true, 'La únidad de esta órden es requerida.'] },
     piezasTeoricas: { type: Number, min: 1, required: [true, 'Es necesario definir la cantidad esperada de esta órden.'] },
@@ -39,13 +39,6 @@ const ordenSchema = new Schema({
 
     nivelDeUrgencia: NVU.KEY,
 
-    //Esta fecha no la cargamos desde el principio. 
-    // La usamos solo como transporte para cuando 
-    // se filtran las órdenes por departamento. 
-    // si la modificamos desde el principio y la guardamos
-    // sería un problema despues modificar la fecha si 
-    // la del foio cambia. 
-    fechaFolio: { type: Date },
 
     //La máquina en que se esta trabajando actualmente. 
     maquinaActual: {
@@ -57,6 +50,15 @@ const ordenSchema = new Schema({
     terminada: { type: Boolean, value: false },
     porcentajeAvance: { type: Number, value: 0, max: 100, min: 0 },
 
+    // ESTOS DATOS SOLO REPITEN LO QUE YA HAY EN EL FOLIO Y EN EL PEDIDO
+    // LOS PUSIMOS AQUI MOTIVADOS PARA LOS REPORTES BUSCANDO OBTENER
+    // SOLO ORDENES SIN EL FOLIO COMPLETO. 
+    vendedor: { type: Schema.Types.ObjectId, ref: 'Usuario' },
+    fechaFolio: { type: Date },
+    idFolio: { type: Schema.Types.ObjectId, ref: 'Folio' },
+    observacionesPedido: { type: String },
+    observacionesFolio: { type: String },
+    desdeAlmacen: { type: Boolean },
 });
 
 

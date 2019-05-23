@@ -10,7 +10,7 @@ CRUD.nombreDeObjetoSingular = 'terminado';
 CRUD.nombreDeObjetoPlural = 'terminados';
 CRUD.campoSortDefault = 'terminado';
 CRUD.camposActualizables = {
-    // estandar: null,
+    terminado: null
 };
 
 
@@ -22,12 +22,6 @@ CRUD.camposDeBusqueda = [
 
 CRUD.crud();
 
-
-
-
-
-// Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
-module.exports = app;
 
 
 

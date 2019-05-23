@@ -1,14 +1,18 @@
 //Esto es necesario
-var express = require('express');
-var app = express();
-var colores = require('../utils/colors');
-var NVU = require('../config/nivelesDeUrgencia');
+const express = require('express');
+const app = express();
+const colores = require('../utils/colors');
+const NVU = require('../config/nivelesDeUrgencia');
 
-var Folio = require('../models/folios/folio');
-var Departamento = require('../models/departamento');
-var RESP = require('../utils/respStatus');
-var CONST = require('../utils/constantes');
-var Maquina = require('../models/maquina');
+const Folio = require('../models/folios/folio');
+const Departamento = require('../models/departamento');
+const RESP = require('../utils/respStatus');
+const CONST = require('../utils/constantes');
+const Maquina = require('../models/maquina');
+const Default = require('../models/configModels/default');
+
+
+
 
 
 
@@ -35,7 +39,7 @@ function esDeptoActual(orden, depto) {
 // ============================================
 // Recive la órden que se le pase. 
 // ============================================
-// Todos los departamentos necesitan recivir las 
+// Todos los departamentos necesitan recibir las 
 // órdenes antes de empezar a trabajarlas. 
 // 
 // Se se pasa req.query.empezarATrabajar en true
@@ -45,17 +49,16 @@ function esDeptoActual(orden, depto) {
 // una orden a una maquina antes de empezar a a trabajar.
 app.put('/', (req, res) => {
     const id_de_la_orden = req.body._id;
-    const depto = req.body.departamento;
-    const depto_ = Departamento.obtener(depto);
+    /**
+     * Obtenemos el id del departamento. Con este 
+     * id buscamos los datos que nos interesan. 
+     * 
+     */
+    const idDepto = req.body.departamento;
+    let depto_;
     const deptoTrabajado = req.body.deptoTrabajado;
     var mensajeGeneral = '';
 
-    if (!depto_) {
-        return RESP._400(res, {
-            msj: `Parece que el departamento ${depto} no esta registrado.`,
-            err: 'Comunicale este error a tu administrador.',
-        });
-    }
 
     // ============================================
     // Parametros varios para trabajo de órden. 
@@ -65,11 +68,13 @@ app.put('/', (req, res) => {
 
     Promise.all([
         existeFolioConOrden(id_de_la_orden),
-        existeDepartamento(depto)
+        existeDepartamento(idDepto)
     ]).then(respuestas => {
         const fol = respuestas[0];
         const departamento = respuestas[1];
 
+        // Obtenemos las variables del departamento.
+        depto_ = Departamento.obtener(departamento.nombre);
         // Se encuentra en este departamento. 
         let orden = buscarOrdenDentroDeFolio(fol, id_de_la_orden);
 
@@ -146,8 +151,6 @@ function existeFolioConOrden(id) {
                     err: 'El id de la órden que ingresaste no existe.',
                 }));
             }
-            console.log(folioEncontrado);
-
             resolve(folioEncontrado);
         }).catch(err => {
             reject(RESP.errorGeneral({
@@ -160,18 +163,25 @@ function existeFolioConOrden(id) {
 
 }
 
-// ============================================
-// Obtiene la órden de un departamento dado.
-// ============================================
 
+/**
+ * Obtiene la órden de un departamento dado.
+ * 
+ */
 app.get('/:idOrden/:departamento', (req, res) => {
 
+    /**
+     * El id de la orden que queremos obtener. 
+     */
     const idOrden = req.params.idOrden;
-    const departamento = (req.params.departamento).toUpperCase();
+    /**
+     * El departamento donde se encuentra. 
+     */
+    const idDepartamento = req.params.departamento
 
     Promise.all([
         orden(idOrden),
-        existeDepartamento(departamento),
+        existeDepartamento(idDepartamento),
     ]).then(respuestas => {
 
         const orden = respuestas[0][0];
@@ -201,9 +211,9 @@ app.get('/:idOrden/:departamento', (req, res) => {
             let msj_Err = '';
             if (tamanoTrayecto > 0) {
                 const deptoAnterior = orden.trayectoRecorrido[tamanoTrayecto - 1];
-                msj_Err = `Esta órden ya fue terminada por el departamento de ${deptoAnterior.departamento.nombre}, pero es necesario que la recivas para poder empezar a trabajarla.`;
+                msj_Err = `Esta órden ya fue terminada por el departamento de ${deptoAnterior.departamento.nombre}, pero es necesario que la recibas para poder empezar a trabajarla.`;
             } else {
-                const EsteDepto = `Para poder registrarla es necesario que la recivas primero.`;
+                const EsteDepto = `Para poder registrarla es necesario que la recibas primero.`;
                 msj_Err = `La órden todavía no ha sido entregada para empezar su producción. ` + EsteDepto;
             }
             return RESP._400(res, {
@@ -224,10 +234,15 @@ app.get('/:idOrden/:departamento', (req, res) => {
     });
 });
 
+/** 
+ * Buscamos un folio que contenga la órden con el id que le pasemos
+ * como parametro. Esto nos devuelve todo el folio pero solo la linea
+ * que necesitamos. 
+ * @param {*} idOrden
+ * @returns La orden por su id.  
+ * 
+ */
 function orden(idOrden) {
-    // Buscamos un folio que contenga la órden con el id que le pasemos
-    // como parametro. Esto nos devuelve todo el folio pero solo la linea
-    // que necesitamos. 
     const uno = {
         'folioLineas.ordenes': { '$elemMatch': { _id: idOrden } },
     };
@@ -276,16 +291,28 @@ function orden(idOrden) {
 
 }
 
-function existeDepartamento(departamento) {
+
+/**
+ * Busca si el id que se le pase como parametro esta registrado
+ * dentro de los departamentos y obtiene toda su informacion.
+ * Estos departamentos tienen que existir dentro de los defautl.
+ *
+ * @param {*} idDepto
+ */
+function existeDepartamento(idDepto) {
+
     return new Promise((resolve, reject) => {
-        Departamento.existe(departamento).then(departamentoEncontrado => {
-                if (!departamentoEncontrado) {
+        Departamento.findById(idDepto).exec()
+            .then(resp => {
+                if (!resp) {
                     reject(RESP.errorGeneral({
-                        msj: 'No existe el departamento.',
-                        err: 'El departamento que ingresaste no existe o no esta registrado.',
+                        msj: `No existe el id que ingresaste. ${idDepto}`,
+                        err: 'Parece que id del departamento que ingresaste no esta registrado. ',
                     }));
+                } else {
+                    resolve(resp)
                 }
-                resolve(departamentoEncontrado);
+
             })
             .catch(err => {
                 reject(RESP.errorGeneral({
@@ -293,8 +320,6 @@ function existeDepartamento(departamento) {
                     err: err,
                 }));
             });
-
-
     });
 }
 
@@ -302,39 +327,30 @@ function existeDepartamento(departamento) {
 // OBTIENE LA LISTA DE ÓRDENES POR DEPARTAMENTO.
 // ============================================
 app.get('/:depto', (req, res) => {
-    const depto = (req.params.depto).toUpperCase();
+    const idDepto = req.params.depto
 
-    Departamento.existe(depto).then(departamento => {
-        if (!departamento) {
-            return RESP._400(res, {
-                msj: 'Error al buscar el departamento.',
-                err: 'El departamento que ingresaste no existe.',
+    Departamento.findOne({ _id: idDepto }).then(departamento => {
+
+        if (!idDepto) {
+            return RESP._500(res, {
+                msj: 'El departamento no existe. ',
+                err: 'El id del departamento que ingresaste no existe.',
             });
         }
 
         // Primero buscamos todos los folios que tengan órdenes actuales en ese departamento
         const busqueda = {
-            // El la busqueda departamento no esta populado por eso buscamos en .departamento y no
-            // en .departamento._id
+
             'folioLineas.ordenes.ubicacionActual.departamento': departamento._id,
             // Si la órden no esta terminada si la tomanos en cuenta. 
             'folioLineas.ordenes.terminada': false
 
         };
 
-        return Folio.find(busqueda)
-            .populate('folioLineas.ordenes.ubicacionActual.departamento')
-            .populate({
-                path: 'folioLineas.modeloCompleto',
-                populate: {
-                    path: 'modelo tamano color terminado marcaLaser'
-                }
-            }).populate('folioLineas.laserCliente').exec();
+        return Folio.find(busqueda).exec();
 
     }).then(folios => {
-
-
-        //    Creamos la estrucutura para guardar las órdenes por nivel. 
+        // Creamos la estrucutura para guardar las órdenes por nivel. 
         const ordenes = {};
         for (var n in NVU.LV) {
             ordenes[NVU.LV[n]] = [];
@@ -356,7 +372,8 @@ app.get('/:depto', (req, res) => {
                         // ARRIBA POR FOLIOS!!! Y NO POR ORDENES!! DE MANERA QUE TODAS LAS ÓRDENES DEL 
                         // FOLIO SE VAN A MOSTRAR!!! ESTEN EN EL DEPTO QUE ESTEN. 
                         if (orden.terminada === true) return false;
-                        if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento.nombre === depto) {
+                        // Comparamos por el id del departamento. 
+                        if (orden.nivelDeUrgencia === nivel && orden.ubicacionActual.departamento._id.toString() === idDepto.toString()) {
 
                             var ordenO = orden.toObject();
                             ordenO.fechaFolio = folio.fechaFolio;
@@ -446,7 +463,6 @@ app.post('/', (req, res, next) => {
         folioEncontrado.save((err, folioGrabado) => {
 
             if (err) {
-                console.log(err);
                 return RESP._500(res, {
                     msj: 'Hubo un error grabando el folio.',
                     err: err,
@@ -461,29 +477,22 @@ app.post('/', (req, res, next) => {
 
 // ============================================
 // Modifica las ordenes que se le pasen para 
-// recivirlas y entregaras en el depto. Control de produccion.
+// recibirlas y entregaras en el depto. Control de produccion.
 // ============================================
 
-app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
+app.put('/controlDeProduccionRecibirYEntregar', (req, res, next) => {
     const arreglo = req.body;
-    console.log(arreglo);
+    // Obtenemos los defautls:
 
-
-    // Comprobamos que el deparatmento esta la bd y tiene su id.
-    Departamento.existe(CONST.DEPARTAMENTOS.CONTROL_DE_PRODUCCION._n)
-        .then(deptoExistente => {
-            if (!deptoExistente) {
-                return RESP._400(res, {
-                    msj: 'El departamento no existe. ',
-                    err: 'CONTROL DE PRODUCCION NO ESTA REGISTRADO.',
-                });
-            }
-
+    Default.find().exec().
+    then(defaults => {
+            const d = defaults[0];
             return Folio.find({
                 // Buscamos los folios que contengan los id. 
                 'folioLineas.ordenes._id': { $in: arreglo },
                 // y que esten en el departamento. 
-                'folioLineas.ordenes.ubicacionActual.departamento': deptoExistente._id
+                'folioLineas.ordenes.ubicacionActual.departamento': d.DEPARTAMENTOS.CONTROL_DE_PRODUCCION
+
             }).exec()
 
         })
@@ -496,8 +505,6 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
             }
 
             // Filtramos las ordenes para modificarlas. 
-
-            console.log('Cantidad de folios encontrados: ' + foliosEncontrados.length);
 
             foliosEncontrados.forEach(x => {
                 arreglo.forEach(_id => {
@@ -521,7 +528,7 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
         })
         .catch(err => {
             return RESP._500(res, {
-                msj: 'Hubo un error buscando las ordenes para recivirlas y entregarlas.',
+                msj: 'Hubo un error buscando las ordenes para recibirlas y entregarlas.',
                 err: err,
             });
         });
@@ -537,32 +544,33 @@ app.put('/controlDeProduccionRecivirYEntregar', (req, res, next) => {
 
 
 app.put('/:idOrden', (req, res) => {
-    //Hay que saber para que depto es.
-    let depto = req.query.depto;
-
-    //Este camino modificado debe ser 
-    // intercepado por el guard y si no es un usuario 
-    // con permiso suficiente no se debe ejecutar este
-    // controller. 
+    /**
+     * El departamento del cual se agregara un registro. 
+     * 
+     */
+    let idDepto = req.query.depto;
+    /** 
+     *Este camino modificado debe ser 
+     * intercepado por el guard y si no es un usuario 
+     * con permiso suficiente no se debe ejecutar este
+     * controller. 
+     * */
     const caminoModificadoAutorizado = req.query.caminoModificado;
 
-    depto = depto.replace(/\'/g, '');
     const datos = req.body;
 
     // Obtenemos el id de la órden.
     const id = req.params.idOrden;
     Promise.all([
         existeFolioConOrden(id),
-        existeDepartamento(depto)
+        existeDepartamento(idDepto)
     ]).then(respuestas => {
         const folio = respuestas[0];
         const departamento = respuestas[1];
-        console.log('Dentor de la promesa.');
 
 
         const orden = buscarOrdenDentroDeFolio(folio, id);
-        var dep = Departamento.obtener(depto)
-        console.log(`${colores.info('DEPTO OBTENIDO')} Departamento obtenido ${JSON.stringify(dep)}`)
+        const dep = Departamento.obtener(departamento.nombre)
         if (dep) {
 
             // ============================================
@@ -571,8 +579,24 @@ app.put('/:idOrden', (req, res) => {
 
             // schemaParaOrden[depto](orden, datos, departamento);
             // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
-            datosDeOrdenYAvanzar(orden, datos, dep._v);
+            datosDeOrdenYAvanzar(orden, datos, dep._vm);
 
+            folio.save(err => {
+                if (err) {
+                    return RESP._500(res, {
+                        msj: 'Hubo un error actualizando el folio.',
+                        err: err,
+                    });
+
+                }
+
+                // return res.status(200).json({
+                //     ok: true,
+                // });
+                return RESP._200(res, 'Órden modificada correctamente.', [
+                    { tipo: 'todoCorrecto', datos: true },
+                ]);
+            });
 
             // ============================================
             //  TODO: OJO!!! ESTA PARTE TODAVÍA NO ESTA FUNCIONANDO.
@@ -581,41 +605,43 @@ app.put('/:idOrden', (req, res) => {
             // NO BORRAR!!!! NO BORRAR!!!!!!
 
 
-            let datosTransformacion = {
-                orden: orden,
-                departamento: departamento,
-                res: res,
-                callback: function() {
-                    //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
-                    folio.save(err => {
-                        if (err) {
-                            return RESP._500(res, {
-                                msj: 'Hubo un error actualizando el folio.',
-                                err: err,
-                            });
+            // let datosTransformacion = {
+            //     orden: orden,
+            //     departamento: departamento,
+            //     res: res,
+            //     callback: function() {
+            //         //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
+            //         folio.save(err => {
+            //             if (err) {
+            //                 return RESP._500(res, {
+            //                     msj: 'Hubo un error actualizando el folio.',
+            //                     err: err,
+            //                 });
 
-                        }
+            //             }
 
-                        // return res.status(200).json({
-                        //     ok: true,
-                        // });
-                        return RESP._200(res, 'Órden modificada correctamente.', [
-                            { tipo: 'todoCorrecto', datos: true },
-                        ]);
-                    });
+            //             // return res.status(200).json({
+            //             //     ok: true,
+            //             // });
+            //             return RESP._200(res, 'Órden modificada correctamente.', [
+            //                 { tipo: 'todoCorrecto', datos: true },
+            //             ]);
+            //         });
 
-                }
-            };
+            //     }
+            // };
 
 
-            if (!datosTransformacion.orden.ubicacionActual) {
-                //Si no tenemos más ubicaciónes entonces no es necesario 
-                // que hagamos la parte de transformación. 
-                datosTransformacion.orden.terminada = true;
-                datosTransformacion.callback();
-            } else {
-                asingarAMaquinaTransformacion(datosTransformacion);
-            }
+
+            // if (!datosTransformacion.orden.ubicacionActual) {
+            //     //Si no tenemos más ubicaciónes entonces no es necesario 
+            //     // que hagamos la parte de transformación. 
+            //     datosTransformacion.orden.terminada = true;
+            //     datosTransformacion.callback();
+            // } else {
+            //     console.log( )
+            //     // asingarAMaquinaTransformacion(datosTransformacion);
+            // }
         } else {
             return RESP._500(res, {
                 msj: 'Departamento no defindo como funcón en sistema. ',
@@ -628,8 +654,6 @@ app.put('/:idOrden', (req, res) => {
 
         }
     }).catch(err => {
-        console.log(err);
-
         return RESP._500(res, err);
     });
 
@@ -638,6 +662,7 @@ app.put('/:idOrden', (req, res) => {
 
 
 function datosDeOrdenYAvanzar(orden, datos, depto) {
+
     orden.ubicacionActual[depto] = datos;
     avanzarCamino(orden);
 }
@@ -660,7 +685,7 @@ function avanzarCamino(orden, depto) {
             // como trayecto recorrido
             orden.trayectoRecorrido.push(ubicacionActual);
             orden.ubicacionActual = orden.siguienteDepartamento;
-            //No se da entrada por que hay que recivir la órden. 
+            //No se da entrada por que hay que recibir la órden. 
 
 
             // Si hay todavía un departamento en el trayecto normal
@@ -686,147 +711,147 @@ function avanzarCamino(orden, depto) {
 
 
 
-function asingarAMaquinaTransformacion(datos) {
-    //Comprobamos que el trayecto actual se corresponda a 
-    // TRANSFORMACIÓN.
+// function asingarAMaquinaTransformacion(datos) {
+//     //Comprobamos que el trayecto actual se corresponda a 
+//     // TRANSFORMACIÓN.
 
-    const DEPTO = CONST.DEPARTAMENTOS.TRANSFORMACION._n;
+//     const DEPTO = CONST.DEPARTAMENTOS.TRANSFORMACION._n;
 
-    let maquinasconProduccion = [];
-    let maquinasSinProduccion = [];
+//     let maquinasconProduccion = [];
+//     let maquinasSinProduccion = [];
 
 
-    // UbicacionActual = TRANSFORMACION
-    if (datos.orden.ubicacionActual.departamento.nombre === DEPTO) {
-        // Buscar máquinas asigandas a transformacion
-        Maquina.find({ departamentos: DEPTO }, (err, maquinasTransformacion) => {
+//     // UbicacionActual = TRANSFORMACION
+//     if (datos.orden.ubicacionActual.departamento.nombre === DEPTO) {
+//         // Buscar máquinas asigandas a transformacion
+//         Maquina.find({ 'departamentos.nombre': DEPTO }, (err, maquinasTransformacion) => {
 
-            if (err) {
-                return RESP._500(datos.res, {
-                    msj: 'Hubo un error buscando las máquinas.',
-                    err: err
-                });
-            }
+//             if (err) {
+//                 return RESP._500(datos.res, {
+//                     msj: 'Hubo un error buscando las máquinas.',
+//                     err: err
+//                 });
+//             }
 
-            // Hay máquinas?
-            if (!maquinasTransformacion) {
-                RESP._400(res, {
-                    msj: 'No hay máquinas asignadas a ' + DEPTO,
-                    err: 'Es necesario asignar máquinas a este departamento.',
-                    masInfo: [{
-                        infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
-                        dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
-                    }]
-                });
-            }
+//             // Hay máquinas?
+//             if (!maquinasTransformacion) {
+//                 RESP._400(res, {
+//                     msj: 'No hay máquinas asignadas a ' + DEPTO,
+//                     err: 'Es necesario asignar máquinas a este departamento.',
+//                     masInfo: [{
+//                         infoAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
+//                         dataAdicional: CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
+//                     }]
+//                 });
+//             }
 
-            //Separar por las que tienen producción. 
-            maquinasConProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length > 0);
+//             //Separar por las que tienen producción. 
+//             maquinasConProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length > 0);
 
-            //Maquinas que no tiene producción. 
-            maquinasSinProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length === 0);
+//             //Maquinas que no tiene producción. 
+//             maquinasSinProduccion = maquinasTransformacion.filter(maquina => maquina.ordenes.length === 0);
 
-            if (maquinasConProduccion > 0) {
+//             if (maquinasConProduccion > 0) {
 
-                //Agregamos máquina con pedido igual.
-                let maquinasConPedidoIgual = [];
-                maquinasConPedidoIgual = maquinasConProduccion.filter(maquina => {
+//                 //Agregamos máquina con pedido igual.
+//                 let maquinasConPedidoIgual = [];
+//                 maquinasConPedidoIgual = maquinasConProduccion.filter(maquina => {
 
-                    for (let i = 0; i < maquina.ordenes.length; i++) {
-                        const orden = maquina.ordenes[i];
-                        return orden.pedido === datos.orden.pedido;
-                    }
+//                     for (let i = 0; i < maquina.ordenes.length; i++) {
+//                         const orden = maquina.ordenes[i];
+//                         return orden.pedido === datos.orden.pedido;
+//                     }
 
-                });
+//                 });
 
-                //¿Hay maquinas con pedido igual?
-                if (maquinasConPedidoIgual > 0) {
-                    filtrarMaquina(maquinasConPedidoIgual, datos);
-                } else {
-                    // Tomamos una máquina con producción. 
-                    let maquinaConModeloIgual = [];
-                    maquinaConModeloIgual = maquinasConProduccion.filter(maquina => {
-                        for (let i = 0; i < maquina.ordenes.length; i++) {
-                            const orden = maquina.ordenes[i];
-                            return orden.modeloCompleto === datos.orden.modeloCompleto;
-                        }
-                    });
+//                 //¿Hay maquinas con pedido igual?
+//                 if (maquinasConPedidoIgual > 0) {
+//                     filtrarMaquina(maquinasConPedidoIgual, datos);
+//                 } else {
+//                     // Tomamos una máquina con producción. 
+//                     let maquinaConModeloIgual = [];
+//                     maquinaConModeloIgual = maquinasConProduccion.filter(maquina => {
+//                         for (let i = 0; i < maquina.ordenes.length; i++) {
+//                             const orden = maquina.ordenes[i];
+//                             return orden.modeloCompleto === datos.orden.modeloCompleto;
+//                         }
+//                     });
 
-                    //¿Hay máquinas con modeloIgual?
-                    if (maquinaConModeloIgual > 0) {
-                        filtrarMaquina(maquinaConModeloIgual, datos);
-                    } else {
-                        // Tomamos una máquina con proudcción. 
-                        let maquinaConTamanoIgual = [];
-                        maquinaConTamanoIgual = maquinasconProduccion.filter(maquina => {
-                            for (let i = 0; i < maquina.ordenes.length; i++) {
-                                const orden = maquina.ordenes[i];
-                                return orden.modeloCompleto.tamano.tamano === datos.orden.modeloCompleto.tamano.tamano;
-                            }
-                        });
+//                     //¿Hay máquinas con modeloIgual?
+//                     if (maquinaConModeloIgual > 0) {
+//                         filtrarMaquina(maquinaConModeloIgual, datos);
+//                     } else {
+//                         // Tomamos una máquina con proudcción. 
+//                         let maquinaConTamanoIgual = [];
+//                         maquinaConTamanoIgual = maquinasconProduccion.filter(maquina => {
+//                             for (let i = 0; i < maquina.ordenes.length; i++) {
+//                                 const orden = maquina.ordenes[i];
+//                                 return orden.modeloCompleto.tamano.tamano === datos.orden.modeloCompleto.tamano.tamano;
+//                             }
+//                         });
 
-                        // ¿Hay máquinas con tamaño igual?
-                        if (maquinaConTamanoIgual > 0) {
-                            filtrarMaquina(maquinaConTamanoIgual, datos);
-                        } else {
-                            //Tomamos una máquina de producción
-                            datos.maquina = maquinasSinProduccion[0];
-                            anadirOrdenAMaquinaYGrabar(datos);
-                        }
-                    }
-                }
-            } else {
-                //Tomamos una máquina sin producción
-                datos.maquina = maquinasSinProduccion[0];
-                anadirOrdenAMaquinaYGrabar(datos);
-            }
-        });
-    } else {
-        // FIN
-        //Si no es el departamento que nos interesa ejecutamos la función de grabado.
-        datos.callback();
-    }
-}
+//                         // ¿Hay máquinas con tamaño igual?
+//                         if (maquinaConTamanoIgual > 0) {
+//                             filtrarMaquina(maquinaConTamanoIgual, datos);
+//                         } else {
+//                             //Tomamos una máquina de producción
+//                             datos.maquina = maquinasSinProduccion[0];
+//                             anadirOrdenAMaquinaYGrabar(datos);
+//                         }
+//                     }
+//                 }
+//             } else {
+//                 //Tomamos una máquina sin producción
+//                 datos.maquina = maquinasSinProduccion[0];
+//                 anadirOrdenAMaquinaYGrabar(datos);
+//             }
+//         });
+//     } else {
+//         // FIN
+//         //Si no es el departamento que nos interesa ejecutamos la función de grabado.
+//         datos.callback();
+//     }
+// }
 
-function anadirOrdenAMaquinaYGrabar(datos) {
+// function anadirOrdenAMaquinaYGrabar(datos) {
 
-    // Añadimos la órden a la máquina.
-    Maquina.findOne({ _id: datos.maquina._id }, (err, maquinaParaModificar) => {
+//     // Añadimos la órden a la máquina.
+//     Maquina.findOne({ _id: datos.maquina._id }, (err, maquinaParaModificar) => {
 
-        return RESP._500(datos.res, {
-            msj: 'Hubo un error buscando la máquina.',
-            err: err,
-        });
+//         return RESP._500(datos.res, {
+//             msj: 'Hubo un error buscando la máquina.',
+//             err: err,
+//         });
 
-        maquinaParaModificar.ordenes.push(datos.orden);
-        // Añadimos la máquina actual a la órden. 
-        orden.maquinaActual = maquinaParaModificar;
-        // Guardamos los cambios echos en la máquina. 
-        maquinaParaModificar.save(err => {
-            if (err) {
-                return RESP._500(datos.res, {
-                    msj: 'Hubo un error guardando las modificaciones de la máquina',
-                    err: err,
-                });
-            }
-            //FIN
-            datos.callback();
-        });
+//         maquinaParaModificar.ordenes.push(datos.orden);
+//         // Añadimos la máquina actual a la órden. 
+//         orden.maquinaActual = maquinaParaModificar;
+//         // Guardamos los cambios echos en la máquina. 
+//         maquinaParaModificar.save(err => {
+//             if (err) {
+//                 return RESP._500(datos.res, {
+//                     msj: 'Hubo un error guardando las modificaciones de la máquina',
+//                     err: err,
+//                 });
+//             }
+//             //FIN
+//             datos.callback();
+//         });
 
-    });
-}
+//     });
+// }
 
-function filtrarMaquina(arrayDeMaquinas, datos) {
-    // Filtramos la máquina con menor cantidad de órdenes.
-    let maquinaConMenorCantidadDeOrdenes =
-        arrayDeMaquinas.sort(
-            (a, b) => {
-                return a.ordenes.length - b.ordenes.length;
-            })[0];
-    datos.maquina = maquinaConMenorCantidadDeOrdenes;
-    anadirOrdenAMaquinaYGrabar(datos);
+// function filtrarMaquina(arrayDeMaquinas, datos) {
+//     // Filtramos la máquina con menor cantidad de órdenes.
+//     let maquinaConMenorCantidadDeOrdenes =
+//         arrayDeMaquinas.sort(
+//             (a, b) => {
+//                 return a.ordenes.length - b.ordenes.length;
+//             })[0];
+//     datos.maquina = maquinaConMenorCantidadDeOrdenes;
+//     anadirOrdenAMaquinaYGrabar(datos);
 
-}
+// }
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app;

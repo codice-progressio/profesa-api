@@ -90,6 +90,11 @@ function generalError(dat) {
     console.log(colores.danger('ERROR') + data.mensaje);
     // DEJA ESTO AQUÍ. 
     console.log(data.errorGeneral);
+    // Si es un error del sistema tambien imprimimos la traza con 
+    // new Error() por que si no no podemos debuguear!!
+    if (dat.err.toString().includes('Error:')) {
+        console.log(new Error(dat.err));
+    }
     return { data };
 }
 

@@ -10,7 +10,7 @@ CRUD.nombreDeObjetoSingular = 'modelo';
 CRUD.nombreDeObjetoPlural = 'modelos';
 CRUD.campoSortDefault = 'modelo';
 CRUD.camposActualizables = {
-    // estandar: null,
+    modelo: null
 };
 
 
@@ -21,14 +21,6 @@ CRUD.camposDeBusqueda = [
 ];
 
 CRUD.crud();
-
-
-
-
-
-// Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
-module.exports = app;
-
 
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.

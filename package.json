@@ -1,24 +1,32 @@
 {
-    "name": "backend-server",
+    "name": "carrduci-sys-api",
     "version": "1.0.0",
-    "description": "Servidor backend del curso de Angular Avanzado",
+    "description": "API server CARRDUCIsys",
     "main": "index.js",
     "scripts": {
         "start": "nodemon app.js",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
-    "author": "Rafael Ramírez",
+    "author": "Rafael Ramirez",
     "license": "ISC",
     "dependencies": {
+        "@types/moment-duration-format": "^2.2.2",
         "bcryptjs": "^2.4.3",
         "body-parser": "^1.18.3",
-        "express": "^4.16.3",
+        "compression": "^1.7.4",
+        "express": "^4.16.4",
         "express-fileupload": "^0.4.0",
         "fs": "0.0.1-security",
         "google-auth-library": "^1.6.1",
         "https": "^1.0.0",
-        "jsonwebtoken": "^8.3.0",
-        "mongoose": "^5.2.4",
-        "mongoose-unique-validator": "^2.0.1"
+        "jsonwebtoken": "^8.5.1",
+        "moment-duration-format": "^2.2.2",
+        "mongoose": "^5.5.1",
+        "mongoose-sequence": "^5.0.1",
+        "mongoose-unique-validator": "^2.0.2",
+        "nodemon": "^1.18.11"
+    },
+    "devDependencies": {
+        "eslint": "^5.16.0"
     }
 }

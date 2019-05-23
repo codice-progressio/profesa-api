@@ -14,8 +14,9 @@ const DEPARTAMENTOS = {
     METALIZADO: { _v: 'METALIZADO', _n: 'METALIZADO', _vm: 'metalizado' },
     BARNIZADO: { _v: 'BARNIZADO', _n: 'BARNIZADO', _vm: 'barnizado' },
     BURATO: { _v: 'BURATO', _n: 'BURATO', _vm: 'burato' },
-    LASER: { _v: 'LASER', _n: 'LASER', _vm: 'laser' },
+    LASER: { _v: 'LASER', _n: 'LÁSER', _vm: 'laser' },
     ALMACEN_DE_BOTON: { _v: 'ALMACEN_DE_BOTON', _n: 'ALMACEN DE BOTON', _vm: 'almacenDeBoton' },
+    TENIDO: { _v: 'TENIDO', _n: 'TEÑIDO', _vm: 'tenido' },
 
 };
 module.exports = DEPARTAMENTOS;

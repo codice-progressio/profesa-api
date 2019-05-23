@@ -1,104 +1,93 @@
-//Esto es necesario
 var express = require('express');
 var app = express();
-var colores = require("../utils/colors");
-var Maquina = require("../models/maquina");
+var Maquina = require('../models/maquina');
 
-var RESP = require("../utils/respStatus");
+var RESP = require('../utils/respStatus')
+var Departamento = require('../models/departamento');
 
 
-// ============================================
-// Obtiene todoas las máquinas.
-// ============================================
 
-app.get('/', (req, res, next) => {
-    Maquina.find({})
-        .populate('gastos.gasto')
-        .populate('departamentos')
-        .exec((err, maquinas) => {
-            if (err) {
-                RESP._500(res, {
-                    msj: 'Hubo un error buscando las máquinas.',
-                    err: err,
+
+var CRUD = require('./CRUD');
+CRUD.app = app;
+CRUD.modelo = Maquina;
+CRUD.nombreDeObjetoSingular = 'maquina';
+CRUD.nombreDeObjetoPlural = 'maquinas';
+CRUD.campoSortDefault = 'clave';
+CRUD.camposActualizables = {
+    // estandar: null,
+};
+
+CRUD.camposDeBusqueda = [
+    'nombre',
+    'clave',
+    'numeroDeSerie',
+    'observaciones',
+
+];
+
+CRUD.camposActualizables = {
+    nombre: null,
+    clave: null,
+    anio: null,
+    departamentos: null,
+    numeroDeSerie: null,
+    observaciones: null,
+};
+
+
+
+CRUD.crud();
+
+/**
+ * Este controlador obtiene las maquinas por 
+ * el departamento que se le pase. 
+ */
+app.get('/departamento/:id', (req, res) => {
+
+    /**
+     *  El id del departamento que queremos otener sus maquinas. 
+     */
+    const idDepto = req.query.id;
+
+    // Existe el departamento. 
+    Departamento.findOne({ _id: idDepto })
+        .exec()
+        .then(depto => {
+            if (!depto) {
+                return RESP._500(res, {
+                    msj: 'El departamento no existe. ',
+                    err: 'El id del departamento que ingresaste no existe.',
                 });
             }
 
-            RESP._200(res, null, [
-                { tipo: 'maquinas', datos: maquinas },
+            return Maquina.find({ 'departamentos._id': idDepto })
+                .exec();
+
+        }).then(maquinas => {
+            if (maquinas.length === 0) {
+                return RESP._400(res, {
+                    msj: 'No hay maquinas registradas para este departamento.',
+                    err: 'Para poder continuar es necesario que registres maquinas para este departamento.',
+                });
+            }
+
+
+            return RESP._200(res, null, [
+                { tipo: CRUD.nombreDeObjetoPlural, datos: maquinas },
             ]);
-        });
-});
 
 
-
-
-// ============================================
-// Guarda una máquina nueva. 
-// ============================================
-
-app.post('/', (req, res, next) => {
-    Maquina.create(req.body).then((maquina) => {
-        RESP._200(res, "Se creó la máquina correctamente.", [
-            { tipo: 'maquina', datos: maquina },
-        ]);
-    }).catch((err) => {
-        return RESP._500(res, {
-            msj: 'No se pudo guardar la máquina.',
-            err: err,
-        });
-    });
-});
-
-app.put('/', (req, res) => {
-
-
-    Maquina.findById(req.body._id, (err, maquinaEncontrada) => {
-
-        if (err) {
+        })
+        .catch(err => {
             return RESP._500(res, {
-                msj: 'Hubo un error buscando la máquina. ',
+                msj: 'Hubo un error al obtener las maquinas para este departamento.',
                 err: err,
             });
-        }
-
-        if (!maquinaEncontrada) {
-            return RESP._400(res, {
-                msj: 'No exíste la máquina.',
-                err: 'No existe una máquina con ese id.',
-            });
-        }
-
-        maquinaEncontrada.nombre = req.body.nombre;
-        maquinaEncontrada.clave = req.body.clave;
-        maquinaEncontrada.anio = req.body.anio;
-        maquinaEncontrada.nombresAnteriores = req.body.nombresAnteriores;
-        maquinaEncontrada.ordenes = req.body.ordenes;
-        maquinaEncontrada.departamentos = req.body.departamentos;
-        maquinaEncontrada.datosDeTrabajo = req.body.datosDeTrabajo;
-        maquinaEncontrada.numeroDeSerie = req.body.numeroDeSerie;
-        maquinaEncontrada.gastos = req.body.gastos;
-        maquinaEncontrada.costo = req.body.costo;
-        maquinaEncontrada.depreciacion = req.body.depreciacion;
-        maquinaEncontrada.observaciones = req.body.observaciones;
-
-        maquinaEncontrada.save((err, maquinaAnterior) => {
-            if (err) {
-                return RESP._500(res, {
-                    msj: 'No se pudo modificar la máquina. ',
-                    err: err,
-                });
-            }
-
-
-            return RESP._200(res, 'Se modifico la máquina de manera correcta.', [
-                { tipo: 'maquina', datos: maquinaAnterior },
-            ]);
-
         });
-    });
+
 
 });
-
 
 
 

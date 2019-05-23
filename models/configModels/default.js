@@ -18,21 +18,14 @@ var defaultsSchema = new Schema({
         type: Schema.Types.Mixed,
         required: [true, 'Es necesario definir los procesos.']
     },
+
+    ACTUALIZACIONES: {
+        type: Schema.Types.Mixed
+    }
 });
 
 defaultsSchema.plugin(uniqueValidator, { message: ' \'{PATH}\' debe ser único.' });
 
-console.log(colores.danger('BORRANDO IDS') + 'Se van a eliminar los datos por defualt anteriores.');
-defaultsSchema.pre('save', function(next) {
-    var schema = mongoose.model('Defaults', defaultsSchema);
-    schema.remove({}).then(resp => {
-            console.log(colores.success('BORRADO') + 'Se limpio la base exitosamente.');
-            next();
-        })
-        .catch(err => {
-            throw new Error(err);
-        });
-});
 
 
 module.exports = mongoose.model('Defaults', defaultsSchema);

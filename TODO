@@ -1,44 +1,93 @@
 FIX:
 
-    ☐ Comprobar que no se puedan agregar dos familias de procesos al mismo modelo. @started(19-01-22 06:50)
+    ✔ Comprobar que no se puedan agregar dos familias de procesos al mismo modelo. @started(19-01-22 08:45) @done(19-01-22 08:45) @lasted(40s)
+    Procesos:
+        ☐ El proceso de cargar material no debe poder repetirse. 
 
 FEATURES:
+    Teñido:
+        ☐ Crear departamento de tenido. 
+
+    Quimica:
+        ✔ Debe regristrar inicio de trabajo como transformacion y laser. @started(19-01-22 14:43) @done(19-01-22 14:43) @lasted(41s)
+    \
+
+    Maquinas:
+        ✔ Setear departamentos en los que puede enlistarse. @started(19-01-23 07:17) @done(19-01-23 13:33) @lasted(6h16m14s)
+
+    Procesos:
+        ✔ Una familia siempre debe de tener entrega de ordenes a proceso. @started(19-01-23 13:37) @done(19-01-23 14:28) @lasted(51m6s)
+    
+    Reportes:
+        ✘ Que las maquinas permitan guardar cambios e incidencias. @started(19-01-23 15:40) @cancelled(19-01-24 06:58) @wasted(15h18m10s)
+        ✘ Que se creen incidencias. @started(19-01-23 15:40) @cancelled(19-01-24 06:58) @wasted(15h18m10s)
+        ✘ Crear empleados @cancelled(19-01-24 06:59)
+
+        ✔ Laser y transformacion @started(19-01-23 14:33) @done(19-01-28 07:16) @lasted(4d16h43m44s)
+            Maquina que lo procesa.
+            Numero de folio
+            Numero de orden
+            Numerp de pedido
+            Gral... mod//tm
+            Marca laser
+            Cantidad
+            bl
+            Hora de inicio y hora de termino
+            Cambios inicio
+            Cambio finalizacion
+
+        ✔ Quimica @started(19-01-28 07:18) @done(19-01-28 14:52) @lasted(7h34m33s)
+            Numero de pedido.
+            Orden
+            Gral - Mod. tama...
+            Cantidad de ordenes
+            Fecha
+
    
-    Sistema de alertas y notificaciones:
-        ☐ Dashboard debe mostrar notificaciones y alertas.
-        ☐ Barra de arriba debe almacenar notificaciones recientes.
-        ☐ Subscripciones a ordenes, pedidos y folios cuando haya cambios.
         
     Logs:
-        ☐ Agregar hora y fecha a todos los logs. 
+        ✘ Quitar los logs por console.log. @cancelled(19-01-29 06:34)
+        ✘ Agregar hora y fecha a todos los logs. @cancelled(19-01-29 06:34)
         
     Reporte de defectos:
-        ☐ Reporte de defectos.
-        ☐ Alertas de tiempo de espera. 
+        ☐ Reporte de defectos. === Necesita aclaracion.
+        ☐ Alertas de tiempo de espera. === Necesita aclaracion. 
+        
+        Seleccion:
+            ✔ Quebrado @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Reves @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Despostillados @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Sin Laser @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Sin hoyos @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Otrosb(Especificar que defecto en un campo) @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
+            ✔ Efecto malo @started(19-01-29 06:52) @done(19-01-29 06:52) @lasted(5s)
             
     Historial de folio:
-        ☐ Mostrar el historial de folios
+        ✘ Mostrar el historial de folios @started(19-01-29 07:07) @cancelled(19-01-29 11:48) @wasted(4h41m55s) Solo necesitamos filtrar dede el modelo folio.
         
     Pedidos:
-        ☐ Un modelo debe de poder surtirse desde almacen para laserarse u otro proceso. 
-
-        ☐ Almacen de materiales.
-        ☐ Almacen de refacciones.
-        ☐ Almacen de producto terminado. 
+        ✔ Un modelo debe de poder surtirse desde almacen para laserarse u otro proceso. @done(19-01-28 07:22)
 
         Almacenes:
-            ☐ Datos del proveedor:;
-            Nombre
-            Razon social
-            Domicilio completo
-            =>Quienes atienden
+            ✔ Almacen de producto terminado. @started(19-01-30 15:43) @done(19-01-31 08:24) @lasted(16h41m2s)
+            
+            
+            
+            
+            ☐ Almacen de materiales.
+            ☐ Almacen de refacciones.
+                ☐ Datos del proveedor:; @started(19-03-08 15:17)
                 Nombre
-                Telefono
-                Correo
-                Puesto
-            # Consecutivo
-            Tiempo de entrega
-            Monedas
+                Razon social
+                Domicilio completo
+                =>Quienes atienden
+                    Nombre
+                    Telefono
+                    Correo
+                    Puesto
+                # Consecutivo
+                Tiempo de entrega
+                Monedas
     
             Articulos:
                 ☐ Tiene que tener un proveedor que sea prioritario( Si tiene tres, que se seleccione al que se le da prioridad.)
@@ -59,6 +108,11 @@ FEATURES:
                 Unidad de medida. 
                 =>Tipo de articulo
                     EJEMPLO Refaccion, resina, etc.
+            Alamacenes:
+                Ubicacion
+                Descripciones
+                Datos interesantes. 
+                
             
             Ficha de compra:
                 ☐ Datos de la requisicion
@@ -68,7 +122,7 @@ FEATURES:
                     Cantidad
                     Costo unitario
                     ???Costo total???
-                    Fecha de espera para recivirlo (Cuando se necesita)
+                    Fecha de espera para recibirlo (Cuando se necesita)
                     Prowvedor => El seleccionado 
                 ☐ Datos de la compra:
                     Fecha
@@ -79,10 +133,9 @@ FEATURES:
                     Fecha de recivido
                     Quien recive. 
 
-        ☐ Carga dinamica de procesos en base a la hoja de matriz de fabian. 
-
-        Procesos:
-           
+                    
+    Procesos:
+        ✘ Carga dinamica de procesos en base a la hoja de matriz de fabian. @cancelled(19-01-29 11:50) Desde el GUI.
             Estandarizacion para procesos.:
                 ☐ Los procesos deben de llevar hit.
                 ☐ Hoja de control de calidad. 
@@ -91,6 +144,11 @@ FEATURES:
                 ☐ Quien lo va a hacer? > Usuarios capacitados. 
                 ☐ Con que lo va a hacer. Material y herramientas. 
                 ☐ Procesos disponibles al crear familia que se arrastre para agregar a la lista. 
+    
+    Sistema de alertas y notificaciones:
+        ☐ Dashboard debe mostrar notificaciones y alertas.
+        ☐ Barra de arriba debe almacenar notificaciones recientes.
+        ☐ Subscripciones a ordenes, pedidos y folios cuando haya cambios.
 
 Archive:
   ✔ El proceso no require ser senalado como especial. @done(19-01-02 08:05) @project(FIX.Procesos)

@@ -4,11 +4,11 @@ const PORT_DEVELOPMENT = 2999;
 const PORT_PRODUCTION = 3000;
 
 const URI_PRODUCTION = 'mongodb://localhost:27017/carrduci';
-const URI_DEVELOPMENT = 'mongodb://localhost:27017/hospitalDB';
+const URI_DEVELOPMENT = 'mongodb://localhost:27017/carrduci';
 
 const ACCESS_CONTROL_ALLOW_ORIGIN = {
     PRODUCTION: 'https://192.168.1.149',
-    DEVELOPMENT: 'http://localhost:4200'
+    DEVELOPMENT: 'https://localhost:4200'
 };
 
 

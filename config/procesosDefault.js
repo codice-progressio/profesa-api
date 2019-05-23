@@ -28,5 +28,25 @@ module.exports = {
         _departamento: DEPARTAMENTOS.ALMACEN_DE_BOTON._n,
         observaciones: 'Este proceceso se utiliza cuando el pedido se senala como surtir de almacen.',
         requiereProduccion: false,
-    }
+    },
+    PRODUCTO_TERMINADO: {
+        // Este proceso es para todas las familias de proceso y se
+        // crea de manera automatica. 
+        _n: 'REMISION DE PRODUCTO TERMINADO.',
+        // El departamento al que esta relacinado.
+        _departamento: DEPARTAMENTOS.PRODUCTO_TERMINADO._n,
+        observaciones: 'Este debe ser siempre el ultimo proceso de toda familia. En el se genera la remision para almacen.',
+        requiereProduccion: false,
+    },
+    EMPAQUE: {
+        // Este proceso es para todas las familias de proceso y se
+        // crea de manera automatica. 
+        _n: 'EMPAQUE DE PRODUCTO.',
+        // El departamento al que esta relacinado.
+        _departamento: DEPARTAMENTOS.EMPAQUE._n,
+        observaciones: 'Este debe ser siempre el ultimo proceso de toda familia. En el se genera la remision para almacen.',
+        requiereProduccion: false,
+    },
+
+
 };

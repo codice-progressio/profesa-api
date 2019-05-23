@@ -26,11 +26,13 @@ var Tenido = [{
         require: [true, 'Es necesario que definas la cantidad a teñir.'],
         min: [1, "La cantidad mínima a teñir es 1."]
     },
+    observaciones: String,
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: Date
 }];
 
 function comprobarCantidadesDeTenido(value) {
     var total = 0;
-    console.log(JSON.stringify(value));
     value.forEach(e => {
         // Sumamos todas las cantidades que se pasaron. 
         total += e.cantidad;
@@ -86,7 +88,10 @@ const folioLineaSchema = new Schema({
     // Este proceso debe afectar al órden en que se estable las órdenes. 
     procesos: [procesosSchema],
     observaciones: { type: String },
-    terminado: { type: Boolean, default: false }
+    observacionesVendedor: { type: String },
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: Date,
+    cantidadProducida: { type: Number, default: 0 }
 
     // Esto de aqui es para que mongose no escriba
     //  folioLineas en vez de folioLineaes

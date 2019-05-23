@@ -2,16 +2,6 @@
 var express = require('express');
 var ModeloCompleto = require('../../models/modeloCompleto');
 var app = express();
-var colores = require('../../utils/colors');
-
-var Modelo = require('../../models/modelo');
-var Tamano = require('../../models/tamano');
-var Color = require('../../models/colores/color');
-var Terminado = require('../../models/terminado');
-
-
-
-var RESP = require('../../utils/respStatus');
 
 
 var CRUD = require('../CRUD');

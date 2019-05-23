@@ -1,41 +1,52 @@
-var mongoose = require('mongoose');
+let mongoose = require('mongoose');
 
-var uniqueValidator = require('mongoose-unique-validator');
-var colores = require('../../utils/colors');
-var folioLineaSchema = require('./folioLinea');
-var NVU = require('../../config/nivelesDeUrgencia');
-var Schema = mongoose.Schema;
+let uniqueValidator = require('mongoose-unique-validator');
+let colores = require('../../utils/colors');
+let folioLineaSchema = require('./folioLinea');
+let NVU = require('../../config/nivelesDeUrgencia');
+let Schema = mongoose.Schema;
+let CONST = require('../../utils/constantes');
 
-var RESP = require('../../utils/respStatus');
-
-// schmea. (key) no es obligatorio el nivel en el folio.
+let RESP = require('../../utils/respStatus');
+let AutoIncrement = require('mongoose-sequence')(mongoose)
+    // schmea. (key) no es obligatorio el nivel en el folio.
 delete NVU.KEY.required;
 //Para este folio el nivel de urgencia por default debe ser almacen.
 
 NVU.KEY.default = NVU.LV.A; //ALMACEN
 
-var folioSchema = new Schema({
+let folioSchema = new Schema({
 
-    numeroDeFolio: { type: String, unique: true, required: [true, 'El folio es necesario'] },
+    numeroDeFolio: { type: Number, unique: true },
     cliente: { type: Schema.Types.ObjectId, ref: 'Cliente', required: [true, 'El cliente es necesario'] },
-    fechaFolio: { type: Schema.Types.Date, required: [true, 'La fecha es necesaria'] },
-    fechaEntrega: { type: Schema.Types.Date },
+    fechaFolio: { type: Date, default: Date.now },
+    fechaEntrega: { type: Date, default: null },
     vendedor: { type: Schema.Types.ObjectId, ref: 'Usuario', required: [true, 'El vendedor es necesario'] },
     observaciones: { type: String },
+    observacionesVendedor: { type: String },
+    /**
+     * Esta bandera se pone en true cuando las modificaciones al folio se terminador
+     * y se pasa el control a control de produccion. 
+     */
+    entregarAProduccion: { type: Boolean, default: false },
+    fechaDeEntregaAProduccion: { type: Date, required: [() => { return this.entregarAProduccion }, 'Es necesario que definas la fecha de entrega a produccion.'] },
     // folioLineas: [{ type: Schema.Types.Mixed, ref: 'FolioLinea' }]
     folioLineas: [folioLineaSchema],
     nivelDeUrgencia: NVU.KEY,
     porcentajeAvance: { type: Number, min: 0, max: 100 },
     ordenesGeneradas: { type: Boolean, default: false },
     impreso: { type: Boolean, default: false },
-    terminado: { type: Boolean, default: false }
+    terminado: { type: Boolean, default: false },
+    fechaTerminado: { type: Date, default: null },
+    cantidadProducida: { type: Number, default: 0 }
 
 
 }, { collection: 'folios', timestamps: true });
 
 folioSchema.plugin(uniqueValidator, { message: '\'{PATH}\' debe ser único.' });
+folioSchema.plugin(AutoIncrement, { id: 'numeroDeFolio_seq', inc_field: 'numeroDeFolio' })
 
-var autoPopulate = function(next) {
+let autoPopulate = function(next) {
 
 
     this.populate('cliente', 'sae nombre');
@@ -46,19 +57,89 @@ var autoPopulate = function(next) {
             path: 'modelo tamano color terminado'
         }
     });
-    this.populate('folioLineas.');
-    this.populate('folioLineas.ordenes.ubicacionActual.departamento');
-    this.populate('folioLineas.ordenes.ubicacionActual.laser.maquinaActual');
 
+    let populantes = [
+        'ubicacionActual',
+        'trayectoNormal',
+        'trayectoRecorrido',
+
+    ];
+
+    populantes.forEach(pop => {
+        this.populate(`folioLineas.ordenes.${pop}.departamento`);
+        this.populate(`folioLineas.ordenes.${pop}.laser.maquinaActual`);
+        this.populate(`folioLineas.ordenes.${pop}.transformacion.maquinaActual`);
+        this.populate(`folioLineas.ordenes.${pop}.materiales.maquinaActual`);
+    });
 
     this.populate('folioLineas.ordenes.siguienteDepartamento.departamento');
-    this.populate('folioLineas.ordenes.trayectoNormal.departamento');
-
-
+    this.populate('folioLineas.ordenes.modeloCompleto');
+    this.populate('folioLineas.procesos.proceso');
 
     this.populate('cliente');
     next();
 };
+
+
+/**
+ *Agrega el proceso de empaque de producto y remision de producto terminado 
+ al pedido nuevo que se este guardando que viene desde almacen. 
+ *
+ * @param {*} next
+ */
+function agregarProcesosFinalesPedidosDeAlmacen(next) {
+    // Comprobamos todos los pedidos que vienen. Asi evitamos purrunes. 
+    // Cargamos los procesos por defecto. 
+    mongoose.models.Defaults.find().exec().then(defaults => {
+            /**
+             * El id del proceso de empaque final. 
+             */
+            let idEmpaque = defaults[0].PROCESOS.EMPAQUE.toString();
+
+            /**
+             * El id del producto terminado. (El proceso que debe ser final. );
+             */
+            let idProductoTerminado = defaults[0].PROCESOS.PRODUCTO_TERMINADO.toString();
+
+            return Promise.all([
+                mongoose.models.Proceso.findById(idEmpaque).exec(),
+                mongoose.models.Proceso.findById(idProductoTerminado).exec()
+            ])
+
+        }).then((resp) => {
+            let procesoEmpaque = resp[0]
+            let procesoProductoTerminado = resp[1]
+
+            // El orden es importante.
+            let FamiliaDeProcesos = mongoose.models.FamiliaDeProcesos;
+
+            this.folioLineas.map((linea) => {
+                // Tiene que ser de almacen. 
+                if (linea.almacen) {
+                    // Es de almacen. 
+                    // Revisamos los procesos que tiene agregadados recordando 
+                    // que todos cuando un pedido se genera para surtir de almacen
+                    // solo se toman en cuenta los que estan agregados directamente 
+                    // al pedido y no los del modelo. 
+
+                    linea.procesos = FamiliaDeProcesos.agregarProcesoAlFinal(procesoEmpaque, linea.procesos)
+                    linea.procesos = FamiliaDeProcesos.agregarProcesoAlFinal(procesoProductoTerminado, linea.procesos)
+
+                    for (let i = 0; i < linea.procesos.length; i++) {
+                        const procesos = linea.procesos[i];
+                        procesos.orden = `0.${i + 2}`
+                    }
+                }
+            })
+            next();
+        })
+        .catch(err => {
+            next(err);
+        });
+}
+
+
+
 folioSchema
     .pre('find', autoPopulate)
     .pre('findOne', autoPopulate)
@@ -69,8 +150,30 @@ folioSchema
         asignarNumeroDePedido(this);
         calcularPorcentajeDeAvance(this);
         verificarFolioTerminado(this);
+        cargarDatosGeneralesDeFolioYPedidoEnOrden(this);
+        sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas(this)
         next();
-    });
+    })
+    .pre('save', agregarProcesosFinalesPedidosDeAlmacen)
+    .post('save', (folio) => {
+        var schema = mongoose.model('Folio', folioSchema);
+        schema.findById(folio._id).lean().then((folio) => {
+
+                asignarNumeroDePedido(folio)
+
+
+                return schema.findByIdAndUpdate(folio._id, folio)
+
+            }).then(resp => {
+                console.log('terminado')
+            })
+            .catch(err => {
+                console.log('Hubo un error modificando el numero de los pedidos. ')
+                throw err
+            });
+
+    })
+
 
 folioSchema.post('save', function() {
     // Si la linea se surte de almacen entonces la trayectoria tiene 
@@ -189,13 +292,13 @@ function trayectoDeOrden(folio) {
                         if (linea.almacen) {
                             // Creamos el objeto trayecto para control de produccion.
                             let trayectoControlDeProduccion = {
-                                orden: 0,
+                                orden: '0',
                                 departamento: procesoControlDeProduccion.departamento
                             };
 
                             // Creamos el objeto trayecto para surtir desde almacen. 
                             let trayectoSurtirDesdeAlmacen = {
-                                orden: 0.1,
+                                orden: '0.1',
                                 departamento: procesoAlmacenDeBoton.departamento
                             };
 
@@ -236,13 +339,45 @@ function trayectoDeOrden(folio) {
                             });
                         });
 
-                        // Tomamos el primer departamento y lo volvemos como ubicacion
-                        // actual.
-                        ordenParaModificar.trayectoNormal.sort(function(a, b) {
-                            return (a.orden - b.orden);
+
+                        // <!-- 
+                        // =====================================
+                        //  ORDENAR POR SI SE AGREGARON PROCESOS EXTRAS
+                        //  AL CREAR ELMODELO
+                        // =====================================
+                        // -->
+
+                        /* Es necesario que ordenesmos puesto que los procesos
+                            que se agregan unicamente para el pedido no vienen ordenados. 
+                            Generalmente son los que van trabajar asi. 
+                        */
+
+                        ordenParaModificar.trayectoNormal.sort((a, b) => {
+
+                            let entero_A = a.orden.split('.')[0];
+                            let entero_B = b.orden.split('.')[0];
+
+                            let decimal_A = a.orden.split('.')[1] ? a.orden.split('.')[1] : '0';
+                            let decimal_B = b.orden.split('.')[1] ? b.orden.split('.')[1] : '0';
+
+                            let x = Number(entero_A) - Number(entero_B);
+
+                            return x == 0 ? Number(decimal_A) - Number(decimal_B) : x;
                         });
 
-                        // Actualizamos la ubicación actual. 
+                        // <!-- 
+                        // =====================================
+                        //  END ORDENAR POR SI SE AGREGARON PROCESOS EXTRAS
+                        //  AL CREAR ELMODELO
+                        // =====================================
+                        // -->
+
+
+
+
+                        // DEFINIMOS LA UBICACION ACTUAL
+                        // Tomamos el primer departamento y lo volvemos como ubicacion
+                        // actual.
                         ordenParaModificar.ubicacionActual = {
                             departamento: mongoose.Types.ObjectId(ordenParaModificar.trayectoNormal[0].departamento._id),
                             entrada: new Date().toISOString(),
@@ -313,7 +448,6 @@ function calcularNivel(folio) {
 
 function copiarModeloCompletoAOrden(folio) {
     let a = 'Copiando modelo completo a órden.';
-    console.log(colores.success(['DEBUG']) + a);
 
     // Recorremos todas las órdenes de todos los pedidos y copiamos
     // a la órden. 
@@ -400,30 +534,106 @@ function calcularPorcentajeDeAvance(folio) {
 
 }
 
+/**
+ *Revisamos si el folio tiene todos sus pedidos como terminados. 
+ Si es asi entonces cambiamos la bandera a terminado. 
+ *
+ * @param {*} folio
+ */
 function verificarFolioTerminado(folio) {
-    console.log(`${colores.info('FOLIO MODELS')}  Verificando si el folio ya esta terminado `);
-    // Revisamos si el folio tiene todos sus pedidos como terminados. 
-    // Si es asi entonces cambiamos la bandera a terminado. 
+
+    // Si no hemos generado las ordenes del folio no es necesario
+    // hacer esta comprobacion.
+    if (!folio.ordenesGeneradas) return
+
     // Recorremos todos los pedidos.
     for (let i = 0; i < folio.folioLineas.length; i++) {
         const linea = folio.folioLineas[i];
         // Recorremos todas las ordenes.
         folio.terminado = true;
+        folio.fechaTerminado = new Date()
         linea.terminado = true;
+        linea.fechaTerminado = new Date()
+
+
+
         for (let o = 0; o < linea.ordenes.length; o++) {
             const orden = linea.ordenes[o];
             // Si una sola orden no esta terminada 
             // basta para que el pedido y el folio no esten termiandos. 
-            console.log(` orden.terminada? ${orden.terminada}`);
             if (!orden.terminada) {
                 folio.terminado = false;
                 linea.terminado = false;
-                // Break por que hay que comprobar los demas pedidos.
+                folio.fechaTerminado = null,
+                    linea.fechaTerminado = null
+                    // Break por que hay que comprobar los demas pedidos.
                 break;
             }
         }
     }
-    console.log(`${colores.info('FOLIO MODELS')}  folio.terminado? ${folio.terminado}`);
+
+}
+
+/**
+ * Carga los datos del folio y pedido en la oren para 
+ * acceso mas facil. 
+ *
+ * @param {*} folio
+ */
+function cargarDatosGeneralesDeFolioYPedidoEnOrden(folio) {
+    folio.folioLineas.forEach(pedido => {
+        pedido.ordenes.map(orden => {
+
+            // Cargamos el vendedor. 
+            orden.vendedor = folio.vendedor;
+
+            // Cargamos la fecha del folio en la ord0en.
+            orden.fechaFolio = folio.fechaFolio;
+
+            // cargamos la referencia del folio
+            orden.idFolio = folio._id;
+
+            // Unimos todas las observaciones. 
+            if (pedido.observaciones) orden.observacionesPedido = pedido.observaciones;
+            if (folio.observaciones) orden.observacionesFolio = folio.observaciones;
+
+            // Mostrar como pendiente de surtir si viene de alamcen
+            orden.desdeAlmacen = pedido.almacen;
+
+        });
+    });
+}
+
+/**
+ *Suma la cantidad registrada en empaque a los campos de cantidadProducida del 
+ pedido y del folio de manera recursiva. Esto se hace para cada orden que esta terminada. 
+ *
+ * @param {*} folio
+ */
+function sumarOrdenesAPedidosYFoliosCuandoEstenTerminadas(folio) {
+    // Es nesario que pongamos en 0 el contador por que si se van terminando diferentes 
+    // ordenes cada vez se va a sumar todo. 
+    folio.cantidadProducida = 0;
+    folio.folioLineas.map((pedido) => {
+        // Tambien reiniciamos la cantidadProducida del pedido por la misma razon 
+        // que reiniciamos la del folio. 
+        pedido.cantidadProducida = 0;
+        pedido.ordenes.map((orden) => {
+            // Para cada orden revisamos que este terminada.
+            if (orden.terminada) {
+                // Obtenemos cada trayecto. 
+                orden.trayectoRecorrido.map((trayecto) => {
+                    // Si el trayecto corresponde al departamento de empaque, lo sumamos. 
+                    if (trayecto.departamento.nombre === CONST.DEPARTAMENTOS.EMPAQUE._n) {
+                        // Esta es la razon por la cual tenemos que reiniciar el contador. Este codigo
+                        // siempre recorre el folio y vuelve a sumar todas las cantidades. 
+                        folio.cantidadProducida += trayecto.empaque.cantidadDeBoton
+                        pedido.cantidadProducida += trayecto.empaque.cantidadDeBoton
+                    }
+                })
+            }
+        })
+    })
 }
 
 module.exports = mongoose.model('Folio', folioSchema);

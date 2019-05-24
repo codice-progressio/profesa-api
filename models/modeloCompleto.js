@@ -1,63 +1,62 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose")
 
-var Schema = mongoose.Schema;
-var procesoSchema = require('./procesos/proceso');
-var Folio = require('../models/folios/folio');
-var Cliente = require('../models/cliente');
+var Schema = mongoose.Schema
+var procesoSchema = require("./procesos/proceso")
+var Folio = require("../models/folios/folio")
+var Cliente = require("../models/cliente")
 
-var Modelo = require('../models/modelo');
-var Tamano = require('../models/tamano');
-var Color = require('../models/colores/color');
-var Terminado = require('../models/terminado');
+var Modelo = require("../models/modelo")
+var Tamano = require("../models/tamano")
+var Color = require("../models/colores/color")
+var Terminado = require("../models/terminado")
 
+var loteSchema = require("../models/almacenProductoTerminado/lote")
 
-var loteSchema = require('../models/almacenProductoTerminado/lote');
+var colores = require("../utils/colors")
 
-var colores = require('../utils/colors');
+var marcaLaser = require("../models/marcaLaser")
 
-var marcaLaser = require('../models/marcaLaser');
-
-var modeloCompletoSchema = new Schema({
+var modeloCompletoSchema = new Schema(
+  {
     // True cuando se desea generar medias órdenes
-    // por defecto. 
+    // por defecto.
     medias: { type: Boolean, default: false },
 
     modelo: {
-        type: Schema.Types.ObjectId,
-        ref: 'Modelo',
-        required: [true, "El modelo es necesario."]
+      type: Schema.Types.ObjectId,
+      ref: "Modelo",
+      required: [true, "El modelo es necesario."]
     },
     tamano: {
-        type: Schema.Types.ObjectId,
-        ref: 'Tamano',
-        required: [true, "El tamano es necesario."]
+      type: Schema.Types.ObjectId,
+      ref: "Tamano",
+      required: [true, "El tamano es necesario."]
     },
     color: {
-        type: Schema.Types.ObjectId,
-        ref: 'Color',
-        required: [true, "El color es necesario."]
+      type: Schema.Types.ObjectId,
+      ref: "Color",
+      required: [true, "El color es necesario."]
     },
     terminado: {
-        type: Schema.Types.ObjectId,
-        ref: 'Terminado',
-        required: [true, "El terminado es necesario."]
+      type: Schema.Types.ObjectId,
+      ref: "Terminado",
+      required: [true, "El terminado es necesario."]
     },
 
-
-    // Hay algúnos modelos que llevan marcaLaser desde que se fabrican. 
+    // Hay algúnos modelos que llevan marcaLaser desde que se fabrican.
     laserAlmacen: marcaLaser,
-    // Las versiones posibles de un modelo para no perder la nomenclatura anterior. 
+    // Las versiones posibles de un modelo para no perder la nomenclatura anterior.
     versionModelo: { type: String },
 
     //La familia de procesos es una agrupación de todos los procesos que conlleva
-    // este modelo. 
+    // este modelo.
     familiaDeProcesos: {
-        type: Schema.Types.ObjectId,
-        ref: 'FamiliaDeProcesos',
-        required: [true, "Es necesario que definas la familia de procesos."]
+      type: Schema.Types.ObjectId,
+      ref: "FamiliaDeProcesos",
+      required: [true, "Es necesario que definas la familia de procesos."]
     },
 
-    // Los procesos especiales son acciones especiales para dicho modelo y pueden 
+    // Los procesos especiales son acciones especiales para dicho modelo y pueden
     // intervenir dentro de los procesos de la familia de procesos para que
     // se ejecuten en el órden deseado de manera que sean reacomodados. Ejemplo:
     // OrdenDeEjecucion-1 Proceso normal 1
@@ -74,194 +73,217 @@ var modeloCompletoSchema = new Schema({
     // OrdenDeEjecucion-3 Proceso extra1  3.1
     // OrdenDeEjecucion-3 Proceso extra2  3.2
 
-
-    procesosEspeciales: [{
+    procesosEspeciales: [
+      {
         proceso: {
-            type: Schema.Types.ObjectId,
-            ref: 'Proceso',
-            required: [true, "El proceso es necesario."]
+          type: Schema.Types.ObjectId,
+          ref: "Proceso",
+          required: [true, "El proceso es necesario."]
         },
         procesoPadre: {
-            type: Schema.Types.ObjectId,
-            ref: 'Proceso',
+          type: Schema.Types.ObjectId,
+          ref: "Proceso"
         },
-        // TODO: Aqui debe de ir el proces del que viene para facilitar el óren y mantener integridad de datos. 
+        // TODO: Aqui debe de ir el proces del que viene para facilitar el óren y mantener integridad de datos.
         orden: { type: Number }
-    }],
+      }
+    ],
 
     nombreCompleto: { type: String },
-    porcentajeDeMerma: { type: Number, default: 2, min: [0, 'Tiene que ser 0 o mayor que 0.'], max: [100, 'El valor máximo permitido es 100.'] },
-    // Para calcular la materia prima. 
+    porcentajeDeMerma: {
+      type: Number,
+      default: 2,
+      min: [0, "Tiene que ser 0 o mayor que 0."],
+      max: [100, "El valor máximo permitido es 100."]
+    },
+    // Para calcular la materia prima.
     espesor: {
-        type: Number,
-        min: [0.01, 'El espesor mínimo debe ser 0.01']
+      type: Number,
+      min: [0.01, "El espesor mínimo debe ser 0.01"]
     },
 
-
     /**
-     * La existencia de boton en el almacen. 
-     * Esta se actualiza automaticamente cuando se 
-     * se guarda la salida de boton o entra un nuevo lote. 
+     * La existencia de boton en el almacen.
+     * Esta se actualiza automaticamente cuando se
+     * se guarda la salida de boton o entra un nuevo lote.
      */
     existencia: { type: Number },
 
     /**
-     * Los lotes de este boton. Ver schema para mas info. 
+     * Los lotes de este boton. Ver schema para mas info.
      */
     lotes: [loteSchema],
 
     actualizarLotesYExistencias: { type: Boolean },
 
-    esBaston: { type: Boolean, required: [true, 'Es necesario definir si el modelo es de baston.'], default: false }
+    esBaston: {
+      type: Boolean,
+      required: [true, "Es necesario definir si el modelo es de baston."],
+      default: false
+    },
 
-
-
-
-}, { collection: 'modelosCompletos' });
-
+    // Valores para las existencias.
+    stockMinimo: { type: Number, default: 0, min: 0 },
+    stockMaximo: {
+      type: Number,
+      default: 0,
+      valildate: [
+        {
+          validator: function(v) {
+            return new Promise((resolve) => {
+              resolve(this.stockMinimo > v)
+            })
+          },
+          msg:
+            "El valor maximo de stock no puede ser menor que el valor minimo de stock"
+        }
+      ]
+    }
+  },
+  { collection: "modelosCompletos" }
+)
 
 let generarNombreCompleto = function(next) {
-    // Obtenemos los id. 
+  // Obtenemos los id.
 
-    Promise.all([
-            Modelo.findById(this.modelo).exec(),
-            Tamano.findById(this.tamano).exec(),
-            Color.findById(this.color).exec(),
-            Terminado.findById(this.terminado).exec()
-        ]).then(resp => {
-            let modelo = resp[0];
-            let tamano = resp[1];
-            let color = resp[2];
-            let terminado = resp[3];
+  Promise.all([
+    Modelo.findById(this.modelo).exec(),
+    Tamano.findById(this.tamano).exec(),
+    Color.findById(this.color).exec(),
+    Terminado.findById(this.terminado).exec()
+  ])
+    .then((resp) => {
+      let modelo = resp[0]
+      let tamano = resp[1]
+      let color = resp[2]
+      let terminado = resp[3]
 
-            this.nombreCompleto = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}`;
-            this.nombreCompleto += this.laserAlmacen.laser.length > 0 ? '-' + this.laserAlmacen.laser : '';
-            this.nombreCompleto += this.versionModelo.split('').length > 0 ? '-' + this.versionModelo : '';
+      this.nombreCompleto = `${modelo.modelo}-${tamano.tamano}-${color.color}-${
+        terminado.terminado
+      }`
+      this.nombreCompleto +=
+        this.laserAlmacen.laser.length > 0 ? "-" + this.laserAlmacen.laser : ""
+      this.nombreCompleto +=
+        this.versionModelo.split("").length > 0 ? "-" + this.versionModelo : ""
 
-
-            next();
-
-        })
-        .catch(err => {
-            next(err);
-        });
-
-};
-
-
-
-
-
+      next()
+    })
+    .catch((err) => {
+      next(err)
+    })
+}
 
 var autoPopulate = function(next) {
-
-    this.populate('modelo', 'modelo', null, { sort: { modelo: -1 } });
-    this.populate('tamano', 'tamano estandar', null, { sort: { tamano: -1 } });
-    this.populate('color', 'color', null, { sort: { color: -1 } });
-    this.populate('terminado', 'terminado', null, { sort: { terminado: -1 } });
-    this.populate({
-        path: 'familiaDeProcesos',
-        populate: {
-            path: 'procesos.proceso',
-            populate: {
-                path: 'maquinas  departamento'
-            }
-        }
-    });
-    this.populate({
-        path: 'procesosEspeciales.proceso',
-        populate: {
-            path: 'maquinas  departamento'
-        }
-    });
-    next();
-};
-
-
-
+  this.populate("modelo", "modelo", null, { sort: { modelo: -1 } })
+  this.populate("tamano", "tamano estandar", null, { sort: { tamano: -1 } })
+  this.populate("color", "color", null, { sort: { color: -1 } })
+  this.populate("terminado", "terminado", null, { sort: { terminado: -1 } })
+  this.populate({
+    path: "familiaDeProcesos",
+    populate: {
+      path: "procesos.proceso",
+      populate: {
+        path: "maquinas  departamento"
+      }
+    }
+  })
+  this.populate({
+    path: "procesosEspeciales.proceso",
+    populate: {
+      path: "maquinas  departamento"
+    }
+  })
+  next()
+}
 
 /**
  * Elimina los pedidos, clientes, modelosCompletos y el elemento en si
- * del id que se le pase como parametro y sus relaciones. 
- * 
- * Esta funcion solo se debe ejecutar desde los hooks. 
+ * del id que se le pase como parametro y sus relaciones.
+ *
+ * Esta funcion solo se debe ejecutar desde los hooks.
  *
  * @param {*} IDElemento El id del elemento que se quiere eliminar. (Modelo, tamano, color, terminado)
- * @param {*} campo El nombre del campo en donde se buscara el id del elemento para los modelos completos. 
- * @param {*} next Para continuar con la ejecucion del pre. 
+ * @param {*} campo El nombre del campo en donde se buscara el id del elemento para los modelos completos.
+ * @param {*} next Para continuar con la ejecucion del pre.
  */
-modeloCompletoSchema.statics.eliminarRelacionados = function(IDElemento, campo, next) {
+modeloCompletoSchema.statics.eliminarRelacionados = function(
+  IDElemento,
+  campo,
+  next
+) {
+  // El id del modelo, tamano, color o termiando a eliminar.
+  var idElemento = IDElemento
 
-    // El id del modelo, tamano, color o termiando a eliminar.
-    var idElemento = IDElemento;
+  // Eliminar los mc que tengan este modelo.
+  const mcIDs = []
 
-    // Eliminar los mc que tengan este modelo. 
-    const mcIDs = [];
+  // Buscamos los id que correspondan e los modelos
+  // Que tengan ese id.
+  this.find({
+    [campo]: idElemento
+  })
+    .exec()
+    .then((mcCoincidentes) => {
+      // Obtenemos el id de los modelosCompletos que coinciden.
+      mcCoincidentes.forEach((mc) => {
+        // Los guardamos en el array para luego utilizarlos.
+        mcIDs.push(mc._id)
+      })
 
-    // Buscamos los id que correspondan e los modelos
-    // Que tengan ese id. 
-    this.find({
-            [campo]: idElemento
-        }).exec()
-        .then(mcCoincidentes => {
+      // Las promesas que van a eliminar los datos.
+      var promesas = []
 
-            // Obtenemos el id de los modelosCompletos que coinciden. 
-            mcCoincidentes.forEach(mc => {
-                // Los guardamos en el array para luego utilizarlos. 
-                mcIDs.push(mc._id);
-            });
+      // Las condiciones para eliminar elementos de los arreglos.
+      var eliC = {
+        $pull: {
+          modelosCompletosAutorizados: { modeloCompleto: { $in: mcIDs } }
+        }
+      }
+      var eliF = { $pull: { folioLineas: { modeloCompleto: { $in: mcIDs } } } }
 
-            // Las promesas que van a eliminar los datos. 
-            var promesas = [];
+      // Eliminamos los clientes relacionados con este modeloCompleto.
+      promesas.push(
+        eliminarModelosCompletosAutorizadosDeClientesRelacionados(mcIDs, eliC)
+      )
+      // Eliminamos los pedidos relacionados con este modeloCompleto.
+      // promesas.push(Folio.update({ 'folioLineas.modeloCompleto': { $in: mcIDs } }, eliF).exec());
+      promesas.push(eliminarPedidosRelacionados(mcIDs, eliF))
+      // Eliminamos los modelos completos relacionados con este elemento que se va a eliminar.
+      promesas.push(this.deleteMany({ _id: { $in: mcIDs } }).exec())
 
-            // Las condiciones para eliminar elementos de los arreglos. 
-            var eliC = { $pull: { modelosCompletosAutorizados: { modeloCompleto: { $in: mcIDs } } } };
-            var eliF = { $pull: { folioLineas: { modeloCompleto: { $in: mcIDs } } } };
-
-
-            // Eliminamos los clientes relacionados con este modeloCompleto. 
-            promesas.push(eliminarModelosCompletosAutorizadosDeClientesRelacionados(mcIDs, eliC));
-            // Eliminamos los pedidos relacionados con este modeloCompleto. 
-            // promesas.push(Folio.update({ 'folioLineas.modeloCompleto': { $in: mcIDs } }, eliF).exec());
-            promesas.push(eliminarPedidosRelacionados(mcIDs, eliF));
-            // Eliminamos los modelos completos relacionados con este elemento que se va a eliminar.  
-            promesas.push(this.deleteMany({ _id: { $in: mcIDs } }).exec());
-
-            return Promise.all(promesas);
-
-        }).then(resp => {
-            console.log(`${colores.success('CORRECTO')}  Datos relacionados eliminados ${JSON.stringify(resp)}`);
-            next();
-        })
-        .catch(err => {
-            next(err);
-        });
-
-
-};
+      return Promise.all(promesas)
+    })
+    .then((resp) => {
+      console.log(
+        `${colores.success(
+          "CORRECTO"
+        )}  Datos relacionados eliminados ${JSON.stringify(resp)}`
+      )
+      next()
+    })
+    .catch((err) => {
+      next(err)
+    })
+}
 
 /**
- * Retorna solo los datos necesarios para el 
+ * Retorna solo los datos necesarios para el
  * almacen de producto terminado. Evitamos
  * que se mande informacion que no nos interesa
- * mostrar. 
+ * mostrar.
  *
  *
  * @param {*} next
  * @returns
  */
 modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
-    let n = {
-        existencia: this.existencia,
-        nombreCompleto: this.nombreCompleto,
-        lotes: this.lotes,
-    };
-    return n;
-};
-
-
-
-
+  let n = {
+    existencia: this.existencia,
+    nombreCompleto: this.nombreCompleto,
+    lotes: this.lotes
+  }
+  return n
+}
 
 /**
  *Busca y elimina los pedidos que esten relacionados con el id del modelo completo que se le
@@ -272,7 +294,10 @@ modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
  * @returns El query para hacer el then. 
  */
 function eliminarPedidosRelacionados(mcIDs, eliF) {
-    return Folio.update({ 'folioLineas.modeloCompleto': { $in: mcIDs } }, eliF).exec();
+  return Folio.update(
+    { "folioLineas.modeloCompleto": { $in: mcIDs } },
+    eliF
+  ).exec()
 }
 
 /**
@@ -283,30 +308,45 @@ function eliminarPedidosRelacionados(mcIDs, eliF) {
  * @param {*} eliC El objeto pull parra eliminr { $pull: { modelosCompletosAutorizados: { modeloCompleto: { $in: [this._id] } } } }
  * @returns El query para hacer el then.
  */
-function eliminarModelosCompletosAutorizadosDeClientesRelacionados(mcIDs, eliC) {
-    return Cliente.update({ 'modelosCompletosAutorizados.modeloCompleto': { $in: mcIDs } }, eliC).exec();
+function eliminarModelosCompletosAutorizadosDeClientesRelacionados(
+  mcIDs,
+  eliC
+) {
+  return Cliente.update(
+    { "modelosCompletosAutorizados.modeloCompleto": { $in: mcIDs } },
+    eliC
+  ).exec()
 }
 
-
 /**
- * Busca todos los folios que contengan pedidos con este modelo y los elimina del 
+ * Busca todos los folios que contengan pedidos con este modelo y los elimina del
  * folio.
  *
  * @param {*} next
  */
 let eliminarLineasDeFoliosRelacionadas = function(next) {
-
-    Promise.all([
-            eliminarPedidosRelacionados([this._id], { $pull: { folioLineas: { modeloCompleto: { $in: [this._id] } } } }),
-            eliminarModelosCompletosAutorizadosDeClientesRelacionados([this._id], { $pull: { modelosCompletosAutorizados: { modeloCompleto: { $in: [this._id] } } } }),
-        ])
-        .then(resp => {
-            console.log(colores.info('DATOS ELIMINADOS') + 'Se eliminaron los datos modelo autorizado para el cliente y pedidos existentes relacionados con este modelo:' + this.nombreCompleto)
-            next();
-        }).catch(err => {
-            next(err);
-        });
-};
+  Promise.all([
+    eliminarPedidosRelacionados([this._id], {
+      $pull: { folioLineas: { modeloCompleto: { $in: [this._id] } } }
+    }),
+    eliminarModelosCompletosAutorizadosDeClientesRelacionados([this._id], {
+      $pull: {
+        modelosCompletosAutorizados: { modeloCompleto: { $in: [this._id] } }
+      }
+    })
+  ])
+    .then((resp) => {
+      console.log(
+        colores.info("DATOS ELIMINADOS") +
+          "Se eliminaron los datos modelo autorizado para el cliente y pedidos existentes relacionados con este modelo:" +
+          this.nombreCompleto
+      )
+      next()
+    })
+    .catch((err) => {
+      next(err)
+    })
+}
 
 /**
  *Esta funcion se encarga de actualizar las existencias del modelo que se grabe
@@ -315,33 +355,29 @@ let eliminarLineasDeFoliosRelacionadas = function(next) {
  * @param {*} next
  */
 let actualizarExistencias = function(next) {
-    // Recorremos todos los lotes y sumamos sus existencias
-    // para modificar la existencia total. 
-    let existenciaTotal = 0;
+  // Recorremos todos los lotes y sumamos sus existencias
+  // para modificar la existencia total.
+  let existenciaTotal = 0
 
-    this.lotes.forEach(lote => {
-        existenciaTotal += lote.existencia;
-    });
+  this.lotes.forEach((lote) => {
+    existenciaTotal += lote.existencia
+  })
 
-    this.existencia = existenciaTotal;
+  this.existencia = existenciaTotal
 
-    next();
+  next()
+}
 
-
-};
-
-
-
-// El orden de es importante sobre todo cuando son el mismo hook. 
+// El orden de es importante sobre todo cuando son el mismo hook.
 
 modeloCompletoSchema
-    .pre('findOne', autoPopulate)
-    .pre('find', autoPopulate)
-    // Este orden de save es importante. 
+  .pre("findOne", autoPopulate)
+  .pre("find", autoPopulate)
+  // Este orden de save es importante.
 
-.pre('save', autoPopulate)
-    .pre('save', generarNombreCompleto)
-    .pre('save', actualizarExistencias)
-    .pre('remove', eliminarLineasDeFoliosRelacionadas);
+  .pre("save", autoPopulate)
+  .pre("save", generarNombreCompleto)
+  .pre("save", actualizarExistencias)
+  .pre("remove", eliminarLineasDeFoliosRelacionadas)
 
-module.exports = mongoose.model('ModeloCompleto', modeloCompletoSchema);
+module.exports = mongoose.model("ModeloCompleto", modeloCompletoSchema)

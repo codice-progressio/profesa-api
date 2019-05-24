@@ -235,6 +235,36 @@ function obtenerMenu(rolesDelUsuario) {
         }
       ]
     },
+
+
+    ALMACENES: {
+      roles: [CONST.ROLES.ALMACEN_MENU],
+      titulo: "Almacen",
+      icono: "fas fa-warehouse",
+      submenu: [
+        {
+          titulo: "Producto terminado",
+          url: "/almacen/productoTerminado",
+          roles: [CONST.ROLES.ALMACEN_PRODUCTO_TERMINADO]
+        },
+        {
+          titulo: "Materia prima",
+          url: "/almacen/materiaPrima",
+          roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
+        },
+        {
+          titulo: "Refacciones",
+          url: "/almacen/refacciones",
+          roles: [CONST.ROLES.ALMACEN_REFACCIONES]
+        },
+        {
+          titulo: "Herramienta",
+          url: "/almacen/herramientas",
+          roles: [CONST.ROLES.ALMACEN_HERRAMIENTAS]
+        },
+        
+      ]
+    },
     CONTROL_DE_PRODUCCION: {
       roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_MENUS],
       titulo: "Control de Producción",

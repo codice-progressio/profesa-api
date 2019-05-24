@@ -18,7 +18,10 @@ app.post('/', (req, res) => {
     ModeloCompleto
         .findOne({ _id: idModeloCompleto })
         .exec()
-        .then(modeloCompleto => {
+        .then(modeloCompleto =>
+        {
+            
+            if (!modeloCompleto) throw 'No existe el modelo'
 
             modeloCompleto.lotes.push(lote);
             return modeloCompleto.save();

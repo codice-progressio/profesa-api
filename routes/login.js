@@ -210,7 +210,7 @@ function obtenerMenu(rolesDelUsuario) {
     REPORTES: {
       roles: [CONST.ROLES.REPORTES_MENUS],
       titulo: "Reportes",
-      icono: "fas fa-pie-chart",
+      icono: "fas fa-chart-pie",
       submenu: [
         // { titulo: 'Historial de folios', url: '/folios/historial', roles: [] },
         {
@@ -257,7 +257,7 @@ function obtenerMenu(rolesDelUsuario) {
     INGENIERIA: {
       roles: [CONST.ROLES.INGENIERIA_MENU],
       titulo: "Ingenieria",
-      icono: "fas fa-gears",
+      icono: "fas fa-cogs",
       submenu: [
         {
           titulo: "Procesos",
@@ -339,7 +339,7 @@ function obtenerMenu(rolesDelUsuario) {
     PRODUCCION: {
       roles: [CONST.ROLES.PRODUCCION_MENU],
       titulo: "Registros",
-      icono: "fas fa-file-text",
+      icono: "fas fa-file-alt",
       submenu: [
         {
           titulo: "Almacen de boton",

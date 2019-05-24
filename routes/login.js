@@ -411,7 +411,7 @@ function obtenerMenu(rolesDelUsuario) {
     SUPER_ADMIN: {
       roles: [CONST.ROLES.SUPER_ADMIN],
       titulo: "SUPER-ADMIN",
-      icono: "fa fa-user tada inifinite animated",
+      icono: "fas fa-user tada inifinite animated",
       submenu: [
         { titulo: "Hospitales", url: "/hospitales", roles: [] },
         { titulo: "Médicos", url: "/medicos", roles: [] },

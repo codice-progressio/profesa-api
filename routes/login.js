@@ -210,7 +210,7 @@ function obtenerMenu(rolesDelUsuario) {
     REPORTES: {
       roles: [CONST.ROLES.REPORTES_MENUS],
       titulo: "Reportes",
-      icono: "fa fa-pie-chart",
+      icono: "fas fa-pie-chart",
       submenu: [
         // { titulo: 'Historial de folios', url: '/folios/historial', roles: [] },
         {
@@ -339,7 +339,7 @@ function obtenerMenu(rolesDelUsuario) {
     PRODUCCION: {
       roles: [CONST.ROLES.PRODUCCION_MENU],
       titulo: "Registros",
-      icono: "fa fa-file-text",
+      icono: "fas fa-file-text",
       submenu: [
         {
           titulo: "Almacen de boton",

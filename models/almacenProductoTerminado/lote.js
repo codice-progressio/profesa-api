@@ -17,16 +17,16 @@ const devolucionesLoteSchema = require('./devolucionLote');
  */
 const LoteSchema = new Schema({
 
-    /**`
-     * Estos  valores on solo para guardar la referencia del lote. 
-     */
-    orden: {
-        type: Schema.Types.ObjectId,
-        ref: 'Folio.folioLinea.ordenes',
-    },
+    // /**`
+    //  * Estos  valores on solo para guardar la referencia del lote. 
+    //  */
+    // orden:[ {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'Folio.folioLinea.ordenes',
+    // }],
 
 
-    numero: { type: String, required: [true, 'Es necesario que definas el numero de lote.'] },
+    // numero: { type: String, required: [true, 'Es necesario que definas el numero de lote.'] },
 
     //----------------------------------------------------------------
 
@@ -50,9 +50,11 @@ const LoteSchema = new Schema({
     devoluciones: [devolucionesLoteSchema],
 
     validandoDevolucion: { type: Boolean, default: false, select: false },
-    observaciones: { type: String }
+    observaciones: { type: String },
 
-}, { timestap: true });
+    createAt:{ type: Date, default: Date.now}
+
+});
 
 /**
  *Agrega una salida a este lote. 

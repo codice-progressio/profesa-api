@@ -94,14 +94,21 @@ app.get("/transito/:id", (req, res) => {
         _id: null,
         total: { $sum: "$folioLineas.cantidad" }
       }
-    }
+    },
+
+    { $project: { _id: 0, total: 1 } }
+  
   )
 
   // Hacemos un match de los
 
   Folio.aggregate(arregloRedact)
-    .then((resp) => {
-      return RESP._200(res, null, [{ tipo: "total", datos: resp }])
+    .then((resp) =>
+    {
+      return RESP._200(res, null , [
+          { tipo: 'total', datos: resp[0].total },
+      ]);
+      
     })
     .catch((err) => {
       return RESP._500(res, {

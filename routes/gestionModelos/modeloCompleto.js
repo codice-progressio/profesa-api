@@ -77,35 +77,31 @@ app.get("/transito/:id", (req, res) => {
     },
 
     {
-      // Sustituimos los pedidos. 
+      // Sustituimos los pedidos.
       $addFields: {
-        'folio.folioLineas': '$pedidosFiltrados',
+        "folio.folioLineas": "$pedidosFiltrados"
       }
-    }
-    ,
+    },
     {
       // Establecemos el root para dejarlo todo como estaba.
       $replaceRoot: { newRoot: "$folio" }
     },
     {
       $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-
     },
-    { $group: {
-      _id: null,
-      total: { $sum: '$folioLineas.cantidad'}
-
-    }}
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$folioLineas.cantidad" }
+      }
+    }
   )
 
   // Hacemos un match de los
 
   Folio.aggregate(arregloRedact)
-    .then((resp) =>
-    {
-      return RESP._200(res, null, [
-        { tipo: "total", datos: resp },
-      ])
+    .then((resp) => {
+      return RESP._200(res, null, [{ tipo: "total", datos: resp }])
     })
     .catch((err) => {
       return RESP._500(res, {
@@ -116,4 +112,3 @@ app.get("/transito/:id", (req, res) => {
 })
 
 module.exports = app
-

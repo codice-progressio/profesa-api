@@ -105,6 +105,15 @@ app.get("/transito/:id", (req, res) => {
   Folio.aggregate(arregloRedact)
     .then((resp) =>
     {
+
+
+      if (resp.length === 0)
+      {
+        return RESP._200(res, null , [
+            { tipo: 'total', datos: 0 },
+        ]);
+        
+      }
       return RESP._200(res, null , [
           { tipo: 'total', datos: resp[0].total },
       ]);

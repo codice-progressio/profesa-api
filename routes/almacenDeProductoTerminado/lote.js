@@ -21,12 +21,12 @@ app.post('/', (req, res) => {
         .then(modeloCompleto =>
         {
             
-            if (!modeloCompleto) throw 'No existe el modelo'
+            if (!modeloCompleto) throw "No existe el modelo"
+            let mc = asignacionDeLote(modeloCompleto, lote)
+            
             // Cuando se crea un nuevo lote su existencia
             // debe ser igual a la cantidaad creada. 
-            lote.existencia = lote.cantidadEntrada
-            modeloCompleto.lotes.push(lote);
-            return modeloCompleto.save();
+            return mc.save();
 
         })
         .then(mcActualizado => {
@@ -43,6 +43,43 @@ app.post('/', (req, res) => {
             });
         });
 });
+
+
+function asignacionDeLote(mc, lote) {
+  // Si hay lotes entonces comprobamos que el primero
+  // corresponda a este mes
+
+  // Buscamos el lote en base a la fecha.
+  if (
+    //   Si esta en 0 creamos un nuevo lote.
+    mc.lotes.length == 0 ||
+    // Si tiene un lote pero no es de este mes creamos un nuevo lote tambien.
+    mc.lotes[0].createAt.getMonth() !== new Date().getMonth()
+  ) {
+    // Si no hay lotes entonces creamos uno nuevo
+    lote.existencia = lote.cantidadEntrada
+    lote.entradas = []
+    lote.entradas.push({
+      cantidad: lote.cantidadEntrada,
+      observaciones: lote.observaciones
+    })
+    mc.lotes.push(lote)
+    return mc
+  }
+
+  // Lote existente. Solo le sumamos a la cantidad entrada
+  mc.lotes[0].existencia += lote.cantidadEntrada
+  mc.lotes[0].cantidadEntrada += lote.cantidadEntrada
+  mc.lotes[0].entradas.push({
+    //  Como ya existe un lote solo registramos la entrada con su
+    // respectiva fecha.
+    cantidad: lote.cantidadEntrada,
+    observaciones: lote.observaciones
+  })
+
+  return mc
+}
+
 
 /**
  * 

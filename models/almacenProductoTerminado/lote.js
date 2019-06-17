@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 const salidaLoteSchema = require('./salidaLote');
+const entradaLoteSchema = require('./entradaLote.model');
 const devolucionesLoteSchema = require('./devolucionLote');
 
 
@@ -47,6 +48,7 @@ const LoteSchema = new Schema({
      * El registro de las salidas que va teniendo el lote. 
      */
     salidas: [salidaLoteSchema],
+    entradas: [entradaLoteSchema],
     devoluciones: [devolucionesLoteSchema],
 
     validandoDevolucion: { type: Boolean, default: false, select: false },

@@ -193,6 +193,8 @@ var autoPopulate = function(next) {
       path: "maquinas  departamento"
     }
   })
+
+  this.populate('lotes.salidas.cliente')
   next()
 }
 

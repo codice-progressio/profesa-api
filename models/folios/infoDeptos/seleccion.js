@@ -16,22 +16,22 @@ var seleccionSchema = new Schema({
     /** 
      * La cantidad de boton quebrado que separa seleccion. 
      */
-    quebrados: { type: Number, min: ['El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
+    quebrados: { type: Number, min: [1, 'El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
     /**`
      * Boton reves de laser. 
      */
-    reves: { type: Number, min: ['El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
+    reves: { type: Number, min: [1, 'El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
     /**
      * El borde roto.
      */
-    despostillado: { type: Number, min: ['El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
-    sinLaser: { type: Number, min: ['El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
-    sinHoyos: { type: Number, min: ['El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
+    despostillado: { type: Number, min: [1, 'El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
+    sinLaser: { type: Number, min: [1, 'El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
+    sinHoyos: { type: Number, min: [1, 'El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
     efectoMalo: { type: String },
     /**
      * Todo lo que no este enlistado.
      */
-    otros: { type: Number, min: ['El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
+    otros: { type: Number, min: [1, 'El valor minimo permitido es 1.'], max: [99000, 'El valor maximo permitido es 99000.'] },
     /**
      * La descripcion del otro defecto.
      */

@@ -97,7 +97,6 @@ app.get("/transito/:id", (req, res) => {
     },
 
     { $project: { _id: 0, total: 1 } }
-  
   )
 
   // Hacemos un match de los

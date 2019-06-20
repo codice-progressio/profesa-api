@@ -239,7 +239,7 @@ function obtenerMenu(rolesDelUsuario) {
 
     ALMACENES: {
       roles: [CONST.ROLES.ALMACEN_MENU],
-      titulo: "Almacen",
+      titulo: " Almacen",
       icono: "fas fa-warehouse",
       submenu: [
         {
@@ -344,6 +344,11 @@ function obtenerMenu(rolesDelUsuario) {
           titulo: "Mis folios",
           url: "/ventas/misFolios",
           roles: [CONST.ROLES.VENTAS_MIS_FOLIOS]
+        },
+        {
+          titulo: "Stock",
+          url: "/ventas/stock",
+          roles: [CONST.ROLES.VENTAS_STOCK]
         }
       ]
     },

@@ -13,8 +13,6 @@ var almacenDeBotonSchema = new Schema({
         max: [999999, 'La cantidad no puede ser mayor que 999999.'],
         type: Number,
         required: [function() {
-                console.log('almacen: Guardado esta en ' + this.guardar);
-
                 return this.guardar;
             },
             'La cantidad de botón es necesaria.'

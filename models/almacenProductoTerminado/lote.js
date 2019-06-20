@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 
 const Schema = mongoose.Schema;
 const salidaLoteSchema = require('./salidaLote');
+const entradaLoteSchema = require('./entradaLote.model');
 const devolucionesLoteSchema = require('./devolucionLote');
 
 
@@ -17,16 +18,16 @@ const devolucionesLoteSchema = require('./devolucionLote');
  */
 const LoteSchema = new Schema({
 
-    /**`
-     * Estos  valores on solo para guardar la referencia del lote. 
-     */
-    orden: {
-        type: Schema.Types.ObjectId,
-        ref: 'Folio.folioLinea.ordenes',
-    },
+    // /**`
+    //  * Estos  valores on solo para guardar la referencia del lote. 
+    //  */
+    // orden:[ {
+    //     type: Schema.Types.ObjectId,
+    //     ref: 'Folio.folioLinea.ordenes',
+    // }],
 
 
-    numero: { type: String, required: [true, 'Es necesario que definas el numero de lote.'] },
+    // numero: { type: String, required: [true, 'Es necesario que definas el numero de lote.'] },
 
     //----------------------------------------------------------------
 
@@ -47,12 +48,15 @@ const LoteSchema = new Schema({
      * El registro de las salidas que va teniendo el lote. 
      */
     salidas: [salidaLoteSchema],
+    entradas: [entradaLoteSchema],
     devoluciones: [devolucionesLoteSchema],
 
     validandoDevolucion: { type: Boolean, default: false, select: false },
-    observaciones: { type: String }
+    observaciones: { type: String },
 
-}, { timestap: true });
+    createAt:{ type: Date, default: Date.now}
+
+});
 
 /**
  *Agrega una salida a este lote. 

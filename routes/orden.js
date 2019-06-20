@@ -1,15 +1,16 @@
 //Esto es necesario
 const express = require('express');
 const app = express();
-const colores = require('../utils/colors');
 const NVU = require('../config/nivelesDeUrgencia');
 
 const Folio = require('../models/folios/folio');
 const Departamento = require('../models/departamento');
 const RESP = require('../utils/respStatus');
 const CONST = require('../utils/constantes');
-const Maquina = require('../models/maquina');
 const Default = require('../models/configModels/default');
+
+var ModeloCompleto = require('../models/modeloCompleto');
+var Lote = require('../models/almacenProductoTerminado/entradaLote.model')
 
 
 
@@ -195,6 +196,7 @@ app.get('/:idOrden/:departamento', (req, res) => {
 
         const modeloCompleto = respuestas[0][1];
         const depto = respuestas[1];
+
 
         const esDeptoActual = orden.ubicacionActual.departamento.nombre === depto.nombre;
         if (!esDeptoActual) {
@@ -418,7 +420,7 @@ app.get('/:depto', (req, res) => {
 // Guarda todas las órdenes. 
 // ============================================
 
-app.post('/', (req, res, next) => {
+app.post('/', (req, res) => {
 
     var datos = req.body;
     Folio.findById(datos.idFolio, (err, folioEncontrado) => {
@@ -480,7 +482,7 @@ app.post('/', (req, res, next) => {
 // recibirlas y entregaras en el depto. Control de produccion.
 // ============================================
 
-app.put('/controlDeProduccionRecibirYEntregar', (req, res, next) => {
+app.put('/controlDeProduccionRecibirYEntregar', (req, res) => {
     const arreglo = req.body;
     // Obtenemos los defautls:
 
@@ -508,7 +510,7 @@ app.put('/controlDeProduccionRecibirYEntregar', (req, res, next) => {
 
             foliosEncontrados.forEach(x => {
                 arreglo.forEach(_id => {
-                    ordenEncontrada = buscarOrdenDentroDeFolio(x, _id);
+                    var ordenEncontrada = buscarOrdenDentroDeFolio(x, _id);
                     if (ordenEncontrada) {
                         ordenEncontrada.ubicacionActual.recivida = true;
                         ordenEncontrada.ubicacionActual.recepcion = new Date();
@@ -518,7 +520,7 @@ app.put('/controlDeProduccionRecibirYEntregar', (req, res, next) => {
             });
 
 
-            a = foliosEncontrados.filter(x => { x.save(); return true; })
+            var a = foliosEncontrados.filter(x => { x.save(); return true; })
             return Promise.all(a);
 
         }).then(foliosGrabados => {
@@ -543,123 +545,100 @@ app.put('/controlDeProduccionRecibirYEntregar', (req, res, next) => {
 // ============================================
 
 
-app.put('/:idOrden', (req, res) => {
-    /**
-     * El departamento del cual se agregara un registro. 
-     * 
-     */
-    let idDepto = req.query.depto;
-    /** 
-     *Este camino modificado debe ser 
-     * intercepado por el guard y si no es un usuario 
-     * con permiso suficiente no se debe ejecutar este
-     * controller. 
-     * */
-    const caminoModificadoAutorizado = req.query.caminoModificado;
+app.put("/:idOrden", (req, res) => {
+  /**
+   * El departamento del cual se agregara un registro.
+   *
+   */
+  let idDepto = req.query.depto
 
-    const datos = req.body;
+  const datos = req.body
 
-    // Obtenemos el id de la órden.
-    const id = req.params.idOrden;
-    Promise.all([
-        existeFolioConOrden(id),
-        existeDepartamento(idDepto)
-    ]).then(respuestas => {
-        const folio = respuestas[0];
-        const departamento = respuestas[1];
+  // Obtenemos el id de la órden.
+  const id = req.params.idOrden
+  Promise.all([existeFolioConOrden(id), existeDepartamento(idDepto)])
+    .then((respuestas) => {
+      const folio = respuestas[0]
+      const departamento = respuestas[1]
 
+      const orden = buscarOrdenDentroDeFolio(folio, id)
+      const dep = Departamento.obtener(departamento.nombre)
+      if (!dep) throw "El departamento ${dep} no esta defindo en el sistema. "
 
-        const orden = buscarOrdenDentroDeFolio(folio, id);
-        const dep = Departamento.obtener(departamento.nombre)
-        if (dep) {
+      // Comprobamos que el departamento sea empaque para
+      // guardar las piezas finales en la orden.
+      elDepartamentoEsProductoTerminado(orden, dep._vm, datos)
 
-            // ============================================
-            // AQUI ES DONDE SE AVANZA EN LA ORDEN
-            // ============================================
+      // ============================================
+      // AQUI ES DONDE SE AVANZA EN LA ORDEN
+      // ============================================
 
-            // schemaParaOrden[depto](orden, datos, departamento);
-            // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
-            datosDeOrdenYAvanzar(orden, datos, dep._vm);
+      // schemaParaOrden[depto](orden, datos, departamento);
+      // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
+      datosDeOrdenYAvanzar(orden, datos, dep._vm)
 
-            folio.save(err => {
-                if (err) {
-                    return RESP._500(res, {
-                        msj: 'Hubo un error actualizando el folio.',
-                        err: err,
-                    });
+      return folio.save()
+    })
+    .then((folioGrabado) => {
+      // Comprobamos si la orden esta terminada:
+      // Si esta terminada entonces la guardamos directamente al
+      //almacen de producto terminado.
 
-                }
+      //   Obtenemos de nuevo la orden.
 
-                // return res.status(200).json({
-                //     ok: true,
-                // });
-                return RESP._200(res, 'Órden modificada correctamente.', [
-                    { tipo: 'todoCorrecto', datos: true },
-                ]);
-            });
+      let ordenModificada = buscarOrdenDentroDeFolio(folioGrabado, id)
 
-            // ============================================
-            //  TODO: OJO!!! ESTA PARTE TODAVÍA NO ESTA FUNCIONANDO.
-            // ============================================
-
-            // NO BORRAR!!!! NO BORRAR!!!!!!
-
-
-            // let datosTransformacion = {
-            //     orden: orden,
-            //     departamento: departamento,
-            //     res: res,
-            //     callback: function() {
-            //         //Ejecutamos el grabado dentro de la función asincrona que esta en asignar máquina. 
-            //         folio.save(err => {
-            //             if (err) {
-            //                 return RESP._500(res, {
-            //                     msj: 'Hubo un error actualizando el folio.',
-            //                     err: err,
-            //                 });
-
-            //             }
-
-            //             // return res.status(200).json({
-            //             //     ok: true,
-            //             // });
-            //             return RESP._200(res, 'Órden modificada correctamente.', [
-            //                 { tipo: 'todoCorrecto', datos: true },
-            //             ]);
-            //         });
-
-            //     }
-            // };
-
-
-
-            // if (!datosTransformacion.orden.ubicacionActual) {
-            //     //Si no tenemos más ubicaciónes entonces no es necesario 
-            //     // que hagamos la parte de transformación. 
-            //     datosTransformacion.orden.terminada = true;
-            //     datosTransformacion.callback();
-            // } else {
-            //     console.log( )
-            //     // asingarAMaquinaTransformacion(datosTransformacion);
-            // }
-        } else {
-            return RESP._500(res, {
-                msj: 'Departamento no defindo como funcón en sistema. ',
-                err: 'Algo extrano paso.',
-                masInfo: [
-                    { infoAdicional: 'sys', dataAdicional: 'Es necesario definir una operación en el sistema para que se guarda en su respectivo schema. ' }
-                ]
-            });
-
-
+      if (ordenModificada.terminada) {
+        //Creamos el lote.
+        var lote = {
+          cantidadEntrada: ordenModificada.piezasFinales,
+          observaciones: `Entrada a almacen desde produccion. ORD: ${
+            ordenModificada.orden
+          }, | ${new Date()} |`
         }
-    }).catch(err => {
-        return RESP._500(res, err);
-    });
+
+        return ModeloCompleto.guardarLote(
+          ordenModificada.modeloCompleto._id,
+          lote
+        )
+      }
+    })
+    .then((resp) => {
+      var msj = "Órden modificada correctamente."
+
+      if (resp != null) msj = "Orden modificada y lote guardado correctamente."
+
+      return RESP._200(res, msj, [{ tipo: "todoCorrecto", datos: true }])
+    })
+    .catch((err) => {
+      return RESP._500(res, {
+        msj: "Hubo un error actualizando el folio.",
+        err: err
+      })
+    })
+})
 
 
-});
-
+/**
+ *Esta comprobacion se hace antes de que empaque de el salto
+ a producto terminado. Lo que hace es pasar la cantidad empacada
+ al valor de piezas finales de la orden unicamente cuando el departamento
+ en el que esta es empaque. Por eso es necesario hacer la comprobacion antes
+ por que despues de esta funcion se ejecuta el cambio de ubicacion actual. 
+ *
+ * @param {*} orden
+ * @param {*} dep
+ * @param {*} datos
+ */
+function elDepartamentoEsProductoTerminado(orden, dep, datos) {
+  // Estamos en empaque.
+    if (dep === CONST.DEPARTAMENTOS.EMPAQUE._vm) {
+        
+    // Tomamos desde los datos la cantidaad de boton
+    // por que estamos reciviendo el departamento de empaque
+    orden.piezasFinales = datos.cantidadDeBoton
+  }
+}
 
 function datosDeOrdenYAvanzar(orden, datos, depto) {
 
@@ -668,7 +647,7 @@ function datosDeOrdenYAvanzar(orden, datos, depto) {
 }
 
 
-function avanzarCamino(orden, depto) {
+function avanzarCamino(orden) {
     // Obtenemos la ubicacion actual. 
     const ubicacionActual = orden.ubicacionActual;
 

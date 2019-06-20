@@ -72,8 +72,6 @@ app.put("/laser/:idCliente", (req, res) => {
 
     var marcaLaser = req.body.laser;
 
-    console.log(` Estamos aqui en cliente`);
-
     Cliente.findById(idCliente).exec()
         .then(clienteEncontrado => {
             if (!clienteEncontrado) {

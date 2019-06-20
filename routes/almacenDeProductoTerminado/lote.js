@@ -15,15 +15,8 @@ app.post('/', (req, res) => {
 
     if (!idModeloCompleto) throw new Error('No definiste el modelo para actualizar el lote.');
 
-    ModeloCompleto
-        .findOne({ _id: idModeloCompleto })
-        .exec()
-        .then(modeloCompleto => {
-
-            modeloCompleto.lotes.push(lote);
-            return modeloCompleto.save();
-
-        })
+    ModeloCompleto.
+        guardarLote(idModeloCompleto, lote)
         .then(mcActualizado => {
 
             return RESP._200(res, `Se guardo el lote para el modelo ${mcActualizado.nombreCompleto}`, [
@@ -38,6 +31,9 @@ app.post('/', (req, res) => {
             });
         });
 });
+
+
+
 
 /**
  * 
@@ -75,5 +71,58 @@ app.delete('/:idModeloCompleto/:idLote', (req, res) => {
         });
 
 });
+
+
+/**
+ * Modifca un lote en base a lid del modelo completo y del
+ * propio lote. 
+ * 
+ * El middleware del modelo completo deberia de hacer el 
+ * ajuste de la existencia de manera automatica.
+ */
+app.put("/:idModeloCompleto/:idLote", (req, res) => {
+  /**
+   * El id del modelo completo.
+   */
+  let idModeloCompleto = req.params.idModeloCompleto
+  /**
+   * El id del lote que debe existir en el mc.
+   *
+   */
+  let idLote = req.params.idLote
+  /**
+   * Los datos del lote para modificar.
+   */
+  let lote = req.body
+  // Buscamos el modelo.
+  ModeloCompleto.findOne({ _id: idModeloCompleto })
+    .exec()
+    .then((mc) => {
+      if (!mc) throw "No existe el id del modelo que ingresaste."
+      if (!mc.lotes.id(idLote)) throw "No existe el id del lote que ingresaste"
+
+      // Modificamos solo los datos que nos interesan.
+
+      mc.lotes.id(idLote).existencia = lote.existencia
+      mc.lotes.id(idLote).cantidadEntrada = lote.cantidadEntrada
+      mc.lotes.id(idLote).observaciones = lote.observaciones
+
+      mc.save()
+    })
+    .then((mcMod) => {
+      return RESP._200(res, "Se modifico el lote de manera correcta", [
+        { tipo: "modeloCompleto", datos: mcMod }
+      ])
+    })
+    .catch((err) => {
+      return RESP._500(res, {
+        msj: "Hubo un error actualizando el lote.",
+        err: err
+      })
+    })
+})
+
+
+
 
 module.exports = app;

@@ -14,11 +14,12 @@ const salidaLoteSchema = new Schema({
      * El cliente al que se le va a surtir el boton. 
      */
     cliente: { type: Schema.Types.ObjectId, ref: 'Cliente', required: [true, 'El cliente es necesario'] },
+    observaciones: { type: String},
     cantidad: {
         type: Number,
         validate: [{
                 validator: function(v) {
-                    return new Promise((resolve, reject) => {
+                    return new Promise((resolve) => {
                         // El valor minimo no puede ser menor que 1;
                         resolve(1 <= v);
                     });
@@ -76,7 +77,7 @@ const salidaLoteSchema = new Schema({
                             cb(true);
                         }
 
-                    };
+                    }
                 },
             },
         ]

@@ -5,6 +5,7 @@ var Schema = mongoose.Schema;
 
 var AlmacenDescripcion = new Schema({
     nombre: { type: String, required: [true, 'El nombre es necesario.'] },
+    descripcion: String,
     ubicacion: { type: String }
 }, { collection: 'almacenesDescripcion' });
 

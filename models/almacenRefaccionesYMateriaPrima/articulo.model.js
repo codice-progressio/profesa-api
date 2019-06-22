@@ -1,64 +1,53 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose")
 
+var Schema = mongoose.Schema
 
-var Schema = mongoose.Schema;
+var ProveedorRelacion = require("./proveedorRelacion.model")
+var SalidaMateriaPrimaYRefacciones = require("./salidaMateriaPrimaYRefacciones.model")
+var EntradaMateriaPrimaYRefacciones = require("./entradaMateriaPrimaYRefacciones.model")
 
-var ArticuloSchema = new Schema({
+var ArticuloSchema = new Schema(
+  {
     codigoLocalizacion: { type: String },
     codigoInterno: { type: String },
     almacen: {
-        type: Schema.Types.ObjectId,
-        ref: 'AlmacenDescripcion',
-        required: [true, 'Es necesario definir el almacen.']
+      type: Schema.Types.ObjectId,
+      ref: "AlmacenDescripcion",
+      required: [true, "Es necesario definir el almacen."]
+    },
+
+    nombre: {
+      type: String,
+      required: [true, "Es necesario que definas el nombre de este articulo."]
     },
 
     descripcion: String,
-    proveedores = [{
-        proveedor: {
-            type: Schema.Types.ObjectId,
-            ref: 'Proveedor',
-            require: [true, 'El proveedor es necesario.']
-        },
-        precio: { type: Number, require: [true, 'Es necesario que definas el precio'] },
-        // Esta divisa la debe de contener el proveedor. 
-        divisa: {
-            type: Schema.Types.ObjectId,
-            ref: 'Divsa',
-            require: [true, 'La moneda es necesaria.']
-        }
-    }],
-    existencia: {
-        total: Number,
-        salidas: [{
-            fecha: Date,
-            cantidad: Number,
-            departamento: {
-                type: Schema.Types.ObjectId,
-                ref: 'Departamento',
-                require: [true, 'El departamento es obligatorio']
+    presentacion: {
+      type: String,
+      required: [
+        true,
+        "Es necesario que definas la presentacion de este producto."
+      ]
+    },
+    unidad: {
+      type: String,
+      required: [true, "La unidad de medida de la presentacion es necesaria."]
+    },
+    kgPorUnidad: {
+      type: Number,
+      min: [0, "El valor minimo permitido es 0."],
+      required: [true, "Es necesario que definas los kg por unidad."]
+    },
 
-            },
-            quienSolicita: {
-                type: Schema.Types.ObjectId,
-                ref: 'Empleado',
-                require: [true, 'Es necesario definir quien solicita']
+    proveedores: [ProveedorRelacion],
 
-            },
-            quienSurte: {
-                type: Schema.Types.ObjectId,
-                ref: 'Usuario',
-                require: [true, 'Es necesario definir quien surte']
-            },
+    existencia: Number,
 
-        }],
+    salidas: [SalidaMateriaPrimaYRefacciones],
+    entradas: [EntradaMateriaPrimaYRefacciones]
+  },
 
-    }
+  { collection: "articulos" }
+)
 
-
-}, { collection: 'Divisas' });
-
-
-
-
-
-module.exports = mongoose.model('Divisa', ArticuloSchema);
+module.exports = mongoose.model("Articulo", ArticuloSchema)

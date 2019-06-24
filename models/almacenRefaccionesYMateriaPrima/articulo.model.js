@@ -2,14 +2,16 @@ var mongoose = require("mongoose")
 
 var Schema = mongoose.Schema
 
-var ProveedorRelacion = require("./proveedorRelacion.model")
+let uniqueValidator = require("mongoose-unique-validator")
+
 var SalidaMateriaPrimaYRefacciones = require("./salidaMateriaPrimaYRefacciones.model")
 var EntradaMateriaPrimaYRefacciones = require("./entradaMateriaPrimaYRefacciones.model")
 
 var ArticuloSchema = new Schema(
   {
-    codigoLocalizacion: { type: String },
+    codigoLocalizacion: { type: String, unique: true },
     codigoInterno: { type: String },
+    codigoProveedor: { type: String },
     almacen: {
       type: Schema.Types.ObjectId,
       ref: "AlmacenDescripcion",
@@ -39,9 +41,10 @@ var ArticuloSchema = new Schema(
       required: [true, "Es necesario que definas los kg por unidad."]
     },
 
-    proveedores: [ProveedorRelacion],
+    // var ProveedorRelacion = require("./proveedorRelacion.model")
+    // proveedores: [ProveedorRelacion],
 
-    existencia: Number,
+    existencia: {type: Number, default: 0},
 
     salidas: [SalidaMateriaPrimaYRefacciones],
     entradas: [EntradaMateriaPrimaYRefacciones]
@@ -49,5 +52,7 @@ var ArticuloSchema = new Schema(
 
   { collection: "articulos" }
 )
+
+ArticuloSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
 
 module.exports = mongoose.model("Articulo", ArticuloSchema)

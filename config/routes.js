@@ -41,12 +41,23 @@ let folioNewRoutes = require('../routes/folio.route')
 let ROLES = require('../config/roles');
 
 var almacenDescripcionRoute = require('../routes/almacenDeMateriaPrimaYRefacciones/almacenDescripcion.route');
+var articuloRoute = require('../routes/almacenDeMateriaPrimaYRefacciones/articulo.route');
 
 
 
 
 module.exports.ROUTES = {
 
+    _ARTICULO: {
+
+        url: '/almacenDeMateriaPrimaYHerramientas/articulo',
+        route: articuloRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
+
+    
     _ALMACEN_DESCRIPCION: {
 
         url: '/almacenDescripcion',

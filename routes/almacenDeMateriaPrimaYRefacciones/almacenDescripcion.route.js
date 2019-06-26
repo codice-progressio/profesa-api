@@ -6,7 +6,7 @@ var CRUD = require("../CRUD")
 CRUD.app = app
 CRUD.modelo = AlmacenDescripcion
 CRUD.nombreDeObjetoSingular = "almacenDescripcion"
-CRUD.nombreDeObjetoPlural = "almacenDescripcion"
+CRUD.nombreDeObjetoPlural = "almacenesDescripcion"
 CRUD.campoSortDefault = "nombre"
 CRUD.camposActualizables = {
   // estandar: null,

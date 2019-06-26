@@ -34,19 +34,18 @@ CRUD.camposActualizables = {
 
 CRUD.crud()
 
-function errF(res, tex ) {
-  return (err) => {
-    return RESP._500(res, {
+function errF(res, tex) {
+  return (err) =>  RESP._500(res, {
       msj: `Hubo un error al registrar la ${tex} para este articulo.`,
       err: err
     })
-  }
+  
 }
 
 function correcto(res) {
-  return (articuloGuardado) => {
-    return RESP._200(res, null, [{ tipo: "articulo", datos: articuloGuardado }])
-  }
+  return (articuloGuardado) => 
+     RESP._200(res, null, [{ tipo: "articulo", datos: articuloGuardado }])
+  
 }
 
 app.put("/entrada/:id", (req, res) => {
@@ -61,7 +60,7 @@ app.put("/entrada/:id", (req, res) => {
       return articulo.save()
     })
     .then(correcto(res))
-    .catch(errF(res, 'entrada'))
+    .catch(errF(res, "entrada"))
 })
 
 /**
@@ -90,7 +89,7 @@ app.put("/salida/:id", (req, res) => {
       return articulo.save()
     })
     .then(correcto(res))
-    .catch(errF(res, 'salida'))
+    .catch(errF(res, "salida"))
 })
 
 /**
@@ -105,6 +104,34 @@ function guardarSalida(articulo, datos) {
   if (!articulo.salidas) articulo.salidas = []
   articulo.salidas.push(datos)
   articulo.existencia -= datos.cantidad
+}
+
+app.put("/stock/:id", (req, res) => {
+  let id = req.params.id
+  let datos = req.body
+  Articulo.findById(id)
+    .exec()
+    .then((articulo) => modificarStock(articulo, datos))
+    .then((articuloGuardado) =>
+      RESP._200(res, "Se modifico el stock de manera correcta.", [
+        { tipo: "articulo", datos: articuloGuardado }
+      ])
+    )
+    .catch((err) =>
+      RESP._500(res, {
+        msj: "Hubo un error actualizando el stock.",
+        err: err
+      })
+    )
+})
+
+function modificarStock(articulo, datos) {
+  if (!articulo) throw "No existe el articulo."
+
+  articulo.stockMinimo = datos.stockMinimo
+  articulo.stockMaximo = datos.stockMaximo
+
+  return articulo.save()
 }
 
 module.exports = app

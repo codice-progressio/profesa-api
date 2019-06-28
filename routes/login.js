@@ -236,7 +236,6 @@ function obtenerMenu(rolesDelUsuario) {
       ]
     },
 
-
     ALMACENES: {
       roles: [CONST.ROLES.ALMACEN_MENU],
       titulo: " Almacen",
@@ -248,20 +247,11 @@ function obtenerMenu(rolesDelUsuario) {
           roles: [CONST.ROLES.ALMACEN_PRODUCTO_TERMINADO]
         },
         {
-          titulo: "Materia prima",
-          url: "/almacen/materiaPrima",
+          titulo: "Produccion",
+          url: "/almacen/produccion",
           roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
         },
-        {
-          titulo: "Refacciones",
-          url: "/almacen/refacciones",
-          roles: [CONST.ROLES.ALMACEN_REFACCIONES]
-        },
-        {
-          titulo: "Herramienta",
-          url: "/almacen/herramientas",
-          roles: [CONST.ROLES.ALMACEN_HERRAMIENTAS]
-        },
+   
         
       ]
     },
@@ -367,6 +357,11 @@ function obtenerMenu(rolesDelUsuario) {
           titulo: "Clientes",
           url: "/clientes",
           roles: [CONST.ROLES.ADMINISTRADOR_CLIENTES]
+        },
+        {
+          titulo: "Almacen descripcion",
+          url: "/almacenDescripcion",
+          roles: [CONST.ROLES.ADMINISTRADOR_ALMACEN_DESCRIPCION]
         }
       ]
     },
@@ -505,13 +500,11 @@ function obtenerMenu(rolesDelUsuario) {
           menuSeleccionado[menu].submenu = menuSeleccionado[
             menu
           ].submenu.filter((submenu) => {
-            
             for (let i = 0; i < submenu.roles.length; i++) {
-              const rolSubmenu = submenu.roles[i].toString();
-              if( rolesDelUsuario.includes(rolSubmenu)){
-                return true;
+              const rolSubmenu = submenu.roles[i].toString()
+              if (rolesDelUsuario.includes(rolSubmenu)) {
+                return true
               }
-              
             }
 
             return false

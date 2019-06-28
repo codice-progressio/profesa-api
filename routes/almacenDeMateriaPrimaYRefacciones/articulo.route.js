@@ -8,7 +8,7 @@ var CRUD = require("../CRUD")
 CRUD.app = app
 CRUD.modelo = Articulo
 CRUD.nombreDeObjetoSingular = "articulo"
-CRUD.nombreDeObjetoPlural = "articulo"
+CRUD.nombreDeObjetoPlural = "articulos"
 CRUD.campoSortDefault = "codigoLocalizacion"
 
 CRUD.camposDeBusqueda = [

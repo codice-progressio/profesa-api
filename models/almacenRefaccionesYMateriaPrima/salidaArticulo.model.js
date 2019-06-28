@@ -2,7 +2,7 @@ var mongoose = require("mongoose")
 
 var Schema = mongoose.Schema
 
-var SalidaMateriaPrimaYRefacciones = new Schema({
+var SalidaArticulo = new Schema({
   fecha: { type: Date, default: Date.now},
   cantidad: {type: Number, min: [0, 'La cantidad no puede ser menor que 0']},
   departamento: {
@@ -23,7 +23,7 @@ var SalidaMateriaPrimaYRefacciones = new Schema({
   // }
 })
 
-module.exports = SalidaMateriaPrimaYRefacciones
+module.exports = SalidaArticulo
 
 
 

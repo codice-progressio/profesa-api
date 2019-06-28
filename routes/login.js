@@ -247,20 +247,12 @@ function obtenerMenu(rolesDelUsuario) {
           roles: [CONST.ROLES.ALMACEN_PRODUCTO_TERMINADO]
         },
         {
-          titulo: "Materia prima",
-          url: "/almacen/materiaPrima",
+          titulo: "Produccion",
+          url: "/almacen/produccion",
           roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
         },
-        {
-          titulo: "Refacciones",
-          url: "/almacen/refacciones",
-          roles: [CONST.ROLES.ALMACEN_REFACCIONES]
-        },
-        {
-          titulo: "Herramienta",
-          url: "/almacen/herramientas",
-          roles: [CONST.ROLES.ALMACEN_HERRAMIENTAS]
-        }
+   
+        
       ]
     },
     CONTROL_DE_PRODUCCION: {

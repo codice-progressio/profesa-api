@@ -4,8 +4,8 @@ var Schema = mongoose.Schema
 
 let uniqueValidator = require("mongoose-unique-validator")
 
-var SalidaMateriaPrimaYRefacciones = require("./salidaMateriaPrimaYRefacciones.model")
-var EntradaMateriaPrimaYRefacciones = require("./entradaMateriaPrimaYRefacciones.model")
+var SalidaArticuloSchema = require("./salidaArticulo.model")
+var EntradaArticuloSchema = require("./entradaArticulo.model")
 
 var ArticuloSchema = new Schema(
   {
@@ -46,8 +46,8 @@ var ArticuloSchema = new Schema(
 
     existencia: { type: Number, default: 0 },
 
-    salidas: [SalidaMateriaPrimaYRefacciones],
-    entradas: [EntradaMateriaPrimaYRefacciones],
+    salidas: [SalidaArticuloSchema],
+    entradas: [EntradaArticuloSchema],
 
     stockMinimo: {
       type: Number,
@@ -56,7 +56,7 @@ var ArticuloSchema = new Schema(
     },
     stockMaximo: {
       type: Number,
-      
+
       default: 0,
       valildate: [
         {
@@ -74,7 +74,14 @@ var ArticuloSchema = new Schema(
 
   { collection: "articulos" }
 )
-
 ArticuloSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
+
+function autoPopulate(next) {
+  this.populate("almacen")
+  next()
+}
+
+ArticuloSchema.pre('find', autoPopulate)
+
 
 module.exports = mongoose.model("Articulo", ArticuloSchema)

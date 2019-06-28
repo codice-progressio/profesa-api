@@ -4,8 +4,8 @@ var Schema = mongoose.Schema
 
 let uniqueValidator = require("mongoose-unique-validator")
 
-var SalidaMateriaPrimaYRefacciones = require("./salidaMateriaPrimaYRefacciones.model")
-var EntradaMateriaPrimaYRefacciones = require("./entradaMateriaPrimaYRefacciones.model")
+var SalidaArticuloSchema = require("./salidaArticulo.model")
+var EntradaArticuloSchema = require("./entradaArticulo.model")
 
 var ArticuloSchema = new Schema(
   {
@@ -44,15 +44,44 @@ var ArticuloSchema = new Schema(
     // var ProveedorRelacion = require("./proveedorRelacion.model")
     // proveedores: [ProveedorRelacion],
 
-    existencia: {type: Number, default: 0},
+    existencia: { type: Number, default: 0 },
 
-    salidas: [SalidaMateriaPrimaYRefacciones],
-    entradas: [EntradaMateriaPrimaYRefacciones]
+    salidas: [SalidaArticuloSchema],
+    entradas: [EntradaArticuloSchema],
+
+    stockMinimo: {
+      type: Number,
+      min: [0, "El minimo permitido es 0."],
+      default: 0
+    },
+    stockMaximo: {
+      type: Number,
+
+      default: 0,
+      valildate: [
+        {
+          validator: function(v) {
+            return new Promise((resolve) => {
+              resolve(this.stockMinimo > v)
+            })
+          },
+          msg:
+            "El valor maximo de stock no puede ser menor que el valor minimo de stock"
+        }
+      ]
+    }
   },
 
   { collection: "articulos" }
 )
-
 ArticuloSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
+
+function autoPopulate(next) {
+  this.populate("almacen")
+  next()
+}
+
+ArticuloSchema.pre('find', autoPopulate)
+
 
 module.exports = mongoose.model("Articulo", ArticuloSchema)

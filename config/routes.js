@@ -50,7 +50,7 @@ module.exports.ROUTES = {
 
     _ARTICULO: {
 
-        url: '/almacenDeMateriaPrimaYHerramientas/articulo',
+        url: '/articulo',
         route: articuloRoute,
         roles: [],
         subRoutes: {}

@@ -9,7 +9,7 @@ CRUD.app = app
 CRUD.modelo = Articulo
 CRUD.nombreDeObjetoSingular = "articulo"
 CRUD.nombreDeObjetoPlural = "articulos"
-CRUD.campoSortDefault = "codigoLocalizacion"
+CRUD.campoSortDefault = "nombre"
 
 CRUD.camposDeBusqueda = [
   "codigoLocalizacion",

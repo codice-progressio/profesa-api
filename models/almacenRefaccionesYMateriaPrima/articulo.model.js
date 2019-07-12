@@ -24,6 +24,7 @@ var ArticuloSchema = new Schema(
     },
 
     descripcion: String,
+    observaciones: String,
     presentacion: {
       type: String,
       required: [

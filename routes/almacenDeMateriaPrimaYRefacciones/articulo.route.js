@@ -17,7 +17,8 @@ CRUD.camposDeBusqueda = [
   "codigoProveedor",
   "nombre",
   "descripcion",
-  "presentacion"
+  "presentacion",
+  "observaciones",
 ]
 
 CRUD.camposActualizables = {
@@ -26,6 +27,7 @@ CRUD.camposActualizables = {
   codigoProveedor: null,
   nombre: null,
   descripcion: null,
+  observaciones: null,
   presentacion: null,
   unidad: null,
   kgPorUnidad: null,

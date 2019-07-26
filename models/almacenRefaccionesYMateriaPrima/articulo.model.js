@@ -79,6 +79,7 @@ ArticuloSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
 
 function autoPopulate(next) {
   this.populate("almacen")
+  this.populate("salidas.departamento")
   next()
 }
 

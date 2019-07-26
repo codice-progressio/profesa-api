@@ -31,7 +31,9 @@ CRUD.camposActualizables = {
   presentacion: null,
   unidad: null,
   kgPorUnidad: null,
-  proveedores: null
+  proveedores: null, 
+  stockMaximo: null,
+  stockMinimo: null
 }
 
 CRUD.crud()

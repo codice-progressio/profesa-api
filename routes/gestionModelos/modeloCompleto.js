@@ -126,4 +126,46 @@ app.get("/transito/:id", (req, res) => {
     })
 })
 
+// <!--
+// =====================================
+//  Modificar Stock
+// =====================================
+// -->
+
+app.post("/stock", (req, res) => {
+  let datos = req.body
+
+  ModeloCompleto.findById(datos._id)
+    .exec()
+    .then((mc) => modificarStock(datos, mc))
+    .then((mcModificado) => _200_ModificarStock(res, mcModificado))
+    .catch((err) => error(res, "Hubo un error modificando el stock", err))
+})
+
+function modificarStock(datos, mc) {
+  if (!mc) throw "El id que ingresaste no existe."
+  mc.stockMinimo = datos.stockMinimo
+  mc.stockMaximo = datos.stockMaximo
+  return mc.save()
+}
+
+function _200_ModificarStock(res, mcModificado) {
+  return RESP._200(res, "Se modifico el stock exitosamente", [
+    { tipo: "modeloCompleto", datos: mcModificado }
+  ])
+}
+
+function error(res, msj, err) {
+  return RESP._500(res, {
+    msj: msj,
+    err: err
+  })
+}
+
+// <!--
+// =====================================
+//  END Modificar Stock
+// =====================================
+// -->
+
 module.exports = app

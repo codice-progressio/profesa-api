@@ -752,6 +752,7 @@ app.get("/", (req, res) => {
       $replaceRoot: { newRoot: "$folio" }
     }
   ]
+  
   let $group_Orden_TrayectoRecorridoAOrden = [
     // Agrupamos por ordenes para obtener el trayecto.
     {
@@ -979,6 +980,29 @@ app.get("/", (req, res) => {
   /**Agrupa los pedidos en sus respectivos folios.
    */
   let $group_Folios_1 = [
+    // En este punto obtenemos desordenados los pedidos asi 
+    // que creamos un nuevo campo para ordenar por el numero
+    // de pedido, para esto primero lo separamos desde "pedido"
+    {
+      $addFields: {
+        'folioLineas': {
+          '_ordenarPedido': {
+            $toInt: { $substrBytes: ["$folioLineas.pedido", 2, 1]}
+          }
+        }
+      }
+    },
+
+    
+    // Ordenamos los pedidos en base a su numero. 
+    {
+      $sort: {
+        'folioLineas._ordenarPedido': 1
+      }
+    },
+
+
+    //------------------------------------
     {
       $group: {
         _id: "$_id",
@@ -1020,7 +1044,7 @@ app.get("/", (req, res) => {
   arregloRedact = arregloRedact.concat(
     $unwind_$lookup_familiaDeProcesos_Procesos_Departamentos
   )
-  arregloRedact = arregloRedact.concat($group_FamiliaDeProcesos_procesos)
+  arregloRedact = arregloRedact.concat($group_FamiliaDeProcesos_procesos)//Arreglado
   arregloRedact = arregloRedact.concat($group_Folios_1)
 
   // Ordenes Ubicacion Actual y Siguiente departameto

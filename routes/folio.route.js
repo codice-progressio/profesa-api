@@ -993,9 +993,12 @@ app.get("/", (req, res) => {
     // de pedido, para esto primero lo separamos desde "pedido"
     {
       $addFields: {
-        'folioLineas': {
-          '_ordenarPedido': {
-            $toInt: { $substrBytes: ["$folioLineas.pedido", 2, 1]}
+        folioLineas: {
+          _ordenarPedido: {
+            // $toInt: { $substrBytes: ["$folioLineas.pedido", 2, 1]}
+            $toInt: {
+              $arrayElemAt : [{ $split: ["$folioLineas.pedido", "-"] }, 1]
+            }
           }
         }
       }

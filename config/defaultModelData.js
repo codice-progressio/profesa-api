@@ -26,6 +26,7 @@ const defaults = {
         EMPAQUE: '',
         SELECCION: '',
         LAVADO: '',
+        TRANSFORMACION_1ER_PASO: '',
     }
 };
 

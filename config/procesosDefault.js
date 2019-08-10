@@ -60,6 +60,13 @@ module.exports = {
         observaciones: 'Proceso de lavado para producto terminado.',
         requiereProduccion: false,
     },
+    TRANSFORMACION_1ER_PASO: {
+        _n: 'TRANSFORMACIÓN 1ER PASO',
+        // El departamento al que esta relacinado.
+        _departamento: DEPARTAMENTOS.TRANSFORMACION._n,
+        observaciones: 'Basico de transformacion',
+        requiereProduccion: true,
+    },
 
 
 };

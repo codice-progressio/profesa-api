@@ -221,7 +221,16 @@ function agregarProcesoAlFinal(procesoAAgregar, procesos) {
 }
 
 
-
+function ajustarPropiedadOrden( next )
+{
+    // Ajustamos la propiedad orden para que coincida con el indice del 
+    // arreglo
+    for (let i = 0; i < this.procesos.length; i++) {
+        const procesos = this.procesos[i];
+        procesos.orden = i
+    }
+    next()
+}
 
 
 familiaDeProcesosSchema
@@ -232,7 +241,11 @@ familiaDeProcesosSchema
     // El orden es importante por que estamos suponiendo que hay un _id a la 
     // hora de comprobar este pre. 
     .pre('save', comprobarQueLaFamiliaTieneElProcesoObligatorios)
-    .pre('save', comprobarEmpaqueYProductoTerminado);
+    .pre('save', comprobarEmpaqueYProductoTerminado)
+
+    // Por ultimo revisamos que todos los procesos
+    // tengan su orden Normal 
+    .pre('save', ajustarPropiedadOrden)
 
 
 

@@ -857,6 +857,14 @@ app.get("/", (req, res) => {
         as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso"
       }
     },
+
+      {
+      $unwind: {
+        path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
+        preserveNullAndEmptyArrays: true
+      }
+    },
+      
     {
       $lookup: {
         from: "procesos",
@@ -931,7 +939,7 @@ app.get("/", (req, res) => {
         folio: { $first: "$$ROOT" },
         procesos: {
           $push:
-            "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso"
+            "$folioLineas.modeloCompleto.familiaDeProcesos.procesos"
         }
       }
     },

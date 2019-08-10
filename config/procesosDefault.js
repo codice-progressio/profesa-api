@@ -1,5 +1,4 @@
 var DEPARTAMENTOS = require('../config/departametosDefaults');
-var Proceso = require('../models/procesos/proceso');
 
 module.exports = {
     CONTROL_DE_PRODUCCION: {
@@ -45,6 +44,20 @@ module.exports = {
         // El departamento al que esta relacinado.
         _departamento: DEPARTAMENTOS.EMPAQUE._n,
         observaciones: 'Este debe ser siempre el ultimo proceso de toda familia. En el se genera la remision para almacen.',
+        requiereProduccion: false,
+    },
+    SELECCION: {
+        _n: 'SELECCIÓN 1',
+        // El departamento al que esta relacinado.
+        _departamento: DEPARTAMENTOS.SELECCION._n,
+        observaciones: 'Proceso de seleccion.',
+        requiereProduccion: false,
+    },
+    LAVADO: {
+        _n: 'LAVADO',
+        // El departamento al que esta relacinado.
+        _departamento: DEPARTAMENTOS.PULIDO._n,
+        observaciones: 'Proceso de lavado para producto terminado.',
         requiereProduccion: false,
     },
 

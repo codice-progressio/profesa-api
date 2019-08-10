@@ -22,6 +22,11 @@ const defaults = {
         CONTROL_DE_PRODUCCION: '',
         LASER: '',
         ALMACEN_DE_BOTON: '',
+        PRODUCTO_TERMINADO: '',
+        EMPAQUE: '',
+        SELECCION: '',
+        LAVADO: '',
+        TRANSFORMACION_1ER_PASO: '',
     }
 };
 

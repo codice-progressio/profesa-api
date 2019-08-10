@@ -178,9 +178,7 @@ folioSchema
 folioSchema.post('save', function() {
     // Si la linea se surte de almacen entonces la trayectoria tiene 
     // que estar vacia. 
-    let a = colores.warning('Validaciones pendientes: Si es desde almacen entonces en el post no se define la trayectoria de producción');
     trayectoDeOrden(this);
-    console.log(a);
 });
 
 folioSchema.methods.calcularNivel = function(idFolio) {
@@ -283,28 +281,43 @@ function trayectoDeOrden(folio) {
                     // -->
 
                     // Definimos la trayectoria que ocupa cada órden.
-
+                    console.log(`linea.procesos`,linea.procesos)
                     //Recorremos cada órden.
                     linea.ordenes.forEach(ordenParaModificar => {
 
-                        //Si es de almacen agregamos control de produccion y surtir desde almacen. 
+                        //Si es de almacen agregamos solo tomamos los pedidos
+                        // que ya estan agregados al folioLinea.pedido.
 
                         if (linea.almacen) {
                             // Creamos el objeto trayecto para control de produccion.
-                            let trayectoControlDeProduccion = {
-                                orden: '0',
-                                departamento: procesoControlDeProduccion.departamento
-                            };
+                            // let trayectoControlDeProduccion = {
+                            //     orden: '0',
+                            //     departamento: procesoControlDeProduccion.departamento
+                            // };
 
-                            // Creamos el objeto trayecto para surtir desde almacen. 
-                            let trayectoSurtirDesdeAlmacen = {
-                                orden: '0.1',
-                                departamento: procesoAlmacenDeBoton.departamento
-                            };
+                            // // Creamos el objeto trayecto para surtir desde almacen. 
+                            // let trayectoSurtirDesdeAlmacen = {
+                            //     orden: '0.1',
+                            //     departamento: procesoAlmacenDeBoton.departamento
+                            // };
 
-                            // Lo agregamos al trayectoNormal de la orden. 
-                            ordenParaModificar.trayectoNormal.push(trayectoControlDeProduccion);
-                            ordenParaModificar.trayectoNormal.push(trayectoSurtirDesdeAlmacen);
+                            // Tomamos todos los procesos del pedido.
+                            // console.log(`linea.almacen`,linea.almacen)
+                            // linea.procesos.forEach(procesos =>
+                            // {
+                            //     ordenParaModificar.trayectoNormal.push(
+                            //         {
+                            //             orden: procesos.orden,
+                            //             departamento: procesos.proceso.departamento
+                            //         }
+                            //     )
+                            // })
+
+                
+
+                            // // Lo agregamos al trayectoNormal de la orden. 
+                            // ordenParaModificar.trayectoNormal.push(trayectoControlDeProduccion);
+                            // ordenParaModificar.trayectoNormal.push(trayectoSurtirDesdeAlmacen);
 
                         } else {
 

@@ -173,7 +173,8 @@ app.post("/", (req, res) => {
         { tipo: "usuario", datos: usuarioDB },
         { tipo: "token", datos: token },
         { tipo: "id", datos: usuarioDB.id },
-        { tipo: "menu", datos: obtenerMenu(usuarioDB.role) }
+        { tipo: "menu", datos: obtenerMenu(usuarioDB.role) },
+        { tipo: "apiVersion", datos: process.env.npm_package_version }
       ])
     })
     .catch((err) => {

@@ -14,6 +14,7 @@ const { OAuth2Client } = require("google-auth-library")
 const client = new OAuth2Client(CLIENT_ID)
 
 var mdAutenticacion = require("../middlewares/autenticacion")
+var pjson = require('../package.json');
 
 async function verify(token) {
   const ticket = await client.verifyIdToken({
@@ -174,7 +175,7 @@ app.post("/", (req, res) => {
         { tipo: "token", datos: token },
         { tipo: "id", datos: usuarioDB.id },
         { tipo: "menu", datos: obtenerMenu(usuarioDB.role) },
-        { tipo: "apiVersion", datos: process.env.npm_package_version }
+        { tipo: "apiVersion", datos: pjson.version }
       ])
     })
     .catch((err) => {

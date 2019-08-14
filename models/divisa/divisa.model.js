@@ -6,11 +6,7 @@ var Schema = mongoose.Schema;
 var DivisaSchema = new Schema({
     nombre: { type: String },
     tipoDeCambio: { type: Number },
-    ultimaActualizacion: { type: Date },
-    almacen: {
-        type: Schema.Types.ObjectId,
-        ref: 'Divisa',
-    }
+    ultimaActualizacion: { type: Date, default: Date.now },
 }, { collection: 'Divisas' });
 
 

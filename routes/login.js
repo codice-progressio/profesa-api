@@ -455,6 +455,11 @@ function obtenerMenu(rolesDelUsuario) {
           titulo: "Producto terminado",
           url: "/produccion/productoTerminado",
           roles: [CONST.ROLES.PRODUCCION_PRODUCTO_TERMINADO]
+        },
+        {
+          titulo: "Teñido",
+          url: "/produccion/tenido",
+          roles: [CONST.ROLES.PRODUCCION_TENIDO]
         }
       ]
     },

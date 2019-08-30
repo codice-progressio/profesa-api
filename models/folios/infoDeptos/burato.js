@@ -2,13 +2,41 @@ var mongoose = require('mongoose');
 
 var Schema = mongoose.Schema;
 
-var buratoSchema = new Schema({
+var buratoSchema = new Schema( {
     guardar: { type: Boolean, default: true },
-    trabajando: { type: Boolean, default: false },
-    peso10Botones: { type: Number, required: [true, 'Es necesario que definas el peso de 10 botonesa en gramos.'] },
-    pesoTotalBoton: { type: Number, required: [true, 'Es necesario que definas el peso total del boton en kg.'] }
+    trabajando: { type: Boolean },
 
-
-}, { timestamps: true });
+    peso10Botones: {
+      type: Number,
+      required: [
+        //   Este required tiene que comprobarse de esta manera
+        // para que cunado se guarde la ubicacion actual no lo
+        // valide y permita que no se guarden los deptos como
+        // este que no deben de ir.
+        () => {
+          return this.guardar
+        },
+        "El peso de 10 botones es necesario"
+      ]
+    },
+    pesoTotalBoton: {
+      type: Number,
+      required: [
+        () => {
+          return this.guardar
+        },
+        "El espesor del botón es necesario"
+      ]
+    },
+    cantidad: {
+      type: Number,
+      required: [
+        () => {
+          return this.guardar
+        },
+        "La cantidad de botón es necesaria"
+      ]
+    }
+  }, { timestamps: true });
 
 module.exports = buratoSchema;

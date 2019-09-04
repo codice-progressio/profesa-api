@@ -344,6 +344,24 @@ function obtenerMenu(rolesDelUsuario) {
         }
       ]
     },
+
+    COMPRAS: {
+      roles: [CONST.ROLES.VENTAS_MENU],
+      titulo: "Compras",
+      icono: "fas fa-shopping-bag",
+      submenu: [
+        {
+          titulo: "Proveedores",
+          url: "/proveedores",
+          roles: [CONST.ROLES.VENTAS_MIS_FOLIOS]
+        },
+        {
+          titulo: "Divisas",
+          url: "/divisas",
+          roles: [CONST.ROLES.COMPRAS_DIVISAS]
+        }
+      ]
+    },
     ADMINISTRADOR: {
       roles: [CONST.ROLES.ADMINISTRADOR_MENU],
       titulo: "Administrador",

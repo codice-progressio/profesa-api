@@ -44,9 +44,27 @@ var almacenDescripcionRoute = require('../routes/almacenDeMateriaPrimaYRefaccion
 var articuloRoute = require('../routes/almacenDeMateriaPrimaYRefacciones/articulo.route');
 
 
+var proveedorRoute = require('../routes/proveedores/proveedor.route');
+var DivisaRoute = require('../routes/divisa/divisa.route');
+
 
 
 module.exports.ROUTES = {
+
+    _DIVISA: {
+        url: '/divisa',
+        route: DivisaRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
+    
+    _PROVEEDOR: {
+        url: '/proveedor',
+        route: proveedorRoute,
+        roles: [],
+        subRoutes: {}
+    },
 
     _ARTICULO: {
 

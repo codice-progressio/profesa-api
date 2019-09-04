@@ -18,12 +18,13 @@ CRUD.camposActualizables = {
   razonSocial: null,
   domicilios: null,
   contactos: null,
-  tiempoDeEntregaEstimado: null,
-  relacionAticulos: null,
+  tiempoDeEntregaEstimadoEnDias: null,
+  relacionArticulos: null,
   rfc: null,
   metodosDePagoAceptados: null,
   condicionesDePago: null,
-  cuentas: null
+  formasDePago: null,
+  cuentas: null,
 }
 
 CRUD.camposDeBusqueda = [

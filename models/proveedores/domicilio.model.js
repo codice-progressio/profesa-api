@@ -11,6 +11,7 @@ var DomicilioSchema = new Schema(
         codigoPostal: String, 
         estado: String, 
         pais: String, 
+        ciudad: String, 
         urlMaps: String
   },
 )

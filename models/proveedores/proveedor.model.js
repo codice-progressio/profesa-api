@@ -29,9 +29,9 @@ var ProveedorSchema = new Schema(
 
     rfc: { type: String, unique: true },
 
-    metodosDePagoAceptados: [{ type: String }],
-    condicionesDePago: [{ type: String }],
-    formasDePago: [{ type: String }],
+    metodosDePagoAceptados: [ String ],
+    condicionesDePago: [ String ],
+    formasDePago: [ String ],
 
     cuentas: [
       {
@@ -45,5 +45,14 @@ var ProveedorSchema = new Schema(
   { collection: "proveedores" }
 )
 ProveedorSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
+
+function autoPopulate(next) {
+  this.populate("relacionArticulos.item")
+  this.populate("relacionArticulos.divisa")
+  next()
+}
+
+
+ProveedorSchema.pre("find", autoPopulate).pre("findOne", autoPopulate)
 
 module.exports = mongoose.model("Proveedor", ProveedorSchema)

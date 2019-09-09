@@ -46,10 +46,18 @@ var articuloRoute = require('../routes/almacenDeMateriaPrimaYRefacciones/articul
 
 var proveedorRoute = require('../routes/proveedores/proveedor.route');
 var DivisaRoute = require('../routes/divisa/divisa.route');
-
+var RequisicionRoute = require('../routes/requisiciones/requisisicion.route')
 
 
 module.exports.ROUTES = {
+
+    _REQUISICION: {
+        url: '/requisicion',
+        route: RequisicionRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
 
     _DIVISA: {
         url: '/divisa',

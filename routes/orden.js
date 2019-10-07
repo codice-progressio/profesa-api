@@ -382,7 +382,6 @@ app.get('/:depto', (req, res) => {
 
                             ordenO.modeloCompleto = linea.modeloCompleto;
                             ordenO.totalOrdenes = linea.ordenes.length;
-                            ordenO.ordenViajera = `${folio.numeroDeFolio}-${i+1}-${orden.numeroDeOrden}`;
                             ordenO.laserCliente = linea.laserCliente;
                             ordenO.observacionesFolio = folio.observaciones;
 

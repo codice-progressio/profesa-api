@@ -1,8 +1,6 @@
 //importar rutas.
 let usuarioRoutes = require('../routes/usuario');
 let loginRoutes = require('../routes/login');
-let hospitalRoutes = require('../routes/hospital');
-let medicoRoutes = require('../routes/medico');
 let busquedaRoutes = require('../routes/busqueda');
 let uploadRoutes = require('../routes/upload');
 let imagenesRoutes = require('../routes/imagenes');
@@ -46,10 +44,18 @@ var articuloRoute = require('../routes/almacenDeMateriaPrimaYRefacciones/articul
 
 var proveedorRoute = require('../routes/proveedores/proveedor.route');
 var DivisaRoute = require('../routes/divisa/divisa.route');
-
+var RequisicionRoute = require('../routes/requisiciones/requisisicion.route')
 
 
 module.exports.ROUTES = {
+
+    _REQUISICION: {
+        url: '/requisicion',
+        route: RequisicionRoute,
+        roles: [],
+        subRoutes: {}
+    },
+
 
     _DIVISA: {
         url: '/divisa',
@@ -181,22 +187,8 @@ module.exports.ROUTES = {
 
         }
     },
-    _HOSPITAL: {
-        url: '/hospital',
-        route: hospitalRoutes,
-        roles: [],
-        subRoutes: {
-
-        }
-    },
-    _MEDICO: {
-        url: '/medico',
-        route: medicoRoutes,
-        roles: [],
-        subRoutes: {
-
-        }
-    },
+   
+ 
     _BUSQUEDA: {
         url: '/busqueda',
         route: busquedaRoutes,

@@ -24,16 +24,37 @@ CRUD.camposActualizables = {
   metodosDePagoAceptados: null,
   condicionesDePago: null,
   formasDePago: null,
-  cuentas: null,
+  cuentas: null
 }
 
-CRUD.camposDeBusqueda = [
-  "nombre",
-  "razonSocial",
-  "rfc",
-]
+CRUD.camposDeBusqueda = ["nombre", "razonSocial", "rfc"]
 
 CRUD.crud()
 
+// <!--
+// =====================================
+//  Buscador todos los elementos relacionados con el proveedor
+// =====================================
+// -->
+
+app.get("/relacionadosAlArticulo/:id", (req, res) => {
+  Proveedor.find({ "relacionArticulos.item": req.params.id })
+    .exec()
+    .then((proveedores) => {
+      return RESP._200(res, null, [{ tipo: "proveedores", datos: proveedores }])
+    })
+    .catch((err) => {
+      return RESP._500(res, {
+        msj: "Hubo un error buscando los proveedores relacionados al articulo",
+        err: err
+      })
+    })
+})
+
+// <!--
+// =====================================
+//  END Buscador todos los elementos relacionados con el proveedor
+// =====================================
+// -->
 
 module.exports = app

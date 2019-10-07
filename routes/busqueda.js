@@ -3,8 +3,6 @@ var express = require('express');
 var app = express();
 
 
-var Hospital = require('../models/hospital');
-var Medico = require('../models/medico');
 var Usuario = require('../models/usuario');
 var Cliente = require('../models/cliente');
 var ModeloCompleto = require('../models/modeloCompleto');
@@ -79,8 +77,6 @@ app.get('/coleccion/:tabla/:busqueda', (req, res) => {
 
 
 var promesas = {
-    "hospitales": buscarHospitales,
-    "medicos": buscarMedicos,
     "usuarios": buscarUsuarios,
     'usuariosRole': buscarUsuariosPorRole,
     "clientes": buscarClientes,
@@ -90,42 +86,7 @@ var promesas = {
 
 // Esta es una promesa y es para crear funciones asincronas de manera fácil y 
 // rápida. 
-function buscarHospitales(busqueda, regex) {
 
-    // Es necesaio que retorne la misma promesa que se instancia.
-    return new Promise((resolve, reject) => {
-        // Creamos la nueva instanacia para la busqueda asincrona. 
-        Hospital.find({ nombre: regex })
-            .populate('usuario', 'nombre email img')
-            .exec((err, hospitales) => {
-                if (err) {
-                    // Si tenemos un error tomamos el valor reject y le pasamos un valor,
-                    // de esta manera la promesa sabe que todo se fue a la #$TE
-                    reject('Error al cargar hospitales', err);
-                } else {
-                    // Si no hubo error entonces pasamos el resultado al resolve para
-                    // que la promesa nos lo devuelva. 
-                    resolve(hospitales);
-                }
-            });
-    });
-}
-
-function buscarMedicos(busqueda, regex) {
-
-    return new Promise((resolve, reject) => {
-        Medico.find({ nombre: regex })
-            .populate('usuario', 'nombre email img')
-            .populate('hospital')
-            .exec((err, medicos) => {
-                if (err) {
-                    reject('Error al cargar medicos', err);
-                } else {
-                    resolve(medicos);
-                }
-            });
-    });
-}
 
 function buscarUsuarios(busqueda, regex) {
 

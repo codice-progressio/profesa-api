@@ -18,6 +18,14 @@ var _ROUTES = require("./config/routes").ROUTES
 
 var _PERMISOS = require("./middlewares/permisos").PERMISOS
 
+/**
+ * Este codigo nos permite agregar datos al htttp 
+ * para tenerlos donde sea?
+ * 
+ */
+
+const httpContext = require("express-http-context");
+
 // ============================================
 // ENVIROMENT
 // ============================================
@@ -86,6 +94,15 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // // Rutas - Middleware PARA SISTEMA CARRDUCI
 // // ============================================
 
+
+
+// Tiene que estar aqui por que segun la documentacion...
+// Note that some popular middlewares (such as body-parser, express-jwt) may 
+// cause context to get lost. To workaround such issues, you are advised to use 
+// any third party middleware that does NOT need the context BEFORE you use 
+// this middleware.
+app.use(httpContext.middleware);
+
 // Obtenemos el token
 app.use((req, res, next) => {
   // const espera = Math.random() * 2 * 5000
@@ -110,7 +127,8 @@ app.use((req, res, next) => {
       req.token = req.headers.authorization.split(" ")[1]
     } else if (req.query && req.query.token) {
       req.token = req.query.token
-    }
+  }
+  httpContext.set("token", req.token );
     next()
 //   }, espera)
 })
@@ -125,6 +143,8 @@ app.use(
     next()
   }
 )
+
+
 
 // Luego creamos las routes.
 for (const key in _ROUTES) {

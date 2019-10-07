@@ -9,7 +9,11 @@ var EntradaArticulo = new Schema({
     min: [0, "La cantidad de entrada no puede ser menor que 0"],
     required: [true, 'Es necesario que definas la cantidad']
   },
-  observaciones: String
+  observaciones: String,
+  requisicion: {  type: Schema.Types.ObjectId,
+    ref: "Requisicion"
+  
+ },
 })
 
 module.exports = EntradaArticulo

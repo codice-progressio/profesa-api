@@ -253,6 +253,11 @@ function obtenerMenu(rolesDelUsuario) {
           url: "/almacen/produccion",
           roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
         },
+        {
+          titulo: "Requisiciones",
+          url: "/almacen/requisiciones",
+          roles: [CONST.ROLES.ALMACEN_REQUISICION]
+        },
    
         
       ]
@@ -341,6 +346,24 @@ function obtenerMenu(rolesDelUsuario) {
           titulo: "Stock",
           url: "/ventas/stock",
           roles: [CONST.ROLES.VENTAS_STOCK]
+        }
+      ]
+    },
+
+    COMPRAS: {
+      roles: [CONST.ROLES.VENTAS_MENU],
+      titulo: "Compras",
+      icono: "fas fa-shopping-bag",
+      submenu: [
+        {
+          titulo: "Proveedores",
+          url: "/proveedores",
+          roles: [CONST.ROLES.VENTAS_MIS_FOLIOS]
+        },
+        {
+          titulo: "Divisas",
+          url: "/divisas",
+          roles: [CONST.ROLES.COMPRAS_DIVISAS]
         }
       ]
     },

@@ -245,7 +245,7 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
                         resp[key] = req.body[key];
                     }
                 }
-
+                console.log(`estamos aqui`)
                 // Guardamos las modificaciones.
                 return resp.save();
             })
@@ -262,6 +262,8 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
                 });
             });
     });
+
+    console.log(`nos brincamos todo`)
 };
 
 /**

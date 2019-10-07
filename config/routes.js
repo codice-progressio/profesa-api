@@ -1,8 +1,6 @@
 //importar rutas.
 let usuarioRoutes = require('../routes/usuario');
 let loginRoutes = require('../routes/login');
-let hospitalRoutes = require('../routes/hospital');
-let medicoRoutes = require('../routes/medico');
 let busquedaRoutes = require('../routes/busqueda');
 let uploadRoutes = require('../routes/upload');
 let imagenesRoutes = require('../routes/imagenes');
@@ -189,22 +187,8 @@ module.exports.ROUTES = {
 
         }
     },
-    _HOSPITAL: {
-        url: '/hospital',
-        route: hospitalRoutes,
-        roles: [],
-        subRoutes: {
-
-        }
-    },
-    _MEDICO: {
-        url: '/medico',
-        route: medicoRoutes,
-        roles: [],
-        subRoutes: {
-
-        }
-    },
+   
+ 
     _BUSQUEDA: {
         url: '/busqueda',
         route: busquedaRoutes,

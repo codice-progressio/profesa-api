@@ -14,7 +14,10 @@ var StatusRequisicionSchema = new Schema({
   //Se completo la cantidad especificada
   // en la requisicion.
   esTerminada: Boolean,
-  // imagenesFacturas: [ImagenesFacturasSchema],
+  imagenesFacturas: [{
+    imagen: String,
+    fecha: Date
+}],
 
   esCancelada: Boolean,
   fechaCancelacion: Date,

@@ -1,6 +1,6 @@
 var mongoose = require("mongoose")
 var Schema = mongoose.Schema
-var ImagenesFacturasSchema = require("./imagenesFacturas.model.js")
+// var ImagenesFacturasSchema = require("./imagenesFacturas.model.js")
 
 var StatusRequisicionSchema = new Schema({
   esRequisicion: { type: Boolean, default: true },
@@ -14,7 +14,7 @@ var StatusRequisicionSchema = new Schema({
   //Se completo la cantidad especificada
   // en la requisicion.
   esTerminada: Boolean,
-  imagenesFacturas: [ImagenesFacturasSchema],
+  // imagenesFacturas: [ImagenesFacturasSchema],
 
   esCancelada: Boolean,
   fechaCancelacion: Date,

@@ -127,7 +127,8 @@ app.use((req, res, next) => {
       req.token = req.headers.authorization.split(" ")[1]
     } else if (req.query && req.query.token) {
       req.token = req.query.token
-    }
+  }
+  httpContext.set("token", req.token );
     next()
 //   }, espera)
 })
@@ -144,40 +145,6 @@ app.use(
 )
 
 
-// <!-- 
-// =====================================
-//  CARGAR EL USUARIO LOGUEADO PARA LOS MIDDLEWARE
-// =====================================
-// -->
-
-var jwt = require("jsonwebtoken")
-var SEED = require("./config/config").SEED
-app.use((req, res, next) =>
-{
-  var token = req.token;
-  if (token)
-  {
-    jwt.verify(token, SEED, (err, decode) => {
-  
-          if (err) {
-            next(new Error(err))
-            return 
-          }
-  
-          // Colocar la información del usuario en 
-          // cualquier petición. Lo extraemos del decode.
-        httpContext.set("usuario", decode.usuario );
-  
-      });
-    
-  } next()
-} )
-
-// <!-- 
-// =====================================
-//  END CARGAR EL USUARIO LOGUEADO PARA LOS MIDDLEWARE
-// =====================================
-// -->
 
 // Luego creamos las routes.
 for (const key in _ROUTES) {

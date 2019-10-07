@@ -1,6 +1,6 @@
 var mongoose = require("mongoose")
 var Schema = mongoose.Schema
-var ImagenesFacturasSchema = require("./imagenesFacturas.model")
+var ImagenesFacturasSchema = require("./imagenesFacturas.model.js")
 
 var StatusRequisicionSchema = new Schema({
   esRequisicion: { type: Boolean, default: true },

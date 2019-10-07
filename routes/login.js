@@ -253,6 +253,11 @@ function obtenerMenu(rolesDelUsuario) {
           url: "/almacen/produccion",
           roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
         },
+        {
+          titulo: "Requisiciones",
+          url: "/almacen/requisiciones",
+          roles: [CONST.ROLES.ALMACEN_REQUISICION]
+        },
    
         
       ]

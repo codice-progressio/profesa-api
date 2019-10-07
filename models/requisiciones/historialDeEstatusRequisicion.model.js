@@ -3,7 +3,7 @@ var Schema = mongoose.Schema
 var EstatusSchema = require('./estatusRequisicion.model.js')
 
 var HistorialDeEstatusRequisicionSchema = new Schema({
-  status: EstatusSchema,
+  estatus: EstatusSchema,
   fechaModificacion: {type: Date, default: Date.now},
   razonDeCambio: String,
   usuarioQueModifica: {

@@ -86,7 +86,7 @@ app.post("/enviarAProduccion", (req, res) => {
       if (req.body.entregarAProduccion) {
         folio.entregarAProduccion = true
         folio.fechaDeEntregaAProduccion = new Date()
-        msj = "Este folio se mando a produccir de manera correcta."
+        msj = "Este folio se mando a producir de manera correcta."
       } else {
         folio.entregarAProduccion = false
         folio.fechaDeEntregaAProduccion = null

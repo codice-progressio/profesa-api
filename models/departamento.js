@@ -6,6 +6,10 @@ var colores = require('../utils/colors');
 
 var DepartamentoSchema = new Schema({
     nombre: { type: String, unique: true, required: [true, 'El nombre del departamento es necesario.'] },
+    area: {
+        type: Schema.Types.ObjectId,
+        ref: "AreaRH",
+    },
 });
 DepartamentoSchema.plugin(uniqueValidator, { message: 'El campo \'{PATH}\' debe ser único.' });
 

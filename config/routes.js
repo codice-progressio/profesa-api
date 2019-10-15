@@ -46,8 +46,15 @@ var proveedorRoute = require('../routes/proveedores/proveedor.route');
 var DivisaRoute = require('../routes/divisa/divisa.route');
 var RequisicionRoute = require('../routes/requisiciones/requisisicion.route')
 
-
+const CursoRoute = require('../routes/recursosHumanos/cursos/curso.route')
 module.exports.ROUTES = {
+
+    _CURSO: {
+        url: '/curso',
+        route: CursoRoute,
+        roles: [],
+        subRoutes: {}
+    },
 
     _REQUISICION: {
         url: '/requisicion',

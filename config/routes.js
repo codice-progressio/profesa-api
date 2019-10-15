@@ -47,8 +47,15 @@ var DivisaRoute = require('../routes/divisa/divisa.route');
 var RequisicionRoute = require('../routes/requisiciones/requisisicion.route')
 
 const CursoRoute = require('../routes/recursosHumanos/cursos/curso.route')
+const AreaRoute = require('../routes/recursosHumanos/areas/area.route')
 module.exports.ROUTES = {
 
+    _AREA: {
+        url: '/area',
+        route: AreaRoute,
+        roles: [],
+        subRoutes: {}
+    },
     _CURSO: {
         url: '/curso',
         route: CursoRoute,

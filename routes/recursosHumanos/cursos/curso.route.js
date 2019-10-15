@@ -4,7 +4,7 @@ var app = express()
 var Curso = require("../../../models/recursosHumanos/cursos/curso.model")
 
 
-var CRUD = require("../CRUD")
+var CRUD = require("../../CRUD")
 CRUD.app = app
 CRUD.modelo = Curso
 CRUD.nombreDeObjetoSingular = "curso"

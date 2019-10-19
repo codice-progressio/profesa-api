@@ -49,9 +49,16 @@ var RequisicionRoute = require('../routes/requisiciones/requisisicion.route')
 const CursoRoute = require('../routes/recursosHumanos/cursos/curso.route')
 const AreaRoute = require('../routes/recursosHumanos/areas/area.route')
 const PuestoRoute = require('../routes/recursosHumanos/puestos/puesto.route')
+const EmpleadoRoute = require('../routes/recursosHumanos/empleado/empleado.route')
 
 module.exports.ROUTES = {
 
+    _EMPLEADO: {
+        url: '/empleado',
+        route: EmpleadoRoute,
+        roles: [],
+        subRoutes: {}
+    },
     _PUESTO: {
         url: '/puesto',
         route: PuestoRoute,

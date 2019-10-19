@@ -1,19 +1,21 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const uniqueValidator = require("mongoose-unique-validator")
+const Puesto = require("../puestos/puesto.model")
 
 const EmpleadoSchema = new Schema(
   {
-    idChecador: { type: Number },
+    idChecador: { type: Number, unique: true },
     idNomina: { type: Number, unique: true },
     nombres: String,
     apellidos: String,
     fechaDeNacimento: Date,
-    sexo: String,
-    curp: String,
-    rfc: String,
-    numeroDeCuenta: String,
-    númeroDeSeguridadSocial: String,
+    //0 - H, 1 - M
+    sexo: Boolean,
+    curp: { type: String, unique: true },
+    rfc: { type: String, unique: true },
+    numeroDeCuenta: { type: String, unique: true },
+    numeroDeSeguridadSocial: { type: String, unique: true },
     fotografia: String,
     sueldoActual: Number,
     puestoActual: {
@@ -54,9 +56,43 @@ const EmpleadoSchema = new Schema(
 )
 EmpleadoSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
 
-module.exports = mongoose.model("Empleado", EmpleadoSchema)
+function crearEventoAltaDeNuevoEmpleado(next) {
+  // Antes de guardar un nuevo empleado creamos el evento
+  // de alta
+  if (this.isNew) {
+    Puesto.findById(this.puestoActual._id)
+      .then((puesto) => {
+        if (!puesto) throw "El puesto no existe"
+        if (!this.eventos) this.eventos = []
+        this.eventos.unshift({
+          fechaDeRegistroDeEvento: new Date(),
+          evento: {
+            estatusLaboral: {
+              alta: true
+            }
+          }
+        })
 
-// TODO: Actualizar automaticamente el sueldo al cambiar de puesto
-// TODO: Actualizar sueldo al aumentar/
-// TODO: Actualizar el puesto actual al crear un nuevo evento.
-// TODO: Actualizar el estatus cuando se desencadene un estatusLaboral.
+        //Tiene que estar activo
+        this.activo = true
+        this.eventos.unshift({
+          fechaDeRegistroDeEvento: new Date(),
+          evento: {
+            puesto: {
+              anterior: null,
+              nuevo: puesto
+            }
+          }
+        })
+
+        this.sueldoActual = puesto.sueldoBase
+        next()
+      })
+      .catch((err) => next(err))
+  } else {
+    next()
+  }
+}
+
+EmpleadoSchema.pre("save", crearEventoAltaDeNuevoEmpleado)
+module.exports = mongoose.model("Empleado", EmpleadoSchema)

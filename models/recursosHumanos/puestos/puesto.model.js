@@ -77,7 +77,11 @@ const PuestoSchema = new Schema(
         type: Schema.Types.ObjectId,
         ref: "Empleado"
       }
-    }
+    }, 
+
+    sueldoBase: Number,
+    sueldoMaximo: Number,
+    
   },
   { collection: "puestos" }
 )

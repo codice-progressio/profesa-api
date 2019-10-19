@@ -8,7 +8,7 @@ CRUD.app = app
 CRUD.modelo = Puesto
 CRUD.nombreDeObjetoSingular = "puesto"
 CRUD.nombreDeObjetoPlural = "puestos"
-CRUD.campoSortDefault = "nombre"
+CRUD.campoSortDefault = "puesto"
 CRUD.camposActualizables = {
   puesto: null,
   fechaDeCreacionDePuesto: null,
@@ -24,7 +24,9 @@ CRUD.camposActualizables = {
   relacionClienteProveedor: null,
   indicesDeEfectividad: null,
   elPuestoPuedeDesarrollarseEnLasSiguientesAreas: null,
-  quien: null
+  quien: null,
+  sueldoBase: null,
+  sueldoMaximo: null,
 }
 
 CRUD.camposDeBusqueda = ["puesto"]

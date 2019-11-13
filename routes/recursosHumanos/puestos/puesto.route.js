@@ -16,7 +16,7 @@ CRUD.camposActualizables = {
   cursosRequeridos: null,
   departamento: null,
   reportaA: null,
-  organigrama: null,
+  // organigrama: null,
   misionDelPuesto: null,
   personalACargo: null,
   perfilDelPuesto: null,
@@ -27,6 +27,8 @@ CRUD.camposActualizables = {
   quien: null,
   sueldoBase: null,
   sueldoMaximo: null,
+  numeroDeExtencion: null,
+  motivoDeCambio: null,
 }
 
 CRUD.camposDeBusqueda = ["puesto"]

@@ -5,11 +5,11 @@ const Puesto = require("../puestos/puesto.model")
 
 const EmpleadoSchema = new Schema(
   {
-    idChecador: { type: Number, unique: true },
-    idNomina: { type: Number, unique: true },
+    idChecador: { type: String, unique: true },
+    idNomina: { type: String, unique: true },
     nombres: String,
     apellidos: String,
-    fechaDeNacimento: Date,
+    fechaDeNacimiento: Date,
     //0 - H, 1 - M
     sexo: Boolean,
     curp: { type: String, unique: true },
@@ -94,5 +94,18 @@ function crearEventoAltaDeNuevoEmpleado(next) {
   }
 }
 
-EmpleadoSchema.pre("save", crearEventoAltaDeNuevoEmpleado)
+
+
+function autoPopulate( next ){
+
+  this.populate('puestoActual')
+  next()
+
+}
+
+EmpleadoSchema
+  .pre("save", crearEventoAltaDeNuevoEmpleado)
+  .pre("find", autoPopulate)
+  .pre("findOne", autoPopulate)
+  .pre("findById", autoPopulate)
 module.exports = mongoose.model("Empleado", EmpleadoSchema)

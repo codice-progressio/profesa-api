@@ -322,7 +322,16 @@ function administrador() {
         url: "/usuarios",
         roles: [CONST.ROLES.ADMINISTRADOR_USUARIOS]
       },
-      // { titulo: 'Departametos', url: '/departamentos', roles: [] },
+      {
+        titulo: "Departametos",
+        url: "/departamentos",
+        roles: [CONST.ROLES.ADMINISTRADOR_DEPARTAMENTOS]
+      },
+      {
+        titulo: "Areas",
+        url: "/areas",
+        roles: [CONST.ROLES.ADMINISTRADOR_AREAS]
+      },
       {
         titulo: "Clientes",
         url: "/clientes",
@@ -432,13 +441,8 @@ function rh() {
         roles: [CONST.ROLES.RH_EMPLEADOS]
       },
       {
-        titulo: "Areas laborales",
-        url: "/areas",
-        roles: [CONST.ROLES.RH_AREAS]
-      },
-      {
         titulo: "Cursos",
-        url: "/areas",
+        url: "/cursos",
         roles: [CONST.ROLES.RH_CURSOS]
       },
       {

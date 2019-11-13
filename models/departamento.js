@@ -34,5 +34,16 @@ DepartamentoSchema.statics.obtener = function x(a) {
     return null;
 }
 
+function autoPopulate( next ){
+    this.populate('area')
+    next()
+}
+
+
+DepartamentoSchema
+    .pre('find', autoPopulate)
+    .pre('findById', autoPopulate)
+    .pre('findOne', autoPopulate)
+
 
 module.exports = mongoose.model('Departamento', DepartamentoSchema);

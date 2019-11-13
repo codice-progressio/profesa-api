@@ -29,7 +29,7 @@ CRUD.camposActualizables = {
   idNomina: null,
   nombres: null,
   apellidos: null,
-  fechaDeNacimento: null,
+  fechaDeNacimiento: null,
   sexo: null,
   curp: null,
   rfc: null,

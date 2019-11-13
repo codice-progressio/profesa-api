@@ -5,7 +5,7 @@ const FuncionesEspecificasDelPuesto = new Schema({
     actividad: String,
     proposito: String,
     frecuencia: String,
-    prioridad: Number
+    prioridad: String
   })
 
 module.exports = FuncionesEspecificasDelPuesto

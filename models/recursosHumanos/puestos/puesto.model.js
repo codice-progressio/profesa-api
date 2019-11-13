@@ -4,6 +4,9 @@ const uniqueValidator = require("mongoose-unique-validator")
 const httpContext = require("express-http-context")
 const jwt = require("jsonwebtoken")
 const SEED = require("../../../config/config").SEED
+const DepartamentoSchema = require("../../departamento")
+const EmpleadoSchema = require("../empleados/empleado.model")
+const CursoSchema = require("../cursos/curso.model")
 
 /**
  *
@@ -14,6 +17,11 @@ const SEED = require("../../../config/config").SEED
 
 const PuestoSchema = new Schema(
   {
+    motivoDeCambio: {
+      type: String,
+      require: ["true", "Debes especificar el motivo del cambio"],
+      default: "Primer cambio"
+    },
     fechaDeCreacionDePuesto: { type: Date, default: Date.now },
     vigenciaEnAnios: { type: Number, default: 2 },
     historial: [require("./historialDePuesto.model")],
@@ -21,7 +29,7 @@ const PuestoSchema = new Schema(
     cursosRequeridos: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Cursos"
+        ref: "Curso"
       }
     ],
 
@@ -32,15 +40,15 @@ const PuestoSchema = new Schema(
     },
     reportaA: {
       type: Schema.Types.ObjectId,
-      ref: "Empleado"
+      ref: "Puesto"
     },
     //Se genera desde la GUI.
-    organigrama: {},
+    organigrama: String,
     misionDelPuesto: String,
     personalACargo: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Empleado"
+        ref: "Puesto"
       }
     ],
     perfilDelPuesto: require("./perfilDelPuesto.model"),
@@ -60,28 +68,31 @@ const PuestoSchema = new Schema(
     elPuestoPuedeDesarrollarseEnLasSiguientesAreas: [
       {
         type: Schema.Types.ObjectId,
-        ref: "AreasRH"
+        ref: "Puesto"
       }
     ],
 
     quien: {
       desarrollo: {
         type: Schema.Types.ObjectId,
-        ref: "Empleado"
+        ref: "Empleado",
+        require: [true, "Es necesario definir quien desarrollo"]
       },
       reviso: {
         type: Schema.Types.ObjectId,
-        ref: "Empleado"
+        ref: "Empleado",
+        require: [true, "Es necesario definir quien reviso"]
       },
       aprobo: {
         type: Schema.Types.ObjectId,
-        ref: "Empleado"
+        ref: "Empleado",
+        require: [true, "Es necesario definir quien aprobo"]
       }
-    }, 
+    },
 
     sueldoBase: Number,
     sueldoMaximo: Number,
-    
+    numeroDeExtencion: Number
   },
   { collection: "puestos" }
 )
@@ -108,13 +119,12 @@ function guardarHistorial(next) {
         this.historial = []
       }
 
-      let historial = this.toObject()
+      let historial = sustituirValoresConflictivosYRetornarObjeto(this)
       // Limpiamos el historial para que
       // no se haga exponencial
-      delete historial.historial
 
       //Seteamos la historia.
-      this.historial.push({
+      this.historial.unshift({
         fechaDeCambio: new Date(),
         usuarioQueModifica: decodeUser,
         cambioAnterior: historial
@@ -125,6 +135,66 @@ function guardarHistorial(next) {
   //Copiamos todo al historial
 }
 
-PuestoSchema.pre("save", guardarHistorial)
 
-module.exports = mongoose.model("Puesto", PuestoSchema)
+
+/**
+ *Convierte todos los valores que habiamos populado de nuevo a su id.
+ *
+ * @param {*} puesto El objeto antes de ser guardado.
+ */
+function sustituirValoresConflictivosYRetornarObjeto(puesto) {
+
+
+  var personalACargo = puesto.personalACargo.map((empleado) =>  {empleado._id})
+  var reportaA = puesto.reportaA ? puesto.reportaA._id : null
+
+  var puestoOb = puesto.toObject()
+  delete puestoOb.historial
+
+  puestoOb.personalACargo = personalACargo
+  puestoOb.reportaA = reportaA
+
+  return puestoOb
+}
+
+function autoPopulate(next) {
+  let puestoSchema = mongoose.model('Puesto')
+
+
+  this.populate("departamento")
+  this.populate("reportaA")
+  this.populate("personalACargo")
+  this.populate("cursosRequeridos")
+  this.populate("relacionClienteProveedor.internos.departamento")
+  this.populate("quien.desarrollo")
+  this.populate("quien.reviso")
+  this.populate("quien.aprobo")
+  this.populate("elPuestoPuedeDesarrollarseEnLasSiguientesAreas")
+  this.populate("historial.usuarioQueModifica", "-password -role")
+  let his = "historial.cambioAnterior."
+  this.populate({ path: his + "departamento", model: DepartamentoSchema })
+  this.populate({ path: his + "reportaA", model: puestoSchema })
+  this.populate({ path: his + "personalACargo", model: puestoSchema })
+  this.populate({ path: his + "cursosRequeridos", model: CursoSchema })
+  this.populate({
+    path: his + "relacionClienteProveedor.internos.departamento",
+    model: DepartamentoSchema
+  })
+  this.populate({ path: his + "quien.desarrollo", model: EmpleadoSchema })
+  this.populate({ path: his + "quien.reviso", model: EmpleadoSchema })
+  this.populate({ path: his + "quien.aprobo", model: EmpleadoSchema })
+  this.populate({
+    path: his + "elPuestoPuedeDesarrollarseEnLasSiguientesAreas",
+    model: puestoSchema
+  })
+
+  next()
+}
+
+PuestoSchema.pre("save", guardarHistorial)
+  .pre("findById", autoPopulate)
+  .pre("findOne", autoPopulate)
+  .pre("find", autoPopulate)
+
+
+  module.exports = mongoose.model("Puesto", PuestoSchema)

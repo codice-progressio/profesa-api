@@ -3,6 +3,7 @@ const Schema = mongoose.Schema
 const uniqueValidator = require("mongoose-unique-validator")
 const Puesto = require("../puestos/puesto.model")
 
+
 const EmpleadoSchema = new Schema(
   {
     idChecador: { type: String, unique: true },
@@ -94,18 +95,39 @@ function crearEventoAltaDeNuevoEmpleado(next) {
   }
 }
 
-
-
-function autoPopulate( next ){
-
-  this.populate('puestoActual')
+function autoPopulate(next) {
+  this.populate("puestoActual")
   next()
-
 }
 
-EmpleadoSchema
-  .pre("save", crearEventoAltaDeNuevoEmpleado)
+function eliminarAsistenciasDeCurso(next) {
+  //Buscamos todos los cursos que contengan a este
+  // empleado en la asistencia y los eliminamos.
+  const Curso = mongoose.model('Curso')
+
+  Curso.find({ "asistencias.empleado": { $elemMatch: { empleado: this._id } } })
+    .exec()
+    .then((cursos) => {
+      if (cursos.length === 0) return
+      const promesas = []
+
+      cursos.asistencias = cursos.asistencias.filter(
+        (x) => x.empleado != this._id
+      )
+
+      cursos.asistencias.forEach((curso) => {
+        this.promesas.push(curso.save())
+      })
+
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch((err) => next(err))
+}
+
+EmpleadoSchema.pre("save", crearEventoAltaDeNuevoEmpleado)
   .pre("find", autoPopulate)
   .pre("findOne", autoPopulate)
   .pre("findById", autoPopulate)
+  .pre("remove", eliminarAsistenciasDeCurso)
 module.exports = mongoose.model("Empleado", EmpleadoSchema)

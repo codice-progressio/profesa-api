@@ -4,9 +4,6 @@ const uniqueValidator = require("mongoose-unique-validator")
 const httpContext = require("express-http-context")
 const jwt = require("jsonwebtoken")
 const SEED = require("../../../config/config").SEED
-const DepartamentoSchema = require("../../departamento")
-const EmpleadoSchema = require("../empleados/empleado.model")
-const CursoSchema = require("../cursos/curso.model")
 
 /**
  *
@@ -17,14 +14,20 @@ const CursoSchema = require("../cursos/curso.model")
 
 const PuestoSchema = new Schema(
   {
-    motivoDeCambio: {
-      type: String,
-      require: ["true", "Debes especificar el motivo del cambio"],
-      default: "Primer cambio"
-    },
+    motivoDeCambio: [
+      {
+        motivo: {
+          type: String,
+          require: ["true", "Debes especificar el motivo del cambio"],
+          default: "Primer cambio"
+        },
+        usuario: { type: Schema.Types.ObjectId, ref: "Usuario" },
+        fecha: { type: Date, default: Date.now }
+      }
+    ],
     fechaDeCreacionDePuesto: { type: Date, default: Date.now },
     vigenciaEnAnios: { type: Number, default: 2 },
-    historial: [require("./historialDePuesto.model")],
+    // historial: [require("./historialDePuesto.model")],
 
     cursosRequeridos: [
       {
@@ -97,8 +100,52 @@ const PuestoSchema = new Schema(
   { collection: "puestos" }
 )
 PuestoSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
-
 // TODO: Antes de guardar hay que copiar los datos al historial. (Ver el historial de requisiciones. )
+
+// function guardarHistorial(next) {
+//   // Obtenemos el usuario logueado
+//   return obtenerUsuario(httpContext.get("token"))
+//     .then((decodeUser) => {
+//       //Si no hay historial creamos el arreglo.
+//       if (!this.historial) {
+//         this.historial = []
+//       }
+
+//       let historial = sustituirValoresConflictivosYRetornarObjeto(this)
+//       // Limpiamos el historial para que
+//       // no se haga exponencial
+
+//       //Seteamos la historia.
+//       this.historial.unshift({
+//         fechaDeCambio: new Date(),
+//         usuarioQueModifica: decodeUser,
+//         cambioAnterior: historial
+//       })
+//     })
+//     .catch((err) => next(err))
+
+//   //Copiamos todo al historial
+// }
+
+// /**
+//  *Convierte todos los valores que habiamos populado de nuevo a su id.
+//  *
+//  * @param {*} puesto El objeto antes de ser guardado.
+//  */
+// function sustituirValoresConflictivosYRetornarObjeto(puesto) {
+//   // var personalACargo = puesto.personalACargo.map((empleado) => {
+//   //   empleado._id
+//   // })
+//   // var reportaA = puesto.reportaA ? puesto.reportaA._id : null
+
+//   var puestoOb = puesto.toObject()
+//   delete puestoOb.historial
+
+//   // puestoOb.personalACargo = personalACargo
+//   // puestoOb.reportaA = reportaA
+
+//   return puestoOb
+// }
 
 function obtenerUsuario(token) {
   return new Promise((resolve, reject) => {
@@ -110,91 +157,178 @@ function obtenerUsuario(token) {
   })
 }
 
-function guardarHistorial(next) {
-  // Obtenemos el usuario logueado
-  return obtenerUsuario(httpContext.get("token"))
-    .then((decodeUser) => {
-      //Si no hay historial creamos el arreglo.
-      if (!this.historial) {
-        this.historial = []
-      }
+function puestoDeEmpleadosRelacionadosANull(next) {
 
-      let historial = sustituirValoresConflictivosYRetornarObjeto(this)
-      // Limpiamos el historial para que
-      // no se haga exponencial
+  //Buscamos todos los empledos que tengan como puesto
+  // actual este y ponemos el puestoActual en null.
+  const Empleado = mongoose.model("Empleado")
+  return Empleado.find({ puestoActual: this._id })
+    .exec()
+    .then(empleados => {
+      if (empleados.length === 0) return
 
-      //Seteamos la historia.
-      this.historial.unshift({
-        fechaDeCambio: new Date(),
-        usuarioQueModifica: decodeUser,
-        cambioAnterior: historial
+      const promesas = []
+
+      empleados.forEach(empleado => {
+        empleado.puestoActual = null
+        agregarMotivoDeCambio(
+          puesto,
+          `Se removio el puesto "${this.puesto}" de el campo "Puesto actual" por que se elimino de la base de datos`,
+          usuario
+        )
+        promesas.push(empleado.save())
       })
-    })
-    .catch((err) => next(err))
 
-  //Copiamos todo al historial
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch(err => {
+      next(err)
+    })
 }
 
+async function ObtenerYDecodificarUsuario() {
+  return await obtenerUsuario(httpContext.get("token"))
+}
 
+async function puestoReportaAANull(next) {
+  //Obtenemos el usuario logueado
+  const usuario = await ObtenerYDecodificarUsuario()
 
-/**
- *Convierte todos los valores que habiamos populado de nuevo a su id.
- *
- * @param {*} puesto El objeto antes de ser guardado.
- */
-function sustituirValoresConflictivosYRetornarObjeto(puesto) {
+  const Puesto = mongoose.model("Puesto")
+  await Puesto.find({ reportaA: this._id })
+    .exec()
+    .then(puestos => {
+      if (puestos.length === 0) return null
+      const promesas = []
 
+      puestos.forEach(puesto => {
+        puesto.reportaA = null
+        agregarMotivoDeCambio(
+          puesto,
+          `Se removio el puesto "${this.puesto}" de el campo "Reporta A" por que se elimino de la base de datos`,
+          usuario
+        )
+        promesas.push(puesto.save())
+      })
 
-  var personalACargo = puesto.personalACargo.map((empleado) =>  {empleado._id})
-  var reportaA = puesto.reportaA ? puesto.reportaA._id : null
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch(err => next(err))
+}
 
-  var puestoOb = puesto.toObject()
-  delete puestoOb.historial
+function agregarMotivoDeCambio(puesto, msj, usuario) {
+  puesto.motivoDeCambio.unshift({
+    motivo: `SISTEMA : ${msj} `,
+    usuario: usuario
+  })
+}
 
-  puestoOb.personalACargo = personalACargo
-  puestoOb.reportaA = reportaA
+function limpiarArray(array) {
+  while (array.length) {
+    array.pop()
+  }
+}
 
-  return puestoOb
+async function puestoPersonalAcargoEliminarDeArreglo(next) {
+  //Buscamos todos los puestos que tengan a cargo
+  // este puesto y los quitamos del arreglo.
+  //Obtenemos el usuario logueado
+  const usuario = await ObtenerYDecodificarUsuario()
+  const Puesto = mongoose.model("Puesto")
+
+  await Puesto.find({ personalACargo: this._id })
+    .exec()
+    .then(puestos => {
+      if (puestos.length === 0) return null
+
+      const promesas = []
+
+      puestos.forEach(puesto => {
+        limpiarArray(puesto.personalACargo)
+
+        puesto.personalACargo.concat(
+          puesto.personalACargo.filter(x => x != this._id)
+        )
+
+        agregarMotivoDeCambio(
+          puesto,
+          `Se removio el puesto "${this.puesto}" de el campo "Personal a cargo" por que se elimino de la base de datos`,
+          usuario
+        )
+
+        promesas.push(puesto.save())
+      })
+
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch(err => next(err))
+}
+
+async function puestoElPuestoPuedeDesarrollarseEnLasSiguientesAreasEliminarDeArreglo(
+  next
+) {
+  //Obtenemos el usuario logueado
+  const usuario = await ObtenerYDecodificarUsuario()
+
+  const Puesto = mongoose.model("Puesto")
+  await Puesto.find({
+    elPuestoPuedeDesarrollarseEnLasSiguientesAreas: this._id
+  })
+    .exec()
+    .then(puestos => {
+      const promesas = []
+
+      puestos.forEach(puesto => {
+        limpiarArray(puesto.elPuestoPuedeDesarrollarseEnLasSiguientesAreas)
+        puesto.elPuestoPuedeDesarrollarseEnLasSiguientesAreas.concat(
+          puesto.elPuestoPuedeDesarrollarseEnLasSiguientesAreas.filter(
+            x => x != this._id
+          )
+        )
+        agregarMotivoDeCambio(
+          puesto,
+          `Se removio el puesto "${this.puesto}" de el campo "El puesto puede desarrollarse en las siguientes areas" por que se elimino de la base de datos`,
+          usuario
+        )
+
+        promesas.push(puesto.save())
+      })
+
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch(err => next(err))
 }
 
 function autoPopulate(next) {
-  let puestoSchema = mongoose.model('Puesto')
-
-
+  this.populate("cursosRequeridos", " -asistencias")
   this.populate("departamento")
-  this.populate("reportaA")
-  this.populate("personalACargo")
-  this.populate("cursosRequeridos")
   this.populate("relacionClienteProveedor.internos.departamento")
-  this.populate("quien.desarrollo")
-  this.populate("quien.reviso")
-  this.populate("quien.aprobo")
-  this.populate("elPuestoPuedeDesarrollarseEnLasSiguientesAreas")
-  this.populate("historial.usuarioQueModifica", "-password -role")
-  let his = "historial.cambioAnterior."
-  this.populate({ path: his + "departamento", model: DepartamentoSchema })
-  this.populate({ path: his + "reportaA", model: puestoSchema })
-  this.populate({ path: his + "personalACargo", model: puestoSchema })
-  this.populate({ path: his + "cursosRequeridos", model: CursoSchema })
-  this.populate({
-    path: his + "relacionClienteProveedor.internos.departamento",
-    model: DepartamentoSchema
-  })
-  this.populate({ path: his + "quien.desarrollo", model: EmpleadoSchema })
-  this.populate({ path: his + "quien.reviso", model: EmpleadoSchema })
-  this.populate({ path: his + "quien.aprobo", model: EmpleadoSchema })
-  this.populate({
-    path: his + "elPuestoPuedeDesarrollarseEnLasSiguientesAreas",
-    model: puestoSchema
-  })
 
-  next()
+  const lessFieldsEmpleado = "-asistencia -eventos"
+  this.populate("quien.desarrollo", lessFieldsEmpleado)
+  this.populate("quien.reviso", lessFieldsEmpleado)
+  this.populate("quien.aprobo", lessFieldsEmpleado)
+  this.populate("motivoDeCambio.usuario", "-password")
+
+  return next()
 }
 
-PuestoSchema.pre("save", guardarHistorial)
+PuestoSchema
+  // .pre("save", guardarHistorial)
+  .pre("find", autoPopulate)
   .pre("findById", autoPopulate)
   .pre("findOne", autoPopulate)
-  .pre("find", autoPopulate)
 
+  .pre("remove", puestoDeEmpleadosRelacionadosANull)
+  .pre("remove", puestoReportaAANull)
+  .pre("remove", puestoPersonalAcargoEliminarDeArreglo)
+  .pre(
+    "remove",
+    puestoElPuestoPuedeDesarrollarseEnLasSiguientesAreasEliminarDeArreglo
+  )
 
-  module.exports = mongoose.model("Puesto", PuestoSchema)
+module.exports = mongoose.model("Puesto", PuestoSchema)

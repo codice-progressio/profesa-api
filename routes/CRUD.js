@@ -262,8 +262,6 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
                 });
             });
     });
-
-    console.log(`nos brincamos todo`)
 };
 
 /**

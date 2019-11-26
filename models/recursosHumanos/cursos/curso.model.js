@@ -1,6 +1,8 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
+const Puesto = require("../puestos/puesto.model")
+
 const CursoModelSchema = new Schema(
   {
     nombre: {
@@ -21,7 +23,7 @@ const CursoModelSchema = new Schema(
       required: [true, "Debes describir el curso"]
     },
     //Es obligatorio
-    esCursoDeTroncoComun: {type: Boolean, default: true},
+    esCursoDeTroncoComun: { type: Boolean, default: true },
     esCursoDeEspecializacion: Boolean,
     asistencias: [
       {
@@ -54,5 +56,29 @@ CursoModelSchema.methods.agregarAsistenciaATodos = function(
     return this.save()
   }
 }
+
+function eliminarCursoDePuestos(next) {
+  //Buscamos todos los puestos que tengar
+  // el curso que se va a eliminar.
+  Puesto.find({ cursosRequeridos: this._id })
+    .exec()
+    .then((puestos) => {
+      if (puestos.length === 0) return
+
+      const promesas = []
+      puestos.forEach((puesto) => {
+        puesto.cursosRequeridos = puesto.cursosRequeridos.filter(
+          (x) => x != this._id
+        )
+
+        promesas.push(puesto.save())
+      })
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch((err) => next(err))
+}
+
+CursoModelSchema.pre("remove", eliminarCursoDePuestos)
 
 module.exports = mongoose.model("Curso", CursoModelSchema)

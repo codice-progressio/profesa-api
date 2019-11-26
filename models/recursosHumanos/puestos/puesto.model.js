@@ -100,53 +100,6 @@ const PuestoSchema = new Schema(
   { collection: "puestos" }
 )
 PuestoSchema.plugin(uniqueValidator, { message: "'{PATH}' debe ser único." })
-// TODO: Antes de guardar hay que copiar los datos al historial. (Ver el historial de requisiciones. )
-
-// function guardarHistorial(next) {
-//   // Obtenemos el usuario logueado
-//   return obtenerUsuario(httpContext.get("token"))
-//     .then((decodeUser) => {
-//       //Si no hay historial creamos el arreglo.
-//       if (!this.historial) {
-//         this.historial = []
-//       }
-
-//       let historial = sustituirValoresConflictivosYRetornarObjeto(this)
-//       // Limpiamos el historial para que
-//       // no se haga exponencial
-
-//       //Seteamos la historia.
-//       this.historial.unshift({
-//         fechaDeCambio: new Date(),
-//         usuarioQueModifica: decodeUser,
-//         cambioAnterior: historial
-//       })
-//     })
-//     .catch((err) => next(err))
-
-//   //Copiamos todo al historial
-// }
-
-// /**
-//  *Convierte todos los valores que habiamos populado de nuevo a su id.
-//  *
-//  * @param {*} puesto El objeto antes de ser guardado.
-//  */
-// function sustituirValoresConflictivosYRetornarObjeto(puesto) {
-//   // var personalACargo = puesto.personalACargo.map((empleado) => {
-//   //   empleado._id
-//   // })
-//   // var reportaA = puesto.reportaA ? puesto.reportaA._id : null
-
-//   var puestoOb = puesto.toObject()
-//   delete puestoOb.historial
-
-//   // puestoOb.personalACargo = personalACargo
-//   // puestoOb.reportaA = reportaA
-
-//   return puestoOb
-// }
-
 function obtenerUsuario(token) {
   return new Promise((resolve, reject) => {
     jwt.verify(token, SEED, (err, decode) => {
@@ -158,7 +111,6 @@ function obtenerUsuario(token) {
 }
 
 function puestoDeEmpleadosRelacionadosANull(next) {
-
   //Buscamos todos los empledos que tengan como puesto
   // actual este y ponemos el puestoActual en null.
   const Empleado = mongoose.model("Empleado")
@@ -242,25 +194,19 @@ async function puestoPersonalAcargoEliminarDeArreglo(next) {
     .exec()
     .then(puestos => {
       if (puestos.length === 0) return null
-
       const promesas = []
-
       puestos.forEach(puesto => {
         limpiarArray(puesto.personalACargo)
-
         puesto.personalACargo.concat(
           puesto.personalACargo.filter(x => x != this._id)
         )
-
         agregarMotivoDeCambio(
           puesto,
           `Se removio el puesto "${this.puesto}" de el campo "Personal a cargo" por que se elimino de la base de datos`,
           usuario
         )
-
         promesas.push(puesto.save())
       })
-
       return Promise.all(promesas)
     })
     .then(() => next())

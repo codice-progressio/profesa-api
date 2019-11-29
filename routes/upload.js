@@ -5,6 +5,7 @@ const fs = require("fs")
 
 var app = express()
 
+
 // var mdAutenticacion = require("../middlewares/autenticacion")
 
 var Usuario = require("../models/usuario")
@@ -16,10 +17,7 @@ var RESP = require("../utils/respStatus")
 
 
 
-const EXTENSIONES_VALIDAS = {
-  IMAGENES: ["png", "jpg", "gif", "jpeg"],
-  OTROS: []
-}
+const EXTENSIONES_VALIDAS = require("../utils/extencionesFicherosValidas.utils").EXTENCIONES_FICHEROS
 
 // default options
 app.use(fileUpload())

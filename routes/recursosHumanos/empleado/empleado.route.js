@@ -3,6 +3,8 @@ const express = require("express")
 const app = express()
 const Empleado = require("../../../models/recursosHumanos/empleados/empleado.model")
 const RESP = require("../../../utils/respStatus")
+const fileUpload = require("express-fileupload")
+const fs = require("fs")
 
 const modificarPuesto = require("./empleado.modificarPuesto.route")
 const modificarSueldo = require("./empleado.modificarSueldo.route")
@@ -66,6 +68,120 @@ CRUD.crud()
 // =====================================
 // -->
 
+app.use(fileUpload())
+app.post("/guardarConFoto", (req, res) => {
+  var empleado = req.body
+  var foto = req.files ? req.files.fotografia : null
+
+  if (foto) {
+    //Validacion de la imagen.
+    var validar = require("../../../utils/extencionesFicherosValidas.utils")
+    if (!validar.extencionPermitida(foto) || !validar.esImagen(foto)) {
+      return RESP._500(res, {
+        msj: "Formato de imagen no valido",
+        err: "Extencion invalida"
+      })
+    }
+  }
+
+  if (empleado._id) {
+    modificar(res, empleado, foto)
+  } else {
+    crear(res, empleado, foto)
+  }
+})
+
+function crear(res, empleado, foto) {
+  if (!foto) throw "La fotografia es obligatoria"
+
+  const nuevoEmpleado = new Empleado(empleado)
+  nuevoEmpleado
+    .save()
+    .then(emp => {
+      let nombreFoto = guardarImagen(foto, emp._id)
+      return Empleado.findOneAndUpdate(empleado._id, {
+        $set: { fotografia: nombreFoto }
+      }).exec()
+    })
+    .then(emp => {
+      return RESP._200(res, "Se guardo el empleado de manera correcta", [
+        { tipo: "emp", datos: emp }
+      ])
+    })
+    .catch(err => {
+      return RESP._500(res, {
+        msj: "Hubo un error guardando al empleado",
+        err: err
+      })
+    })
+}
+
+function modificar(res, empModificaciones, foto) {
+  Empleado.findById(empModificaciones._id)
+    .exec()
+    .then(empleado => {
+      if (!empleado) {
+        throw "No existe el empleado"
+      }
+
+      let a = [
+        "idChecador",
+        "idNomina",
+        "nombres",
+        "apellidos",
+        "fechaDeNacimiento",
+        "sexo",
+        "curp",
+        "rfc",
+        "numeroDeCuenta",
+        "numeroDeSeguridadSocial"
+      ].forEach(x => {
+        empleado[x] = empModificaciones[x]
+      })
+
+      if (foto) {
+        empleado.fotografia = guardarImagen(
+          foto,
+          empleado._id,
+          empleado.fotografia
+        )
+      }
+
+      return empleado.save()
+    })
+    .then(empleado => {
+      return RESP._200(res, "Se modifico correctamente el empleado", [
+        { tipo: "empleado", datos: empleado }
+      ])
+    })
+    .catch(err => {
+      return RESP._500(res, {
+        msj: "Hubo un error actualizando al empleado",
+        err: err
+      })
+    })
+}
+
+function guardarImagen(foto, id, nombreAnterior = "XXXXXXXXXX") {
+  var nombreCortado = foto.name.split(".")
+  var ext = nombreCortado[nombreCortado.length - 1]
+  var pathFolder = `./uploads/empleados`
+  var path = `${pathFolder}/${id}.${ext}`
+  //Si no existe el directorio se crea
+  if (!fs.existsSync(pathFolder)) {
+    fs.mkdirSync(pathFolder)
+  }
+
+  let viejo = `${pathFolder}/${nombreAnterior}`
+  if (fs.existsSync(viejo)) fs.unlinkSync(viejo)
+
+  foto.mv(path, (path, err) => {
+    if (err) throw "No se pudo guardar la imagen de este empleado" + err
+  })
+
+  return `${id}.${ext}`
+}
+
 app.put("/modificar/puesto", (req, res) => {
   //Cambio de puesto
   var datos = {
@@ -75,10 +191,10 @@ app.put("/modificar/puesto", (req, res) => {
   //Buscar que si exista el puesto.
   //Buscar que si exista el empleado
   modificarPuesto(datos)
-    .then((empleado) =>
+    .then(empleado =>
       estatusOk("Se creo el evento correctamente", "empleado", empleado, res)
     )
-    .catch((err) => error("Hubo un error modificando el puesto", res, err))
+    .catch(err => error("Hubo un error modificando el puesto", res, err))
 })
 
 // <!--
@@ -104,10 +220,8 @@ app.put("/modificar/sueldo", (req, res) => {
   }
 
   modificarSueldo(datos)
-    .then((empleado) =>
-      estatusOk("Sueldo modificado", "empleado", empleado, res)
-    )
-    .catch((err) => error("Hubo un error modificando el puesto", res, err))
+    .then(empleado => estatusOk("Sueldo modificado", "empleado", empleado, res))
+    .catch(err => error("Hubo un error modificando el puesto", res, err))
 })
 
 // <!--
@@ -130,10 +244,10 @@ app.put("/modificar/estatusLaboral", (req, res) => {
     observaciones: req.body.observaciones
   }
   modificarEstatusLaboral(datos)
-    .then((empleado) =>
+    .then(empleado =>
       estatusOk("Estatus laboral modificado", "empleado", empleado, res)
     )
-    .catch((err) =>
+    .catch(err =>
       error("Hubo un error modificando el estatus laboral", res, err)
     )
 })
@@ -171,10 +285,10 @@ app.put("/registrar/permiso", (req, res) => {
     comentario: req.body.comentario
   }
   registrarPermiso(datos)
-    .then((empleado) =>
+    .then(empleado =>
       estatusOk("Permiso actualizado", "empleado", empleado, res)
     )
-    .catch((err) => error("Hubo un error con el permiso", res, err))
+    .catch(err => error("Hubo un error con el permiso", res, err))
 })
 
 // <!--
@@ -196,10 +310,10 @@ app.put("/registrar/vacaciones", (req, res) => {
   }
 
   registrarVacaciones(datos)
-    .then((empleado) =>
+    .then(empleado =>
       estatusOk("Vacaciones registradas", "empleado", empleado, res)
     )
-    .catch((err) => error("Hubo un error registrando las vacaciones", res, err))
+    .catch(err => error("Hubo un error registrando las vacaciones", res, err))
 })
 
 // <!--
@@ -222,10 +336,8 @@ app.put("/registrar/curso", (req, res) => {
   }
 
   registrarCurso(datos)
-    .then((empleado) =>
-      estatusOk("Curso registrado", "empleado", empleado, res)
-    )
-    .catch((err) => error("Hubo un error registrando el curso", res, err))
+    .then(empleado => estatusOk("Curso registrado", "empleado", empleado, res))
+    .catch(err => error("Hubo un error registrando el curso", res, err))
 })
 
 // <!--
@@ -248,8 +360,8 @@ app.put("/registrar/acta", (req, res) => {
   }
 
   registrarActa(datos)
-    .then((empleado) => estatusOk("Acta registrada", "empleado", empleado, res))
-    .catch((err) => error("Hubo un error registrando el acta", res, err))
+    .then(empleado => estatusOk("Acta registrada", "empleado", empleado, res))
+    .catch(err => error("Hubo un error registrando el acta", res, err))
 })
 
 // <!--
@@ -272,12 +384,10 @@ app.put("/registrar/felicitacion", (req, res) => {
   }
 
   registrarFelicitacion(datos)
-    .then((empleado) =>
+    .then(empleado =>
       estatusOk("Felicitacion registrada", "empleado", empleado, res)
     )
-    .catch((err) =>
-      error("Hubo un error registrando la felicitacion", res, err)
-    )
+    .catch(err => error("Hubo un error registrando la felicitacion", res, err))
 })
 
 // <!--
@@ -300,12 +410,10 @@ app.put("/registrar/amonestacion", (req, res) => {
   }
 
   registrarAmonestacion(datos)
-    .then((empleado) =>
+    .then(empleado =>
       estatusOk("Amonestacion registrada", "empleado", empleado, res)
     )
-    .catch((err) =>
-      error("Hubo un error registrando la amonestacion", res, err)
-    )
+    .catch(err => error("Hubo un error registrando la amonestacion", res, err))
 })
 
 // <!--
@@ -331,8 +439,8 @@ app.put("/registrar/bono", (req, res) => {
   }
 
   registrarBono(datos)
-    .then((empleado) => estatusOk("Bono registrado", "empleado", empleado, res))
-    .catch((err) => error("Hubo un error registrando el bono", res, err))
+    .then(empleado => estatusOk("Bono registrado", "empleado", empleado, res))
+    .catch(err => error("Hubo un error registrando el bono", res, err))
 })
 
 // <!--
@@ -354,10 +462,8 @@ app.delete("/eliminar/:idEmpleado/:idEvento", (req, res) => {
   }
 
   eliminarEvento(datos)
-    .then((empleado) =>
-      estatusOk("Evento eliminado", "empleado", empleado, res)
-    )
-    .catch((err) => error("Hubo un error eliminando el evento", res, err))
+    .then(empleado => estatusOk("Evento eliminado", "empleado", empleado, res))
+    .catch(err => error("Hubo un error eliminando el evento", res, err))
 })
 
 // <!--

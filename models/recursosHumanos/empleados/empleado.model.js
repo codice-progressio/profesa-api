@@ -3,25 +3,27 @@ const Schema = mongoose.Schema
 const uniqueValidator = require("mongoose-unique-validator")
 const Puesto = require("../puestos/puesto.model")
 
+const fs = require("fs")
 
 const EmpleadoSchema = new Schema(
   {
-    idChecador: { type: String, unique: true },
-    idNomina: { type: String, unique: true },
+    idChecador: String,
+    idNomina: { type: String, unique: true},
     nombres: String,
     apellidos: String,
     fechaDeNacimiento: Date,
     //0 - H, 1 - M
     sexo: Boolean,
-    curp: { type: String, unique: true },
-    rfc: { type: String, unique: true },
-    numeroDeCuenta: { type: String, unique: true },
-    numeroDeSeguridadSocial: { type: String, unique: true },
+    curp: String,
+    rfc: String,
+    numeroDeCuenta: String,
+    numeroDeSeguridadSocial: { type: String },
     fotografia: String,
     sueldoActual: Number,
     puestoActual: {
       type: Schema.Types.ObjectId,
-      ref: "Puesto"
+      ref: "Puesto",
+      required: [true, "Es necesario definir el puesto para este empleado"]
     },
     //Relacionado a eventosRH. estatusLaboral.
     activo: Boolean,
@@ -62,7 +64,7 @@ function crearEventoAltaDeNuevoEmpleado(next) {
   // de alta
   if (this.isNew) {
     Puesto.findById(this.puestoActual._id)
-      .then((puesto) => {
+      .then(puesto => {
         if (!puesto) throw "El puesto no existe"
         if (!this.eventos) this.eventos = []
         this.eventos.unshift({
@@ -89,7 +91,7 @@ function crearEventoAltaDeNuevoEmpleado(next) {
         this.sueldoActual = puesto.sueldoBase
         next()
       })
-      .catch((err) => next(err))
+      .catch(err => next(err))
   } else {
     next()
   }
@@ -103,26 +105,34 @@ function autoPopulate(next) {
 function eliminarAsistenciasDeCurso(next) {
   //Buscamos todos los cursos que contengan a este
   // empleado en la asistencia y los eliminamos.
-  const Curso = mongoose.model('Curso')
+  const Curso = mongoose.model("Curso")
 
-  Curso.find({ "asistencias.empleado": { $elemMatch: { empleado: this._id } } })
+  Curso.find({ asistencias: { empleado: this._id } })
     .exec()
-    .then((cursos) => {
+    .then(cursos => {
       if (cursos.length === 0) return
       const promesas = []
 
       cursos.asistencias = cursos.asistencias.filter(
-        (x) => x.empleado != this._id
+        x => x.empleado != this._id
       )
 
-      cursos.asistencias.forEach((curso) => {
+      cursos.asistencias.forEach(curso => {
         this.promesas.push(curso.save())
       })
 
       return Promise.all(promesas)
     })
     .then(() => next())
-    .catch((err) => next(err))
+    .catch(err => next(err))
+}
+
+function eliminarFoto(next) {
+  const path = `./uploads/empleados/${this.fotografia}`
+  if (fs.existsSync(path)) {
+    fs.unlinkSync(path)
+  }
+  next()
 }
 
 EmpleadoSchema.pre("save", crearEventoAltaDeNuevoEmpleado)
@@ -130,4 +140,5 @@ EmpleadoSchema.pre("save", crearEventoAltaDeNuevoEmpleado)
   .pre("findOne", autoPopulate)
   .pre("findById", autoPopulate)
   .pre("remove", eliminarAsistenciasDeCurso)
+  .pre("remove", eliminarFoto)
 module.exports = mongoose.model("Empleado", EmpleadoSchema)

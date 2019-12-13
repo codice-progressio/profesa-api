@@ -8,7 +8,7 @@ const fs = require("fs")
 const EmpleadoSchema = new Schema(
   {
     idChecador: String,
-    idNomina: { type: String, unique: true},
+    idNomina: { type: String, unique: true },
     nombres: String,
     apellidos: String,
     fechaDeNacimiento: Date,
@@ -22,9 +22,26 @@ const EmpleadoSchema = new Schema(
     sueldoActual: Number,
     puestoActual: {
       type: Schema.Types.ObjectId,
-      ref: "Puesto",
-      required: [true, "Es necesario definir el puesto para este empleado"]
+      ref: "Puesto"
     },
+    email: String,
+    celular: String,
+    telCasa: String,
+    telEmergencia: String,
+    nombreEmergencia: String,
+
+    estadoCivil: {
+      type: Boolean,
+      required: [true, "Es necesario el estado civil  "]
+    },
+    hijos: [],
+    nivelDeEstudios: String,
+
+    domicilio: {
+      type: String,
+      required: [true, "Es necesario definir el domicilio"]
+    },
+
     //Relacionado a eventosRH. estatusLaboral.
     activo: Boolean,
     //El puesto esta dentro de los eventos.
@@ -83,7 +100,8 @@ function crearEventoAltaDeNuevoEmpleado(next) {
           evento: {
             puesto: {
               anterior: null,
-              nuevo: puesto
+              nuevo: puesto._id,
+              observaciones: "SISTEMA - Asignacion de puesto por ingreso"
             }
           }
         })
@@ -99,6 +117,32 @@ function crearEventoAltaDeNuevoEmpleado(next) {
 
 function autoPopulate(next) {
   this.populate("puestoActual")
+
+  let less = ""
+    .concat(" -motivoDeCambio")
+    .concat(" -fechaDeCreacionDePuesto")
+    .concat(" -vigenciaEnAnios")
+    .concat(" -cursosRequeridos")
+    .concat(" -departamento")
+    .concat(" -reportaA")
+    .concat(" -organigrama")
+    .concat(" -misionDelPuesto")
+    .concat(" -personalACargo")
+    .concat(" -perfilDelPuesto")
+    .concat(" -funcionesEspecificasDelPuesto")
+    .concat(" -relacionClienteProveedor")
+    .concat(" -indicesDeEfectividad")
+    .concat(" -elPuestoPuedeDesarrollarseEnLasSiguientesAreas")
+    .concat(" -quien")
+    .concat(" -sueldoBase")
+    .concat(" -sueldoMaximo")
+    .concat(" -numeroDeExtencion")
+
+  const e = final => `eventos.evento.${ final }`
+  
+  this.populate(e("puesto.anterior"), less)
+  this.populate(e("puesto.nuevo"), less)
+  this.populate(e("curso"), ' -asistencias')
   next()
 }
 

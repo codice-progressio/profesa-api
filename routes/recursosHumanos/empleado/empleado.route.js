@@ -54,13 +54,21 @@ CRUD.camposDeBusqueda = [
   "curp",
   "rfc",
   "numeroDeCuenta",
-  "númeroDeSeguridadSocial"
+  "númeroDeSeguridadSocial",
+  "email",
+  "celular",
+  "telCasa",
+  "telEmergencia",
+  "nivelDeEstudios",
+  "domicilio"
 ]
 
 CRUD.crud()
 
 // TODO: Actualizar sueldo al aumentar/
 // TODO: Actualizar el estatus cuando se desencadene un estatusLaboral.
+
+const pathFolderEmpleados = `./uploads/empleados`
 
 // <!--
 // =====================================
@@ -99,11 +107,15 @@ function crear(res, empleado, foto) {
     .save()
     .then(emp => {
       let nombreFoto = guardarImagen(foto, emp._id)
-      return Empleado.findOneAndUpdate(empleado._id, {
-        $set: { fotografia: nombreFoto }
-      }).exec()
+      return Empleado.findOneAndUpdate(
+        { _id: empleado._id },
+        {
+          $set: { fotografia: nombreFoto }
+        }
+      ).exec()
     })
     .then(emp => {
+      console.log(`emp`, emp)
       return RESP._200(res, "Se guardo el empleado de manera correcta", [
         { tipo: "emp", datos: emp }
       ])
@@ -124,6 +136,8 @@ function modificar(res, empModificaciones, foto) {
         throw "No existe el empleado"
       }
 
+      console.log(`empModificaciones['hijos']`, empModificaciones["hijos"])
+
       let a = [
         "idChecador",
         "idNomina",
@@ -134,17 +148,30 @@ function modificar(res, empModificaciones, foto) {
         "curp",
         "rfc",
         "numeroDeCuenta",
-        "numeroDeSeguridadSocial"
+        "numeroDeSeguridadSocial",
+        "email",
+        "celular",
+        "telCasa",
+        "telEmergencia",
+        "nombreEmergencia",
+        "estadoCivil",
+        "domicilio",
+        "nivelDeEstudios",
+        "hijos"
       ].forEach(x => {
         empleado[x] = empModificaciones[x]
       })
 
       if (foto) {
+        console.log(`si hay foto: `, empleado.fotografia)
+        //Si la foto tiene una extencion diferente entonces valio quesadilla.
         empleado.fotografia = guardarImagen(
           foto,
           empleado._id,
           empleado.fotografia
         )
+
+        console.log("nombre de la foto: ", empleado.fotografia)
       }
 
       return empleado.save()
@@ -165,14 +192,13 @@ function modificar(res, empModificaciones, foto) {
 function guardarImagen(foto, id, nombreAnterior = "XXXXXXXXXX") {
   var nombreCortado = foto.name.split(".")
   var ext = nombreCortado[nombreCortado.length - 1]
-  var pathFolder = `./uploads/empleados`
-  var path = `${pathFolder}/${id}.${ext}`
+  var path = `${pathFolderEmpleados}/${id}.${ext}`
   //Si no existe el directorio se crea
-  if (!fs.existsSync(pathFolder)) {
-    fs.mkdirSync(pathFolder)
+  if (!fs.existsSync(pathFolderEmpleados)) {
+    fs.mkdirSync(pathFolderEmpleados)
   }
 
-  let viejo = `${pathFolder}/${nombreAnterior}`
+  let viejo = `${pathFolderEmpleados}/${nombreAnterior}`
   if (fs.existsSync(viejo)) fs.unlinkSync(viejo)
 
   foto.mv(path, (path, err) => {
@@ -182,7 +208,7 @@ function guardarImagen(foto, id, nombreAnterior = "XXXXXXXXXX") {
   return `${id}.${ext}`
 }
 
-app.put("/modificar/puesto", (req, res) => {
+app.put("/evento/puesto", (req, res) => {
   //Cambio de puesto
   var datos = {
     _id: req.body._id,
@@ -209,7 +235,7 @@ app.put("/modificar/puesto", (req, res) => {
 // =====================================
 // -->
 
-app.put("/modificar/sueldo", (req, res) => {
+app.put("/evento/sueldo", (req, res) => {
   // Con un aumento de sueldo necesitamos
   // comprobar que no supere el maximo.
 
@@ -236,11 +262,14 @@ app.put("/modificar/sueldo", (req, res) => {
 // =====================================
 // -->
 
-app.put("/modificar/estatusLaboral", (req, res) => {
+app.put("/evento/estatusLaboral", (req, res) => {
   var datos = {
     _id: req.body._id,
     reingreso: req.body.reingreso,
     baja: req.body.baja,
+    incapacidadEnfermedadGeneral: req.body.incapacidadEnfermedadGeneral,
+    incapacidadRiesgoDeTrabajo: req.body.incapacidadRiesgoDeTrabajo,
+    incapacidadMaternidad: req.body.incapacidadMaternidad,
     observaciones: req.body.observaciones
   }
   modificarEstatusLaboral(datos)
@@ -264,20 +293,13 @@ app.put("/modificar/estatusLaboral", (req, res) => {
 // =====================================
 // -->
 
-app.put("/registrar/permiso", (req, res) => {
+app.put("/evento/permiso", (req, res) => {
   var datos = {
     _id: req.body._id,
     eventoPendienteDeDefinir: req.body.eventoPendienteDeDefinir,
     conGoceDeSueldo: req.body.conGoceDeSueldo,
     sinGoceDeSueldo: req.body.sinGoceDeSueldo,
-    motivo: {
-      porPaternidad: req.body.motivo.porPaternidad,
-      porDefunción: req.body.motivo.porDefunción,
-      porMatrimonio: req.body.motivo.porMatrimonio,
-      paraDesempeñarUnCargoDeElecciónPopular:
-        req.body.motivo.paraDesempeñarUnCargoDeElecciónPopular,
-      otro: req.body.motivo.otro
-    },
+    motivo: req.body.motivo,
     fechaDeInicio: req.body.fechaDeInicio,
     fechaDeFinalizacion: req.body.fechaDeFinalizacion,
     autorizacionSupervisor: req.body.autorizacionSupervisor,
@@ -302,7 +324,7 @@ app.put("/registrar/permiso", (req, res) => {
 //  Vacaciones
 // =====================================
 // -->
-app.put("/registrar/vacaciones", (req, res) => {
+app.put("/evento/vacaciones", (req, res) => {
   var datos = {
     _id: req.body._id,
     desde: req.body.desde,
@@ -328,7 +350,7 @@ app.put("/registrar/vacaciones", (req, res) => {
 // =====================================
 // -->
 
-app.put("/registrar/curso", (req, res) => {
+app.put("/evento/curso", (req, res) => {
   var datos = {
     _id: req.body._id,
     idCurso: req.body.idCurso,
@@ -351,13 +373,14 @@ app.put("/registrar/curso", (req, res) => {
 //  Registrar Acta
 // =====================================
 // -->
-
-app.put("/registrar/acta", (req, res) => {
+app.put("/evento/castigo", (req, res) => {
   var datos = {
     _id: req.body._id,
-    acta: req.body.acta,
+    acta: req.files.acta,
     fecha: req.body.fecha
   }
+
+  datos.acta = moverDocumentoDeEmpleado(datos.acta, datos._id, "ACTA")
 
   registrarActa(datos)
     .then(empleado => estatusOk("Acta registrada", "empleado", empleado, res))
@@ -370,18 +393,52 @@ app.put("/registrar/acta", (req, res) => {
 // =====================================
 // -->
 
+function moverDocumentoDeEmpleado(foto, id, tipoEvento) {
+  const validar = require("../../../utils/extencionesFicherosValidas.utils")
+  if (!validar.extencionPermitida(foto) || !validar.esImagen(foto)) {
+    return RESP._500(res, {
+      msj: "Formato de imagen no valido",
+      err: "Extencion invalida"
+    })
+  }
+
+  const sp = foto.name.split(".")
+  const ext = sp[sp.length - 1]
+
+  // Existe la carpeta?
+
+  if (!fs.existsSync(pathFolderEmpleados)) fs.mkdirSync(pathFolderEmpleados)
+
+  const nombre = `${id}_EVENTO_${tipoEvento}_${new Date().getTime()}.${ext}`
+
+  foto.mv(`${pathFolderEmpleados}/${nombre}`, (path, err) => {
+    if (err)
+      throw new Error(
+        `No se pudo guardar el documento de este evento:${tipoEvento}`
+      )
+  })
+
+  return nombre
+}
+
 // <!--
 // =====================================
 //  Registrar Felicitacion
 // =====================================
 // -->
 
-app.put("/registrar/felicitacion", (req, res) => {
-  var datos = {
+app.put("/evento/felicitacion", (req, res) => {
+  const datos = {
     _id: req.body._id,
-    documento: req.body.documento,
+    documento: req.files.documento,
     fecha: req.body.fecha
   }
+
+  datos.documento = moverDocumentoDeEmpleado(
+    datos.documento,
+    datos._id,
+    "FELICITACION"
+  )
 
   registrarFelicitacion(datos)
     .then(empleado =>
@@ -402,12 +459,18 @@ app.put("/registrar/felicitacion", (req, res) => {
 // =====================================
 // -->
 
-app.put("/registrar/amonestacion", (req, res) => {
+app.put("/evento/amonestacion", (req, res) => {
   var datos = {
     _id: req.body._id,
-    documento: req.body.documento,
+    documento: req.files.documento,
     fecha: req.body.fecha
   }
+
+  datos.documento = moverDocumentoDeEmpleado(
+    datos.documento,
+    datos._id,
+    "AMONESTACION"
+  )
 
   registrarAmonestacion(datos)
     .then(empleado =>
@@ -428,14 +491,15 @@ app.put("/registrar/amonestacion", (req, res) => {
 // =====================================
 // -->
 
-app.put("/registrar/bono", (req, res) => {
+app.put("/evento/bono", (req, res) => {
   var datos = {
     _id: req.body._id,
     porAsistencia: req.body.porAsistencia,
     porPuntualidad: req.body.porPuntualidad,
     porProductividad: req.body.porProductividad,
     porResultados: req.body.porResultados,
-    ayudaEscolarEventual: req.body.ayudaEscolarEventual
+    ayudaEscolarEventual: req.body.ayudaEscolarEventual,
+    otros: req.body.otros
   }
 
   registrarBono(datos)

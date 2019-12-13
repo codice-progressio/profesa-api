@@ -79,17 +79,17 @@ const PuestoSchema = new Schema(
       desarrollo: {
         type: Schema.Types.ObjectId,
         ref: "Empleado",
-        require: [true, "Es necesario definir quien desarrollo"]
+        // require: [true, "Es necesario definir quien desarrollo"]
       },
       reviso: {
         type: Schema.Types.ObjectId,
         ref: "Empleado",
-        require: [true, "Es necesario definir quien reviso"]
+        // require: [true, "Es necesario definir quien reviso"]
       },
       aprobo: {
         type: Schema.Types.ObjectId,
         ref: "Empleado",
-        require: [true, "Es necesario definir quien aprobo"]
+        // require: [true, "Es necesario definir quien aprobo"]
       }
     },
 
@@ -254,7 +254,7 @@ function autoPopulate(next) {
   this.populate("departamento")
   this.populate("relacionClienteProveedor.internos.departamento")
 
-  const lessFieldsEmpleado = "-asistencia -eventos"
+  const lessFieldsEmpleado = "-asistencia -eventos -puestoActual"
   this.populate("quien.desarrollo", lessFieldsEmpleado)
   this.populate("quien.reviso", lessFieldsEmpleado)
   this.populate("quien.aprobo", lessFieldsEmpleado)

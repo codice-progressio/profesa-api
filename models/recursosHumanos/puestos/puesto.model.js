@@ -45,7 +45,6 @@ const PuestoSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Puesto"
     },
-    //Se genera desde la GUI.
     organigrama: String,
     misionDelPuesto: String,
     personalACargo: [
@@ -78,17 +77,17 @@ const PuestoSchema = new Schema(
     quien: {
       desarrollo: {
         type: Schema.Types.ObjectId,
-        ref: "Empleado",
+        ref: "Empleado"
         // require: [true, "Es necesario definir quien desarrollo"]
       },
       reviso: {
         type: Schema.Types.ObjectId,
-        ref: "Empleado",
+        ref: "Empleado"
         // require: [true, "Es necesario definir quien reviso"]
       },
       aprobo: {
         type: Schema.Types.ObjectId,
-        ref: "Empleado",
+        ref: "Empleado"
         // require: [true, "Es necesario definir quien aprobo"]
       }
     },
@@ -110,10 +109,11 @@ function obtenerUsuario(token) {
   })
 }
 
-function puestoDeEmpleadosRelacionadosANull(next) {
+async function puestoDeEmpleadosRelacionadosANull(next) {
   //Buscamos todos los empledos que tengan como puesto
   // actual este y ponemos el puestoActual en null.
   const Empleado = mongoose.model("Empleado")
+  const usuario = await ObtenerYDecodificarUsuario()
   return Empleado.find({ puestoActual: this._id })
     .exec()
     .then(empleados => {
@@ -124,7 +124,7 @@ function puestoDeEmpleadosRelacionadosANull(next) {
       empleados.forEach(empleado => {
         empleado.puestoActual = null
         agregarMotivoDeCambio(
-          puesto,
+          this,
           `Se removio el puesto "${this.puesto}" de el campo "Puesto actual" por que se elimino de la base de datos`,
           usuario
         )
@@ -158,7 +158,7 @@ async function puestoReportaAANull(next) {
         puesto.reportaA = null
         agregarMotivoDeCambio(
           puesto,
-          `Se removio el puesto "${this.puesto}" de el campo "Reporta A" por que se elimino de la base de datos`,
+          `Se removio el puesto "${this.puesto}" del campo "Reporta A" por que se elimino de la base de datos`,
           usuario
         )
         promesas.push(puesto.save())
@@ -202,7 +202,7 @@ async function puestoPersonalAcargoEliminarDeArreglo(next) {
         )
         agregarMotivoDeCambio(
           puesto,
-          `Se removio el puesto "${this.puesto}" de el campo "Personal a cargo" por que se elimino de la base de datos`,
+          `Se removio el puesto "${this.puesto}" del campo "Personal a cargo" por que se elimino de la base de datos`,
           usuario
         )
         promesas.push(puesto.save())
@@ -236,7 +236,7 @@ async function puestoElPuestoPuedeDesarrollarseEnLasSiguientesAreasEliminarDeArr
         )
         agregarMotivoDeCambio(
           puesto,
-          `Se removio el puesto "${this.puesto}" de el campo "El puesto puede desarrollarse en las siguientes areas" por que se elimino de la base de datos`,
+          `Se removio el puesto "${this.puesto}" del campo "El puesto puede desarrollarse en las siguientes areas" por que se elimino de la base de datos`,
           usuario
         )
 

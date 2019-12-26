@@ -29,6 +29,7 @@ const EmpleadoSchema = new Schema(
     telCasa: String,
     telEmergencia: String,
     nombreEmergencia: String,
+    parentescoEmergencia: String,
 
     estadoCivil: {
       type: Boolean,

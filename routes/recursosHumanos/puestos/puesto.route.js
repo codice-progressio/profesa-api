@@ -4,6 +4,7 @@ var app = express()
 var Puesto = require("../../../models/recursosHumanos/puestos/puesto.model")
 var CONSTANSTES = require("../../../utils/constantes")
 var RESP = require("../../../utils/respStatus")
+var parsearBody = require("../../../utils/parsearBody")
 const ObjectId = require("mongoose").Types.ObjectId
 const fs = require("fs")
 const fileUpload = require("express-fileupload")
@@ -139,22 +140,10 @@ app.get("/buscar/:termino", (req, res) => {
  * @param {*} body El body stringifiado. 
  * @returns
  */
-function parsearPuesto(body) {
-  //
-  const objPuesto = {}
 
-  Object.keys(body).forEach(x => {
-    try {
-      objPuesto[x] = JSON.parse(body[x])
-    } catch (error) {
-      objPuesto[x] = body[x] == "undefined" ? undefined : body[x]
-    }
-  })
-  return objPuesto
-}
 
 app.post("/", (req, res) => {
-  const puesto = new Puesto(parsearPuesto(req.body))
+  const puesto = new Puesto(parsearBody(req.body))
 
   const organigramaFile = req.files ? req.files.organigrama : null
   if (!organigramaFile) {
@@ -190,7 +179,7 @@ app.post("/", (req, res) => {
 })
 
 app.put("/", (req, res) => {
-  const puesto = parsearPuesto(req.body)
+  const puesto = parsearBody(req.body)
   const organigramaFile = req.files ? req.files.organigrama : null
 
   if (organigramaFile) validarImagen(organigramaFile, res)

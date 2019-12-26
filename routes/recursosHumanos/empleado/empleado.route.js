@@ -3,6 +3,7 @@ const express = require("express")
 const app = express()
 const Empleado = require("../../../models/recursosHumanos/empleados/empleado.model")
 const RESP = require("../../../utils/respStatus")
+const parsearBody = require("../../../utils/parsearBody")
 const fileUpload = require("express-fileupload")
 const fs = require("fs")
 
@@ -78,7 +79,7 @@ const pathFolderEmpleados = `./uploads/empleados`
 
 app.use(fileUpload())
 app.post("/guardarConFoto", (req, res) => {
-  var empleado = req.body
+  var empleado = parsearBody(req.body)
   var foto = req.files ? req.files.fotografia : null
 
   if (foto) {
@@ -100,22 +101,23 @@ app.post("/guardarConFoto", (req, res) => {
 })
 
 function crear(res, empleado, foto) {
-  if (!foto) throw "La fotografia es obligatoria"
+  if (!foto) {
+    return RESP._500(res, {
+      msj: "La fotografia es obligatoria",
+      err: "Es necesario subir una imagen del empleado."
+    })
+  }
 
   const nuevoEmpleado = new Empleado(empleado)
   nuevoEmpleado
     .save()
     .then(emp => {
-      let nombreFoto = guardarImagen(foto, emp._id)
-      return Empleado.findOneAndUpdate(
-        { _id: empleado._id },
-        {
-          $set: { fotografia: nombreFoto }
-        }
+      return Empleado.updateOne(
+        { _id: emp._id },
+        { $set: { fotografia: guardarImagen(foto, emp._id) } }
       ).exec()
     })
     .then(emp => {
-      console.log(`emp`, emp)
       return RESP._200(res, "Se guardo el empleado de manera correcta", [
         { tipo: "emp", datos: emp }
       ])
@@ -136,8 +138,6 @@ function modificar(res, empModificaciones, foto) {
         throw "No existe el empleado"
       }
 
-      console.log(`empModificaciones['hijos']`, empModificaciones["hijos"])
-
       let a = [
         "idChecador",
         "idNomina",
@@ -157,21 +157,19 @@ function modificar(res, empModificaciones, foto) {
         "estadoCivil",
         "domicilio",
         "nivelDeEstudios",
-        "hijos"
+        "hijos",
+        "parentescoEmergencia"
       ].forEach(x => {
         empleado[x] = empModificaciones[x]
       })
 
       if (foto) {
-        console.log(`si hay foto: `, empleado.fotografia)
         //Si la foto tiene una extencion diferente entonces valio quesadilla.
         empleado.fotografia = guardarImagen(
           foto,
           empleado._id,
           empleado.fotografia
         )
-
-        console.log("nombre de la foto: ", empleado.fotografia)
       }
 
       return empleado.save()
@@ -242,7 +240,7 @@ app.put("/evento/sueldo", (req, res) => {
   var datos = {
     _id: req.body._id,
     nuevoSueldo: req.body.nuevoSueldo,
-    observaciones: req.body.observaciones
+    observacion: req.body.observacion
   }
 
   modificarSueldo(datos)
@@ -306,7 +304,34 @@ app.put("/evento/permiso", (req, res) => {
     autorizacionRH: req.body.autorizacionRH,
     comentario: req.body.comentario
   }
-  registrarPermiso(datos)
+  registrarPermiso
+    .nuevoPermiso(datos)
+    .then(empleado =>
+      estatusOk("Permiso actualizado", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error con el permiso", res, err))
+})
+
+app.put("/evento/permiso/autorizar", (req, res) => {
+  var datos = {
+    _id: req.body._id,
+    idHisto: req.body.idHisto
+  }
+  registrarPermiso
+    .autorizar(datos)
+    .then(empleado =>
+      estatusOk("Permiso actualizado", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error con el permiso", res, err))
+})
+app.put("/evento/permiso/rechazar", (req, res) => {
+  var datos = {
+    _id: req.body._id,
+    idHisto: req.body.idHisto,
+    motivoRechazado: req.body.motivo
+  }
+  registrarPermiso
+    .rechazar(datos)
     .then(empleado =>
       estatusOk("Permiso actualizado", "empleado", empleado, res)
     )
@@ -375,9 +400,9 @@ app.put("/evento/curso", (req, res) => {
 // -->
 app.put("/evento/castigo", (req, res) => {
   var datos = {
-    _id: req.body._id,
+    _id: JSON.parse(req.body._id),
     acta: req.files.acta,
-    fecha: req.body.fecha
+    fecha: JSON.parse(req.body.fecha)
   }
 
   datos.acta = moverDocumentoDeEmpleado(datos.acta, datos._id, "ACTA")
@@ -429,9 +454,9 @@ function moverDocumentoDeEmpleado(foto, id, tipoEvento) {
 
 app.put("/evento/felicitacion", (req, res) => {
   const datos = {
-    _id: req.body._id,
+    _id: JSON.parse(req.body._id),
     documento: req.files.documento,
-    fecha: req.body.fecha
+    fecha: JSON.parse(req.body.fecha)
   }
 
   datos.documento = moverDocumentoDeEmpleado(
@@ -461,9 +486,9 @@ app.put("/evento/felicitacion", (req, res) => {
 
 app.put("/evento/amonestacion", (req, res) => {
   var datos = {
-    _id: req.body._id,
+    _id: JSON.parse(req.body._id),
     documento: req.files.documento,
-    fecha: req.body.fecha
+    fecha: JSON.parse(req.body.fecha)
   }
 
   datos.documento = moverDocumentoDeEmpleado(

@@ -55,7 +55,10 @@ var EventosRHSchema = new Schema(
       fechaDeFinalizacion: Date,
       autorizacionSupervisor: Boolean,
       autorizacionRH: Boolean,
-      comentario: String
+      comentario: String,
+      rechazado: Boolean,
+      motivoRechazo: String,
+      fechaRechazo: Date
     },
 
     bono: {

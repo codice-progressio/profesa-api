@@ -27,6 +27,8 @@ function crearEvento(datos) {
     if (!evento.bono[k]) delete evento.bono[k]
   })
 
+  if (!evento.bono.otros.cantidad) delete evento.bono.otros
+
   return crearHistorialDeEventos(evento)
 }
 

@@ -5,29 +5,19 @@ const fs = require("fs")
 
 var app = express()
 
-var mdAutenticacion = require("../middlewares/autenticacion")
+
+// var mdAutenticacion = require("../middlewares/autenticacion")
 
 var Usuario = require("../models/usuario")
 var Requisicion = require("../models/requisiciones/requisicion.model")
+var Puesto = require("../models/recursosHumanos/puestos/puesto.model")
 
 var RESP = require("../utils/respStatus")
 
-const PATHS = {
-  USUARIOS: "./uploads/usuarios/",
-  FACTURAS: "./uploads/facturas/",
-  LASER: "./uploads/laser/"
-}
 
-const TIPOS_DE_IMAGENES = {
-  USUARIOS: "usuarios",
-  LASERADOS: "laserados",
-  FACTURAS: "facturas"
-}
 
-const EXTENSIONES_VALIDAS = {
-  IMAGENES: ["png", "jpg", "gif", "jpeg"],
-  OTROS: []
-}
+
+const EXTENSIONES_VALIDAS = require("../utils/extencionesFicherosValidas.utils").EXTENCIONES_FICHEROS
 
 // default options
 app.use(fileUpload())
@@ -48,11 +38,11 @@ function errorGeneral(msj, err, res) {
 }
 
 function validarTiposFicheros(res, tipo) {
-  var tiposValidos = Object.values(TIPOS_DE_IMAGENES)
-  if (tiposValidos.indexOf(tipo) < 0) {
+  
+  if (!TIPOS_DE_IMAGENES.hasOwnProperty(tipo)) {
     return RESP._500(res, {
       msj: "Coleccion invalida",
-      err: "La coleccion para el fichero no es valida"
+      err: `La coleccion '${tipo}' no es valida.`
     })
   }
 }
@@ -113,7 +103,7 @@ app.put("/:tipo/:id", (req, res) => {
   imagenNoSeleccionada(req.files)
   
   //Si no hay ficheros pues no guardamos nada. 
-  if (!req.files) requisicionOk(null, res)
+  if (!req.files) return requisicionOk(null, res)
   
   
   
@@ -121,7 +111,10 @@ app.put("/:tipo/:id", (req, res) => {
   //En caso de que no sea cambio de foto de perfil.
 
 
-  var archivo = req.files.imagen ? [req.files.imagen] : req.files["facturas[]"]
+  var archivo = req.files.imagen ? [req.files.imagen] : req.files["imagenes"]
+  //Todo tiene que ser un arreglo
+  archivo = archivo.forEach ? archivo : [archivo]
+
   //La variable que guardara los nombres de archivos
   //creados. En el caso de las facturas tienen que ser
   // varias pero en el caso de las que son de usuario
@@ -130,29 +123,65 @@ app.put("/:tipo/:id", (req, res) => {
   var nombresDeArchivos = []
 
   // Archivo puede llegar como un archivo simple o un arreglo. /:
-  if (archivo.forEach) {
-    archivo.forEach((archivo) =>
-      nombresDeArchivos.push(moverImagenesParaGuardar(archivo, id, tipo, res))
-    )
-  } else {
+  archivo.forEach((archivo) =>
     nombresDeArchivos.push(moverImagenesParaGuardar(archivo, id, tipo, res))
-  }
+  )
 
-  //nombreDeArchivo es un arreglo
-  subirPorTipo(tipo, id, nombresDeArchivos, res)
+  //Ha esta altura ya validamos que exista el tipo. 
+  TIPOS_DE_IMAGENES[tipo].fun(id, nombresDeArchivos, res)
 })
 
-function subirPorTipo(tipo, id, nombresDeArchivo, res) {
-  if (tipo === TIPOS_DE_IMAGENES.USUARIOS) {
-    tipoUsuario(id, nombresDeArchivo[0], res)
-  }
 
-  if (tipo === TIPOS_DE_IMAGENES.FACTURAS) {
-    tipoFactura(id, nombresDeArchivo, res)
+const TIPOS_DE_IMAGENES = {
+  usuarios: {
+    fun: tipoUsuario,
+    path: "./uploads/usuarios/"
+  },
+  facturas: { 
+    fun: tipoFactura, 
+    path: "./uploads/facturas/" 
+  },
+  organigramaPuesto: {
+    fun: tipoOrganigramaPuesto,
+    path: "./uploads/organigramaPuesto/"
   }
 }
 
-function tipoUsuario(id, nombreArchivo, res) {
+function tipoOrganigramaPuesto( id, archivos, res ){
+  var nombreDeArchivo = archivos.pop()
+
+  Puesto.
+  updateOne(
+    { _id: id },
+    {
+      // Hacemos un push
+      $set: {
+        // Para cada uno de los elementos que traemos en objetoDeImagenes.
+        "organigrama": nombreDeArchivo,
+        //Ya existe un historial en el prehook de save. 
+        'historial.0.cambioAnterior.organigrama': nombreDeArchivo
+      }
+    }
+  )
+  .exec()
+  .then( ()=>{puestoOk( res)} )
+  .catch( (err)=>errorGeneral(
+    'Hubo un error subiendo el organigrama de este puesto', 
+    err, 
+    res
+  ) )
+
+}
+
+function puestoOk( res ) {
+  return RESP._200(res, null , [
+      { tipo: null, datos: null },
+  ]);
+  
+}
+
+function tipoUsuario(id, archivos, res) {
+  var nombreArchivo = archivos.pop()
   // Comprobamos si el usuario ya tiene una imágen.
   // Si la tiene la removemos.
   Usuario.findById(id)
@@ -208,7 +237,7 @@ function usuarioProcesosDeImagen(usuario, nombreArchivo) {
     throw "No existe el usuario"
   }
 
-  var pathViejo = PATHS.USUARIOS + usuario.img
+  var pathViejo = TIPOS_DE_IMAGENES.usuarios.path + usuario.img
 
   // Si no existe el path lo crea
   if (fs.existsSync(pathViejo)) {

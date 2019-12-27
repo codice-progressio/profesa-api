@@ -185,7 +185,6 @@ folioSchema.methods.calcularNivel = function(idFolio) {
     var schema = mongoose.model('Folio', folioSchema);
     schema.findById(idFolio).then(fol => { fol.save(); }).catch(err => {
         let a = colores.danger('No se actualizo el nivel de importancia del folio: ' + err);
-        console.log(a);
     });
 };
 
@@ -302,7 +301,7 @@ function trayectoDeOrden(folio) {
                             // };
 
                             // Tomamos todos los procesos del pedido.
-                            // console.log(`linea.almacen`,linea.almacen)
+                            
                             // linea.procesos.forEach(procesos =>
                             // {
                             //     ordenParaModificar.trayectoNormal.push(
@@ -416,7 +415,6 @@ function trayectoDeOrden(folio) {
             }
             return;
         }).then(folioParaGrabar => {
-            console.log(colores.success('ORDENES') + 'Se generaron las órdenes de manera correcta.');
             return;
         })
         .catch(err => {
@@ -517,32 +515,32 @@ function calcularPorcentajeDeAvance(folio) {
                 var tamanoTrayectoRecorrido = orden.trayectoRecorrido.length;
 
 
-                // console.log('trayectonormal: ' + tamanoTrayectoNormal);
-                // console.log('recorrido: ' + tamanoTrayectoRecorrido);
+                
+                
 
 
                 if (tamanoTrayectoNormal > tamanoTrayectoRecorrido) {
                     orden.porcentajeAvance = (tamanoTrayectoRecorrido / tamanoTrayectoNormal) * 100;
                     orden.porcentajeAvance = tamanoTrayectoRecorrido > 0 ? orden.porcentajeAvance : 0;
                 } else {
-                    // console.log(` El trayecto recorrido de esta órden ${orden.orden} es mayor que su trayecto normal`);
+                    
                     orden.porcentajeAvance = 0;
                 }
             }
             sumatoriaDePorcentajesDeOrden += orden.porcentajeAvance;
         }
         // Asignamos el porcentaje de la linea. 
-        // console.log('Sumatoria orden ' + sumatoriaDePorcentajesDeOrden);
-        // console.log('Total de órdenes ' + linea.ordenes.length);
+        
+        
 
 
         linea.porcentajeAvance = sumatoriaDePorcentajesDeOrden / linea.ordenes.length;
         sumatoriaDePorcentajeDeLinea += linea.porcentajeAvance;
-        // console.log('% linea' + linea.porcentajeAvance);
+        
     }
 
     folio.porcentajeAvance = sumatoriaDePorcentajeDeLinea / folio.folioLineas.length;
-    // console.log('Folio porcentaje: ' + folio.porcentajeAvance);
+    
 
 
 }

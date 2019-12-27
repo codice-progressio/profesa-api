@@ -11,8 +11,8 @@ module.exports = function(datos) {
 function agregarCurso(empleado, curso, datos) {
   existen(empleado, curso)
 
-  empleado.eventos.unshift(crearEvento(curso))
-
+  empleado.eventos.unshift(crearEvento(curso, datos.fecha))
+  console.log(empleado.eventos, empleado.eventos)
   if (!curso.asistencias) curso.asistencias = []
   curso.asistencias.unshift({
     empleado: empleado._id,
@@ -32,18 +32,18 @@ function guardarCambios(empleado, curso) {
   })
 }
 
-function crearEvento(curso) {
+function crearEvento(curso, fecha) {
   const evento = { curso: curso }
-  return crearHistorialDeEventos(evento)
+  return crearHistorialDeEventos(evento, fecha)
 }
 function existen(empleado, curso) {
   if (!empleado) throw "No existe el empleado"
   if (!curso) throw "No existe el curso"
 }
 
-function crearHistorialDeEventos(evento) {
+function crearHistorialDeEventos(evento, fecha) {
   return {
-    fechaDeRegistroDeEvento: new Date(),
+    fechaDeRegistroDeEvento: fecha,
     evento: evento
   }
 }

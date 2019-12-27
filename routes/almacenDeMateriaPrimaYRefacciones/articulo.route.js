@@ -19,6 +19,7 @@ CRUD.camposDeBusqueda = [
   "descripcion",
   "presentacion",
   "observaciones",
+  
 ]
 
 CRUD.camposActualizables = {

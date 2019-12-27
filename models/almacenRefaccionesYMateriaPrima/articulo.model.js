@@ -83,7 +83,25 @@ function autoPopulate(next) {
   next()
 }
 
-ArticuloSchema.pre('find', autoPopulate)
+function limpiarRequisicionesRelacionadas(next) {
+  //Buscamos todas las requisiciones que contengan
+  //este articulo y las eliminamos.
+  const Requisicion = mongoose.model("Requisicion")
+  Requisicion.find({ articulo: this._id })
+    .exec()
+    .then((requisiciones) => {
+      if (requisiciones.length === 0) return
 
+      const promesas = requisiciones.map((req) => req.remove())
+      return Promise.all(promesas)
+    })
+    .then(() => next())
+    .catch((err) => next(err))
+}
+
+ArticuloSchema.pre("find", autoPopulate).pre(
+  "remove",
+  limpiarRequisicionesRelacionadas
+)
 
 module.exports = mongoose.model("Articulo", ArticuloSchema)

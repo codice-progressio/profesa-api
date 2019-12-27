@@ -606,7 +606,7 @@ app.put("/evento/bono", (req, res) => {
 // =====================================
 // -->
 
-app.delete("/eliminar/:idEmpleado/:idEvento", (req, res) => {
+app.delete("/evento/:idEmpleado/:idEvento", (req, res) => {
   var datos = {
     _id: req.params.idEmpleado,
     _idEvento: req.params.idEvento

@@ -2,7 +2,7 @@ const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 
 const PerfilDePuestoSchema = new Schema({
-  conocimiento: [String],
+  conocimientos: [String],
   habilidades: [String],
   aptitudes: [String]
 })

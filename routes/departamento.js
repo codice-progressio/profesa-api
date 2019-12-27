@@ -12,6 +12,7 @@ CRUD.nombreDeObjetoPlural = 'departamentos';
 CRUD.campoSortDefault = 'nombre';
 CRUD.camposActualizables = {
     nombre: null,
+    area: null,
 };
 
 

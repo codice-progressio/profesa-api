@@ -22,8 +22,7 @@
         "https": "^1.0.0",
         "jsonwebtoken": "^8.5.1",
         "moment-duration-format": "^2.2.2",
-        "mongoose": "^5.5.1",
-        "mongoose-autopopulate": "^0.9.1",
+        "mongoose": "^5.7.11",
         "mongoose-sequence": "^5.0.1",
         "mongoose-unique-validator": "^2.0.2",
         "nodemon": "^1.18.11"

@@ -23,7 +23,7 @@ function crearEventoDeSueldoConComprobacion(d) {
       cambiosDeSueldo: {
         sueldAnteriorAlCambio: d.empleado.sueldoActual,
         aumento: d.datos.nuevoSueldo,
-        observacion: d.datos.observaciones
+        observacion: d.datos.observacion
       }
     }
   

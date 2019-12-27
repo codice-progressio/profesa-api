@@ -22,7 +22,7 @@ DepartamentoSchema.statics.obtener = function x(a) {
     // Buscamos alguna conincidencia itinerando los 
     // tres tipos de variable.
     a = a.toLowerCase();
-    console.log(`${colores.info('||DEBUG|| OBTENER DEPTO DESDE SCHEMA')} Este es departamento que se va a mostrar ${a}`)
+
     for (const x in DEPTOS) {
         if (DEPTOS.hasOwnProperty(x)) {
             const dat = DEPTOS[x];

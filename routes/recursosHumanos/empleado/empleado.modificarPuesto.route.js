@@ -42,36 +42,32 @@ function crearEventos(data) {
   empleado.puestoActual = puestoNuevo
 
   // Crear evento de cambioDeSueldo y hacer unshift
-  const evNuevoSueldo = crearEventoDeSueldo(
-    puestoAnterior.sueldoBase,
-    puestoNuevo.sueldoBase
-  )
-  empleado.eventos.unshift(evNuevoSueldo)
 
-  //Modificar sueldo actual
-  empleado.sueldoActual = evNuevoSueldo.evento.cambiosDeSueldo.aumento
+  if (puestoNuevo.sueldoBase > empleado.sueldoActual) {
+    // Solo se puede agregar un aumento de sueldo si
+    // el puestoNuevo.sueldoBase supera al sueldo actual
+    //
+    const evNuevoSueldo = crearEventoDeSueldo(
+      puestoAnterior.sueldoBase,
+      puestoNuevo.sueldoBase,
+      empleado.sueldoActual
+    )
+    empleado.eventos.unshift(evNuevoSueldo)
+    //Modificar sueldo actual
+    empleado.sueldoActual = evNuevoSueldo.evento.cambiosDeSueldo.aumento
+  }
 
   return empleado.save()
 }
 
 function crearEventoDeSueldo(anterior, nuevo) {
   var sueldoActual = nuevo
-  var observacion =
-    "Aumento registrado automaticamente por el sistema al detectar un cambio de puesto."
-
-  //Si el puesto tiene un salario menor
-  // al que tiene el empleado no se hace
-  //  de manera automatica el bajon.
-  if (anterior >= nuevo) {
-    sueldoActual = anterior
-    observacion =
-      "No se aplico automaticamente el aumento. El salario actual es menor o igual que el salario nuevo"
-  }
+  var observacion = `[ SISTEMA ] Aumento registrado automaticamente al detectar un cambio de puesto.`
 
   const evento = {
     cambiosDeSueldo: {
       sueldAnteriorAlCambio: anterior,
-      aumento: sueldoActual,
+      aumento: nuevo,
       observacion: observacion
     }
   }
@@ -116,4 +112,27 @@ function noExisteAlguno(emp, puN) {
   a.forEach(d => {
     if (d.existe) throw d.m
   })
+}
+
+function formatMoney(number, decPlaces, decSep, thouSep) {
+  ;(decPlaces = isNaN((decPlaces = Math.abs(decPlaces))) ? 2 : decPlaces),
+    (decSep = typeof decSep === "undefined" ? "." : decSep)
+  thouSep = typeof thouSep === "undefined" ? "," : thouSep
+  var sign = number < 0 ? "-" : ""
+  var i = String(
+    parseInt((number = Math.abs(Number(number) || 0).toFixed(decPlaces)))
+  )
+  var j = (j = i.length) > 3 ? j % 3 : 0
+
+  return (
+    sign +
+    (j ? i.substr(0, j) + thouSep : "") +
+    i.substr(j).replace(/(\decSep{3})(?=\decSep)/g, "$1" + thouSep) +
+    (decPlaces
+      ? decSep +
+        Math.abs(number - i)
+          .toFixed(decPlaces)
+          .slice(2)
+      : "")
+  )
 }

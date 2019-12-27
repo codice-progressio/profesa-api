@@ -18,8 +18,7 @@ const registrarAmonestacion = require("./empleado.registrarAmonestacion.route")
 const registrarBono = require("./empleado.registrarBono.route")
 const eliminarEvento = require("./empleado.eliminarEvento.route")
 
-const modificarEstatusLaboral = require("./empleado.modificarEstatusLaboral.route")
-  .modificarEstatusLaboral
+const estatusLaboral = require("./empleado.modificarEstatusLaboral.route")
 
 const CRUD = require("../../CRUD")
 CRUD.app = app
@@ -260,22 +259,85 @@ app.put("/evento/sueldo", (req, res) => {
 // =====================================
 // -->
 
-app.put("/evento/estatusLaboral", (req, res) => {
-  var datos = {
-    _id: req.body._id,
-    reingreso: req.body.reingreso,
-    baja: req.body.baja,
-    incapacidadEnfermedadGeneral: req.body.incapacidadEnfermedadGeneral,
-    incapacidadRiesgoDeTrabajo: req.body.incapacidadRiesgoDeTrabajo,
-    incapacidadMaternidad: req.body.incapacidadMaternidad,
-    observaciones: req.body.observaciones
-  }
-  modificarEstatusLaboral(datos)
+app.put("/evento/estatusLaboral/baja", (req, res) => {
+  var datos = req.body
+
+  estatusLaboral
+    .baja(datos)
     .then(empleado =>
-      estatusOk("Estatus laboral modificado", "empleado", empleado, res)
+      estatusOk("Se dio de baja al empleado", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error dando de baja el empleado", res, err))
+})
+
+app.put("/evento/estatusLaboral/reingreso", (req, res) => {
+  var datos = req.body
+
+  estatusLaboral
+    .reingreso(datos)
+    .then(empleado =>
+      estatusOk("Se reingreso al empleado", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error reingresando al empleado", res, err))
+})
+
+app.put("/evento/estatusLaboral/incapacidad/enfermedadGeneral", (req, res) => {
+  //Debe ser la estructura del estatusLaboral
+  var datos = req.body
+  estatusLaboral
+    .enfermedadGeneral(datos)
+    .then(empleado =>
+      estatusOk(
+        "Se agrego la incapacidad por enfermedad",
+        "empleado",
+        empleado,
+        res
+      )
     )
     .catch(err =>
-      error("Hubo un error modificando el estatus laboral", res, err)
+      error("Hubo un error registrando la incapacidad por enfermedad", res, err)
+    )
+})
+app.put("/evento/estatusLaboral/incapacidad/riesgoDeTrabajo", (req, res) => {
+  //Debe ser la estructura del estatusLaboral
+  var datos = req.body
+  estatusLaboral
+    .riesgoDeTrabajo(datos)
+    .then(empleado =>
+      estatusOk(
+        "Se agrego la incapacidad por riesgo de trabajo",
+        "empleado",
+        empleado,
+        res
+      )
+    )
+    .catch(err =>
+      error(
+        "Hubo un error registrando la incapacidad por riesgo de trabajo",
+        res,
+        err
+      )
+    )
+})
+app.put("/evento/estatusLaboral/incapacidad/maternidad", (req, res) => {
+  //Debe ser la estructura del estatusLaboral
+  var datos = req.body
+  estatusLaboral
+    .maternidad(datos)
+    .then(empleado =>
+      estatusOk(
+        "Se agrego la incapacidad por maternidad",
+        "empleado",
+        empleado,
+        res
+      )
+    )
+    .catch(err =>
+      error(
+        "Hubo un error registrando la incapacidad por maternidad",
+        res,
+        err
+      )
     )
 })
 

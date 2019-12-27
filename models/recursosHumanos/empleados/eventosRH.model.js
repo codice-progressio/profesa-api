@@ -84,6 +84,8 @@ var EventosRHSchema = new Schema(
       incapacidadMaternidad: Boolean,
       observaciones: String, 
 
+      fechaInicioIncapacidad: Date,
+      fechaFinalizacionIncapacidad: Date
 
     }
   },

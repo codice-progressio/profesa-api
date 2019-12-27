@@ -245,7 +245,6 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
                         resp[key] = req.body[key];
                     }
                 }
-                console.log(`estamos aqui`)
                 // Guardamos las modificaciones.
                 return resp.save();
             })
@@ -262,8 +261,6 @@ const put = function(modelo, app, nombreDeObjeto, objetoDeActualizacion) {
                 });
             });
     });
-
-    console.log(`nos brincamos todo`)
 };
 
 /**
@@ -376,7 +373,8 @@ module.exports = {
         this._nombreDeObjetoPlural = value;
     },
     _campoSortDefault: null,
-    get campoSortDefault() {
+    get campoSortDefault()
+    {
         return this._campoSortDefault;
     },
     /**
@@ -387,11 +385,13 @@ module.exports = {
        *
        @param value El campo para ordenar. 
        */
-    set campoSortDefault(value) {
+    set campoSortDefault(value)
+    {
         this._campoSortDefault = value;
     },
     _camposDeBusqueda: null,
-    get camposDeBusqueda() {
+    get camposDeBusqueda()
+    {
         return this._camposDeBusqueda;
     },
     /**

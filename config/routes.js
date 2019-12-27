@@ -1,6 +1,6 @@
 //importar rutas.
 let usuarioRoutes = require('../routes/usuario');
-let loginRoutes = require('../routes/login');
+let loginRoutes = require('../routes/login/login');
 let busquedaRoutes = require('../routes/busqueda');
 let uploadRoutes = require('../routes/upload');
 let imagenesRoutes = require('../routes/imagenes');

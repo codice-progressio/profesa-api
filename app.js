@@ -107,7 +107,7 @@ app.use(httpContext.middleware);
 app.use((req, res, next) => {
   // const espera = Math.random() * 2 * 5000
   // const espera = 0;
-//   console.log(`Esperando ${espera} ms`)
+
 //   setTimeout(function() {
   if (!ENVIROMENT.esModoProduccion)
   {
@@ -174,7 +174,7 @@ app.use(function(err, req, res) {
 // ============================================
 
 // function requireHTTPS(req, res, next) {
-//     console.log('Entro a este midleware')
+
 //         // The 'x-forwarded-proto' check is for Heroku
 // //     if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
 // //         return res.redirect('https://' + req.get('host') + req.url);
@@ -210,9 +210,4 @@ if (ENVIROMENT.esModoProduccion) {
       console.log(ENVIROMENT.msj_mongoose_ok)
       defaults()
     })
-  //     // Escuchar peticiones cuando estamos trabajando en modo desarollo.
-  // app.listen(ENVIROMENT.port, () => {
-  //     console.log(ENVIROMENT.msj_mongoose_ok);
-  //     defaults();
-  // });
 }

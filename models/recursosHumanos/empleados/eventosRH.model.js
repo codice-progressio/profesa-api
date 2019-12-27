@@ -13,9 +13,8 @@ var EventosRHSchema = new Schema(
       hasta: Date
     },
     cambiosDeSueldo: {
-      // Expresa lo que antes era: 1200
       sueldAnteriorAlCambio: Number,
-      //Expresa el total: 1200+600 = 1800
+      //El nuevo sueldo que se va a definir
       aumento: Number,
       observacion: String
     },
@@ -46,16 +45,20 @@ var EventosRHSchema = new Schema(
       sinGoceDeSueldo: Boolean,
       motivo: {
         porPaternidad: Boolean,
-        porDefunción: Boolean,
+        porDefuncion: Boolean,
         porMatrimonio: Boolean,
-        paraDesempeñarUnCargoDeElecciónPopular: Boolean,
+        paraDesempenarUnCargoDeEleccionPopular: Boolean,
+        citaMedica: Boolean,
         otro: String
       },
       fechaDeInicio: Date,
       fechaDeFinalizacion: Date,
       autorizacionSupervisor: Boolean,
       autorizacionRH: Boolean,
-      comentario: String
+      comentario: String,
+      rechazado: Boolean,
+      motivoRechazo: String,
+      fechaRechazo: Date
     },
 
     bono: {
@@ -63,7 +66,11 @@ var EventosRHSchema = new Schema(
       porPuntualidad: Number,
       porProductividad: Number,
       porResultados: Number,
-      ayudaEscolarEventual: Number
+      ayudaEscolarEventual: Number,
+      otros: {
+        cantidad: Number,
+        motivo: String
+      }
     },
 
     estatusLaboral: {
@@ -71,7 +78,15 @@ var EventosRHSchema = new Schema(
       alta: Boolean,
       baja: Boolean,
       reingreso: Boolean,
-      observaciones: String
+      
+      incapacidadEnfermedadGeneral: Boolean,
+      incapacidadRiesgoDeTrabajo: Boolean,
+      incapacidadMaternidad: Boolean,
+      observaciones: String, 
+
+      fechaInicioIncapacidad: Date,
+      fechaFinalizacionIncapacidad: Date
+
     }
   },
   { _id: false }

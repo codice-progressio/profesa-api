@@ -1,6 +1,6 @@
 //importar rutas.
 let usuarioRoutes = require('../routes/usuario');
-let loginRoutes = require('../routes/login');
+let loginRoutes = require('../routes/login/login');
 let busquedaRoutes = require('../routes/busqueda');
 let uploadRoutes = require('../routes/upload');
 let imagenesRoutes = require('../routes/imagenes');
@@ -46,8 +46,37 @@ var proveedorRoute = require('../routes/proveedores/proveedor.route');
 var DivisaRoute = require('../routes/divisa/divisa.route');
 var RequisicionRoute = require('../routes/requisiciones/requisisicion.route')
 
+const CursoRoute = require('../routes/recursosHumanos/cursos/curso.route')
+const AreaRoute = require('../routes/recursosHumanos/areas/area.route')
+const PuestoRoute = require('../routes/recursosHumanos/puestos/puesto.route')
+const EmpleadoRoute = require('../routes/recursosHumanos/empleado/empleado.route')
 
 module.exports.ROUTES = {
+
+    _EMPLEADO: {
+        url: '/empleado',
+        route: EmpleadoRoute,
+        roles: [],
+        subRoutes: {}
+    },
+    _PUESTO: {
+        url: '/puesto',
+        route: PuestoRoute,
+        roles: [],
+        subRoutes: {}
+    },
+    _AREA: {
+        url: '/area',
+        route: AreaRoute,
+        roles: [],
+        subRoutes: {}
+    },
+    _CURSO: {
+        url: '/curso',
+        route: CursoRoute,
+        roles: [],
+        subRoutes: {}
+    },
 
     _REQUISICION: {
         url: '/requisicion',

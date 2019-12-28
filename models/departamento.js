@@ -6,6 +6,10 @@ var colores = require('../utils/colors');
 
 var DepartamentoSchema = new Schema({
     nombre: { type: String, unique: true, required: [true, 'El nombre del departamento es necesario.'] },
+    area: {
+        type: Schema.Types.ObjectId,
+        ref: "AreaRH",
+    },
 });
 DepartamentoSchema.plugin(uniqueValidator, { message: 'El campo \'{PATH}\' debe ser único.' });
 
@@ -18,7 +22,7 @@ DepartamentoSchema.statics.obtener = function x(a) {
     // Buscamos alguna conincidencia itinerando los 
     // tres tipos de variable.
     a = a.toLowerCase();
-    console.log(`${colores.info('||DEBUG|| OBTENER DEPTO DESDE SCHEMA')} Este es departamento que se va a mostrar ${a}`)
+
     for (const x in DEPTOS) {
         if (DEPTOS.hasOwnProperty(x)) {
             const dat = DEPTOS[x];
@@ -29,6 +33,17 @@ DepartamentoSchema.statics.obtener = function x(a) {
     }
     return null;
 }
+
+function autoPopulate( next ){
+    this.populate('area')
+    next()
+}
+
+
+DepartamentoSchema
+    .pre('find', autoPopulate)
+    .pre('findById', autoPopulate)
+    .pre('findOne', autoPopulate)
 
 
 module.exports = mongoose.model('Departamento', DepartamentoSchema);

@@ -12,7 +12,6 @@ app.get('/:tipo/:img', (req, res, next) => {
 
     //__dirname Obtiene toda la ruta de donde nos encontramos actualmente.
     var pathImagen = path.resolve(__dirname, `../uploads/${tipo}/${img}`);
-
     // Si la imagen existe
     if (fs.existsSync(pathImagen)) {
         res.sendFile(pathImagen);

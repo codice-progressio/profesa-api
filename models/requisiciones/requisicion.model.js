@@ -166,7 +166,8 @@ function guardarArticulo_guardar(articulo, self) {
     requisicion: self
   })
 
-  articulo.existencia += cantidadARegistrar
+  articulo.existencia =
+    (articulo.existencia + cantidadARegistrar).toPrecision(3)
 
   return articulo.save()
 }
@@ -181,7 +182,7 @@ function obtenerDiferenciaEntreEstatus(requisicion) {
     var anterior = arrayHistorialDeEstatus[1].estatus.cantidadEntregadaALaFecha
     var nueva = requisicion.estatus.cantidadEntregadaALaFecha
 
-    diferencia = nueva - anterior
+    diferencia = (nueva - anterior).toPrecision(3)
   }
   // Si solo hay uno entoces la diferencia es igual al primer estatus.
   if (arrayHistorialDeEstatus.length < 2) {

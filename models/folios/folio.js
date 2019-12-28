@@ -410,8 +410,21 @@ function trayectoDeOrden(folio) {
                     folioPopulado.ordenesGeneradas = true;
                 }
             }
-            if (folioPopulado.trayectoGenerado) {
-                return folioPopulado.save();
+            if (folioPopulado.trayectoGenerado)
+            {
+                // Guardar con save nos estaba dando un error
+                // al intentar validar. Cambiamos por esta 
+                //estructura para saltarnos la validacion. 
+                // No se por que se generaba el error pero 
+                // al parecer tiene que ver con que modificamos el objeto
+                // de manera directa y perdio algunas propiedades.
+                const _id = folioPopulado._id
+                const objSinId = folioPopulado.toObject()
+                delete objSinId._id
+                return mongoose.models.Folio.updateOne(
+                  { _id },
+                  { $set: objSinId }
+                ).exec()
             }
             return;
         }).then(folioParaGrabar => {

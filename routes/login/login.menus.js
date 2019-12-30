@@ -315,7 +315,7 @@ function administrador() {
   const menu = {
     roles: [CONST.ROLES.ADMINISTRADOR_MENU],
     titulo: "Administrador",
-    icono: "fas fa-toolbox",
+    icono: "fas fa-user-cog",
     submenu: [
       {
         titulo: "Usuarios",

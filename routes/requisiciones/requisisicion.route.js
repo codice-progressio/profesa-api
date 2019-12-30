@@ -81,8 +81,9 @@ function obtenerRequisicion(id) {
 // -->
 function estatusEsRequisicion(requisicion, requisicionBody) {
   // Sumamos la cantidadRecivida a la fecha
-  requisicionBody.estatus.cantidadEntregadaALaFecha +=
-    requisicion.estatus.cantidadEntregadaALaFecha
+  requisicionBody.estatus.cantidadEntregadaALaFecha =
+  (requisicionBody.estatus.cantidadEntregadaALaFecha+
+    requisicion.estatus.cantidadEntregadaALaFecha).toPrecision(3)
 
   //Copiamos las facturas para  que no haga el cambio
   // ya que las facturas las guardamos directamente

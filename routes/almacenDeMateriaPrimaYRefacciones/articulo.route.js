@@ -79,7 +79,7 @@ function guardarEntrada(articulo, datos) {
 
   if (!articulo.entradas) articulo.entradas = []
   articulo.entradas.push(datos)
-  articulo.existencia += datos.cantidad
+  articulo.existencia = (articulo.existencia + datos.cantidad).toPrecision(3)
 }
 
 app.put("/salida/:id", (req, res) => {
@@ -108,7 +108,7 @@ function guardarSalida(articulo, datos) {
 
   if (!articulo.salidas) articulo.salidas = []
   articulo.salidas.push(datos)
-  articulo.existencia -= datos.cantidad
+  articulo.existencia = (articulo.existencia - datos.cantidad).toPrecision(3)
 }
 
 app.put("/stock/:id", (req, res) => {

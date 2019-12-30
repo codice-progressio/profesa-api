@@ -113,7 +113,7 @@ app.use((req, res, next) => {
   {
     console.log(
       `${new Date()}|` +
-        colores.success("PETICION RECIVIDA") +
+        colores.success("PETICION RECIBIDA") +
         colores.danger(req.method) +
         colores.info(req.originalUrl)
     )
@@ -136,10 +136,14 @@ app.use((req, res, next) => {
 // NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.
 app.use(
   // [_PERMISOS()],
-  (req, res, next) => {
-    console.log(
-      colores.success("SEGURIDAD") + colores.info(req.originalUrl) + "Validado."
-    )
+  (req, res, next) =>
+  {
+    if (!ENVIROMENT.esModoProduccion)
+    {
+      console.log(
+        colores.success("SEGURIDAD") + colores.info(req.originalUrl) + "Validado."
+      )
+    }
     next()
   }
 )

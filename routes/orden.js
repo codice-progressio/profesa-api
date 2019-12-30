@@ -44,7 +44,7 @@ function esDeptoActual(orden, depto) {
 // órdenes antes de empezar a trabajarlas. 
 // 
 // Se se pasa req.query.empezarATrabajar en true
-// la orden tiene dos pasos para ser recivida. El primero
+// la orden tiene dos pasos para ser recibida. El primero
 // es el paso normal de todos los deptos, el segundo es 
 // aplicable en casos que hay que asignar, por ejemplo en transformacion
 // una orden a una maquina antes de empezar a a trabajar.
@@ -89,7 +89,7 @@ app.put('/', (req, res) => {
         }
 
         if (orden.ubicacionActual.recivida) {
-            // Si la órden ya fue recivida entonces la señalamos que empieza a trabajar. 
+            // Si la órden ya fue recibida entonces la señalamos que empieza a trabajar. 
 
             if (empezarATrabajar) {
                 if (!deptoTrabajado) {
@@ -117,7 +117,7 @@ app.put('/', (req, res) => {
 
 
             return RESP._400(res, {
-                msj: 'Está órden ya fue recivida.',
+                msj: 'Está órden ya fue recibida.',
                 err: 'La órden ya esta trabajandose.',
             });
         }

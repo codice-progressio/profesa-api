@@ -113,7 +113,7 @@ app.use((req, res, next) => {
   {
     console.log(
       `${new Date()}|` +
-        colores.success("PETICION RECIVIDA") +
+        colores.success("PETICION RECIBIDA") +
         colores.danger(req.method) +
         colores.info(req.originalUrl)
     )

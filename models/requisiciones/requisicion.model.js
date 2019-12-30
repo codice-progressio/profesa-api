@@ -119,7 +119,7 @@ function hidePass(requisicion) {
   requisicion.usuario.role = []
   requisicion.usuario.password = ":D"
   if (requisicion.historialDeEstatus) {
-    requisicion.historialDeEstatus.forEach((y) => {
+    requisicion.historialDeEstatus.forEach(y => {
       y.usuarioQueModifica.password = ":D"
       y.usuarioQueModifica.role = []
     })
@@ -129,9 +129,8 @@ function hidePass(requisicion) {
 function abonarAlArticulo(next) {
   var a = this.isModified("estatus.cantidadEntregadaALaFecha")
   var b = obtenerDiferenciaEntreEstatus(this) > 0
- 
-  if (a && b)
-  {
+
+  if (a && b) {
     guardarArticulo(next, this)
     return
   } else {
@@ -144,9 +143,9 @@ function guardarArticulo(next, self) {
 
   ArticuloSchema.findById(self.articulo._id)
     .exec()
-    .then((articulo) => guardarArticulo_guardar(articulo, self))
+    .then(articulo => guardarArticulo_guardar(articulo, self))
     .then(() => next())
-    .catch((err) => next(err))
+    .catch(err => next(err))
 }
 
 function guardarArticulo_guardar(articulo, self) {
@@ -166,8 +165,10 @@ function guardarArticulo_guardar(articulo, self) {
     requisicion: self
   })
 
-  articulo.existencia =
-    (articulo.existencia + cantidadARegistrar).toPrecision(3)
+  articulo.existencia = (
+    articulo.existencia * 1 +
+    cantidadARegistrar * 1
+  ).toPrecision(3)
 
   return articulo.save()
 }
@@ -198,7 +199,7 @@ RequisicionSchema.pre("validate", cargarUsuarioActivo)
   .pre("findById", autoPopulate)
   .pre("save", abonarAlArticulo)
   .post("find", function(requisicion) {
-    requisicion.forEach((x) => hidePass(x))
+    requisicion.forEach(x => hidePass(x))
   })
   .post("findOne", hidePass)
   .post("findById", hidePass)

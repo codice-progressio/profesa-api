@@ -201,6 +201,7 @@ function lookupUsuarios(arreglo) {
         estatus: "$estatus",
         createdAt: "$createdAt",
         updateddAt: "$updateddAt",
+        observaciones: "$observaciones",
 
         razonDeCambioTemp: "$razonDeCambioTemp"
       },

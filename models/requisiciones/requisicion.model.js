@@ -37,7 +37,8 @@ var RequisicionSchema = new Schema(
     estatus: EstatusRequisicionsSchema,
     //Una copia del status con fecha.
     historialDeEstatus: [HistorialDeEstatusSchema],
-    razonDeCambioTemp: String
+    razonDeCambioTemp: String,
+    observaciones: String
   },
   { collection: "requisiciones", timestamps: true }
 )

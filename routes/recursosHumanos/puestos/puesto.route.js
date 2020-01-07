@@ -26,6 +26,9 @@ app.get("/", (req, res) => {
   const campo = String(req.query.campo || "puesto")
 
   Promise.all([
+    //Esta seccion de aqui aplica para todo los datos
+    // de manera que el total tiene que aplicar para
+    // contar todos los datos. 
     Puesto.countDocuments().exec(),
     Puesto.aggregate(
       [

@@ -40,7 +40,7 @@ app.get("/", async (req, res) => {
   const sort = Number(req.query.sort || 1)
   const campo = String(req.query.campo || "empleado")
 
-  const total = await Empleado.countDocuments().exec()
+  const total = await Empleado.countDocuments().exec()    
 
   Empleado.find()
     .sort({ [campo]: sort })
@@ -93,7 +93,7 @@ app.get("/buscar/:termino", async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
-  const campo = String(req.query.campo || "puesto")
+  const campo = String(req.query.campo || "idNomina")
   const termino = String(
     req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   )
@@ -137,6 +137,10 @@ app.get("/buscar/:termino", async (req, res) => {
   ])
     .exec()
     .then(empleados => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error. 
+      if( !total.length ) total.push({total:0})
+
       return RESP._200(res, null, [
         { tipo: "empleados", datos: empleados },
         { tipo: "total", datos: total.pop().total }

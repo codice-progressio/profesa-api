@@ -181,10 +181,17 @@ function almacenes() {
         roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
       },
       {
+        titulo: "Produccion - ES",
+        url: "/almacen/produccion/entradasYSalidas",
+        roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA_ENTRADA_Y_SALIDA]
+      },
+      {
         titulo: "Requisiciones",
         url: "/almacen/requisiciones",
         roles: [CONST.ROLES.ALMACEN_REQUISICION]
       }
+
+     
     ]
   }
   return menu

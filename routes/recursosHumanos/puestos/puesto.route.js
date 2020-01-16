@@ -26,6 +26,9 @@ app.get("/", (req, res) => {
   const campo = String(req.query.campo || "puesto")
 
   Promise.all([
+    //Esta seccion de aqui aplica para todo los datos
+    // de manera que el total tiene que aplicar para
+    // contar todos los datos. 
     Puesto.countDocuments().exec(),
     Puesto.aggregate(
       [
@@ -74,7 +77,7 @@ app.get("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el id del puesto"))
 })
 
-app.get("/buscar/:termino", (req, res) => {
+app.get("/buscar/:termino", async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -83,46 +86,40 @@ app.get("/buscar/:termino", (req, res) => {
     req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   )
 
-  console.log(`req.query`, req.query)
-  console.log(`estamos en buscar termino`, campo, sort)
-  console.log(`'puesto'`, "puesto")
+  const $match = {
+    $or: [
+      {
+        puesto: { $regex: termino, $options: "i" }
+      },
+      {
+        misionDelPuesto: { $regex: termino, $options: "i" }
+      }
+    ]
+  }
 
-  Promise.all([
-    Puesto.countDocuments().exec(),
-    Puesto.aggregate(
-      [
-        {
-          $match: {
-            //Buscamos textualmente dentro de la mision del puesto
-            // y el nombre del puesto
-            $or: [
-              {
-                puesto: { $regex: termino, $options: "i" }
-              },
-              {
-                misionDelPuesto: { $regex: termino, $options: "i" }
-              }
-            ]
-          }
-        },
-        { $sort: { [campo]: sort } },
-        //Desde aqui limitamos unicamente lo que queremos ver
-        { $limit: desde + limite },
-        { $skip: desde }
-      ]
-        //Hacemos lo que tenemos que hacer.
-        .concat(populacionManual())
-        //Ordenamos de nuevo por que perdemos el orden con los
-        //stages anteriores.
-        .concat([{ $sort: { [campo]: sort } }])
-    ).exec()
-  ])
-    .then(respuesta => {
-      const total = respuesta[0]
-      const puestos = respuesta[1]
+  const total = await Puesto.aggregate([{ $match }, { $count: "total" }]).exec()
+  Puesto.aggregate(
+    [
+      { $match },
+      { $sort: { [campo]: sort } },
+      //Desde aqui limitamos unicamente lo que queremos ver
+      { $limit: desde + limite },
+      { $skip: desde }
+    ]
+      //Hacemos lo que tenemos que hacer.
+      .concat(populacionManual())
+      //Ordenamos de nuevo por que perdemos el orden con los
+      //stages anteriores.
+      .concat([{ $sort: { [campo]: sort } }])
+  )
+    .exec()
+    .then(puestos =>
+    {
+      
+      
       return RESP._200(res, null, [
         { tipo: "puestos", datos: puestos },
-        { tipo: "total", datos: total }
+        { tipo: "total", datos: total.pop().total }
       ])
     })
     .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
@@ -140,7 +137,6 @@ app.get("/buscar/:termino", (req, res) => {
  * @param {*} body El body stringifiado. 
  * @returns
  */
-
 
 app.post("/", (req, res) => {
   const puesto = new Puesto(parsearBody(req.body))

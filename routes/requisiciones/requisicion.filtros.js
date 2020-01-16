@@ -201,7 +201,7 @@ function lookupUsuarios(arreglo) {
         estatus: "$estatus",
         createdAt: "$createdAt",
         updateddAt: "$updateddAt",
-
+        observaciones: "$observaciones",
         razonDeCambioTemp: "$razonDeCambioTemp"
       },
       historialDeEstatusGrupo: {
@@ -223,6 +223,7 @@ function lookupUsuarios(arreglo) {
       estatus: "$_id.estatus",
       historialDeEstatus: "$historialDeEstatusGrupo",
       razonDeCambioTemp: "$_id.razonDeCambioTemp",
+      observaciones: "$_id.observaciones",
       createdAt: "$_id.createdAt",
       updateddAt: "$_id.updateddAt"
     }

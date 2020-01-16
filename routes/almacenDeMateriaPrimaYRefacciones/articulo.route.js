@@ -79,7 +79,7 @@ function guardarEntrada(articulo, datos) {
 
   if (!articulo.entradas) articulo.entradas = []
   articulo.entradas.push(datos)
-  articulo.existencia = (articulo.existencia + datos.cantidad).toPrecision(3)
+  articulo.existencia = (articulo.existencia + (datos.cantidad*1)).toPrecision(3)
 }
 
 app.put("/salida/:id", (req, res) => {

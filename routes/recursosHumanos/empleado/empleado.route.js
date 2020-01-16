@@ -20,64 +20,155 @@ const eliminarEvento = require("./empleado.eliminarEvento.route")
 
 const estatusLaboral = require("./empleado.modificarEstatusLaboral.route")
 
-const CRUD = require("../../CRUD")
-CRUD.app = app
-CRUD.modelo = Empleado
-CRUD.nombreDeObjetoSingular = "empleado"
-CRUD.nombreDeObjetoPlural = "empleados"
-CRUD.campoSortDefault = "idNomina"
-CRUD.camposActualizables = {
-  idChecador: null,
-  idNomina: null,
-  nombres: null,
-  apellidos: null,
-  fechaDeNacimiento: null,
-  sexo: null,
-  curp: null,
-  rfc: null,
-  numeroDeCuenta: null,
-  numeroDeSeguridadSocial: null,
-  fotografia: null,
-  //   sueldoActual: null,
-  //   puestoActual: null,
-  //Relacionado a eventosRH. estatusLaboral.
-  activo: null,
-  //El puesto esta dentro de los eventos.
-  documentos: null
-}
-
-CRUD.camposDeBusqueda = [
-  "idChecador",
-  "idNomina",
-  "nombres",
-  "apellidos",
-  "curp",
-  "rfc",
-  "numeroDeCuenta",
-  "númeroDeSeguridadSocial",
-  "email",
-  "celular",
-  "telCasa",
-  "telEmergencia",
-  "nivelDeEstudios",
-  "domicilio"
-]
-
-CRUD.crud()
-
-// TODO: Actualizar sueldo al aumentar/
-// TODO: Actualizar el estatus cuando se desencadene un estatusLaboral.
-
 const pathFolderEmpleados = `./uploads/empleados`
+
+const erro = (res, err, msj) => {
+  return RESP._500(res, {
+    msj: msj,
+    err: err
+  })
+}
 
 // <!--
 // =====================================
-//  Modificar puesto
+//  Todo
+// =====================================
+// -->
+app.get("/", async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "empleado")
+
+  const total = await Empleado.countDocuments().exec()    
+
+  Empleado.find()
+    .sort({ [campo]: sort })
+    .limit(limite)
+    .skip(desde)
+    .exec()
+    .then(empleados => {
+      return RESP._200(res, null, [
+        { tipo: "empleados", datos: empleados },
+        { tipo: "total", datos: total }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
+})
+
+// <!--
+// =====================================
+//  END Todo
+// =====================================
+// -->
+
+// <!--
+// =====================================
+//  Id
+// =====================================
+// -->
+app.get("/:id", (req, res) => {
+  Empleado.findById(req.params.id)
+    .exec()
+    .then(empleado => {
+      if (!empleado) throw "No existe el id"
+
+      return RESP._200(res, null, [{ tipo: "empleado", datos: empleado }])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
+})
+
+// <!--
+// =====================================
+//  END Id
+// =====================================
+// -->
+
+// <!--
+// =====================================
+//  termino
+// =====================================
+// -->
+app.get("/buscar/:termino", async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "idNomina")
+  const termino = String(
+    req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const b = campo => ({
+    [campo]: { $regex: termino, $options: "i" }
+  })
+
+  const $match = {
+    $or: []
+  }
+
+  ;[
+    "idChecador",
+    "idNomina",
+    "nombres",
+    "apellidos",
+    "curp",
+    "rfc",
+    "numeroDeCuenta",
+    "númeroDeSeguridadSocial",
+    "email",
+    "celular",
+    "telCasa",
+    "telEmergencia",
+    "nivelDeEstudios",
+    "domicilio"
+  ].forEach(x => $match.$or.push(b(x)))
+
+  const total = await Empleado.aggregate([
+    { $match },
+    { $count: "total" }
+  ]).exec()
+
+  Empleado.aggregate([
+    { $match },
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } }
+  ])
+    .exec()
+    .then(empleados => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error. 
+      if( !total.length ) total.push({total:0})
+
+      return RESP._200(res, null, [
+        { tipo: "empleados", datos: empleados },
+        { tipo: "total", datos: total.pop().total }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los empleados"))
+})
+
+// <!--
+// =====================================
+//  END termino
+// =====================================
+// -->
+
+// <!--
+// =====================================
+//  Crear y Modificar puesto
+// =====================================
+// -->
+
+// <!--
+// =====================================
+//  Guardar y modificar
 // =====================================
 // -->
 
 app.use(fileUpload())
-app.post("/guardarConFoto", (req, res) => {
+app.post("/", (req, res) => {
   var empleado = parsearBody(req.body)
   var foto = req.files ? req.files.fotografia : null
 
@@ -204,6 +295,36 @@ function guardarImagen(foto, id, nombreAnterior = "XXXXXXXXXX") {
 
   return `${id}.${ext}`
 }
+// <!--
+// =====================================
+//  END Guardar y modificar
+// =====================================
+// -->
+
+// <!--
+// =====================================
+//  Eliminar
+// =====================================
+// -->
+
+app.delete("/:id", (req, res) => {
+  Empleado.findById(req.params.id)
+    .exec()
+    .then(empleado => {
+      if (!empleado) throw "No existe el id"
+      return empleado.remove()
+    })
+    .then(emp => {
+      return RESP._200(res, null, [{ tipo: "empleado", datos: emp }])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando al empleado"))
+})
+
+// <!--
+// =====================================
+//  END Eliminar
+// =====================================
+// -->
 
 app.put("/evento/puesto", (req, res) => {
   //Cambio de puesto
@@ -222,7 +343,7 @@ app.put("/evento/puesto", (req, res) => {
 
 // <!--
 // =====================================
-//  END Modificar puesto
+//  END Crear y Modificar puesto
 // =====================================
 // -->
 
@@ -333,11 +454,7 @@ app.put("/evento/estatusLaboral/incapacidad/maternidad", (req, res) => {
       )
     )
     .catch(err =>
-      error(
-        "Hubo un error registrando la incapacidad por maternidad",
-        res,
-        err
-      )
+      error("Hubo un error registrando la incapacidad por maternidad", res, err)
     )
 })
 

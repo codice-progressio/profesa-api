@@ -157,6 +157,11 @@ function reportes() {
         titulo: "Quimica",
         url: "/reportes/quimica",
         roles: [CONST.ROLES.REPORTES_QUIMICA]
+      },
+      {
+        titulo: "Faltante producto terminado",
+        url: "/reportes/productoTerminado/faltantes",
+        roles: []
       }
     ]
   }

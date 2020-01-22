@@ -43,17 +43,6 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/lotePrueba", (req, res) => {
-  console.log(`req.body`, req.body)
-  ModeloCompleto.guardarLote(req.body._id, req.body.lote)
-
-    .then(mod => {
-      return RESP._200(res, "ya paso", [{ tipo: "mod", datos: mod.lotes }])
-    })
-
-    .catch(err => erro(res, err, "lote prueba fail!!! :/"))
-})
-
 /**
  * Consolidamos los lotes de los modelos completos de manera manual.l
  * Esta operacion recalcula los lotes existentes en base al mes y anio de
@@ -79,7 +68,7 @@ app.get("/consolidar/:idModelo", (req, res) => {
         // del lote y tiene la siguientee estructura 2020@01 que representa
         // anio y mes. No afecta demasiado pero si pasan varios anios
         // se puede confundir un lote de 2019-01 con 2020-01 si no se toma
-        // en cuenta la fecha. 
+        // en cuenta la fecha.
         const mesLote = fl.getFullYear() + "@" + fl.getMonth()
 
         if (!lotesOrganizados.hasOwnProperty(mesLote))
@@ -88,11 +77,11 @@ app.get("/consolidar/:idModelo", (req, res) => {
         lotesOrganizados[mesLote].push(lote)
       })
 
-      //Almacenamos la estructura final de los lotes. 
+      //Almacenamos la estructura final de los lotes.
       const lotesFinales = []
 
-      //Recorremos todos los lotes semi-ordenados para 
-      //obtener los nuevos calculos. 
+      //Recorremos todos los lotes semi-ordenados para
+      //obtener los nuevos calculos.
       for (const key in lotesOrganizados) {
         if (lotesOrganizados.hasOwnProperty(key)) {
           const lotes = lotesOrganizados[key]
@@ -108,9 +97,8 @@ app.get("/consolidar/:idModelo", (req, res) => {
             createAt: null
           }
 
-          lotes.forEach(lote =>
-          {
-            //Reciclamos la operacion de reduccion. 
+          lotes.forEach(lote => {
+            //Reciclamos la operacion de reduccion.
             const reduce = (a, b) => +a + +b.cantidad
             //Sumamos todas las salidas y las entradas
             const salidas = lote.salidas.reduce(reduce, 0)
@@ -118,18 +106,18 @@ app.get("/consolidar/:idModelo", (req, res) => {
             //Calculamos de nuevo la existencia para el nuevo lote
             lnew.existencia += entradas - salidas
 
-            //Guardamos la cantidad de entrada que se registraron 
+            //Guardamos la cantidad de entrada que se registraron
             lnew.cantidadEntrada += entradas
 
             //Concatenamos los arreglos de cada lote sin arreglar
-            // para que queden dentro del nuevo grupo. 
+            // para que queden dentro del nuevo grupo.
             lnew.salidas = lnew.salidas.concat(lote.salidas)
             lnew.entradas = lnew.entradas.concat(lote.entradas)
             lnew.devoluciones = lnew.devoluciones.concat(lote.devoluciones)
           })
           const loteParaDatos = lotes.pop()
-          //Copiamos la fecha del primer lote del grupo. 
-          //Funciona por que los lotes ya estaban ordenados. 
+          //Copiamos la fecha del primer lote del grupo.
+          //Funciona por que los lotes ya estaban ordenados.
           lnew.createAt = loteParaDatos.createAt
           lnew.observaciones = loteParaDatos.observaciones
           lnew.validandoDevolucion = loteParaDatos.validandoDevolucion
@@ -137,14 +125,18 @@ app.get("/consolidar/:idModelo", (req, res) => {
           lotesFinales.push(lnew)
         }
       }
-      //Asignamos los lotes. 
+      //Asignamos los lotes.
       mod.lotes = lotesFinales
-      //Sumanos la existencia de cada lote nuevo. 
+      //Sumanos la existencia de cada lote nuevo.
       mod.existencia = mod.lotes.reduce((a, b) => +a + +b.existencia, 0)
       return mod.save()
     })
     .then(mod => {
-      return RESP._200(res, "lotes", [{ tipo: "mod", datos: mod }])
+      return RESP._200(
+        res,
+        "Se consolidaron los lotes del modelo de manera correcta",
+        [{ tipo: "modeloCompleto", datos: mod }]
+      )
     })
     .catch(err => erro(res, err, "Error consolidando"))
 })

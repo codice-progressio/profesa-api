@@ -1,19 +1,49 @@
 const CONST = require("../../utils/constantes")
 
 module.exports = function(rolesDelUsuario) {
-  const MENUS = generarMenus()
+  var menuSeleccionado = generarMenus()
 
-  agregarAdministradores(MENUS)
+  if (!rolesDelUsuario.includes("SUPER_ADMIN")) {
+    menuSeleccionado = generarMenuSegunRoles(rolesDelUsuario, menuSeleccionado)
+  }
 
-  const menuSeleccionado = generarMenuSegunRoles(rolesDelUsuario, MENUS)
   //Obtenemos solo los valores
   var menu = Object.values(menuSeleccionado)
+  menu.sort((a, b) => (a.titulo > b.titulo ? 1 : -1))
+  //Agregmos el dashboar
+  menu.unshift(principal())
+  menu.forEach(m => m.submenu.sort((a, b) => (a.titulo > b.titulo ? 1 : -1)))
   return menu
+}
+
+function generarMenuSegunRoles(rolesDelUsuario, OBJETO_MENUS) {
+  //ES NECESARIO QUE LOS PERMISOS INCLUYAN EL TEXTO MENU!!!
+  const menusSeleccionados = {}
+
+  rolesDelUsuario
+    .filter(rol => rol.includes("MENU"))
+    .forEach(rol => {
+      for (const key in OBJETO_MENUS) {
+        const menuCompleto = OBJETO_MENUS[key]
+        if (menuCompleto.roles.includes(rol))
+          menusSeleccionados[key] = menuCompleto
+      }
+    })
+
+  for (const key in menusSeleccionados) {
+    const menu = menusSeleccionados[key]
+    menu.submenu = menu.submenu.filter(submenu => {
+      return submenu.roles.every(rolActual =>
+        rolesDelUsuario.includes(rolActual)
+      )
+    })
+  }
+
+  return menusSeleccionados
 }
 
 function generarMenus() {
   return {
-    PRINCIPAL: principal(),
     REPORTES: reportes(),
     ALMACENES: almacenes(),
     CONTROL_DE_PRODUCCION: controlDeProduccion(),
@@ -26,105 +56,17 @@ function generarMenus() {
   }
 }
 
-function agregarAdministradores(MENUS) {
-  // Agregamos los administradordes.
-  for (const menu in MENUS) {
-    if (MENUS.hasOwnProperty(menu)) {
-      const element = MENUS[menu]
-      if (menu !== "SUPER_ADMIN" && menu !== "PRINCIPAL") {
-        element.roles.push(CONST.ROLES.ADMIN_ROLE)
-        element.roles.push(CONST.ROLES.SUPER_ADMIN)
-
-        element.submenu.forEach((submenu) => {
-          submenu.roles.push(CONST.ROLES.ADMIN_ROLE)
-          submenu.roles.push(CONST.ROLES.SUPER_ADMIN)
-        })
-      }
-
-      // Ordenamos alfabeticamente los menus.
-      element.submenu.sort(function compare(a, b) {
-        if (a.titulo < b.titulo) return -1
-        if (a.titulo > b.titulo) return 1
-        return 0
-      })
-    }
-  }
-}
-
-function generarMenuSegunRoles(rolesDelUsuario, MENUS) {
-  const menuSeleccionado = {}
-  // Recorremos los roles.
-  for (let i = 0; i < rolesDelUsuario.length; i++) {
-    // Obtenemos el nombre del rol.
-    const rol = rolesDelUsuario[i]
-    generarMenuSegunRoles_recorrido(
-      MENUS,
-      menuSeleccionado,
-      rol,
-      rolesDelUsuario
-    )
-  }
-  return menuSeleccionado
-}
-
-function generarMenuSegunRoles_recorrido(
-  MENUS,
-  menuSeleccionado,
-  rol,
-  rolesDelUsuario
-) {
-  // Recorremos el menu.
-  for (const menu in MENUS) {
-    if (MENUS.hasOwnProperty(menu)) {
-      const objetoMenu = MENUS[menu]
-      // el objetoMenu contiene el rol
-      // que estamos enlistando lo agreegamos
-      // a menu seleccionamos y lo borramos de Menus
-      // para no repetir los menus.
-      if (objetoMenu.roles.includes(rol)) {
-        menuSeleccionado[menu] = objetoMenu
-        // Comprobamos que el menuSeleccionado[menu]
-        // contenga tambien los permisos necesarios, si no
-        // lo eliminamos.
-        generarMenuSegunRoles_recorrido_contieneLosPermisos(
-          menuSeleccionado[menu],
-          rolesDelUsuario
-        )
-
-        // Lo borramos para que el menú no se repita.
-        delete MENUS[menu]
-      }
-    }
-  }
-}
-
-function generarMenuSegunRoles_recorrido_contieneLosPermisos(
-  menuSeleccionado,
-  rolesDelUsuario
-) {
-  menuSeleccionado.submenu = menuSeleccionado.submenu.filter((submenu) => {
-    for (let i = 0; i < submenu.roles.length; i++) {
-      const rolSubmenu = submenu.roles[i].toString()
-      if (rolesDelUsuario.includes(rolSubmenu)) {
-        return true
-      }
-    }
-
-    return false
-  })
-}
-
 function principal() {
   const menu = {
     // TODO MUNDO DEBE DE TENER ESTO.
-    roles: CONST.ROLES.ARRAY,
-    titulo: "Principal",
+    roles: [],
+    titulo: "Avisos",
     icono: "fas fa-comments",
     submenu: [
       {
         titulo: "Dashboard",
         url: "/dashboard",
-        roles: CONST.ROLES.ARRAY
+        roles: []
       }
     ]
   }
@@ -133,14 +75,14 @@ function principal() {
 
 function reportes() {
   const menu = {
-    roles: [CONST.ROLES.REPORTES_MENUS],
+    roles: [CONST.ROLES.REPORTES_MENU],
     titulo: "Reportes",
     icono: "fas fa-chart-pie",
     submenu: [
       {
         titulo: "Faltante producto terminado",
         url: "/reportes/productoTerminado/faltantes",
-        roles: []
+        roles: [CONST.ROLES.REPORTES_PRODUCTO_TERMINADO_FALTANTES]
       }
     ]
   }
@@ -174,8 +116,6 @@ function almacenes() {
         url: "/almacen/requisiciones",
         roles: [CONST.ROLES.ALMACEN_REQUISICION]
       }
-
-     
     ]
   }
   return menu

@@ -223,14 +223,14 @@ function ventas() {
 
 function compras() {
   const menu = {
-    roles: [CONST.ROLES.VENTAS_MENU],
+    roles: [CONST.ROLES.COMPRAS_MENU],
     titulo: "Compras",
     icono: "fas fa-shopping-bag",
     submenu: [
       {
         titulo: "Proveedores",
         url: "/proveedores",
-        roles: [CONST.ROLES.VENTAS_MIS_FOLIOS]
+        roles: [CONST.ROLES.COMPRAS_PROVEEDORES]
       },
       {
         titulo: "Divisas",

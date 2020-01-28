@@ -277,8 +277,8 @@ modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
     return n
 }
 
-modeloCompletoSchema.statics.guardarLote = function(idModeloCompleto, lote) {
-    return this.findOne({ _id: idModeloCompleto })
+modeloCompletoSchema.statics.guardarLote = function(id, lote) {
+    return this.findById( id )
         .exec()
         .then((modeloCompleto) => {
             if (!modeloCompleto) throw "No existe el modelo"

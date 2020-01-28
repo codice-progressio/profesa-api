@@ -137,26 +137,10 @@ function reportes() {
     titulo: "Reportes",
     icono: "fas fa-chart-pie",
     submenu: [
-      // { titulo: 'Historial de folios', url: '/folios/historial', roles: [] },
       {
-        titulo: "Historial de folios",
-        url: "/folios/historial",
-        roles: [CONST.ROLES.REPORTES_HISTORIAL_DE_FOLIOS]
-      },
-      {
-        titulo: "Laser",
-        url: "/reportes/laser",
-        roles: [CONST.ROLES.REPORTES_LASER]
-      },
-      {
-        titulo: "Tranformacion",
-        url: "/reportes/transformacion",
-        roles: [CONST.ROLES.REPORTES_TRANSFORMACION]
-      },
-      {
-        titulo: "Quimica",
-        url: "/reportes/quimica",
-        roles: [CONST.ROLES.REPORTES_QUIMICA]
+        titulo: "Faltante producto terminado",
+        url: "/reportes/productoTerminado/faltantes",
+        roles: []
       }
     ]
   }

@@ -88,10 +88,10 @@ app.put('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_
 
     var id = req.params.id;
     var body = req.body;
-    console.log('Entramos por aaca');
-
+    
+    //Eliminamos todos los roles que no existen.
+    body.role = body.role.filter(rol=> CONST.ROLES.ARRAY.includes(rol))
     Usuario.findById(id).exec().then(u => {
-        console.log('siguio');
         if (!u) {
             return RESP._400(res, {
                 msj: 'El usuario no existe. ',
@@ -129,7 +129,7 @@ app.put('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_
 // Crear un nuevo usuario. 
 // ============================================
 app.post('/', (req, res) => {
-    console.log('eSTAMOS AQUI');
+   
 
     var body = req.body;
 

@@ -96,7 +96,9 @@ module.exports = () => {
 };
 
 
-function crearSuperAdmin(adminExistente) {
+function crearSuperAdmin(adminExistente)
+{
+    
     if (!adminExistente) {
         console.log(D + colores.warning('SUPER-ADMIN') + "No existe el usuario super admin. Se creará.");
         const nuevoAdmin = new Usuario();
@@ -105,9 +107,11 @@ function crearSuperAdmin(adminExistente) {
         nuevoAdmin.password = USUARIO_SUPER_ADMIN.password;
         nuevoAdmin.role = USUARIO_SUPER_ADMIN.role;
         return nuevoAdmin.save();
-    } else {
-        return adminExistente;
-    }
+    } 
+        
+    adminExistente.role = CONSTANTES.ROLES.ARRAY
+    return adminExistente.save();
+    
 }
 
 function comprobarDepartamentos(deptoBuscado, nombreVar) {

@@ -75,7 +75,6 @@ app.use(function(req, res, next) {
 
 //  Body parser
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }))
 app.use(bodyParser.json({limit: '50mb'}));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {

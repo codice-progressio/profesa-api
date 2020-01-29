@@ -1,15 +1,10 @@
 var express = require("express")
 var app = express()
 var RESP = require("../../utils/respStatus")
-var Folio = require("../../models/folios/folio")
-var Default = require("../../models/configModels/default")
-var colores = require("../../utils/colors")
-var ModeloCompleto = require("../../models/modeloCompleto")
 
 var RepoFalProdTer = require("./reporte.faltanteProductoTerminado")
-
+var RepoFalAlmaProd = require("./reporte.faltanteAlmacenProduccion")
 const mongoose = require("mongoose")
-const ObjectId = mongoose.Types.ObjectId
 
 // <!--
 // =====================================
@@ -68,6 +63,57 @@ app.get("/productoTerminado/faltantes", (req, res) => {
         res,
         err,
         "Hubo un error generan el reporte de faltantes de producto terminado"
+      )
+    )
+})
+app.get("/almacenDeProduccion/faltantes", (req, res) => {
+  var datosReporte = null
+  // Genera los reportes faltanes.
+  RepoFalAlmaProd.aggregate()
+    .exec()
+    .then(datos => {
+      //Calculamos los consumos.
+      const calculoDeDias = dias => dias * 24 * 60 * 60 * 1000
+      const dias = {
+        _7: new Date(new Date().getTime() - calculoDeDias(7)),
+        _30: new Date(new Date().getTime() - calculoDeDias(30)),
+        _365: new Date(new Date().getTime() - calculoDeDias(365))
+      }
+
+      for (const key in dias) {
+        const fecha = dias[key]
+        datos.forEach(articulo => {
+          articulo[key] = articulo.salidas.filter(
+            salida => salida.fecha > fecha
+          )
+        })
+      }
+
+      datosReporte = datos
+
+      return RepoFalAlmaProd.requisicionesPendientes(
+        datosReporte.map(x => x._id)
+      )
+    })
+    .then(requisiciones => {
+      // Unimos las requisiciones encontradas con sus respectivos
+      // match de articulos
+      datosReporte.forEach(dato => {
+        dato["requisicionesPendientes"] = requisiciones.filter(r => {
+          return r.articulo + "" == dato._id + ""
+        })
+        delete dato.salidas
+      })
+
+      return RESP._200(res, "datos hasta el momento", [
+        { tipo: "datosReporte", datos: datosReporte }
+      ])
+    })
+    .catch(err =>
+      erro(
+        res,
+        err,
+        "Hubo un error generan el reporte de faltantes del almacen de produccion"
       )
     )
 })

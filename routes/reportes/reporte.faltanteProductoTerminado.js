@@ -13,7 +13,7 @@ module.exports.aggregate = function() {
           { stockMinimo: { $gt: 0 } },
           // La existencia debe ser menor que el stock
           // minimo
-          { $expr: { $lt: ["$existencia", "$stockMinimo"] } }
+          { $expr: { $lte: ["$existencia", "$stockMinimo"] } }
         ]
       }
     },

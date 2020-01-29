@@ -123,7 +123,7 @@ function almacenes() {
 
 function controlDeProduccion() {
   const menu = {
-    roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_MENUS],
+    roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_MENU],
     titulo: "Control de Producción",
     icono: "fas fa-project-diagram",
     submenu: [

@@ -83,6 +83,11 @@ function reportes() {
         titulo: "Faltante producto terminado",
         url: "/reportes/productoTerminado/faltantes",
         roles: [CONST.ROLES.REPORTES_PRODUCTO_TERMINADO_FALTANTES]
+      },
+      {
+        titulo: "Faltantes almacen de produccion",
+        url: "/reportes/almacenDeProduccion/faltantes",
+        roles: [CONST.ROLES.REPORTES_ALMACEN_PRODUCCION_FALTANTES]
       }
     ]
   }

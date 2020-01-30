@@ -72,4 +72,48 @@ app.get("/productoTerminado/faltantes", (req, res) => {
     )
 })
 
+      for (const key in dias) {
+        const fecha = dias[key]
+        datos.forEach(articulo => {
+          articulo[key] = articulo.salidas.filter(
+            salida => salida.fecha > fecha
+          )
+        })
+      }
+
+      datosReporte = datos
+
+      return RepoFalAlmaProd.requisicionesPendientes(
+        datosReporte.map(x => x._id)
+      )
+    })
+    .then(requisiciones => {
+      // Unimos las requisiciones encontradas con sus respectivos
+      // match de articulos
+      datosReporte.forEach(dato => {
+        dato["requisicionesPendientes"] = requisiciones.filter(r => {
+          return r.articulo + "" == dato._id + ""
+        })
+
+        dato["enCamino"] = dato.requisicionesPendientes.reduce((a, b) => {
+          return a + (b.cantidad - b.cantidadEntregadaALaFecha)
+        }, 0)
+
+        delete dato.salidas
+      })
+
+      return RESP._200(res, "datos hasta el momento", [
+        // { tipo: "reporte", datos: datos }
+        { tipo: "reporte", datos: datosReporte }
+      ])
+    })
+    .catch(err =>
+      erro(
+        res,
+        err,
+        "Hubo un error generan el reporte de faltantes del almacen de produccion"
+      )
+    )
+})
+
 module.exports = app

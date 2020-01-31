@@ -3,7 +3,12 @@ var app = express()
 var RESP = require("../../utils/respStatus")
 
 var RepoFalProdTer = require("./reporte.faltanteProductoTerminado")
+var RepoPersProdTerm = require("./reporte.personalizadoAlmacenProduccion")
 var RepoFalAlmaProd = require("./reporte.faltanteAlmacenProduccion")
+
+var RepoPers = require("../../models/almacenRefaccionesYMateriaPrima/reportePersonalizadoAlmacenProduccion.model")
+
+var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.model")
 
 const mongoose = require("mongoose")
 
@@ -68,7 +73,6 @@ app.get("/productoTerminado/faltantes", (req, res) => {
     )
 })
 
-
 app.get("/almacenDeProduccion/faltantes", (req, res) => {
   var datosReporte = null
   // Genera los reportes faltanes.
@@ -126,5 +130,56 @@ app.get("/almacenDeProduccion/faltantes", (req, res) => {
       )
     )
 })
+
+app.get("/almacenDeProduccion/personalizado/:id", (req, res) => {
+  var articulosRepo = null
+
+  RepoPers.findById(req.params.id)
+    .exec()
+    .then(reporte => {
+      if (!reporte) throw "No existe el reporte"
+
+      return Articulo.find({ _id: { $in: reporte.articulos } })
+        .lean()
+        .exec()
+    })
+    .then(articulos => {
+      articulosRepo = articulos
+      return RepoFalAlmaProd.requisicionesPendientes(articulos.map(x => x._id))
+    })
+    .then(requisiciones => {
+      articulosRepo.map(articulo => {
+        articulo["enTransito"] = requisiciones.filter(
+          req => req.articulo + "" === articulo._id + ""
+        )
+      })
+      articulosRepo = agregarCalculoDeDias(articulosRepo)
+
+      return RESP._200(res, "Se genero el reporte", [
+        { tipo: "reportes", datos: articulosRepo }
+      ])
+    })
+    .catch(err =>
+      erro(res, err, "Hubo un error generando el reporte personalizado")
+    )
+})
+
+function agregarCalculoDeDias(datos) {
+  const calculoDeDias = dias => dias * 24 * 60 * 60 * 1000
+  const dias = {
+    _7: new Date(new Date().getTime() - calculoDeDias(7)),
+    _30: new Date(new Date().getTime() - calculoDeDias(30)),
+    _365: new Date(new Date().getTime() - calculoDeDias(365))
+  }
+
+  for (const key in dias) {
+    const fecha = dias[key]
+    datos.forEach(articulo => {
+      articulo[key] = articulo.salidas.filter(salida => salida.fecha > fecha)
+    })
+  }
+
+  return datos
+}
 
 module.exports = app

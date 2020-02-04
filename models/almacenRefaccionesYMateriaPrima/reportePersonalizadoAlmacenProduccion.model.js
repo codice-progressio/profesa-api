@@ -6,8 +6,7 @@ var ReportePersonalizadoAlmacenProduccionSchema = new Schema(
     nombre: { type: String, required: [true, "Debes definir un nombre"] },
     descripcion: String,
     articulos: {
-      type: [Schema.Types.ObjectId],
-      ref: "Articulos",
+      type: [{ type: Schema.Types.ObjectId, ref: "Articulo" }],
       validate: [
         {
           validator: function(v) {
@@ -23,6 +22,17 @@ var ReportePersonalizadoAlmacenProduccionSchema = new Schema(
 
   { collection: "reportesPersonalizadosAlmacenProduccion", timestamps: true }
 )
+
+
+function autoPopulate (next) {
+  this.populate("articulos", ' -salidas -entradas')
+  next()
+}
+
+ReportePersonalizadoAlmacenProduccionSchema
+  .pre("find", autoPopulate)
+  .pre("findById", autoPopulate)
+  .pre("findOne", autoPopulate)
 
 module.exports = mongoose.model(
   "ReportePersonalizadoAlmacenProduccion",

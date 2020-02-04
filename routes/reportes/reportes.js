@@ -3,7 +3,6 @@ var app = express()
 var RESP = require("../../utils/respStatus")
 
 var RepoFalProdTer = require("./reporte.faltanteProductoTerminado")
-var RepoPersProdTerm = require("./reporte.personalizadoAlmacenProduccion")
 var RepoFalAlmaProd = require("./reporte.faltanteAlmacenProduccion")
 
 var RepoPers = require("../../models/almacenRefaccionesYMateriaPrima/reportePersonalizadoAlmacenProduccion.model")

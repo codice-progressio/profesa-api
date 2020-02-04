@@ -103,6 +103,48 @@ app.get("/buscar/:termino", async (req, res) => {
 
   RepoPer.aggregate([
     { $match },
+    // Populacion del articulo sin entrdas ni salidas
+    {
+      $unwind: {
+        path: "$articulos"
+      }
+    },
+    {
+      $lookup: {
+        from: "articulos",
+        localField: "articulos",
+        foreignField: "_id",
+        as: "articulos"
+      }
+    },
+    {
+      $unwind: {
+        path: "$articulos"
+      }
+    },
+    {
+      $unset: ["articulos.salidas", "articulos.entradas"]
+    },
+
+    {
+      $group: {
+        _id: "$_id",
+        reporte: { $first: "$$ROOT" },
+        articulos: { $push: "$articulos" }
+      }
+    },
+
+    {
+      $addFields: {
+        "reporte.articulos": "$articulos"
+      }
+    },
+    {
+      $replaceRoot: { newRoot: "$reporte" }
+    },
+
+    //Fin de populacion
+
     { $sort: { [campo]: sort } },
     //Desde aqui limitamos unicamente lo que queremos ver
     { $limit: desde + limite },

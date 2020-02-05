@@ -1,9 +1,14 @@
 var mongoose = require("mongoose")
 var Schema = mongoose.Schema
+let uniqueValidator = require("mongoose-unique-validator")
 
 var ReportePersonalizadoAlmacenProduccionSchema = new Schema(
   {
-    nombre: { type: String, required: [true, "Debes definir un nombre"] },
+    nombre: {
+      type: String,
+      required: [true, "Debes definir un nombre"],
+      unique: true
+    },
     descripcion: String,
     articulos: {
       type: [{ type: Schema.Types.ObjectId, ref: "Articulo" }],
@@ -22,15 +27,16 @@ var ReportePersonalizadoAlmacenProduccionSchema = new Schema(
 
   { collection: "reportesPersonalizadosAlmacenProduccion", timestamps: true }
 )
+ReportePersonalizadoAlmacenProduccionSchema.plugin(uniqueValidator, {
+  message: "'{PATH}' debe ser único."
+})
 
-
-function autoPopulate (next) {
-  this.populate("articulos", ' -salidas -entradas')
+function autoPopulate(next) {
+  this.populate("articulos", " -salidas -entradas")
   next()
 }
 
-ReportePersonalizadoAlmacenProduccionSchema
-  .pre("find", autoPopulate)
+ReportePersonalizadoAlmacenProduccionSchema.pre("find", autoPopulate)
   .pre("findById", autoPopulate)
   .pre("findOne", autoPopulate)
 

@@ -75,7 +75,7 @@ app.get("/:id", (req, res) => {
 
       return RESP._200(res, null, [{ tipo: "empleado", datos: empleado }])
     })
-    .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
+    .catch(err => erro(res, err, "Hubo un error buscando los empleados"))
 })
 
 // <!--

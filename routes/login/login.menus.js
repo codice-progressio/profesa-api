@@ -88,6 +88,11 @@ function reportes() {
         titulo: "Faltantes almacen de produccion",
         url: "/reportes/almacenDeProduccion/faltantes",
         roles: [CONST.ROLES.REPORTES_ALMACEN_PRODUCCION_FALTANTES]
+      },
+      {
+        titulo: "Personalizados",
+        url: "/reportes/almacenDeProduccion/personalizado",
+        roles: [CONST.ROLES.REPORTES_ALMACEN_PRODUCCION_PERSONALIZADOS]
       }
     ]
   }
@@ -120,6 +125,11 @@ function almacenes() {
         titulo: "Requisiciones",
         url: "/almacen/requisiciones",
         roles: [CONST.ROLES.ALMACEN_REQUISICION]
+      },
+      {
+        titulo: "Reportes personalizados",
+        url: "/almacen/reportesPersonalizados",
+        roles: [CONST.ROLES.ALMACEN_PRODUCCION_REPORTES_PERSONALIZADOS]
       }
     ]
   }

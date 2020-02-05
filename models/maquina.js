@@ -29,6 +29,26 @@ var maquinaSchema = new Schema({
     numeroDeSerie: { type: String },
     observaciones: { type: String },
 
+    //Debemos aplicar el PEPS. Estas ordenes no necesariamente
+    //deben estar en transformacion
+    pila: [{
+        
+        folio:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio',
+        },
+        pedido:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio.folioLinea',
+        },
+        orden:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio.folioLinea.ordenes',
+        },
+
+
+    }],
+
 
     trabajando: {type:Boolean, default: false},
     trabajo: {

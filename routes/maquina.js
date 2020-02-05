@@ -87,12 +87,12 @@ app.get("/buscar/:termino", async (req, res) => {
     $match.$or.push(b(x))
   )
 
-  const total = await RepoPer.aggregate([
+  const total = await Maquina.aggregate([
     { $match },
     { $count: "total" }
   ]).exec()
 
-  RepoPer.aggregate([
+  Maquina.aggregate([
     { $match },
     // Populacion del articulo sin entrdas ni salidas
     {
@@ -185,15 +185,11 @@ app.put("/", (req, res) => {
       return maquina.save()
     })
     .then(maquina => {
-      return RESP._200(
-        res,
-        "Se modifico correctamente la maquina",
-        [{ tipo: "maquina", datos: maquina }]
-      )
+      return RESP._200(res, "Se modifico correctamente la maquina", [
+        { tipo: "maquina", datos: maquina }
+      ])
     })
-    .catch(err =>
-      erro(res, err, "Hubo un error actualizando la maquina")
-    )
+    .catch(err => erro(res, err, "Hubo un error actualizando la maquina"))
 })
 
 //   <!--
@@ -202,27 +198,21 @@ app.put("/", (req, res) => {
 //   =====================================
 //   -->
 
-
-
 app.delete("/:id", (req, res) => {
-    Maquina.findById(req.params.id)
-      .exec()
-      .then(maquina => {
-        if (!maquina) throw "No existe la maquina"
-  
-        return maquina.remove()
-      })
-      .then(maquina => {
-        return RESP._200(
-          res,
-          "Se elimino de manera correcta la maquina",
-          [{ tipo: "maquina", datos: maquina }]
-        )
-      })
-      .catch(err =>
-        erro(res, err, "Hubo un error eliminando la maquina")
-      )
-  })
+  Maquina.findById(req.params.id)
+    .exec()
+    .then(maquina => {
+      if (!maquina) throw "No existe la maquina"
+
+      return maquina.remove()
+    })
+    .then(maquina => {
+      return RESP._200(res, "Se elimino de manera correcta la maquina", [
+        { tipo: "maquina", datos: maquina }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando la maquina"))
+})
 
 /**
  * Este controlador obtiene las maquinas por

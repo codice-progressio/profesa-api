@@ -5,76 +5,6 @@ var Proceso = require('../models/procesos/proceso');
 var colores = require('../utils/colors');
 var NombreAnteriorMaquinaShchema = require('../models/nombreAnteriorMaquina');
 var Schema = mongoose.Schema;
-var Folio = require('../models/folios/folio');
-
-
-// var orden_DatosDeTrabajoEnMaquina = new Schema({
-
-//         // El id del folio para hacer referencia a el y la informacion
-//         // facilitandomos la vida para los reportes. 
-//         folio: {type: ObjectId, ref: 'Folio'},
-//         // El id de la orden de la cual se va a guardar el regitro. 
-//         orden: {type: ObjectId, ref: 'Folio.folioLineas.ordenes'},
-//         // El estatus de la orden. 
-//         // 1 - Trabajando
-//         // 2 - En espera.
-//         estatus: { type: number},
-//         // El registro de los cambio para esta orden.
-//         // Si no hay cambio esto debe estar en nulo.
-//         cambio: {
-//             // La hora a la que inicio el cambio. 
-//             inicio: { type: Date},
-//             // La hora a la que finlizo el cambio.
-//             finalizo: { type: Date},
-//             // El usuario mecanico
-//             empleado: {type: ObjectId, ref: 'Empleado'},
-//             // El registro de incidencias en el cambio. 
-
-//             incidencias:[ {
-//                 // El registro de la incidencia debe existir para
-//                 // llevar estadisticas. 
-//                 incidencia: { type: ObjectId, ref: 'Incidencias' },
-//                 observaciones: { type:String },
-//                 fotos: [{ type: String }]
-//             }]
-//         }, 
-
-
-//         // Hora de inicializacion del trabajo. 
-//         inicio: { type: Date },
-//         // Hora de finalizacion del trabajo de la orden. 
-//         finalizacion: { type: Date },
-
-//         incidencias:[ {
-//             incidencia: { type: ObjectId, ref: 'Incidencias' },
-//             observaciones: { type:String },
-//             fotos: [`{ type: String }`]
-//         }]
-
-
-
-
-
-// });
-
-
-// // Esta schema se encarga de almacenar los datos 
-// // de trabajo de la maquina. R
-// var trabajoDeMaquinaSchema = new Schema({
-
-//     // La orden que esta actualmente trabajandose. 
-//     ordenActualTrabajando: orden_DatosDeTrabajoEnMaquina,
-
-//     // La lista de ordenes en espera para empezar a trabajar en la maquina. 
-//     ordenesEnEspera: [orden_DatosDeTrabajoEnMaquina],
-
-//     // El historial de trabajo de la maquina. 
-//     historial: [orden_DatosDeTrabajoEnMaquina],
-// });
-
-
-
-
 
 var maquinaSchema = new Schema({
     nombre: { type: String, required: [true, 'El nombre de la máquina no puede estar vacio. Define un nombre.'] },
@@ -97,31 +27,61 @@ var maquinaSchema = new Schema({
         }, 'El campo debe tener por lo menos un departamento definido.']
     },
     numeroDeSerie: { type: String },
-    observaciones: { type: String }
+    observaciones: { type: String },
 
 
-    // trabajo: trabajoDeMaquinaSchema,
+    trabajando: {type:Boolean, default: false},
+    trabajo: {
+      
+        folio:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio',
+        },
+        pedido:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio.folioLinea',
+        },
+        orden:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio.folioLinea.ordenes',
+        },
+        inicio: { type: Date, default: Date.now() },
+    },
 
+    trabajado: [{
+      
+        folio:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio',
+        },
+        pedido:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio.folioLinea',
+        },
+        orden:{
+            type: Schema.Types.ObjectId,
+            ref: 'Folio.folioLinea.ordenes',
+        },
+        inicio: Date ,
+        finalizacion: { type: Date, default: Date.now() },
+        
+    }],
+    parada: {type: Boolean, default:false},
+    paro: {
+        tipo: String,
+        observacion: String,
+        inicio: {
+            type: Date, default: Date.now()
+        },
+        finalizacion: Date
+    },
+    paros: [{
+        tipo: String,
+        observacion: String,
+        inicio: Date,
+        finalizacion: Date
+    }]
 
-
-    // gastos: {
-    //     type: [gastoConsumo],
-    //     // validate: [function(a) {
-    //     //     return a.length >= 1;
-    //     // }, 'El campo debe tener por lo menos un gasto definido']
-    // },
-
-    // costo: {
-    //     type: Number,
-    //     // require: [true, "Para fines de costos este campo es obligatorio."], 
-    //     // min: [1, 'La máquina no puede costar menos de un peso.'] 
-    // },
-    // depreciacion: {
-    //     type: Number,
-    //     // require: [true, "Los años de depreciación son obligatorios."],
-    //     // min: [0.83, 'El valor mínimo de depreciación es el equivalente a un mes en decimales. (.83)'],
-    //     // max: [15, 'La máquina no se puede depreciar en más de 15 años.']
-    // },
 
 }, { collection: 'maquinas' });
 

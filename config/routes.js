@@ -36,8 +36,6 @@ let salidaRoute = require("../routes/almacenDeProductoTerminado/salida")
 
 let folioNewRoutes = require("../routes/folio.route")
 
-let ROLES = require("../config/roles")
-
 var almacenDescripcionRoute = require("../routes/almacenDeMateriaPrimaYRefacciones/almacenDescripcion.route")
 var articuloRoute = require("../routes/almacenDeMateriaPrimaYRefacciones/articulo.route")
 
@@ -52,253 +50,46 @@ const EmpleadoRoute = require("../routes/recursosHumanos/empleado/empleado.route
 
 var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
 
-module.exports.ROUTES = {
-  _REPORTE_PERSONALIZADO_ALMACEN_PRODUCCION: {
-    url: "/reportePersonalizadoAlmacenProduccion",
-    route: ReportePersonalizadoAlmacenProduccion,
-    roles: [],
-    subRoutes: {}
-  },
-  _EMPLEADO: {
-    url: "/empleado",
-    route: EmpleadoRoute,
-    roles: [],
-    subRoutes: {}
-  },
-  _PUESTO: {
-    url: "/puesto",
-    route: PuestoRoute,
-    roles: [],
-    subRoutes: {}
-  },
-  _AREA: {
-    url: "/area",
-    route: AreaRoute,
-    roles: [],
-    subRoutes: {}
-  },
-  _CURSO: {
-    url: "/curso",
-    route: CursoRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _REQUISICION: {
-    url: "/requisicion",
-    route: RequisicionRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _DIVISA: {
-    url: "/divisa",
-    route: DivisaRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _PROVEEDOR: {
-    url: "/proveedor",
-    route: proveedorRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _ARTICULO: {
-    url: "/articulo",
-    route: articuloRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _ALMACEN_DESCRIPCION: {
-    url: "/almacenDescripcion",
-    route: almacenDescripcionRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _ALMACEN_DE_PRODUCTO_TERMINADO: {
-    url: "/almacenDeProductoTerminado",
-    route: almacenDeProductoTerminadoRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _ALMACEN_DE_PRODUCTO_TERMINADO_LOTE: {
-    url: "/almacenDeProductoTerminado/lote",
-    route: loteRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _ALMACEN_DE_PRODUCTO_TERMINADO_SALIDA: {
-    url: "/almacenDeProductoTerminado/salida",
-    route: salidaRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _ALMACEN_DE_PRODUCTO_TERMINADO_DEVOLUCION: {
-    url: "/almacenDeProductoTerminado/devolucion",
-    route: devolucionRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _REPORTES: {
-    url: "/reportes",
-    route: reportesRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _DEFAULTS: {
-    url: "/defaults",
-    route: defaultsRoute,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _LOGIN: {
-    url: "/login",
-    route: loginRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _FOLIO: {
-    url: "/folio",
-    route: folioRoutes,
-    roles: [ROLES.FOLIO_CONSULTAR],
-    subRoutes: {
-      _: {
-        url: "/",
-        roles: [ROLES.CONTROL_DE_PRODUCCION_REGISTRAR_FOLIOS_ROLE]
-      }
-    }
-  },
-  _FOLIO_NEW: {
-    url: "/folios",
-    route: folioNewRoutes,
-    roles: []
-  },
-
-  _USUARIO: {
-    url: "/usuario",
-    route: usuarioRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _BUSQUEDA: {
-    url: "/busqueda",
-    route: busquedaRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _UPLOAD: {
-    url: "/upload",
-    route: uploadRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _IMG: {
-    url: "/img",
-    route: imagenesRoutes,
-    roles: [ROLES.USER_ROLE],
-    subRoutes: {}
-  },
-  _FOLIOLINEA: {
-    url: "/folioLinea",
-    route: folioLineaRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _MODELOCOMPLETO: {
-    url: "/modeloCompleto",
-    route: modeloCompletoRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _CLIENTE: {
-    url: "/cliente",
-    route: clienteRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _DEPARTAMENTO: {
-    url: "/departamento",
-    route: departamentoRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _PROCESO: {
-    url: "/proceso",
-    route: procesoRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _FAMILIADEPROCESOS: {
-    url: "/familiaDeProcesos",
-    route: familiaDeProcesosRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _ORDEN: {
-    url: "/orden",
-    route: ordenRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _TRAYECTORIA: {
-    url: "/trayectoria",
-    route: trayectoriaRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _MAQUINA: {
-    url: "/maquina",
-    route: maquinaRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _GASTOGASTO: {
-    url: "/gasto",
-    route: gastoRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _MODELO: {
-    url: "/modelo",
-    route: modeloRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _TAMANO: {
-    url: "/tamano",
-    route: tamanoRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _COLOR: {
-    url: "/color",
-    route: colorRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-  _TERMINADO: {
-    url: "/terminado",
-    route: terminadoRoutes,
-    roles: [],
-    subRoutes: {}
-  },
-
-  _HIT: {
-    url: "/hit",
-    route: hitRoutes,
-    roles: [],
-    subRoutes: {}
-  }
+module.exports.ROUTES = function(app) {
+  app.use(
+    "/reportePersonalizadoAlmacenProduccion",
+    ReportePersonalizadoAlmacenProduccion
+  )
+  app.use("/empleado", EmpleadoRoute)
+  app.use("/puesto", PuestoRoute)
+  app.use("/area", AreaRoute)
+  app.use("/curso", CursoRoute)
+  app.use("/requisicion", RequisicionRoute)
+  app.use("/divisa", DivisaRoute)
+  app.use("/proveedor", proveedorRoute)
+  app.use("/articulo", articuloRoute)
+  app.use("/almacenDescripcion", almacenDescripcionRoute)
+  app.use("/almacenDeProductoTerminado", almacenDeProductoTerminadoRoute)
+  app.use("/almacenDeProductoTerminado/lote", loteRoute)
+  app.use("/almacenDeProductoTerminado/salida", salidaRoute)
+  app.use("/almacenDeProductoTerminado/devolucion", devolucionRoute)
+  app.use("/reportes", reportesRoute)
+  app.use("/defaults", defaultsRoute)
+  app.use("/login", loginRoutes)
+  app.use("/folio", folioRoutes)
+  app.use("/folios", folioNewRoutes)
+  app.use("/usuario", usuarioRoutes)
+  app.use("/busqueda", busquedaRoutes)
+  app.use("/upload", uploadRoutes)
+  app.use("/img", imagenesRoutes)
+  app.use("/folioLinea", folioLineaRoutes)
+  app.use("/modeloCompleto", modeloCompletoRoutes)
+  app.use("/cliente", clienteRoutes)
+  app.use("/departamento", departamentoRoutes)
+  app.use("/proceso", procesoRoutes)
+  app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
+  app.use("/orden", ordenRoutes)
+  app.use("/trayectoria", trayectoriaRoutes)
+  app.use("/maquina", maquinaRoutes)
+  app.use("/gasto", gastoRoutes)
+  app.use("/modelo", modeloRoutes)
+  app.use("/tamano", tamanoRoutes)
+  app.use("/color", colorRoutes)
+  app.use("/terminado", terminadoRoutes)
+  app.use("/hit", hitRoutes)
 }

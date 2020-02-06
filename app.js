@@ -150,12 +150,7 @@ app.use(
 
 
 // Luego creamos las routes.
-for (const key in _ROUTES) {
-  if (_ROUTES.hasOwnProperty(key)) {
-    const route = _ROUTES[key]
-    app.use(route.url, route.route)
-  }
-}
+_ROUTES(app)
 
 // Llamamos a los errores.
 app.use(function(req, res) {

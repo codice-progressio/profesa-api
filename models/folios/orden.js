@@ -43,8 +43,10 @@ const ordenSchema = new Schema({
     //La máquina en que se esta trabajando actualmente. 
     maquinaActual: {
         type: Schema.Types.ObjectId,
-        ref: 'Maquina'
+        ref: 'Maquina', 
     },
+
+    asignada: Boolean,
 
     // Dictamina si la órden esta terminada. (En base a los departamento que recorrio. )
     terminada: { type: Boolean, value: false },

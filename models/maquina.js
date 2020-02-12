@@ -35,16 +35,21 @@ var maquinaSchema = new Schema({
         
         folio:{
             type: Schema.Types.ObjectId,
+            required: [true, ' Es necesario definir el folio'],
             ref: 'Folio',
         },
         pedido:{
             type: Schema.Types.ObjectId,
+            required: [true, ' Es necesario definir el pedido'],
             ref: 'Folio.folioLinea',
         },
         orden:{
             type: Schema.Types.ObjectId,
+            required: [true, ' Es necesario definir la orden'],
             ref: 'Folio.folioLinea.ordenes',
         },
+
+        paso: Number
     }],
 
 
@@ -64,6 +69,7 @@ var maquinaSchema = new Schema({
             ref: 'Folio.folioLinea.ordenes',
         },
         inicio: { type: Date, default: Date.now() },
+        paso: Number
     },
 
     trabajado: [{
@@ -82,7 +88,7 @@ var maquinaSchema = new Schema({
         },
         inicio: Date ,
         finalizacion: { type: Date, default: Date.now() },
-        
+        paso:Number
     }],
     parada: {type: Boolean, default:false},
     paro: {

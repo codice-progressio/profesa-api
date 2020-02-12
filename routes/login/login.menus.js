@@ -153,7 +153,12 @@ function controlDeProduccion() {
         titulo: "Seguimientos",
         url: "/folios/seguimiento",
         roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_SEGUIMIENTOS]
-      }
+      },
+      {
+        titulo: "Asignar ordenes",
+        url: "/folios/asignarOrdenes",
+        roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_ASIGNAR_ORDENES]
+      },
     ]
   }
 

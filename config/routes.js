@@ -50,8 +50,10 @@ const EmpleadoRoute = require("../routes/recursosHumanos/empleado/empleado.route
 
 var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
 
-module.exports.ROUTES = function (app)
-{
+var ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
+
+module.exports.ROUTES = function(app) {
+  app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(
     "/reportePersonalizadoAlmacenProduccion",
     ReportePersonalizadoAlmacenProduccion

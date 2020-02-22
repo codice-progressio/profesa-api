@@ -9,37 +9,90 @@ var RESP = require("../utils/respStatus")
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
-var CRUD = require("./CRUD")
-CRUD.app = app
-CRUD.modelo = Folio
-CRUD.nombreDeObjetoSingular = "folio"
-CRUD.nombreDeObjetoPlural = "folios"
-CRUD.campoSortDefault = "fechaEntrega"
-CRUD.camposActualizables = {
-  // numeroDeFolio: null ,
-  cliente: null,
-  // fechaFolio: null,
-  // fechaEntrega: null,
-  vendedor: null,
-  observaciones: null,
-  observacionesVendedor: null,
-  folioLineas: null,
-  nivelDeUrgencia: null,
-  porcentajeAvance: null,
-  // ordenesGeneradas: null,
-  // impreso: null,
-  terminado: null,
-  // fechaTerminado: null,
-  cantidadProducida: null
+const erro = (res, err, msj) => {
+  return RESP._500(res, {
+    msj: msj,
+    err: err
+  })
 }
 
-CRUD.camposDeBusqueda = ["numeroDeFolio", "observaciones"]
+app.delete("/:id", (req, res) => {
+  const id = req.params.id
 
-CRUD.crud("delete", "post", "getById", "put")
+  if (!id) {
+    return RESP._400(res, {
+      msj: "No definiste un id para eliminar.",
+      err: "Es necesario que definas un id."
+    })
+  }
+
+  Folio.findById()
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+
+      return folio.remove()
+    })
+    .then(folio => {
+      return RESP._200(res, "Se elimino el folio", [
+        { tipo: "folio", datos: folio }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
+})
+
+app.post("/", (req, res) => {
+  new Folio(req.body)
+    .save()
+    .then(folio => {
+      return RESP._200(res, "Se guardo el folio", [
+        { tipo: "folio", datos: folio }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
+})
+
+app.get("/:id", (req, res) => {
+  Folio.findById(req.params.id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+
+      return RESP._200(res, null, [{ tipo: "folio", datos: folio }])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
+})
+
+app.put("/", (req, res) => {
+  Folio.findById(req.params.id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+      ;[
+        "cliente",
+        "vendedor",
+        "observaciones",
+        "observacionesVendedor",
+        "folioLineas",
+        "nivelDeUrgencia",
+        "porcentajeAvance",
+        "terminado",
+        "cantidadProducida"
+      ].forEach(x => (folio[x] = req.body[x]))
+      return folio.save()
+    })
+    .then(folio => {
+      return RESP._200(res, "Se modifico el folio", [
+        { tipo: "folio", datos: folio }
+      ])
+    })
+
+    .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
+})
 
 app.get("/folioImpreso/:id", (req, res) => {
   Folio.findById(req.params.id)
-    .then((folio) => {
+    .then(folio => {
       if (!folio) throw "No existe el folio."
       folio.impreso = true
       return folio.save()
@@ -49,7 +102,7 @@ app.get("/folioImpreso/:id", (req, res) => {
         //  { tipo: 'folio', datos: folio },
       ])
     })
-    .catch((err) => {
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error marcando el folio como impreso. ",
         err: err
@@ -66,7 +119,7 @@ app.post("/enviarAProduccion", (req, res) => {
   let msj = ""
 
   Folio.findById(req.body._id)
-    .then((folio) => {
+    .then(folio => {
       if (!folio) {
         return RESP._400(res, {
           msj: "No existe el folio.",
@@ -95,10 +148,10 @@ app.post("/enviarAProduccion", (req, res) => {
 
       return folio.save()
     })
-    .then((folioGrabado) => {
+    .then(folioGrabado => {
       return RESP._200(res, msj, [{ tipo: "folio", datos: folioGrabado }])
     })
-    .catch((err) => {
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error buscando el folio.",
         err: err
@@ -111,7 +164,7 @@ app.post("/enviarAProduccion", (req, res) => {
  */
 app.post("/ordenesImpresas", (req, res) => {
   Folio.findById(req.body._id)
-    .then((folioEncontrado) => {
+    .then(folioEncontrado => {
       if (!folioEncontrado) {
         return RESP._400(res, {
           msj: "No existe el folio.",
@@ -121,10 +174,10 @@ app.post("/ordenesImpresas", (req, res) => {
       folioEncontrado.impreso = true
       return folioEncontrado.save()
     })
-    .then((folioGrabado) => {
+    .then(folioGrabado => {
       return RESP._200(res, null, [{ tipo: "folio", datos: folioGrabado }])
     })
-    .catch((err) => {
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error buscando el folio para senalarlo como impreso",
         err: err
@@ -291,11 +344,9 @@ app.get("/", (req, res) => {
         : -1
 
     if (conversion === -1) {
-      throw `El valor del filtro para folios terminados no es valido val:(${
-        objetoDeBusqueda.folioTerminado
-      })`
+      throw `El valor del filtro para folios terminados no es valido val:(${objetoDeBusqueda.folioTerminado})`
     }
-    arregloAnd.push({ terminado:  conversion })
+    arregloAnd.push({ terminado: conversion })
   }
 
   if (arregloAnd.length > 0)
@@ -752,7 +803,7 @@ app.get("/", (req, res) => {
       $replaceRoot: { newRoot: "$folio" }
     }
   ]
-  
+
   let $group_Orden_TrayectoRecorridoAOrden = [
     // Agrupamos por ordenes para obtener el trayecto.
     {
@@ -858,13 +909,13 @@ app.get("/", (req, res) => {
       }
     },
 
-      {
+    {
       $unwind: {
         path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
         preserveNullAndEmptyArrays: true
       }
     },
-      
+
     {
       $lookup: {
         from: "procesos",
@@ -938,8 +989,7 @@ app.get("/", (req, res) => {
         _id: "$folioLineas._id",
         folio: { $first: "$$ROOT" },
         procesos: {
-          $push:
-            "$folioLineas.modeloCompleto.familiaDeProcesos.procesos"
+          $push: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos"
         }
       }
     },
@@ -988,7 +1038,7 @@ app.get("/", (req, res) => {
   /**Agrupa los pedidos en sus respectivos folios.
    */
   let $group_Folios_1 = [
-    // En este punto obtenemos desordenados los pedidos asi 
+    // En este punto obtenemos desordenados los pedidos asi
     // que creamos un nuevo campo para ordenar por el numero
     // de pedido, para esto primero lo separamos desde "pedido"
     {
@@ -997,21 +1047,19 @@ app.get("/", (req, res) => {
           _ordenarPedido: {
             // $toInt: { $substrBytes: ["$folioLineas.pedido", 2, 1]}
             $toInt: {
-              $arrayElemAt : [{ $split: ["$folioLineas.pedido", "-"] }, 1]
+              $arrayElemAt: [{ $split: ["$folioLineas.pedido", "-"] }, 1]
             }
           }
         }
       }
     },
 
-    
-    // Ordenamos los pedidos en base a su numero. 
+    // Ordenamos los pedidos en base a su numero.
     {
       $sort: {
-        'folioLineas._ordenarPedido': 1
+        "folioLineas._ordenarPedido": 1
       }
     },
-
 
     //------------------------------------
     {
@@ -1055,7 +1103,7 @@ app.get("/", (req, res) => {
   arregloRedact = arregloRedact.concat(
     $unwind_$lookup_familiaDeProcesos_Procesos_Departamentos
   )
-  arregloRedact = arregloRedact.concat($group_FamiliaDeProcesos_procesos)//Arreglado
+  arregloRedact = arregloRedact.concat($group_FamiliaDeProcesos_procesos) //Arreglado
   arregloRedact = arregloRedact.concat($group_Folios_1)
 
   // Ordenes Ubicacion Actual y Siguiente departameto
@@ -1326,7 +1374,7 @@ app.get("/", (req, res) => {
 
     let llavesLv2 = Object.keys(lv2)
 
-    let inexistentes = llavesLv2.filter((x) => {
+    let inexistentes = llavesLv2.filter(x => {
       return !camposSorteables.join(" ").includes(x)
     })
 
@@ -1386,7 +1434,7 @@ app.get("/", (req, res) => {
   // =====================================
   // -->
 
-  let error = (err) => {
+  let error = err => {
     return RESP._500(res, {
       msj: "Hubo un error filtrando los folios",
       err: err
@@ -1404,7 +1452,7 @@ app.get("/", (req, res) => {
         .skip(objetoDeBusqueda.desde)
         .countDocuments()
     ])
-      .then((resp) => {
+      .then(resp => {
         return RESP._200(res, null, [
           { tipo: "folios", datos: resp[0] },
           { tipo: "total", datos: resp[1] }
@@ -1413,7 +1461,7 @@ app.get("/", (req, res) => {
       .catch(error)
   } else {
     Folio.aggregate(arregloRedact)
-      .then((folios) => {
+      .then(folios => {
         return RESP._200(res, null, [
           { tipo: "total", datos: folios[0] ? folios[0].total : 0 },
           { tipo: "folios", datos: folios[0] ? folios[0].folios : [] }

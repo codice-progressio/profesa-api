@@ -19,7 +19,18 @@ app.post("/asignar", (req, res) => {
    * Valores que recibimos
    *
    * @param idMaquina: string
-   * @param ordenes: [{folio:string, pedido:string, orden:string, paso:number}]
+   * @param ordenes: [{
+   *      folio:string,
+   *      pedido:string,
+   *      orden:string,
+   *      modeloCompleto: string, //Solo para facilitarnos la vida
+   *      pasos: Number, //La cantidad de pasos que tiene la orden
+   *      numeroDeOrden: string, //El numero de orden (con respecto a
+   *      los procesos) para facilitarnos la vida.
+   *      numerosDeOrden: [Number], // Los numeros de orden (procesos) pero
+   *      juntos para saber que paso es este dato de orden
+   *      paso: Number //Si es primer paso, 2do paso, etc.
+   * }]
    *
    *
    *
@@ -31,29 +42,10 @@ app.post("/asignar", (req, res) => {
     .then(maquina => {
       if (!maquina) throw " No existe  la maquina."
 
-      const mapcomp = x => {
-        return ""
-          .concat(x.folio)
-          .concat("@")
-          .concat(x.pedido)
-          .concat("@")
-          .concat(x.orden)
-          .concat("@")
-          .concat(x.paso)
-      }
-      const ordenes = new Set(
-        maquina.pila
-          .map(x => mapcomp(x))
-          .concat(datos.ordenes.map(x => mapcomp(x)))
-      )
-      maquina.pila = []
-
-      ordenes.forEach(x => {
-        const or = x.split("@")
-        const ord = { folio: or[0], pedido: or[1], orden: or[2], paso: or[3] }
-        maquina.pila.push(ord)
-      })
-      return maquina.save()
+      return Maquina.update(
+        { _id: maquina.id },
+        { $set: { pila: datos.ordenes } }
+      ).exec()
     })
     .then(maquina => {
       return RESP._200(res, "Se agregaron de manera correcta las ordenes", [
@@ -96,165 +88,193 @@ app.delete("/desasignar", (req, res) => {
     )
 })
 
-app.get("/estaAsignada", (req, res) => {
-  const datos = req.body
+// app.get("/estaAsignada", (req, res) => {
+//   const datos = req.body
 
+//   Maquina.aggregate([
+//     {
+//       $match: {
+//         pila: {
+//           folio: datos.folio,
+//           pedido: datos.pedido,
+//           orden: datos.orden
+//         }
+//       }
+//     }
+//   ])
+//     .exec()
+//     .then(maquinas => {
+//       if (!maquinas)
+//         return RESP._200(res, null, [{ tipo: "correcto", datos: true }])
+
+//       if (err) {
+//         return RESP._500(res, {
+//           msj: `Esta orden ya esta asignada a la maquina ${maquinas[0].nombre}`,
+//           err: err,
+//           masInfo: [
+//             {
+//               infoAdicional:
+//                 CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
+//               dataAdicional:
+//                 CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
+//             }
+//           ]
+//         })
+//       }
+//     })
+//     .catch(err =>
+//       erro(res, err, "Hubo un error comprobando si la orden esta asignada")
+//     )
+// })
+
+app.get("/ordenesPorAsignar/:id", async (req, res) => {
+  //El id actual de transformacion
+  const idT = req.params.id
+
+  //Buscamos todas las maquinas y obtenemos todas las ordenes
+  // que estan asignadas en pila. Con su idOrden vamos
+  // a quitar de este reporte las que ya esten asignadas
+  var ordenesAsignadas = null
   Maquina.aggregate([
     {
-      $match: {
-        pila: {
-          folio: datos.folio,
-          pedido: datos.pedido,
-          orden: datos.orden
-        }
+      //Solo las maquinas que tengan ordenes en la pila
+      $match: { pila: { $exists: true, $ne: [] } }
+    },
+    {
+      $unwind: { path: "$pila" }
+    },
+
+    {
+      $project: {
+        folio: "$pila.folio",
+        pedido: "$pila.pedido",
+        orden: "$pila.orden",
+        paso: "$pila.paso"
       }
     }
   ])
     .exec()
-    .then(maquinas => {
-      if (!maquinas)
-        return RESP._200(res, null, [{ tipo: "correcto", datos: true }])
+    .then(ordAs => {
+      ordenesAsignadas = ordAs
+      // Si son dos pasos obtenemos dos ordenes, si son tres, 3 ordenes, etc.
+      //  De esta manera vamos a guardar en la maquina el tipo de paso que la orden va a estar haciendo comparandolo contra la ubicacion actual que tenemos.
 
-      if (err) {
-        return RESP._500(res, {
-          msj: `Esta orden ya esta asignada a la maquina ${maquinas[0].nombre}`,
-          err: err,
-          masInfo: [
-            {
-              infoAdicional:
-                CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
-              dataAdicional:
-                CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
-            }
-          ]
-        })
-      }
-    })
-    .catch(err =>
-      erro(res, err, "Hubo un error comprobando si la orden esta asignada")
-    )
-})
-
-app.get("/ordenesPorAsignar/:id", async (req, res) => {
-  const idT = req.params.id
-
-  // Si son dos pasos obtenemos dos ordenes, si son tres, 3 ordenes, etc.
-  //  De esta manera vamos a guardar en la maquina el tipo de paso que la orden va a estar haciendo comparandolo contra la ubicacion actual que tenemos.
-
-  Folio.aggregate([
-    {
-      $match: {
-        // Folios sin terminar
-        terminado: false
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas"
-      }
-    },
-
-    {
-      $match: {
-        // Pedidos sin terminar y con
-        // ordenes generadas
-        "folioLineas.terminado": false,
-        "folioLineas.ordenesGeneradas": true
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes"
-      }
-    },
-    {
-      $match: {
-        "folioLineas.ordenes.terminada": false,
-        //El campo no debe de existir para
-        //saber que no esta asignada.
-        "folioLineas.ordenes.maquinaActual": {
-          $exists: false,
-          $eq: null
-        }
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.trayectoNormal"
-      }
-    },
-
-    //El id de trasnformacion . De esta manera obtener solo las ordenes
-    // que tienen que pasar por transformacion.
-    {
-      $match: {
-        "folioLineas.ordenes.trayectoNormal.departamento": ObjectId(idT)
-      }
-    },
-    {
-      // Agrupamos por que solo nos interesan los id del folio, pedido y orden.
-      $group: {
-        _id: {
-          folio: "$_id",
-          pedido: "$folioLineas._id",
-          orden: "$folioLineas.ordenes._id",
-          numeroDeOrden: "$folioLineas.ordenes.orden",
-          modeloCompleto: "$folioLineas.ordenes.modeloCompleto", //solo para referencia
-          ubicacionActual: "$folioLineas.ordenes.ubicacionActual"
+      return Folio.aggregate([
+        {
+          $match: {
+            // Folios sin terminar
+            terminado: false
+          }
         },
-        //Los trayectos que coinciden con el id que le pasamos.
-        //De esta manera sabemos si esta por encima de la ubicacion
-        // actual y quitamos el trayecto (Por ejemplo, ya paso por segundo paso, entonces no hay que mostrar el segundo paso.)
+        {
+          $unwind: {
+            path: "$folioLineas"
+          }
+        },
 
-        trayectos: { $push: "$folioLineas.ordenes.trayectoNormal" },
-        //Este nos sirve para referenciar
-        numerosDeOrden: { $push: "$folioLineas.ordenes.trayectoNormal.orden" },
-        pasos: { $sum: 1 }
-      }
-    },
+        {
+          $match: {
+            // Pedidos sin terminar y con
+            // ordenes generadas
+            "folioLineas.terminado": false,
+            "folioLineas.ordenesGeneradas": true
+          }
+        },
+        {
+          $unwind: {
+            path: "$folioLineas.ordenes"
+          }
+        },
+        {
+          $match: {
+            "folioLineas.ordenes.terminada": false,
+            //El campo no debe de existir para
+            //saber que no esta asignada.
+            "folioLineas.ordenes.maquinaActual": {
+              $exists: false,
+              $eq: null
+            }
+          }
+        },
+        {
+          $unwind: {
+            path: "$folioLineas.ordenes.trayectoNormal"
+          }
+        },
 
-    //Ahora separamos de nuevo el arreglo de trayectos para hacer un match
-    // contra el numero de 'orden' que tiene la ubicacion actual. Si es menor
-    // no debe de aparecer. Si es igual, quiere decir que esta trabajando o
-    // pendiente de trabajar. (disponible?) y si es mayor todavia no llega.
+        //El id de trasnformacion . De esta manera obtener solo las ordenes
+        // que tienen que pasar por transformacion.
+        {
+          $match: {
+            "folioLineas.ordenes.trayectoNormal.departamento": ObjectId(idT)
+          }
+        },
+        {
+          // Agrupamos por que solo nos interesan los id del folio, pedido y orden.
+          $group: {
+            _id: {
+              folio: "$_id",
+              pedido: "$folioLineas._id",
+              orden: "$folioLineas.ordenes._id",
+              numeroDeOrden: "$folioLineas.ordenes.orden",
+              modeloCompleto: "$folioLineas.ordenes.modeloCompleto", //solo para referencia
+              ubicacionActual: "$folioLineas.ordenes.ubicacionActual"
+            },
+            //Los trayectos que coinciden con el id que le pasamos.
+            //De esta manera sabemos si esta por encima de la ubicacion
+            // actual y quitamos el trayecto (Por ejemplo, ya paso por segundo paso, entonces no hay que mostrar el segundo paso.)
 
-    {
-      $unwind: {
-        path: "$trayectos"
-      }
-    },
+            trayectos: { $push: "$folioLineas.ordenes.trayectoNormal" },
+            //Este nos sirve para referenciar
+            numerosDeOrden: {
+              $push: "$folioLineas.ordenes.trayectoNormal.orden"
+            },
+            pasos: { $sum: 1 }
+          }
+        },
 
-    {
-      $match: {
-        $expr: { $lte: ["$_id.ubicacionActual.orden", "$trayectos.orden"] }
-      }
-    },
-    {
-      $project: {
-        folio: "$_id.folio",
-        pedido: "$_id.pedido",
-        orden: "$_id.orden",
-        modeloCompleto: "$_id.modeloCompleto",
-        numeroDeOrden: "$_id.numeroDeOrden",
-        ubicacionActual: "$_id.ubicacionActual",
-        trayectos: "$trayectos",
-        pasos: "$pasos",
-        numerosDeOrden: "$numerosDeOrden"
-      }
-    },
-    { $unset: ["_id"] },
-    {
-      $lookup: {
-        from: "modelosCompletos",
-        localField: "modeloCompleto",
-        foreignField: "_id",
-        as: "modeloCompleto"
-      }
-    },
-    { $unwind: "$modeloCompleto" },
-    { $addFields: { modeloCompleto: "$modeloCompleto.nombreCompleto" } }
-  ])
-    .exec()
+        //Ahora separamos de nuevo el arreglo de trayectos para hacer un match
+        // contra el numero de 'orden' que tiene la ubicacion actual. Si es menor
+        // no debe de aparecer. Si es igual, quiere decir que esta trabajando o
+        // pendiente de trabajar. (disponible?) y si es mayor todavia no llega.
+
+        {
+          $unwind: {
+            path: "$trayectos"
+          }
+        },
+
+        {
+          $match: {
+            $expr: { $lte: ["$_id.ubicacionActual.orden", "$trayectos.orden"] }
+          }
+        },
+        {
+          $project: {
+            folio: "$_id.folio",
+            pedido: "$_id.pedido",
+            orden: "$_id.orden",
+            modeloCompleto: "$_id.modeloCompleto",
+            numeroDeOrden: "$_id.numeroDeOrden",
+            ubicacionActual: "$_id.ubicacionActual",
+            trayectos: "$trayectos",
+            pasos: "$pasos",
+            numerosDeOrden: "$numerosDeOrden"
+          }
+        },
+        { $unset: ["_id"] },
+        {
+          $lookup: {
+            from: "modelosCompletos",
+            localField: "modeloCompleto",
+            foreignField: "_id",
+            as: "modeloCompleto"
+          }
+        },
+        { $unwind: "$modeloCompleto" },
+        { $addFields: { modeloCompleto: "$modeloCompleto.nombreCompleto" } }
+      ]).exec()
+    })
     .then(ordenes => {
       /**
        * Obtenemos esta estructura:
@@ -288,6 +308,15 @@ app.get("/ordenesPorAsignar/:id", async (req, res) => {
        */
 
       ordenes.map(orden => (orden["paso"] = obtenerPaso(orden)))
+
+      //Quitamos las ordenes que ya estan asignadas.a
+      ordenes = ordenes.filter(x => {
+        return !(
+          ordenesAsignadas.filter(
+            oa => oa.orden.toString() == x.orden.toString() && oa.paso == x.paso
+          ).length > 0
+        )
+      })
 
       res.send({ ordenes })
     })

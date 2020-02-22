@@ -49,7 +49,12 @@ var maquinaSchema = new Schema({
             ref: 'Folio.folioLinea.ordenes',
         },
 
-        paso: Number
+        modeloCompleto: String,
+        pasos: Number,
+        numeroDeOrden: String,
+        numerosDeOrden: [Number],
+        paso: Number,
+
     }],
 
 
@@ -69,7 +74,12 @@ var maquinaSchema = new Schema({
             ref: 'Folio.folioLinea.ordenes',
         },
         inicio: { type: Date, default: Date.now() },
-        paso: Number
+        modeloCompleto: String,
+        pasos: Number,
+        numeroDeOrden: String,
+        numerosDeOrden: [Number],
+        paso: Number,
+
     },
 
     trabajado: [{

@@ -46,6 +46,7 @@ const ordenSchema = new Schema({
         ref: 'Maquina', 
     },
 
+    //Asignada a una pila de trabajo.
     asignada: Boolean,
 
     // Dictamina si la órden esta terminada. (En base a los departamento que recorrio. )

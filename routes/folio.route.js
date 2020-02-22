@@ -45,7 +45,7 @@ app.get("/folioImpreso/:id", (req, res) => {
       return folio.save()
     })
     .then(() => {
-      return RESP._200(res, "El folio se marco como impreso", [
+      return RESP._200(res, null, [
         //  { tipo: 'folio', datos: folio },
       ])
     })

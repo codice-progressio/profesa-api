@@ -31,7 +31,7 @@ module.exports = () => {
 
     console.log(D + colores.warning('Comprobando información.'));
 
-    Usuario.findOne({ nombre: USUARIO_SUPER_ADMIN.nombre }).exec()
+    Usuario.findOne({ email: USUARIO_SUPER_ADMIN.email }).exec()
         .then(admin => {
 
             return crearSuperAdmin(admin);

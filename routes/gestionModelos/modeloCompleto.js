@@ -52,73 +52,38 @@ app.get("/transito/:id", (req, res) => {
       }
     },
 
+    { $unwind: { path: "$folioLineas" } },
+
     // Obtenemos los pedidos que coincidan contra el modelo. (Es con el id)
     {
       $match: {
-        "folioLineas.modeloCompleto": ObjectId(id)
-      }
-    },
-    {
-      $project: {
-        folio: "$$ROOT",
-        pedidosFiltrados: {
-          $filter: {
-            // La nueva propiedad que se va crear para poder traer solo los
-            // pedidos que coincidan.
-            input: "$folioLineas",
-            cond: {
-              // Solo mos interesa el modelo del que vamos
-              // a obtener su produccion
-              $eq: ["$$this.modeloCompleto", ObjectId(id)]
-            }
-          }
-        }
+        "folioLineas.modeloCompleto": ObjectId(id),
+        "folioLineas.terminado": false
       }
     },
 
-    {
-      // Sustituimos los pedidos.
-      $addFields: {
-        "folio.folioLineas": "$pedidosFiltrados"
-      }
-    },
-    {
-      // Establecemos el root para dejarlo todo como estaba.
-      $replaceRoot: { newRoot: "$folio" }
-    },
-    {
-      $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-    },
+    { $unwind: { path: "$folioLineas.ordenes" } },
+
+    { $match: { "folioLineas.ordenes.terminada": false } },
+
     {
       $group: {
         _id: null,
-        total: { $sum: "$folioLineas.cantidad" }
+        total: { $sum: "$folioLineas.ordenes.piezasTeoricas" }
       }
     },
-
-    { $project: { _id: 0, total: 1 } }
+    { $replaceRoot: { newRoot: { total: "$total" } } }
   )
 
   // Hacemos un match de los
 
   Folio.aggregate(arregloRedact)
-    .then((resp) =>
-    {
-
-
-      if (resp.length === 0)
-      {
-        return RESP._200(res, null , [
-            { tipo: 'total', datos: 0 },
-        ]);
-        
-      }
-      return RESP._200(res, null , [
-          { tipo: 'total', datos: resp[0].total },
-      ]);
-      
+    .then(resp => {
+      return RESP._200(res, null, [
+        { tipo: "total", datos: resp[0] ? resp[0].total : 0 }
+      ])
     })
-    .catch((err) => {
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error al obtener la produccion en transito",
         err: err
@@ -137,9 +102,9 @@ app.post("/stock", (req, res) => {
 
   ModeloCompleto.findById(datos._id)
     .exec()
-    .then((mc) => modificarStock(datos, mc))
-    .then((mcModificado) => _200_ModificarStock(res, mcModificado))
-    .catch((err) => error(res, "Hubo un error modificando el stock", err))
+    .then(mc => modificarStock(datos, mc))
+    .then(mcModificado => _200_ModificarStock(res, mcModificado))
+    .catch(err => error(res, "Hubo un error modificando el stock", err))
 })
 
 function modificarStock(datos, mc) {

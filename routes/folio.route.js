@@ -64,7 +64,7 @@ app.get("/:id", (req, res) => {
 })
 
 app.put("/", (req, res) => {
-  Folio.findById(req.params.id)
+  Folio.findById(req.body._id)
     .exec()
     .then(folio => {
       if (!folio) throw "No existe el folio"
@@ -86,8 +86,7 @@ app.put("/", (req, res) => {
         { tipo: "folio", datos: folio }
       ])
     })
-
-    .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
+    .catch(err => erro(res, err, "Hubo un error modificando el folio"))
 })
 
 app.get("/folioImpreso/:id", (req, res) => {

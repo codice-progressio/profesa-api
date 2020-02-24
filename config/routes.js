@@ -9,8 +9,6 @@ let imagenesRoutes = require("../routes/imagenes")
 // IMPORTAR RUTAS PARA SISTEMA CARRDUCI
 // ============================================
 
-let folioRoutes = require("../routes/folio")
-let folioLineaRoutes = require("../routes/folioLinea")
 let modeloCompletoRoutes = require("../routes/gestionModelos/modeloCompleto")
 let clienteRoutes = require("../routes/cliente")
 let departamentoRoutes = require("../routes/departamento")
@@ -74,18 +72,20 @@ module.exports.ROUTES = function(app) {
   app.use("/reportes", reportesRoute)
   app.use("/defaults", defaultsRoute)
   app.use("/login", loginRoutes)
+  //Gestion de folios
   app.use("/folios", folioNewRoutes)
+  // app.use("/folioLinea", folioLineaRoutes)
+  app.use("/orden", ordenRoutes)
+  //----------------------------
   app.use("/usuario", usuarioRoutes)
   app.use("/busqueda", busquedaRoutes)
   app.use("/upload", uploadRoutes)
   app.use("/img", imagenesRoutes)
-  app.use("/folioLinea", folioLineaRoutes)
   app.use("/modeloCompleto", modeloCompletoRoutes)
   app.use("/cliente", clienteRoutes)
   app.use("/departamento", departamentoRoutes)
   app.use("/proceso", procesoRoutes)
   app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
-  app.use("/orden", ordenRoutes)
   app.use("/trayectoria", trayectoriaRoutes)
   app.use("/maquina", maquinaRoutes)
   app.use("/gasto", gastoRoutes)

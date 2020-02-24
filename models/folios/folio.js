@@ -186,7 +186,6 @@ folioSchema
         // es true y lo vuelve a guardar de esa manera.
 
         //Con esta linea esperamos confirmar que esto sea correcto.
-        console.log(`folio.ordenesGeneradas`, folio.ordenesGeneradas)
         if (
           folio.lineas
             ? folio.lineas.reduce((a, b) => {
@@ -199,7 +198,7 @@ folioSchema
         return schema.findByIdAndUpdate(folio._id, folio)
       })
       .then(resp => {
-        console.log("terminado")
+        //Pues nada, todo salio bien
       })
       .catch(err => {
         console.log("Hubo un error modificando el numero de los pedidos. ")

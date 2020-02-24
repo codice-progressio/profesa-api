@@ -88,45 +88,6 @@ app.delete("/desasignar", (req, res) => {
     )
 })
 
-// app.get("/estaAsignada", (req, res) => {
-//   const datos = req.body
-
-//   Maquina.aggregate([
-//     {
-//       $match: {
-//         pila: {
-//           folio: datos.folio,
-//           pedido: datos.pedido,
-//           orden: datos.orden
-//         }
-//       }
-//     }
-//   ])
-//     .exec()
-//     .then(maquinas => {
-//       if (!maquinas)
-//         return RESP._200(res, null, [{ tipo: "correcto", datos: true }])
-
-//       if (err) {
-//         return RESP._500(res, {
-//           msj: `Esta orden ya esta asignada a la maquina ${maquinas[0].nombre}`,
-//           err: err,
-//           masInfo: [
-//             {
-//               infoAdicional:
-//                 CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
-//               dataAdicional:
-//                 CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional
-//             }
-//           ]
-//         })
-//       }
-//     })
-//     .catch(err =>
-//       erro(res, err, "Hubo un error comprobando si la orden esta asignada")
-//     )
-// })
-
 app.get("/ordenesPorAsignar/:id", async (req, res) => {
   //El id actual de transformacion
   const idT = req.params.id

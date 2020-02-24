@@ -74,7 +74,6 @@ module.exports.ROUTES = function(app) {
   app.use("/reportes", reportesRoute)
   app.use("/defaults", defaultsRoute)
   app.use("/login", loginRoutes)
-  app.use("/folio", folioRoutes)
   app.use("/folios", folioNewRoutes)
   app.use("/usuario", usuarioRoutes)
   app.use("/busqueda", busquedaRoutes)

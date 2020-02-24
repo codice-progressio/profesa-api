@@ -26,7 +26,7 @@ app.delete("/:id", (req, res) => {
     })
   }
 
-  Folio.findById()
+  Folio.findById(id)
     .exec()
     .then(folio => {
       if (!folio) throw "No existe el folio"

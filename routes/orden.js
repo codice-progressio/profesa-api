@@ -12,6 +12,15 @@ const Default = require("../models/configModels/default")
 var ModeloCompleto = require("../models/modeloCompleto")
 var Lote = require("../models/almacenProductoTerminado/entradaLote.model")
 
+const Maquina = require("../models/maquina")
+
+const erro = (res, err, msj) => {
+  return RESP._500(res, {
+    msj: msj,
+    err: err
+  })
+}
+
 function buscarOrdenDentroDeFolio(fol, id) {
   // Esta función solo funciona si antes se ha comprobado
   // que la órden existe dentro del departamento.
@@ -106,7 +115,56 @@ app.put("/", (req, res) => {
           deptoTrabajado.trabajando = true
           orden.ubicacionActual[depto_._vm] = deptoTrabajado
           mensajeGeneral = "Órden trabajando."
-          return fol.save()
+
+          if (depto_._vm === CONST.DEPARTAMENTOS.TRANSFORMACION._vm) {
+            //Asignamos el trabajo a la maquina
+            return new Promise((resolve, reject) => {
+              //Si vamos a tomar este cause es por que al final
+              // vamos a grabar el folio por ultimo para retornar
+              // ese objeto.
+
+              // Buscamos la maquina.
+              const idMaquina = orden.ubicacionActual[depto_._vm].maquinaActual
+
+              Maquina.findById(idMaquina)
+                .exec()
+                .then(maquina => {
+                  if (!maquina) throw "No existe la maquina"
+
+                  if(maquina.trabajando) throw `Esta maquina esta trabajando la orden '${maquina.trabajo.numeroDeOrden}'. Es necesario finalizar esta orden para asignar nueva carga. `
+
+                  //Para que esto funcione la orden tiene que existir en la
+                  // pila de trabajo, si no, vamos retornar un error.
+                  const ordenDePila = maquina.pila.find(x => {
+                    return (
+                      x.orden + "" === orden._id + "" &&
+                      //x.trayectos.orden se refiere al orden secuencial de los
+                      // pasos del trayecto. De aqui sabemos si hay segundo paso o mas. Se esta comparando con su equivalente orden.ubicacionActual.orden
+                      x.trayectos.orden + "" ===
+                        orden.ubicacionActual.orden + ""
+                    )
+                  })
+
+                  if (!ordenDePila) {
+                    throw `La orden no esta asignada a la pila de trabajo de la maquina. Para resolver este error es necesario que el supervisor de transformacion asigne la orden '${orden.orden}' a la pila de trabajo de la maquina '${maquina.clave}'`
+                  }
+
+                  maquina.trabajando = true
+                  maquina.trabajo = ordenDePila
+                  maquina.pila.remove(ordenDePila._id)
+
+                  return maquina.save()
+                })
+                .then(maquinaGuardada => {
+                  //Ahora si grabamos el folio
+                  orden.maquinaActual = maquinaGuardada._id
+                  return resolve(fol.save())
+                })
+                .catch(err => reject(err))
+            })
+          } else {
+            return fol.save()
+          }
         }
 
         return RESP._400(res, {
@@ -124,9 +182,7 @@ app.put("/", (req, res) => {
       const orden = buscarOrdenDentroDeFolio(folioGrabado, id_de_la_orden)
       return RESP._200(res, mensajeGeneral, [{ tipo: "orden", orden }])
     })
-    .catch(err => {
-      return RESP._500(res, err)
-    })
+    .catch(err => erro(res, err, "Hubo un error recibiendo la orden"))
 })
 
 function existeFolioConOrden(id) {
@@ -562,9 +618,51 @@ app.put("/:idOrden", (req, res) => {
 
       // schemaParaOrden[depto](orden, datos, departamento);
       // Requerimos el nombre de la variable para buscar dinamicamente la funcion.
-      datosDeOrdenYAvanzar(orden, datos, dep._vm)
 
-      return folio.save()
+      //El departamento tiene que ser transformacion para
+      // podamos adminsitrar las maquinas.
+      if (dep._vm === CONST.DEPARTAMENTOS.TRANSFORMACION._vm) {
+        return new Promise((resolve, reject) => {
+          //Es transformacion y por la tanto necesitamos saber la
+          // maquina en la que trabajo para quitar de trabajando
+          // esta orden.
+
+          const idMaquina = orden.ubicacionActual[dep._vm].maquinaActual
+
+          Maquina.findById(idMaquina)
+            .exec()
+            .then(maquina => {
+              if (!maquina)
+                throw `No se puede completar el avance de la orden ${orden.orden} por que al parecer la maquina actual que se le asigno no existe. Si esto es un error reportalo al administrador del sistema`
+
+              maquina.trabajando = false
+              maquina.trabajado.push(maquina.trabajo)
+              maquina.trabajo = null
+
+              return maquina.save()
+            })
+
+            .then(maquinaGuardada => {
+              //La maquina ya no tiene asignada la orden entonces tenemos que
+              // continuar en lo que estabamos.
+              // #OJO No se debe poner en otro momento para no tener problemas
+              // con el cambio de ubicacion.
+              datosDeOrdenYAvanzar(orden, datos, dep._vm)
+              orden.maquinaActual = null
+
+              return resolve(folio.save())
+            })
+
+            .catch(err => reject(err))
+        })
+      } else {
+        //Si no es transformacion podemos continuar con su avance de manera natural.
+        // ##OJO No podemos poner esto en un solo lugar
+        // por que si no vamos a tener un desfase del puesto actual.
+        // Se debe repetir dentro de la promesa y aqui para conservar el orden de las operaciones.
+        datosDeOrdenYAvanzar(orden, datos, dep._vm)
+        return folio.save()
+      }
     })
     .then(folioGrabado => {
       // Comprobamos si la orden esta terminada:

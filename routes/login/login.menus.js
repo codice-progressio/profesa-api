@@ -93,6 +93,11 @@ function reportes() {
         titulo: "Personalizados",
         url: "/reportes/almacenDeProduccion/personalizado",
         roles: [CONST.ROLES.REPORTES_ALMACEN_PRODUCCION_PERSONALIZADOS]
+      },
+      {
+        titulo: "Transformacion",
+        url: "/reportes/transformacion",
+        roles: [CONST.ROLES.REPORTES_TRANSFORMACION]
       }
     ]
   }

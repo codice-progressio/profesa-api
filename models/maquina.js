@@ -6,6 +6,8 @@ var colores = require("../utils/colors")
 var NombreAnteriorMaquinaShchema = require("../models/nombreAnteriorMaquina")
 var Schema = mongoose.Schema
 
+var Trayecto = require("../models/folios/trayecto")
+
 var maquinaSchema = new Schema(
   {
     nombre: {
@@ -56,6 +58,12 @@ var maquinaSchema = new Schema(
     //deben estar en transformacion
     pila: [
       {
+        cliente: String,
+        idCliente: String,
+        fechaPedidoProduccion: Date,
+        esBaston: Boolean,
+        marcaLaser: String,
+        disponible: Boolean,
         folio: {
           type: Schema.Types.ObjectId,
           required: [true, " Es necesario definir el folio"],
@@ -71,15 +79,29 @@ var maquinaSchema = new Schema(
           required: [true, " Es necesario definir la orden"],
           ref: "Folio.folioLinea.ordenes"
         },
+        ubicacionActual: {
+          recivida: Boolean,
+          _id: String,
+          departamento: String,
+          entrada: Date,
+          orden: Number,
+          transformacion: Schema.Types.Mixed
+        },
 
-        modeloCompleto: String,
-        pasos: Number,
-        numeroDeOrden: String,
-        numerosDeOrden: [Number],
-        paso: Number,
         trayectos: {
-          orden: Number
-        }
+          recivida: Boolean,
+          _id: String,
+          orden: Number,
+          departamento: String
+        },
+        paso: Number,
+        numerosDeOrden: [Number],
+        pasos: Number,
+        modeloCompleto: String,
+        numeroDeOrden: String,
+        observacionesOrden: String,
+        observacionesPedido: String,
+        observacionesFolio: String
       }
     ],
 
@@ -105,7 +127,17 @@ var maquinaSchema = new Schema(
       paso: Number,
       trayectos: {
         orden: Number
-      }
+      },
+
+      cliente: String,
+      idCliente: String,
+      fechaPedidoProduccion: Date,
+      esBaston: Boolean,
+      marcaLaser: String,
+      disponible: Boolean,
+      observacionesOrden: String,
+      observacionesPedido: String,
+      observacionesFolio: String
     },
 
     trabajado: [
@@ -127,7 +159,16 @@ var maquinaSchema = new Schema(
         paso: Number,
         trayectos: {
           orden: Number
-        }
+        },
+        cliente: String,
+        idCliente: String,
+        fechaPedidoProduccion: Date,
+        esBaston: Boolean,
+        marcaLaser: String,
+        disponible: Boolean,
+        observacionesOrden: String,
+        observacionesPedido: String,
+        observacionesFolio: String
       }
     ],
     parada: { type: Boolean, default: false },

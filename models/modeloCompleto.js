@@ -127,14 +127,18 @@ var modeloCompletoSchema = new Schema({
         valildate: [{
             validator: function(v) {
                 return new Promise((resolve) => {
-                    resolve(this.stockMinimo > v)
+                    resolve(this.stockMinimo >= v)
                 })
             },
             msg: "El valor maximo de stock no puede ser menor que el valor minimo de stock"
         }]
     }
 }, { collection: "modelosCompletos" })
-
+/**
+ *
+ *
+ * @param {*} next
+ */
 let generarNombreCompleto = function(next) {
     // Obtenemos los id.
 
@@ -280,8 +284,7 @@ modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
 modeloCompletoSchema.statics.guardarLote = function(id, lote) {
     return this.findById( id )
         .exec()
-        .then((modeloCompleto) =>
-        {
+        .then((modeloCompleto) => {
             if (!modeloCompleto) throw "No existe el modelo"
             let mc = asignacionDeLote(modeloCompleto, lote)
 
@@ -336,12 +339,12 @@ function comprobarLote(modeloCompleto) {
     var ultimoLote = modeloCompleto.lotes[modeloCompleto.lotes.length - 1]
     var nuevoLote = !ultimoLote
 
-    if (ultimoLote) {
+    if (!ultimoLote) {
         // Si hay un lote comprobamos sus fechas.
-        var mesActual = `${new Date().getYear()}@${new Date().getMonth()}`
+        var mesActual = new Date().getMonth()
             // Si no hay un lote entonces mandamos un menos uno 
             // para que la comprobacion nunca sea igual
-        var mesLote = ultimoLote ? `${ultimoLote.createAt.getYear()}@${ultimoLote.createAt.getMonth()}` : -1
+        var mesLote = ultimoLote ? ultimoLote.getMonth() : -1
             // Si las fechas son iguales quiere decir que no
             // debemos crear nuevo lote.
         nuevoLote = !(mesActual === mesLote)

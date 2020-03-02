@@ -127,7 +127,7 @@ var modeloCompletoSchema = new Schema({
         valildate: [{
             validator: function(v) {
                 return new Promise((resolve) => {
-                    resolve(this.stockMinimo > v)
+                    resolve(this.stockMinimo >= v)
                 })
             },
             msg: "El valor maximo de stock no puede ser menor que el valor minimo de stock"

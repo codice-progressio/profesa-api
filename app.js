@@ -157,6 +157,17 @@ for (const key in _ROUTES) {
   }
 }
 
+//Especial para un solo uso
+app.put("/eliminar-minimos-y-maximos", (req, res) => {
+  require("./models/modeloCompleto")
+    .updateMany({}, { $set: { stockMinimo: 0, stockMaximo: 0 } })
+    .exec()
+    .then(dato => {
+      res.send(dato)
+    })
+    .catch(err => res.send(err))
+})
+
 // Llamamos a los errores.
 app.use(function(req, res) {
   return RESP._404(res, {

@@ -75,8 +75,12 @@ app.use(function(req, res, next) {
 
 //  Body parser
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.json({limit: '50mb'}));
+app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+
+//Convierte los valores de los query que se pasan por url
+// en valores. Ej. 'true'=> true, '1000' => 1000
+app.use(require('express-query-auto-parse')())
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   // Mensaje de conexion a la base de datos.
   console.log(ENVIROMENT.msj_bienvenida)
@@ -104,10 +108,10 @@ app.use(httpContext.middleware);
 
 // Obtenemos el token
 app.use((req, res, next) => {
-  // const espera = Math.random() * 2 * 5000
+  // const espera = 1000
   // const espera = 0;
 
-//   setTimeout(function() {
+  // setTimeout(function() {
   if (!ENVIROMENT.esModoProduccion)
   {
     console.log(
@@ -129,7 +133,7 @@ app.use((req, res, next) => {
   }
   httpContext.set("token", req.token );
     next()
-//   }, espera)
+  // }, espera)
 })
 
 // NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.

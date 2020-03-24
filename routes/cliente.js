@@ -22,7 +22,7 @@ app.post("/", (req, res) => {
         { tipo: "cliente", datos: cliente }
       ])
     })
-    .catch(err => erro(res, err, "Hubo un error guardo el cliente"))
+    .catch(err => erro(res, err, "Hubo un error guardando el cliente"))
 })
 app.get("/", async (req, res) => {
   const desde = Number(req.query.desde || 0)

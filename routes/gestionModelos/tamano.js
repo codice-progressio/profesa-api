@@ -1,6 +1,7 @@
 var express = require("express")
 var app = express()
 var Tamano = require("../../models/tamano")
+var RESP = require("../../utils/respStatus")
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {

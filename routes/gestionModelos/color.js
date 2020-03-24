@@ -1,5 +1,7 @@
 var express = require("express")
 var app = express()
+var RESP = require("../../utils/respStatus")
+var Color = require("../../models/colores/color")
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {

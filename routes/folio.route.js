@@ -343,14 +343,11 @@ app.get("/filtrar", async (req, res) => {
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
   const campo = String(req.query.campo || "folio")
-  
-  
-  delete req.query.desde 
-  delete req.query.limite 
-  delete req.query.sort 
-  delete req.query.campo 
 
-  
+  delete req.query.desde
+  delete req.query.limite
+  delete req.query.sort
+  delete req.query.campo
 
   // Hay tres elementos que deben ser objecto id. Hacemos un
   // hard code para convertirlos
@@ -444,7 +441,9 @@ app.get("/filtrar", async (req, res) => {
         laserCliente: "$folioLineas.laserCliente.laser",
 
         porcentajeAvancePedido: "$folioLineas.porcentajeAvance",
-        cantidadProducidaPedido: "$folioLineas.cantidadProducida"
+        cantidadProducidaPedido: "$folioLineas.cantidadProducida",
+
+        cantidadSolicitadaPedido: "$folioLineas.cantidad"
       }
     },
     { $unset: "_id" },
@@ -534,18 +533,53 @@ app.get("/filtrar", async (req, res) => {
 
   Folio.aggregate(agg)
     .exec()
-    .then(foliosConsulta =>
-    {
-      
-
-     return RESP._200(res, null , [
-         { tipo: 'pedidos', datos: foliosConsulta },
-         { tipo: 'total', datos: total[0]?total[0]:0 },
-     ]);
-     
-      
+    .then(foliosConsulta => {
+      return RESP._200(res, null, [
+        { tipo: "pedidos", datos: foliosConsulta },
+        { tipo: "total", datos: total[0] ? total[0] : 0 }
+      ])
     })
-  .catch(err=> erro(res, err, 'Hubo un error obteniendo '))
+    .catch(err => erro(res, err, "Hubo un error obteniendo "))
+})
+
+app.get("/porEntregarAProduccion/:vendedor", (req, res) => {
+  Folio.aggregate([
+    {
+      $match: {
+        vendedor: ObjectId(req.params.vendedor),
+        ordenesGeneradas: false,
+        // entregarAProduccion: false,
+        terminado: false
+      }
+    },
+    {
+      $project: {
+        folio: "$numeroDeFolio",
+        cliente: "$cliente",
+        fechaDeCreacion: "$createdAt"
+      }
+    },
+    {
+      $lookup: {
+        from: "clientes",
+        foreignField: "_id",
+        localField: "cliente",
+        as: "cliente"
+      }
+    },
+
+    { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
+    {
+      $addFields: {
+        cliente: "$cliente.nombre",
+        idCliente: "$cliente._id"
+      }
+    }
+  ])
+    .exec()
+    .then(folios => {
+      return RESP._200(res, null, [{ tipo: "folios", datos: folios }])
+    })
 })
 
 module.exports = app

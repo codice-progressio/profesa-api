@@ -32,14 +32,47 @@ app.get("/", async (req, res) => {
   const sort = Number(req.query.sort || 1)
   const campo = String(req.query.campo || "nombreCompleto")
 
-  const total = await ModeloCompleto.countDocuments().exec()
+  const total = await ModeloCompleto.countDocuments()
 
-  ModeloCompleto.find()
-    .sort({ [campo]: sort })
-    .limit(limite)
-    .skip(desde)
+  ModeloCompleto.aggregate([
+    { $match: { noExiste: { $exists: false } } },
+
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familiaDeProcesos",
+        as: "familiaDeProcesos"
+      }
+    },
+
+    {
+      $unwind: { path: "$familiaDeProcesos", preserveNullAndEmptyArrays: true }
+    },
+    //Fin de populacion
+
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } },
+    {
+      $project: {
+        nombreCompleto: "$nombreCompleto",
+        existencia: "$existencia",
+        stockMaximo: "$stockMaximo",
+        stockMinimo: "$stockMinimo",
+        medias: "$medias",
+        familiaDeProcesos: "$familiaDeProcesos.nombre",
+        familiaDeProcesosId: "$familiaDeProcesos._id"
+      }
+    }
+  ])
     .exec()
     .then(modelosCompletos => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error.
+
       return RESP._200(res, null, [
         { tipo: "modelosCompletos", datos: modelosCompletos },
         { tipo: "total", datos: total }
@@ -87,6 +120,18 @@ app.get("/buscar/termino/:termino", async (req, res) => {
   ModeloCompleto.aggregate([
     { $match },
 
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familiaDeProcesos",
+        as: "familiaDeProcesos"
+      }
+    },
+
+    {
+      $unwind: { path: "$familiaDeProcesos", preserveNullAndEmptyArrays: true }
+    },
     //Fin de populacion
 
     { $sort: { [campo]: sort } },
@@ -99,7 +144,9 @@ app.get("/buscar/termino/:termino", async (req, res) => {
         nombreCompleto: "$nombreCompleto",
         existencia: "$existencia",
         stockMaximo: "$stockMaximo",
-        stockMinimo: "$stockMinimo"
+        stockMinimo: "$stockMinimo",
+        familiaDeProcesos: "$familiaDeProcesos.nombre",
+        familiaDeProcesosId: "$familiaDeProcesos._id"
       }
     }
   ])

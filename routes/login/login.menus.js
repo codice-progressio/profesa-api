@@ -207,8 +207,8 @@ function ingenieria() {
         roles: [CONST.ROLES.INGENIERIA_TERMINADOS]
       },
       {
-        titulo: "Modelos completos",
-        url: "/modelosCompletos",
+        titulo: "SKU - Produccion",
+        url: "/sku",
         roles: [CONST.ROLES.INGENIERIA_MODELOS_COMPLETOS]
       },
       {

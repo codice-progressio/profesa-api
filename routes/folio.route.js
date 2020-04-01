@@ -286,26 +286,22 @@ app.get("/retornarAlVendedor/:id", (req, res) => {
   Folio.findById(id)
     .exec()
     .then(folio => {
+      if (!folio) throw "No existe el folio"
       if (folio.ordenesGeneradas)
         throw "Imposible retornar. Las ordenes ya estan generadas"
 
-      return Folio.updateOne(
-        { _id: ObjectId(id) },
-        {
-          entregarAProduccion: false,
-          fechaDeEntregaAProduccion: null,
-          folioLineas: {
-            ordenesGeneradas: false,
-            trayectoGenerado: false,
-            porcentajeDeAvance: false,
-            ordenes: []
-          }
-        }
-      ).exec()
+      ;(folio.entregarAProduccion = false),
+        (folio.fechaDeEntregaAProduccion = null),
+        folio.folioLineas.forEach(pedido => {
+          pedido.ordenesGeneradas = false
+          pedido.trayectoGenerado = false
+          pedido.porcentajeDeAvance = false
+          pedido.ordenes = []
+        })
+      return folio.save()
     })
     .then(respuesta => {
       if (respuesta.nModified != 1) throw "No se pudo retornar el folio"
-
       return RESP._200(res, "Se retorno el folio al vendedor", [])
     })
     .catch(err =>
@@ -318,9 +314,9 @@ app.get("/retornarAlVendedor/:id", (req, res) => {
  * que valor tenga la bandera. que se le pase como parametro.
  *
  */
-app.post("/iniciarProduccion/:id", (req, res) => {
+app.post("/iniciarProduccion", (req, res) => {
   Folio.updateOne(
-    { _id: ObjectId(req.params.id) },
+    { _id: ObjectId(req.body._id) },
     { entregarAProduccion: true, fechaDeEntregaAProduccion: new Date() }
   )
     .exec()
@@ -548,7 +544,7 @@ app.get("/porEntregarAProduccion/:vendedor", (req, res) => {
       $match: {
         vendedor: ObjectId(req.params.vendedor),
         ordenesGeneradas: false,
-        // entregarAProduccion: false,
+        entregarAProduccion: false,
         terminado: false
       }
     },

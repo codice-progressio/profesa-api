@@ -203,8 +203,8 @@ if (ENVIROMENT.esModoProduccion) {
   https
     .createServer(
       {
-        key: fs.readFileSync("certificado/api.localhost.key"),
-        cert: fs.readFileSync("certificado/api.localhost.crt")
+        key: fs.readFileSync("certificado/angular.key"),
+        cert: fs.readFileSync("certificado/angular.crt")
       },
       app
     )

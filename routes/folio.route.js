@@ -301,7 +301,6 @@ app.get("/retornarAlVendedor/:id", (req, res) => {
       return folio.save()
     })
     .then(respuesta => {
-      if (respuesta.nModified != 1) throw "No se pudo retornar el folio"
       return RESP._200(res, "Se retorno el folio al vendedor", [])
     })
     .catch(err =>

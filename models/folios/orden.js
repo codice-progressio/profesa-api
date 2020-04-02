@@ -56,9 +56,9 @@ const ordenSchema = new Schema({
     // ESTOS DATOS SOLO REPITEN LO QUE YA HAY EN EL FOLIO Y EN EL PEDIDO
     // LOS PUSIMOS AQUI MOTIVADOS PARA LOS REPORTES BUSCANDO OBTENER
     // SOLO ORDENES SIN EL FOLIO COMPLETO. 
-    vendedor: { type: Schema.Types.ObjectId, ref: 'Usuario' },
-    fechaFolio: { type: Date },
-    idFolio: { type: Schema.Types.ObjectId, ref: 'Folio' },
+    // vendedor: { type: Schema.Types.ObjectId, ref: 'Usuario' },
+    // fechaFolio: { type: Date },
+    // idFolio: { type: Schema.Types.ObjectId, ref: 'Folio' },
     observacionesPedido: { type: String },
     observacionesFolio: { type: String },
     desdeAlmacen: { type: Boolean },

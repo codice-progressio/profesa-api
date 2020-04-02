@@ -280,59 +280,6 @@ app.get("/reporte/paraRevision", async (req, res) => {
     )
 })
 
-app.get("/retornarAlVendedor/:id", (req, res) => {
-  const id = req.params.id
-
-  Folio.findById(id)
-    .exec()
-    .then(folio => {
-      if (!folio) throw "No existe el folio"
-      if (folio.ordenesGeneradas)
-        throw "Imposible retornar. Las ordenes ya estan generadas"
-
-      ;(folio.entregarAProduccion = false),
-        (folio.fechaDeEntregaAProduccion = null),
-        folio.folioLineas.forEach(pedido => {
-          pedido.ordenesGeneradas = false
-          pedido.trayectoGenerado = false
-          pedido.porcentajeDeAvance = false
-          pedido.ordenes = []
-        })
-      return folio.save()
-    })
-    .then(respuesta => {
-      return RESP._200(res, "Se retorno el folio al vendedor", [])
-    })
-    .catch(err =>
-      erro(res, err, "Hubo un error retornando el folio al vendedor")
-    )
-})
-
-/**
- * Senala el folio listo para produccion o no dependiendo de
- * que valor tenga la bandera. que se le pase como parametro.
- *
- */
-app.post("/iniciarProduccion", (req, res) => {
-  Folio.updateOne(
-    { _id: ObjectId(req.body._id) },
-    { entregarAProduccion: true, fechaDeEntregaAProduccion: new Date() }
-  )
-    .exec()
-    .then(respuesta => {
-      if (respuesta.nModified != 1)
-        throw "No se pudo enviar el folio a produccion"
-
-      return RESP._200(res, "Folio enviado a produccion", [])
-    })
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error buscando el folio.",
-        err: err
-      })
-    })
-})
-
 app.get("/filtrar", async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
@@ -575,6 +522,66 @@ app.get("/porEntregarAProduccion/:vendedor", (req, res) => {
     .then(folios => {
       return RESP._200(res, null, [{ tipo: "folios", datos: folios }])
     })
+})
+
+app.put("/retornarAlVendedor", (req, res) => {
+  const id = req.body.id
+
+  Folio.findById(id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+      if (folio.ordenesGeneradas)
+        throw "Imposible retornar. Las ordenes ya estan generadas"
+      ;(folio.entregarAProduccion = false),
+        (folio.fechaDeEntregaAProduccion = null),
+        folio.folioLineas.forEach(pedido => {
+          pedido.ordenesGeneradas = false
+          pedido.trayectoGenerado = false
+          pedido.porcentajeDeAvance = false
+          pedido.ordenes = []
+        })
+      return folio.save()
+    })
+    .then(respuesta => {
+      return RESP._200(res, "Se retorno el folio al vendedor", [])
+    })
+    .catch(err =>
+      erro(res, err, "Hubo un error retornando el folio al vendedor")
+    )
+})
+
+/**
+ * Senala el folio listo para produccion o no dependiendo de
+ * que valor tenga la bandera. que se le pase como parametro.
+ *
+ */
+app.put("/entregarARevision", (req, res) => {
+  Folio.updateOne(
+    { _id: ObjectId(req.body._id) },
+    { entregarAProduccion: true, fechaDeEntregaAProduccion: new Date() }
+  )
+    .exec()
+    .then(respuesta => {
+      if (respuesta.nModified != 1)
+        throw "No se pudo enviar el folio a produccion"
+
+      return RESP._200(res, "Folio enviado a produccion", [])
+    })
+    .catch(err => {
+      return RESP._500(res, {
+        msj: "Hubo un error buscando el folio.",
+        err: err
+      })
+    })
+})
+
+app.put("/liberarParaProduccion", (req, res) =>
+{
+  
+  return res.send('No existe')
+
+
 })
 
 module.exports = app

@@ -48,7 +48,6 @@ let FolioSchema = new Schema(
     },
     // folioLineas: [{ type: Schema.Types.Mixed, ref: 'FolioLinea' }]
     folioLineas: [folioLineaSchema],
-    nivelDeUrgencia: NVU.KEY,
     porcentajeAvance: { type: Number, min: 0, max: 100 },
     ordenesGeneradas: { type: Boolean, default: false },
     impreso: { type: Boolean, default: false },

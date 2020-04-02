@@ -51,6 +51,25 @@ var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaP
 var ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
 
 module.exports.ROUTES = function(app) {
+  app.use("/parametros", require("../routes/parametros/parametros.route"))
+
+  app.use((req, res, next) => {
+    //Cargamos todos los parametros en cada peticion para tener disponible
+    //la informacion en req.parametros
+    var Parametros = require("../models/defautls/parametrosDeTrabajo.model")
+
+    Parametros.find()
+      .exec()
+      .then(parametros => {
+        if (parametros.length === 0)
+          throw "No has definido el documento que contiene los parametros. Es necesario que los definas para poder continuar."
+
+        req["parametros"] = parametros[0]
+        next()
+      })
+      .catch(err => next(err))
+  })
+
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(
     "/reportePersonalizadoAlmacenProduccion",

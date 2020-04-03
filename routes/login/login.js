@@ -19,8 +19,14 @@ const obtenerMenu = require("./login.menus")
 // Autenticación de google.
 // ============================================
 
+const estructuraToken = usuario => {
+  const us = usuario.toObject()
+  us["permissions"] = usuario.role
+  return { ...us }
+}
+
 app.get("/renuevatoken", mdAutenticacion.verificarToken, (req, res) => {
-  var token = jwt.sign({ usuario: req.usuario }, SEED, { expiresIn: 14400 })
+  var token = jwt.sign(estructuraToken(req.usaurio), SEED, { expiresIn: 14400 })
 
   return res.status(200).send({
     ok: true,
@@ -32,31 +38,19 @@ app.post("/", (req, res) => {
   var body = req.body
   Usuario.findOne({ email: body.email })
     .exec()
-    .then((usuarioDB) => {
-      if (!usuarioDB) {
-        return RESP._400(res, {
-          msj: "Credencianles incorrectas",
-          err: "No se pudo loguear."
-        })
-      }
+    .then(usuarioDB => {
+      if (!usuarioDB) throw "Credenciales incorrectas"
 
-      if (!body.password) {
-        return RESP._400(res, {
-          msj: "El password no debe estar vacio.",
-          err: "Parece que olvidaste escribir el password."
-        })
-      }
+      if (!body.password) throw "El password no debe estar vacio."
 
-      if (!bcrypt.compareSync(body.password, usuarioDB.password)) {
-        return RESP._400(res, {
-          msj: "Credencianles incorrectas",
-          err: "No se pudo loguear."
-        })
-      }
+      if (!bcrypt.compareSync(body.password, usuarioDB.password))
+        throw "Credenciales incorrectas"
 
       // crear un token!
       usuarioDB.password = ":D"
-      var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 })
+      var token = jwt.sign(estructuraToken(usuarioDB), SEED, {
+        expiresIn: 14400
+      })
 
       return RESP._200(res, `Bienvenido ${usuarioDB.nombre}`, [
         { tipo: "usuario", datos: usuarioDB },
@@ -66,7 +60,7 @@ app.post("/", (req, res) => {
         { tipo: "apiVersion", datos: pjson.version }
       ])
     })
-    .catch((err) => {
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error en el login.",
         err: err

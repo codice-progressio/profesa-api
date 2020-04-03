@@ -1,26 +1,34 @@
-var mongoose = require('mongoose');
-var uniqueValidator = require('mongoose-unique-validator');
-var _ROLES = require('../config/roles');
+var mongoose = require("mongoose")
+var uniqueValidator = require("mongoose-unique-validator")
+var permisos = require("../config/permisos.config")
 
-var Schema = mongoose.Schema;
+var Schema = mongoose.Schema
 
 var rolesValidos = {
-    // TODO: Estos valores tienen que ir en el archivo config.js
-    values: _ROLES.ARRAY,
-    message: '{VALUE} no es un rol permitido.'
-};
+  // TODO: Estos valores tienen que ir en el archivo config.js
+  values: permisos.lista,
+  message: "{VALUE} no es un rol permitido."
+}
 
 var usuarioSchema = new Schema({
-    nombre: { type: String, required: [true, 'El nombre es necesario.'] },
-    email: { type: String, unique: true, required: [true, 'El correo es necesario.'] },
-    password: { type: String, required: [true, 'La contraseña es necesaria.'] },
-    img: { type: String, required: false },
-    // TODO: Un usuario debe poder tener varios roles. 
-    role: { type: [String], required: true, enum: rolesValidos, default: [_ROLES.USER_ROLE] },
-    google: { type: Boolean, default: false },
-    idTrabajador: { type: Number }
-});
+  nombre: { type: String, required: [true, "El nombre es necesario."] },
+  email: {
+    type: String,
+    unique: true,
+    required: [true, "El correo es necesario."]
+  },
+  password: { type: String, required: [true, "La contraseña es necesaria."] },
+  img: { type: String, required: false },
+  // TODO: Un usuario debe poder tener varios roles.
+  role: {
+    type: [String],
+    required: true,
+    enum: rolesValidos,
+    default: [permisos.$("login")]
+  },
+  idTrabajador: { type: Number }
+})
 
-usuarioSchema.plugin(uniqueValidator, { message: ' \'{PATH}\' debe ser único.' });
+usuarioSchema.plugin(uniqueValidator, { message: " '{PATH}' debe ser único." })
 
-module.exports = mongoose.model('Usuario', usuarioSchema);
+module.exports = mongoose.model("Usuario", usuarioSchema)

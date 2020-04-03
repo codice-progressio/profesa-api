@@ -50,13 +50,20 @@ var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaP
 
 var ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
 
-module.exports.ROUTES = function(app) {
-  app.use("/parametros", require("../routes/parametros/parametros.route"))
+var guard = require("express-jwt-permissions")()
+var jwt = require("express-jwt")
+var seed = require("../config/config").SEED
 
+module.exports.ROUTES = function(app) {
+  //Aseguramos todo menos el login y paremetros. Internamente paraemtros
+  // se asegura. Tambien crea el req.user
+  app.use(jwt({ secret: seed }).unless({ path: ["/login", "/parametros"] }))
+
+  app.use("/parametros", require("../routes/parametros/parametros.route"))
   app.use((req, res, next) => {
     //Cargamos todos los parametros en cada peticion para tener disponible
     //la informacion en req.parametros
-    var Parametros = require("../models/defautls/parametrosDeTrabajo.model")
+    var Parametros = require("../models/defautls/parametros.model")
 
     Parametros.find()
       .exec()
@@ -69,6 +76,9 @@ module.exports.ROUTES = function(app) {
       })
       .catch(err => next(err))
   })
+
+
+  app.use("/login", loginRoutes)
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(
@@ -90,7 +100,7 @@ module.exports.ROUTES = function(app) {
   app.use("/almacenDeProductoTerminado/devolucion", devolucionRoute)
   app.use("/reportes", reportesRoute)
   app.use("/defaults", defaultsRoute)
-  app.use("/login", loginRoutes)
+
   //Gestion de folios
   app.use("/folios", folioNewRoutes)
   // app.use("/folioLinea", folioLineaRoutes)

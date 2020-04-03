@@ -13,18 +13,13 @@ var db = require("./config/db")
 
 var RESP = require("./utils/respStatus")
 
-var defaults = require("./config/defaultData")
 var _ROUTES = require("./config/routes").ROUTES
-
-var _PERMISOS = require("./middlewares/permisos").PERMISOS
 
 /**
  * Este codigo nos permite agregar datos al htttp
  * para tenerlos donde sea?
  *
  */
-
-const httpContext = require("express-http-context")
 
 // ============================================
 // ENVIROMENT
@@ -81,6 +76,10 @@ app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }))
 //Convierte los valores de los query que se pasan por url
 // en valores. Ej. 'true'=> true, '1000' => 1000
 app.use(require("express-query-auto-parse")())
+
+mongoose.set("useNewUrlParser", true)
+mongoose.set("useUnifiedTopology", true)
+mongoose.set("useCreateIndex", true)
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   // Mensaje de conexion a la base de datos.
   console.log(ENVIROMENT.msj_bienvenida)
@@ -96,13 +95,6 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 // // ============================================
 // // Rutas - Middleware PARA SISTEMA CARRDUCI
 // // ============================================
-
-// Tiene que estar aqui por que segun la documentacion...
-// Note that some popular middlewares (such as body-parser, express-jwt) may
-// cause context to get lost. To workaround such issues, you are advised to use
-// any third party middleware that does NOT need the context BEFORE you use
-// this middleware.
-app.use(httpContext.middleware)
 
 // Obtenemos el token
 app.use((req, res, next) => {
@@ -127,27 +119,10 @@ app.use((req, res, next) => {
   } else if (req.query && req.query.token) {
     req.token = req.query.token
   }
-  httpContext.set("token", req.token)
   next()
   // }, espera)
 })
 
-// NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.
-app.use(
-  // [_PERMISOS()],
-  (req, res, next) => {
-    if (!ENVIROMENT.esModoProduccion) {
-      console.log(
-        colores.success("SEGURIDAD") +
-          colores.info(req.originalUrl) +
-          "Validado."
-      )
-    }
-    next()
-  }
-)
-
-// Luego creamos las routes.
 _ROUTES(app)
 
 // Llamamos a los errores.
@@ -158,7 +133,11 @@ app.use(function(req, res) {
   })
 })
 
-app.use(function(err, req, res) {
+app.use(function(err, req, res, next) {
+  if (err.code === "permission_denied") {
+    return res.status(403).send("Permiso denegado")
+  }
+
   return RESP._500(res, {
     msj: "Hubo un error.",
     err: err
@@ -191,7 +170,6 @@ if (ENVIROMENT.esModoProduccion) {
     )
     .listen(ENVIROMENT.port, () => {
       console.log(ENVIROMENT.msj_mongoose_ok)
-      defaults()
     })
 } else {
   https
@@ -204,6 +182,5 @@ if (ENVIROMENT.esModoProduccion) {
     )
     .listen(ENVIROMENT.port, () => {
       console.log(ENVIROMENT.msj_mongoose_ok)
-      defaults()
     })
 }

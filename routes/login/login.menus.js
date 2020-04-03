@@ -1,6 +1,9 @@
-const CONST = require("../../utils/constantes")
+var CONST = require("../../utils/constantes")
+var permisos = require("../../config/permisos.config") 
 
-module.exports = function(rolesDelUsuario) {
+module.exports = function (rolesDelUsuario)
+{
+  console.log(permisos)
   var menuSeleccionado = generarMenus()
 
   if (!rolesDelUsuario.includes("SUPER_ADMIN")) {
@@ -297,7 +300,24 @@ function administrador() {
         titulo: "Almacen descripcion",
         url: "/almacenDescripcion",
         roles: [CONST.ROLES.ADMINISTRADOR_ALMACEN_DESCRIPCION]
-      }
+      },
+     
+    ]
+  }
+  return menu
+}
+function parametrosDelSistema() {
+  const menu = {
+    roles: [CONST.ROLES.ADMINISTRADOR_MENU],
+    titulo: "Administrador",
+    icono: "fas fa-user-cog",
+    submenu: [
+      {
+        titulo: "Usuarios",
+        url: "/usuarios",
+        roles: []
+      },
+     
     ]
   }
   return menu

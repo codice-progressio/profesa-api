@@ -43,18 +43,12 @@ exports.verificarToken = function(req, res, next) {
     var token = req.query.token;
     jwt.verify(token, SEED, (err, decode) => {
 
-        if (err) {
-            return RESP._401(res, {
-                msj: 'Token incorrecto.',
-                err: 'El token recivo no es válido.',
-            });
-        }
+        if (err) return next('El token no es valido')
 
         // Colocar la información del usuario en 
         // cualquier petición. Lo extraemos del decode.
         req.usuario = decode.usuario;
         next();
-
     });
 };
 

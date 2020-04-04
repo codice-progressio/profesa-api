@@ -31,9 +31,12 @@ app.post("/", (req, res, next) => {
     .catch(err => next(err))
 })
 
+
+//Despues de esto tiene que existir el docuemnto de parametros 
+// para poder continuar
 app.use(async (req, res, next) => {
-  var parametro = await Parametros.find().exec()
-  if (!parametro[0])
+  var parametro = await Parametros.findOne().exec()
+  if (!parametro)
     return next("No existe un documento para poder establecer este parametro")
   next()
 })
@@ -88,11 +91,10 @@ app.post("/super-admin/crear", async (req, res, next) => {
 
 //DESPUES DE AQUI TODO LO DEBE SE HACER EL SUPER ADMIN
 
-// app.use(guard.check(permisos.todos.SUPER_ADMIN))
+app.use(guard.check(permisos.$('SUPER_ADMIN')))
 
 app.put(
   "/configurar-super-admin/cambiar",
-  guard.check(permisos.$("SUPER_ADMIN")),
   async (req, res, next) => {
     Promise.all(
       //Contra fuerza bruta

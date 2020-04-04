@@ -35,21 +35,21 @@ var app = express()
 
 // Esta función nos ayuda a quitar duplicados dentro
 //  del array.
-Array.prototype.unique = (function(a) {
-  return function() {
+Array.prototype.unique = (function (a) {
+  return function () {
     return this.filter(a)
   }
-})(function(a, b, c) {
+})(function (a, b, c) {
   return c.indexOf(a, b + 1) < 0
 })
 
-Array.prototype.greaterThan0 = function(a) {
+Array.prototype.greaterThan0 = function (a) {
   return a.length >= 1
 }
 
 app.use(compression())
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Origin",
     ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
@@ -126,21 +126,21 @@ app.use((req, res, next) => {
 _ROUTES(app)
 
 // Llamamos a los errores.
-app.use(function(req, res) {
+app.use(function (req, res) {
   return RESP._404(res, {
     msj: "La pagina solicitada no existe.",
-    err: "La pagina que solicitaste no existe."
+    err: "La pagina que solicitaste no existe.",
   })
 })
 
-app.use(function(err, req, res, next) {
+app.use(function (err, req, res, next) {
   if (err.code === "permission_denied") {
     return res.status(403).send("Permiso denegado")
   }
 
   return RESP._500(res, {
     msj: "Hubo un error.",
-    err: err
+    err: err,
   })
 })
 
@@ -164,7 +164,7 @@ if (ENVIROMENT.esModoProduccion) {
     .createServer(
       {
         key: fs.readFileSync("certificado/api.192.168.1.149.key"),
-        cert: fs.readFileSync("certificado/api.192.168.1.149.crt")
+        cert: fs.readFileSync("certificado/api.192.168.1.149.crt"),
       },
       app
     )
@@ -176,7 +176,7 @@ if (ENVIROMENT.esModoProduccion) {
     .createServer(
       {
         key: fs.readFileSync("certificado/angular.key"),
-        cert: fs.readFileSync("certificado/angular.crt")
+        cert: fs.readFileSync("certificado/angular.crt"),
       },
       app
     )

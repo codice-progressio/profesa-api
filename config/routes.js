@@ -53,32 +53,38 @@ var ProgramacionTransformacion = require("../routes/ingenieria/programacionTrans
 var guard = require("express-jwt-permissions")()
 var jwt = require("express-jwt")
 var seed = require("../config/config").SEED
+var permisos = require('../config/permisos.config')
 
 module.exports.ROUTES = function(app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
   app.use(jwt({ secret: seed }).unless({ path: ["/login", "/parametros"] }))
 
+  //Este va primero por que se usan permisos especiales internamente
   app.use("/parametros", require("../routes/parametros/parametros.route"))
-  app.use((req, res, next) => {
-    //Cargamos todos los parametros en cada peticion para tener disponible
-    //la informacion en req.parametros
-    var Parametros = require("../models/defautls/parametros.model")
+ 
+  //Cargamos todos los parametros en cada peticion para tener disponible
+  //la informacion en req.parametros
+  var Parametros = require("../models/defautls/parametros.model")
+  app.use((req, res, next) =>
+  {
 
-    Parametros.find()
+    Parametros.findOne()
       .exec()
       .then(parametros => {
-        if (parametros.length === 0)
+        if (!parametros)
           throw "No has definido el documento que contiene los parametros. Es necesario que los definas para poder continuar."
 
-        req["parametros"] = parametros[0]
+        req["parametros"] = parametros
         next()
       })
       .catch(err => next(err))
   })
 
-
   app.use("/login", loginRoutes)
+
+  //Para usar esta parte debe tener permisos de login
+  app.use(guard.check(permisos.$('login')))
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(

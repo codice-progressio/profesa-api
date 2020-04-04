@@ -1,3 +1,5 @@
+const fs = require("fs")
+
 const permisos = {
   SUPER_ADMIN: "El usuario administrador",
   login: "Permite que un usuario se loguee"
@@ -11,8 +13,22 @@ const permisos = {
  * @returns
  */
 module.exports.$ = permiso => {
+  if (process.env.NODE_ENV === "production") return permiso
+
   if (permisos.hasOwnProperty(permiso)) return permiso
-  console.log('no definodo')
-  throw "Permiso no definido"
+
+  const archivo = "config/permisos.config.txt"
+
+  if (fs.existsSync(archivo)) {
+    var data = fs.readFileSync(archivo, "utf-8")
+    if (!data.includes(permiso)) {
+      data = data
+        .concat(`"${permiso}":"NO SE HA DEFINIDO DESCRIPCION",\n`)
+        
+      fs.writeFileSync(archivo, data)
+
+      console.log("Permiso no definido " + permiso)
+    }
+  }
 }
 module.exports.lista = Object.keys(permisos)

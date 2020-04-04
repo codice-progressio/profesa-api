@@ -1,7 +1,6 @@
 //importar rutas.
 let usuarioRoutes = require("../routes/usuario")
 let loginRoutes = require("../routes/login/login")
-let busquedaRoutes = require("../routes/busqueda")
 let uploadRoutes = require("../routes/upload")
 let imagenesRoutes = require("../routes/imagenes")
 
@@ -15,15 +14,12 @@ let departamentoRoutes = require("../routes/departamento")
 let procesoRoutes = require("../routes/proceso")
 let familiaDeProcesosRoutes = require("../routes/familiaDeProcesos")
 let ordenRoutes = require("../routes/orden")
-let trayectoriaRoutes = require("../routes/trayectoria")
 let maquinaRoutes = require("../routes/maquina")
-let gastoRoutes = require("../routes/gasto")
 
 let modeloRoutes = require("../routes/gestionModelos/modelo")
 let tamanoRoutes = require("../routes/gestionModelos/tamano")
 let colorRoutes = require("../routes/gestionModelos/color")
 let terminadoRoutes = require("../routes/gestionModelos/terminado")
-let hitRoutes = require("../routes/ingenieria/hit")
 let defaultsRoute = require("../routes/configCruds/defaults.crud")
 
 let reportesRoute = require("../routes/reportes/reportes")
@@ -53,47 +49,48 @@ var ProgramacionTransformacion = require("../routes/ingenieria/programacionTrans
 var guard = require("express-jwt-permissions")()
 var jwt = require("express-jwt")
 var seed = require("../config/config").SEED
-var permisos = require('../config/permisos.config')
+var permisos = require("../config/permisos.config")
 
-module.exports.ROUTES = function(app) {
+module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
   app.use(jwt({ secret: seed }).unless({ path: ["/login", "/parametros"] }))
 
   //Este va primero por que se usan permisos especiales internamente
   app.use("/parametros", require("../routes/parametros/parametros.route"))
- 
+
   //Cargamos todos los parametros en cada peticion para tener disponible
   //la informacion en req.parametros
   var Parametros = require("../models/defautls/parametros.model")
-  app.use((req, res, next) =>
-  {
-
+  app.use((req, res, next) => {
     Parametros.findOne()
       .exec()
-      .then(parametros => {
+      .then((parametros) => {
         if (!parametros)
           throw "No has definido el documento que contiene los parametros. Es necesario que los definas para poder continuar."
 
         req["parametros"] = parametros
         next()
       })
-      .catch(err => next(err))
+      .catch((err) => next(err))
   })
 
   app.use("/login", loginRoutes)
 
   //Para usar esta parte debe tener permisos de login
-  app.use(guard.check(permisos.$('login')))
+  app.use(guard.check(permisos.$("login")))
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(
     "/reportePersonalizadoAlmacenProduccion",
     ReportePersonalizadoAlmacenProduccion
   )
+  //DEPRECIAR ESTO!!!
+  app.use("/defaults", defaultsRoute)
+  // -------------------------------
   app.use("/empleado", EmpleadoRoute)
   app.use("/puesto", PuestoRoute)
-  app.use("/area", AreaRoute)
+  app.use("/area", guard.check(permisos.$("SUPER_ADMIN")), AreaRoute)
   app.use("/curso", CursoRoute)
   app.use("/requisicion", RequisicionRoute)
   app.use("/divisa", DivisaRoute)
@@ -105,15 +102,12 @@ module.exports.ROUTES = function(app) {
   app.use("/almacenDeProductoTerminado/salida", salidaRoute)
   app.use("/almacenDeProductoTerminado/devolucion", devolucionRoute)
   app.use("/reportes", reportesRoute)
-  app.use("/defaults", defaultsRoute)
 
   //Gestion de folios
   app.use("/folios", folioNewRoutes)
-  // app.use("/folioLinea", folioLineaRoutes)
   app.use("/orden", ordenRoutes)
   //----------------------------
   app.use("/usuario", usuarioRoutes)
-  app.use("/busqueda", busquedaRoutes)
   app.use("/upload", uploadRoutes)
   app.use("/img", imagenesRoutes)
   app.use("/modeloCompleto", modeloCompletoRoutes)
@@ -121,12 +115,9 @@ module.exports.ROUTES = function(app) {
   app.use("/departamento", departamentoRoutes)
   app.use("/proceso", procesoRoutes)
   app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
-  app.use("/trayectoria", trayectoriaRoutes)
   app.use("/maquina", maquinaRoutes)
-  app.use("/gasto", gastoRoutes)
   app.use("/modelo", modeloRoutes)
   app.use("/tamano", tamanoRoutes)
   app.use("/color", colorRoutes)
   app.use("/terminado", terminadoRoutes)
-  app.use("/hit", hitRoutes)
 }

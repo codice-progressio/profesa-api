@@ -1,7 +1,6 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const uniqueValidator = require("mongoose-unique-validator")
-const httpContext = require("express-http-context")
 const jwt = require("jsonwebtoken")
 const SEED = require("../../../config/config").SEED
 
@@ -139,8 +138,10 @@ async function puestoDeEmpleadosRelacionadosANull(next) {
     })
 }
 
-async function ObtenerYDecodificarUsuario() {
-  return await obtenerUsuario(httpContext.get("token"))
+async function ObtenerYDecodificarUsuario()
+{
+  throw '#httpContexArreglar2 Debe obtener el usuario desde el contextgo normal'
+  // return await obtenerUsuario())
 }
 
 async function puestoReportaAANull(next) {

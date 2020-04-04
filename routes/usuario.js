@@ -10,11 +10,14 @@ var mdAutenticacion = require('../middlewares/autenticacion');
 
 var app = express();
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../config/permisos.config')
+
 
 // ============================================
 // Obtener todos los usuarios. 
 // ============================================
-app.get('/', (req, res, next) => {
+app.get('/',  guard.check(permisos.$('administrador:usuario:leer')),(req, res, next) => {
 
     var desde = req.query.desde || 0;
     desde = Number(desde);
@@ -54,37 +57,13 @@ app.get('/', (req, res, next) => {
 });
 
 
-
-// // ============================================
-// // Verificar token. (Esta parte esta en middleware)
-// // ============================================
-
-// app.use('/', (req, res, next) => {
-
-//     var token = req.query.token;
-//     jwt.verify(token, SEED, (err, decode) => {
-
-//         if (err) {
-//             return res.status(401).json({
-//                 ok: true,
-//                 mensaje: 'Token incorrecto.',
-//                 errors: err
-//             });
-//         }
-
-//         next();
-
-
-//     });
-
-// });
-
-
-
 // ============================================
 // Actualizar usuario
 // ============================================
-app.put('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_o_MismoUsuario, mdAutenticacion.verificarNoCambioDeADMIN_ROLE], (req, res) => {
+app.put('/:id', [
+    
+    mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_o_MismoUsuario, mdAutenticacion.verificarNoCambioDeADMIN_ROLE], (req, res) =>
+    {
 
     var id = req.params.id;
     var body = req.body;
@@ -128,7 +107,7 @@ app.put('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_
 // ============================================
 // Crear un nuevo usuario. 
 // ============================================
-app.post('/', (req, res) => {
+app.post('/', guard.check(permisos.$('administrador:usuario:crear')),(req, res) => {
    
 
     var body = req.body;
@@ -194,7 +173,8 @@ app.post('/', (req, res) => {
 // ============================================
 
 
-app.delete('/:id', [mdAutenticacion.verificarToken, mdAutenticacion.verificarADMIN_ROLE], (req, res) => {
+app.delete('/:id', guard.check(permisos.$('administrador:usuario:eliminar')), (req, res) =>
+    {
 
     var id = req.params.id;
 

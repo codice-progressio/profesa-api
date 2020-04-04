@@ -2,13 +2,14 @@ let express = require('express');
 let app = express();
 let RESP = require('../../utils/respStatus');
 var ModeloCompleto = require('../../models/modeloCompleto');
-
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
 
 /**
  * Guardar nuevo lote. 
  * 
  */
-app.post('/', (req, res) => {
+app.post('/', guard.check(permisos.$('almacenDeProductoTerminado:lote:crear')), (req, res) => {
 
     let idModeloCompleto = req.body._id;
     let lote = req.body.lote;
@@ -41,7 +42,7 @@ app.post('/', (req, res) => {
  * 
  */
 
-app.delete('/:idModeloCompleto/:idLote', (req, res) => {
+app.delete('/:idModeloCompleto/:idLote', guard.check(permisos.$('almacenDeProductoTerminado:lote:eliminar')),(req, res) => {
 
     let idModeloCompleto = req.params.idModeloCompleto;
     let idLote = req.params.idLote;
@@ -80,7 +81,7 @@ app.delete('/:idModeloCompleto/:idLote', (req, res) => {
  * El middleware del modelo completo deberia de hacer el 
  * ajuste de la existencia de manera automatica.
  */
-app.put("/:idModeloCompleto/:idLote", (req, res) => {
+app.put("/:idModeloCompleto/:idLote", guard.check(permisos.$('almacenDeProductoTerminado:lote:modificar')), (req, res) => {
   /**
    * El id del modelo completo.
    */

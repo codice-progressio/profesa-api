@@ -3,6 +3,8 @@ var app = express()
 var RESP = require("../../utils/respStatus")
 var Color = require("../../models/colores/color")
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
@@ -10,7 +12,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", (req, res) => {
+app.post("/", guard.check(permisos.$('color:crear')), (req, res) => {
   return new Color(req.body)
     .save()
     .then(color => {
@@ -21,7 +23,7 @@ app.post("/", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando el color"))
 })
 
-app.get("/", async (req, res) => {
+app.get("/", guard.check(permisos.$('color:leer:todo')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -43,7 +45,7 @@ app.get("/", async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los colores"))
 })
 
-app.get("/:id", (req, res) => {
+app.get("/:id", guard.check(permisos.$('color:leer:id')), (req, res) => {
   Color.findById(req.params.id)
     .exec()
     .then(color => {
@@ -54,7 +56,7 @@ app.get("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el color por su id"))
 })
 
-app.get("/buscar/:termino", async (req, res) => {
+app.get("/buscar/:termino", guard.check(permisos.$('color:leer:termino')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -105,7 +107,7 @@ app.get("/buscar/:termino", async (req, res) => {
     )
 })
 
-app.delete("/:id", (req, res) => {
+app.delete("/:id", guard.check(permisos.$('color:eliminar')), (req, res) => {
   Color.findById(req.params.id)
     .exec()
     .then(color => {
@@ -121,7 +123,7 @@ app.delete("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el color"))
 })
 
-app.put("/", (req, res) => {
+app.put("/", guard.check(permisos.$('color:modificar')), (req, res) => {
   Color.findById(req.body._id)
     .exec()
     .then(color => {

@@ -7,6 +7,9 @@ var Usuario = require("../models/usuario")
 
 var app = express()
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../config/permisos.config')
+
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
@@ -14,7 +17,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", (req, res) => {
+app.post("/", guard.check(permisos.$('cliente:crear')), (req, res) => {
   return new Cliente(req.body)
     .save()
     .then(cliente => {
@@ -24,7 +27,7 @@ app.post("/", (req, res) => {
     })
     .catch(err => erro(res, err, "Hubo un error guardando el cliente"))
 })
-app.get("/", async (req, res) => {
+app.get("/", guard.check(permisos.$('cliente:leer:todo')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -46,7 +49,7 @@ app.get("/", async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los clientes"))
 })
 
-app.get("/:id", (req, res) => {
+app.get("/:id", guard.check(permisos.$('cliente:leer:id')), (req, res) => {
   Cliente.findById(req.params.id)
     .exec()
     .then(cliente => {
@@ -57,7 +60,7 @@ app.get("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el cliente por su id"))
 })
 
-app.get("/buscar/:termino", async (req, res) => {
+app.get("/buscar/:termino", guard.check(permisos.$('cliente:leer:termino')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -111,7 +114,7 @@ app.get("/buscar/:termino", async (req, res) => {
     )
 })
 
-app.delete("/:id", (req, res) => {
+app.delete("/:id", guard.check(permisos.$('cliente:eliminar')),(req, res) => {
   Cliente.findById(req.params.id)
     .exec()
     .then(cliente => {
@@ -127,7 +130,7 @@ app.delete("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el cliente"))
 })
 
-app.put("/", (req, res) => {
+app.put("/", guard.check(permisos.$('cliente:modificar')), (req, res) => {
   Cliente.findById(req.body._id)
     .exec()
     .then(cliente => {
@@ -150,7 +153,7 @@ app.put("/", (req, res) => {
 // ============================================
 // El id de la marca embebida.
 
-app.get("/laser/:idLaser", (req, res, next) => {
+app.get("/laser/:idLaser", guard.check(permisos.$('cliente:laser:leer:id')), (req, res, next) => {
   const id = req.params.idLaser
   Cliente.findOne({ laserados: { $elemMatch: { _id: id } } })
     .exec()
@@ -177,7 +180,7 @@ app.get("/laser/:idLaser", (req, res, next) => {
 // // Agregar una marca laser al cliente.
 // // ============================================
 
-app.put("/laser/:idCliente", (req, res) => {
+app.put("/laser/:idCliente", guard.check(permisos.$('cliente:laser:agregar')), (req, res) => {
   var idCliente = req.params.idCliente
 
   var marcaLaser = req.body.laser
@@ -209,86 +212,6 @@ app.put("/laser/:idCliente", (req, res) => {
       })
     })
 })
-
-// ============================================
-// Hace una peticion de agregar un modelo a un cliente.
-// ============================================
-app.put(
-  "/solicitarAutorizacion/modeloCompleto/:idCliente",
-  (req, res, next) => {
-    // Comprobamos que el usuario y el modelo existan
-    const idCliente = req.params.idCliente
-    Promise.all([
-      ModeloCompleto.findById(req.body.modeloCompleto).exec(),
-      Usuario.findById(req.body.usuarioQueSolicitaAutorizacion).exec(),
-      Cliente.findById(idCliente).exec()
-    ])
-      .then(respuestas => {
-        const modeloCompleto = respuestas[0]
-        const usuario = respuestas[1]
-        const cliente = respuestas[2]
-        if (!modeloCompleto) {
-          return RESP._400(res, {
-            msj: "No existe el modelo completo.",
-            err: "El id que ingresaste no existe."
-          })
-        }
-
-        if (!usuario) {
-          return RESP._400(res, {
-            msj: "No existe el usuario.",
-            err: "El id que ingresaste no existe."
-          })
-        }
-
-        if (!cliente) {
-          return RESP._400(res, {
-            msj: "El cliente no existe.",
-            err: "El id que ingresaste no existe."
-          })
-        }
-
-        const existe = cliente.modelosCompletosAutorizados.find(x => {
-          console.log(x.modeloCompleto.id + "" + modeloCompleto._id.toString())
-          return x.modeloCompleto.id === modeloCompleto._id.toString()
-        })
-        if (existe) {
-          return RESP._400(res, {
-            msj: existe.autorizado
-              ? "Modelo autorizado"
-              : "Autorizacion pendiente.",
-            err: existe.autorizado
-              ? "Este modelo ya fue autorizado para este cliente."
-              : "La solicitud ya esta echa pero aun no se autoriza."
-          })
-        }
-
-        // Modificamos el cliente
-        cliente.modelosCompletosAutorizados.push({
-          modeloCompleto: modeloCompleto._id,
-          usuarioQueSolicitaAutorizacion: usuario._id,
-          autorizacionSolicitada: true
-        })
-
-        return cliente.save()
-      })
-      .then(clienteGrabado => {
-        return RESP._200(res, "Se realizo la solicitud para este cliente", [
-          { tipo: "cliente", datos: clienteGrabado }
-        ])
-      })
-      .catch(err => {
-        return RESP._500(res, {
-          msj: "Hubo un error solicitando la autorizacion.",
-          err: err
-        })
-      })
-  }
-)
-
-// ============================================
-// END Hace una peticion de agregar un modelo a un cliente.
-// ============================================
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app

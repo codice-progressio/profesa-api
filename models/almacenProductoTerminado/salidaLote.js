@@ -27,7 +27,6 @@ const salidaLoteSchema = new Schema({
                 msg: 'El valor que ingresaste ( {VALUE} ) es menor que el permitido ( 1 ).'
             },
             {
-                isAsync: true,
                 /**
                  * Esta funcion valida que la cantidad que se va a registrar como salida
                  * no supera la existencia actual que hay. Es necesario hacer un pequeno hackj
@@ -40,44 +39,52 @@ const salidaLoteSchema = new Schema({
                  * @param {any} cb El callback que genera mongoose y que nos permite agregar el mensaje personalizado.
                  */
                 validator: function(v, cb) {
-                    if (this.parent().validandoDevolucion) {
-                        // Si estmamos validando una devolucion entonces no entramos aqui. 
-                        cb(true);
-                    } else {
-                        if (this.validando) {
-                            // Corregimos por que se aplica el pre donde calcula los totales
-                            // en el pre save. Que es antes de entrar a validar. Por tanto 
-                            // sumamos el valor ingresado para volver a la existencia actual. 
-                            let existencia = this.parent().existencia + v;
-
-                            let msjError = '';
-                            let pasoValidacion = true;
-
-                            /**
-                             * El lote no tiene existencia. 
-                             */
-                            if (existencia <= 0) {
-                                msjError = `Este lote no tiene existencias.`;
-                                pasoValidacion = false;
-
-                            } else if (existencia < v) {
-                                /**
-                                 * Si la existencia es menor 
-                                 * que la cantidad que va a dar salida
-                                 * manda error.  
-                                 *  
-                                 * */
-                                msjError = `El valor que ingresaste ( ${v} ) es mayor que la existencia ( ${ existencia } ) de este lote.`;
-                                pasoValidacion = false;
-                            }
-                            this.validando = false;
-                            cb(pasoValidacion, msjError);
-
+                    // #isAsync
+                    return new Promise((resolve, reject) =>
+                    {
+                        
+                        if (this.parent().validandoDevolucion)
+                        {
+                            // Si estmamos validando una devolucion entonces no entramos aqui. 
+                            resolve(cb(true))
                         } else {
-                            cb(true);
+                            if (this.validando) {
+                                // Corregimos por que se aplica el pre donde calcula los totales
+                                // en el pre save. Que es antes de entrar a validar. Por tanto 
+                                // sumamos el valor ingresado para volver a la existencia actual. 
+                                let existencia = this.parent().existencia + v;
+    
+                                let msjError = '';
+                                let pasoValidacion = true;
+    
+                                /**
+                                 * El lote no tiene existencia. 
+                                 */
+                                if (existencia <= 0) {
+                                    msjError = `Este lote no tiene existencias.`;
+                                    pasoValidacion = false;
+    
+                                } else if (existencia < v) {
+                                    /**
+                                     * Si la existencia es menor 
+                                     * que la cantidad que va a dar salida
+                                     * manda error.  
+                                     *  
+                                     * */
+                                    msjError = `El valor que ingresaste ( ${v} ) es mayor que la existencia ( ${ existencia } ) de este lote.`;
+                                    pasoValidacion = false;
+                                }
+                                this.validando = false;
+                                resolve(cb(pasoValidacion, msjError))
+    
+                            } else {
+                                resolve(cb(true))
+                            }
+    
                         }
 
-                    }
+                    } )
+                    
                 },
             },
         ]

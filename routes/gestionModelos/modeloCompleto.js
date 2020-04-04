@@ -8,6 +8,9 @@ var app = express()
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
+
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
@@ -15,7 +18,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", (req, res) => {
+app.post("/", guard.check(permisos.$('modeloCompleto:crear')), (req, res) => {
   return new ModeloCompleto(req.body)
     .save()
     .then(modeloCompleto => {
@@ -26,7 +29,7 @@ app.post("/", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardo el sku"))
 })
 
-app.get("/", async (req, res) => {
+app.get("/", guard.check(permisos.$('modeloCompleto:leer:todo')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -81,7 +84,7 @@ app.get("/", async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los sku"))
 })
 
-app.get("/buscar/id/:id", (req, res) => {
+app.get("/buscar/id/:id", guard.check(permisos.$('modeloCompleto:leer:id')), (req, res) => {
   ModeloCompleto.findById(req.params.id)
     .exec()
     .then(modeloCompleto => {
@@ -94,7 +97,7 @@ app.get("/buscar/id/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el sku por su id"))
 })
 
-app.get("/buscar/termino/:termino", async (req, res) => {
+app.get("/buscar/termino/:termino", guard.check(permisos.$('modeloCompleto:leer:termino')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -166,7 +169,7 @@ app.get("/buscar/termino/:termino", async (req, res) => {
     )
 })
 
-app.delete("/:id", (req, res) => {
+app.delete("/:id", guard.check(permisos.$('modeloCompleto:eliminar')), (req, res) => {
   ModeloCompleto.findById(req.params.id)
     .exec()
     .then(modeloCompleto => {
@@ -182,7 +185,7 @@ app.delete("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
 })
 
-app.put("/", (req, res) => {
+app.put("/", guard.check(permisos.$('modeloCompleto:modificar')), (req, res) => {
   ModeloCompleto.findById(req.body._id)
     .exec()
     .then(modeloCompleto => {
@@ -208,7 +211,7 @@ app.put("/", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
 })
 
-app.get("/transito/:id", (req, res) => {
+app.get("/transito/:id", guard.check(permisos.$('modeloCompleto:leer:transito')), (req, res) => {
   let id = req.params.id
 
   if (!id) {
@@ -276,7 +279,7 @@ app.get("/transito/:id", (req, res) => {
 // =====================================
 // -->
 
-app.post("/stock", (req, res) => {
+app.post("/stock", guard.check(permisos.$('modeloCompleto:stock:modificar')), (req, res) => {
   let datos = req.body
 
   ModeloCompleto.findById(datos._id)

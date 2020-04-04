@@ -11,6 +11,9 @@ var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.mo
 
 const mongoose = require("mongoose")
 
+var guard = require("express-jwt-permissions")()
+var permisos = require("../../config/permisos.config")
+
 // <!--
 // =====================================
 //  Este route se encarga de generar todos los reportes
@@ -25,143 +28,157 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.get("/productoTerminado/faltantes", (req, res) => {
-  // Genera los reportes faltanes.
+app.get(
+  "/productoTerminado/faltantes",
+  guard.check(permisos.$("reportes:productoTerminado:faltes")),
+  (req, res) => {
+    // Genera los reportes faltanes.
 
-  var datosReporte = null
-  RepoFalProdTer.aggregate()
-    .exec()
+    var datosReporte = null
+    RepoFalProdTer.aggregate()
+      .exec()
 
-    .then(datos => {
-      datosReporte = datos
-      return RepoFalProdTer.materialEnProceso(datos.map(x => x._id)).exec()
-    })
-    .then(enProceso => {
-      const clasPed = {}
-      datosReporte.forEach(x => (clasPed[x._id] = []))
-      enProceso.forEach(x => {
-        var arreglo = clasPed[x.modeloCompleto]
-
-        arreglo.push(x)
+      .then(datos => {
+        datosReporte = datos
+        return RepoFalProdTer.materialEnProceso(datos.map(x => x._id)).exec()
       })
+      .then(enProceso => {
+        const clasPed = {}
+        datosReporte.forEach(x => (clasPed[x._id] = []))
+        enProceso.forEach(x => {
+          var arreglo = clasPed[x.modeloCompleto]
 
-      datosReporte.map(mod => {
-        mod["ordenesEnTransito"] = clasPed[mod._id]
-
-        //Sumamos lo que esta en transito (cantida) menos lo
-        // que ya esta terminado (cantidadProducida)
-        var total = 0
-        mod.ordenesEnTransito.map(x => {
-          total += x.cantidad
-        })
-        mod["enTransito"] = total
-
-        return mod
-      })
-
-      return RESP._200(res, "datos hasta el momento", [
-        { tipo: "reporte", datos: datosReporte }
-      ])
-    })
-    .catch(err =>
-      erro(
-        res,
-        err,
-        "Hubo un error generan el reporte de faltantes de producto terminado"
-      )
-    )
-})
-
-app.get("/almacenDeProduccion/faltantes", (req, res) => {
-  var datosReporte = null
-  // Genera los reportes faltanes.
-  RepoFalAlmaProd.aggregate()
-    .exec()
-    .then(datos => {
-      //Calculamos los consumos.
-      const calculoDeDias = dias => dias * 24 * 60 * 60 * 1000
-      const dias = {
-        _7: new Date(new Date().getTime() - calculoDeDias(7)),
-        _30: new Date(new Date().getTime() - calculoDeDias(30)),
-        _365: new Date(new Date().getTime() - calculoDeDias(365))
-      }
-
-      for (const key in dias) {
-        const fecha = dias[key]
-        datos.forEach(articulo => {
-          articulo[key] = articulo.salidas.filter(
-            salida => salida.fecha > fecha
-          )
-        })
-      }
-
-      datosReporte = datos
-
-      return RepoFalAlmaProd.requisicionesPendientes(
-        datosReporte.map(x => x._id)
-      )
-    })
-    .then(requisiciones => {
-      // Unimos las requisiciones encontradas con sus respectivos
-      // match de articulos
-      datosReporte.forEach(dato => {
-        dato["requisicionesPendientes"] = requisiciones.filter(r => {
-          return r.articulo + "" == dato._id + ""
+          arreglo.push(x)
         })
 
-        dato["enCamino"] = dato.requisicionesPendientes.reduce((a, b) => {
-          return a + (b.cantidad - b.cantidadEntregadaALaFecha)
-        }, 0)
+        datosReporte.map(mod => {
+          mod["ordenesEnTransito"] = clasPed[mod._id]
 
-        delete dato.salidas
+          //Sumamos lo que esta en transito (cantida) menos lo
+          // que ya esta terminado (cantidadProducida)
+          var total = 0
+          mod.ordenesEnTransito.map(x => {
+            total += x.cantidad
+          })
+          mod["enTransito"] = total
+
+          return mod
+        })
+
+        return RESP._200(res, "datos hasta el momento", [
+          { tipo: "reporte", datos: datosReporte }
+        ])
       })
-
-      return RESP._200(res, "datos hasta el momento", [
-        // { tipo: "reporte", datos: datos }
-        { tipo: "reporte", datos: datosReporte }
-      ])
-    })
-    .catch(err =>
-      erro(
-        res,
-        err,
-        "Hubo un error generan el reporte de faltantes del almacen de produccion"
+      .catch(err =>
+        erro(
+          res,
+          err,
+          "Hubo un error generan el reporte de faltantes de producto terminado"
+        )
       )
-    )
-})
+  }
+)
 
-app.get("/almacenDeProduccion/personalizado/:id", (req, res) => {
-  var articulosRepo = null
+app.get(
+  "/almacenDeProduccion/faltantes",
+  guard.check(permisos.$("reportes:almacenDeProduccion/faltantes")),
+  (req, res) => {
+    var datosReporte = null
+    // Genera los reportes faltanes.
+    RepoFalAlmaProd.aggregate()
+      .exec()
+      .then(datos => {
+        //Calculamos los consumos.
+        const calculoDeDias = dias => dias * 24 * 60 * 60 * 1000
+        const dias = {
+          _7: new Date(new Date().getTime() - calculoDeDias(7)),
+          _30: new Date(new Date().getTime() - calculoDeDias(30)),
+          _365: new Date(new Date().getTime() - calculoDeDias(365))
+        }
 
-  RepoPers.findById(req.params.id)
-    .exec()
-    .then(reporte => {
-      if (!reporte) throw "No existe el reporte"
+        for (const key in dias) {
+          const fecha = dias[key]
+          datos.forEach(articulo => {
+            articulo[key] = articulo.salidas.filter(
+              salida => salida.fecha > fecha
+            )
+          })
+        }
 
-      return Articulo.find({ _id: { $in: reporte.articulos } })
-        .lean()
-        .exec()
-    })
-    .then(articulos => {
-      articulosRepo = articulos
-      return RepoFalAlmaProd.requisicionesPendientes(articulos.map(x => x._id))
-    })
-    .then(requisiciones => {
-      articulosRepo.map(articulo => {
-        articulo["enTransito"] = requisiciones.filter(
-          req => req.articulo + "" === articulo._id + ""
+        datosReporte = datos
+
+        return RepoFalAlmaProd.requisicionesPendientes(
+          datosReporte.map(x => x._id)
         )
       })
-      articulosRepo = agregarCalculoDeDias(articulosRepo)
+      .then(requisiciones => {
+        // Unimos las requisiciones encontradas con sus respectivos
+        // match de articulos
+        datosReporte.forEach(dato => {
+          dato["requisicionesPendientes"] = requisiciones.filter(r => {
+            return r.articulo + "" == dato._id + ""
+          })
 
-      return RESP._200(res, "Se genero el reporte", [
-        { tipo: "reportes", datos: articulosRepo }
-      ])
-    })
-    .catch(err =>
-      erro(res, err, "Hubo un error generando el reporte personalizado")
-    )
-})
+          dato["enCamino"] = dato.requisicionesPendientes.reduce((a, b) => {
+            return a + (b.cantidad - b.cantidadEntregadaALaFecha)
+          }, 0)
+
+          delete dato.salidas
+        })
+
+        return RESP._200(res, "datos hasta el momento", [
+          // { tipo: "reporte", datos: datos }
+          { tipo: "reporte", datos: datosReporte }
+        ])
+      })
+      .catch(err =>
+        erro(
+          res,
+          err,
+          "Hubo un error generan el reporte de faltantes del almacen de produccion"
+        )
+      )
+  }
+)
+
+app.get(
+  "/almacenDeProduccion/personalizado/:id",
+  guard.check(permisos.$("reportes:almacenDeProduccion:personalizado:id")),
+  (req, res) => {
+    var articulosRepo = null
+
+    RepoPers.findById(req.params.id)
+      .exec()
+      .then(reporte => {
+        if (!reporte) throw "No existe el reporte"
+
+        return Articulo.find({ _id: { $in: reporte.articulos } })
+          .lean()
+          .exec()
+      })
+      .then(articulos => {
+        articulosRepo = articulos
+        return RepoFalAlmaProd.requisicionesPendientes(
+          articulos.map(x => x._id)
+        )
+      })
+      .then(requisiciones => {
+        articulosRepo.map(articulo => {
+          articulo["enTransito"] = requisiciones.filter(
+            req => req.articulo + "" === articulo._id + ""
+          )
+        })
+        articulosRepo = agregarCalculoDeDias(articulosRepo)
+
+        return RESP._200(res, "Se genero el reporte", [
+          { tipo: "reportes", datos: articulosRepo }
+        ])
+      })
+      .catch(err =>
+        erro(res, err, "Hubo un error generando el reporte personalizado")
+      )
+  }
+)
 
 function agregarCalculoDeDias(datos) {
   const calculoDeDias = dias => dias * 24 * 60 * 60 * 1000

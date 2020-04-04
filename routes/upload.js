@@ -14,7 +14,8 @@ var Puesto = require("../models/recursosHumanos/puestos/puesto.model")
 
 var RESP = require("../utils/respStatus")
 
-
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../config/permisos.config')
 
 
 const EXTENSIONES_VALIDAS = require("../utils/extencionesFicherosValidas.utils").EXTENCIONES_FICHEROS
@@ -91,7 +92,7 @@ function moverImagenesParaGuardar(archivo, id, tipo, res) {
   return nombreArchivo
 }
 
-app.put("/:tipo/:id", (req, res) => {
+app.put("/:tipo/:id", guard.check(permisos.$('upload:tipo:id')), (req, res) => {
   // Obtenemos el tipo de fichero que es el que nos
   // va a dar la carpeta donde vamos a guardar.
   var tipo = req.params.tipo

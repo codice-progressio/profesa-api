@@ -4,7 +4,6 @@ var uniqueValidator = require("mongoose-unique-validator")
 var AutoIncrement = require("mongoose-sequence")(mongoose)
 var EstatusRequisicionsSchema = require("./estatusRequisicion.model")
 var HistorialDeEstatusSchema = require("./historialDeEstatusRequisicion.model")
-var httpContext = require("express-http-context")
 
 var ArticuloSchema = require("../almacenRefaccionesYMateriaPrima/articulo.model")
 
@@ -53,7 +52,11 @@ RequisicionSchema.plugin(uniqueValidator, {
 })
 
 function obtenerUsuario(token, self, next, cb) {
-  jwt.verify(token, SEED, (err, decode) => {
+ 
+  throw 'No esta funcionado'
+ 
+  jwt.verify(token, SEED, (err, decode) =>
+  {
     if (err) {
       next(new Error(err))
       return
@@ -80,7 +83,8 @@ var cargarUsuarioActivo = function(next) {
       self.usuario = decodeUser
       next()
     }
-    obtenerUsuario(httpContext.get("token"), this, next, cb)
+    throw '#httpContexArreglar1 De aqui se elimino el httpContex'
+    // obtenerUsuario(), this, next, cb)
   } else {
     next()
   }
@@ -98,8 +102,8 @@ var copiarDatosAHistorial = function(next) {
 
     next()
   }
-
-  obtenerUsuario(httpContext.get("token"), this, next, cb)
+  throw "#httpContexArreglar2 Quitamos no esta definido"
+  // obtenerUsuario(ttphContext.get("token"), this, next, cb)
 }
 
 // <!--

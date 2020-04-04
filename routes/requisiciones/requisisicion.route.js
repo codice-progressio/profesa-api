@@ -4,6 +4,9 @@ var Requisicion = require("../../models/requisiciones/requisicion.model")
 var requisicionFiltros = require("./requisicion.filtros")
 var RESP = require("../../utils/respStatus")
 
+var guard = require("express-jwt-permissions")()
+var permisos = require("../../config/permisos.config")
+
 var error = (err, res, msj) => {
   return RESP._500(res, {
     msj: msj,
@@ -15,7 +18,7 @@ var respuesta = (reqSave, res, tipo, msj) => {
   return RESP._200(res, msj, [{ tipo: tipo, datos: reqSave }])
 }
 
-app.post("/", (req, res) => {
+app.post("/", guard.check(permisos.$("requisicion:crear")), (req, res) => {
   const r = new Requisicion(req.body)
 
   r.save(req.body)
@@ -28,7 +31,7 @@ app.post("/", (req, res) => {
     })
 })
 
-app.put("/", (req, res) => {
+app.put("/", guard.check(permisos.$("requisicion:modificar")), (req, res) => {
   Requisicion.findById(req.body._id)
     .exec()
     .then(requisicion => {
@@ -62,30 +65,34 @@ app.put("/", (req, res) => {
     })
 })
 
-app.delete("/:id", (req, res) => {
-  Requisicion.findById(req.params.id)
-    .exec()
-    .then(requisicion => {
-      if (!requisicion) throw "No existe la requisicion"
-      return requisicion.remove()
-    })
-    .then(requi =>
-      respuesta(
-        requi,
-        res,
-        "requisicion",
-        "Se elimino la requisicion de manera correcta"
-      )
-    )
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error eliminando la requisicion",
-        err: err
+app.delete(
+  "/:id",
+  guard.check(permisos.$("requisicion:eliminar")),
+  (req, res) => {
+    Requisicion.findById(req.params.id)
+      .exec()
+      .then(requisicion => {
+        if (!requisicion) throw "No existe la requisicion"
+        return requisicion.remove()
       })
-    })
-})
+      .then(requi =>
+        respuesta(
+          requi,
+          res,
+          "requisicion",
+          "Se elimino la requisicion de manera correcta"
+        )
+      )
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error eliminando la requisicion",
+          err: err
+        })
+      })
+  }
+)
 
-app.get("/:id", (req, res) => {
+app.get("/:id", guard.check(permisos.$("requisicion:leer:id")), (req, res) => {
   Requisicion.findById(req.params.id)
     .exec()
     .then(requisicion => {
@@ -107,7 +114,7 @@ app.get("/:id", (req, res) => {
 // =====================================
 // -->
 
-app.get("/", (req, res) => {
+app.get("/", guard.check(permisos.$("requisicion:leer:todo")), (req, res) => {
   var b = requisicionFiltros.obtenerFiltros(req.query)
 
   let arregloRedact = requisicionFiltros.generarArregloRedact(b)
@@ -166,16 +173,20 @@ function estatusEsRequisicion(requisicion, requisicionBody) {
   return requisicion.save()
 }
 
-app.put("/estatus/actualizar/:id", (req, res) => {
-  obtenerRequisicion(req.params.id)
-    // Pasamos toda la requisicion pero solo vamos a utilizar
-    // el estatus.
-    .then(requisicion => estatusEsRequisicion(requisicion, req.body))
-    .then(requisicion =>
-      respuesta(requisicion, res, "requisicioin", ' "Estatus modificado."')
-    )
-    .catch(err => error(err, res, "Hubo un error modificando el status"))
-})
+app.put(
+  "/estatus/actualizar/:id",
+  guard.check(permisos.$("requisicion:estatus:actualizar")),
+  (req, res) => {
+    obtenerRequisicion(req.params.id)
+      // Pasamos toda la requisicion pero solo vamos a utilizar
+      // el estatus.
+      .then(requisicion => estatusEsRequisicion(requisicion, req.body))
+      .then(requisicion =>
+        respuesta(requisicion, res, "requisicioin", ' "Estatus modificado."')
+      )
+      .catch(err => error(err, res, "Hubo un error modificando el status"))
+  }
+)
 
 // <!--
 // =====================================

@@ -3,6 +3,9 @@ var app = express()
 var Modelo = require("../../models/modelo")
 var RESP = require("../../utils/respStatus")
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
+
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
@@ -10,7 +13,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", (req, res) => {
+app.post("/", guard.check(permisos.$('modelo:crear')), (req, res) => {
   return new Modelo(req.body)
     .save()
     .then(modelo => {
@@ -21,7 +24,7 @@ app.post("/", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando el modelo"))
 })
 
-app.get("/", async (req, res) => {
+app.get("/", guard.check(permisos.$('modelo:leer:todo')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -43,7 +46,7 @@ app.get("/", async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los modelos"))
 })
 
-app.get("/:id", (req, res) => {
+app.get("/:id", guard.check(permisos.$('modelo:leer:id')), (req, res) => {
   Modelo.findById(req.params.id)
     .exec()
     .then(modelo => {
@@ -54,7 +57,7 @@ app.get("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el modelo por su id"))
 })
 
-app.get("/buscar/:termino", async (req, res) => {
+app.get("/buscar/:termino", guard.check(permisos.$('modelo:leer:termino')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -105,7 +108,7 @@ app.get("/buscar/:termino", async (req, res) => {
     )
 })
 
-app.delete("/:id", (req, res) => {
+app.delete("/:id", guard.check(permisos.$('modelo:eliminar')), (req, res) => {
   Modelo.findById(req.params.id)
     .exec()
     .then(modelo => {
@@ -121,7 +124,7 @@ app.delete("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el modelo"))
 })
 
-app.put("/", (req, res) => {
+app.put("/", guard.check(permisos.$('modelo:modificar')), (req, res) => {
   Modelo.findById(req.body._id)
     .exec()
     .then(modelo => {

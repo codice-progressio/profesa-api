@@ -10,6 +10,9 @@ const fs = require("fs")
 const fileUpload = require("express-fileupload")
 const populacionManual = require("./puesto.route.aggregate")
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../../config/permisos.config')
+
 app.use(fileUpload())
 
 const erro = (res, err, msj) => {
@@ -19,7 +22,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.get("/", (req, res) => {
+app.get("/", guard.check(permisos.$('puesto:leer:todo')),(req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -60,7 +63,7 @@ app.get("/", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
 })
 
-app.get("/:id", (req, res) => {
+app.get("/:id", guard.check(permisos.$('puesto:leer:id')), (req, res) => {
   Puesto.aggregate(
     [
       {
@@ -77,7 +80,7 @@ app.get("/:id", (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el id del puesto"))
 })
 
-app.get("/buscar/:termino", async (req, res) => {
+app.get("/buscar/:termino", guard.check(permisos.$('puesto:leer:termino')), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -138,7 +141,7 @@ app.get("/buscar/:termino", async (req, res) => {
  * @returns
  */
 
-app.post("/", (req, res) => {
+app.post("/", guard.check(permisos.$('puesto:crear')), (req, res) => {
   const puesto = new Puesto(parsearBody(req.body))
 
   const organigramaFile = req.files ? req.files.organigrama : null
@@ -174,7 +177,7 @@ app.post("/", (req, res) => {
     })
 })
 
-app.put("/", (req, res) => {
+app.put("/", guard.check(permisos.$('puesto:modificar')),(req, res) => {
   const puesto = parsearBody(req.body)
   const organigramaFile = req.files ? req.files.organigrama : null
 
@@ -243,7 +246,7 @@ function cargarOrganigrama(organigramaFile, id, nombreAnterior = "") {
   return nombre
 }
 
-app.post("/multiple", (req, res) => {
+app.post("/multiple", guard.check(permisos.$('XXXXX:multiplePuesto')), (req, res) => {
   Puesto.find({ _id: { $in: req.body } })
     .exec()
     .then(puestos => {
@@ -257,7 +260,7 @@ app.post("/multiple", (req, res) => {
     })
 })
 
-app.delete("/:id", (req, res) => {
+app.delete("/:id", guard.check(permisos.$('puesto:eliminar')),(req, res) => {
   Puesto.findById(req.params.id)
     .exec()
     .then(resp => {

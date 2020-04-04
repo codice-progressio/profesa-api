@@ -148,70 +148,9 @@ app.put("/", guard.check(permisos.$('cliente:modificar')), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando el cliente"))
 })
 
-// ============================================
-// Busca una marca laser del cliente por id de la misma.
-// ============================================
-// El id de la marca embebida.
 
-app.get("/laser/:idLaser", guard.check(permisos.$('cliente:laser:leer:id')), (req, res, next) => {
-  const id = req.params.idLaser
-  Cliente.findOne({ laserados: { $elemMatch: { _id: id } } })
-    .exec()
-    .then(clienteEncontrado => {
-      if (!clienteEncontrado) {
-        return RESP._400(res, {
-          msj: "No hubo coincidencias para la marca laser.",
-          err: "El id de la marca laser que ingresaste no existe."
-        })
-      }
-      return RESP._200(res, null, [
-        { tipo: "marcaLaser", datos: clienteEncontrado.laserados.id(id) }
-      ])
-    })
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error buscando la marca laser.",
-        err: err
-      })
-    })
-})
 
-// // ============================================
-// // Agregar una marca laser al cliente.
-// // ============================================
 
-app.put("/laser/:idCliente", guard.check(permisos.$('cliente:laser:agregar')), (req, res) => {
-  var idCliente = req.params.idCliente
-
-  var marcaLaser = req.body.laser
-
-  Cliente.findById(idCliente)
-    .exec()
-    .then(clienteEncontrado => {
-      if (!clienteEncontrado) {
-        return RESP._400(res, {
-          msj: "El cliente no existe",
-          err: "El id que ingresaste no coincide contra ningun cliente."
-        })
-      }
-
-      clienteEncontrado.laserados.push({
-        laser: marcaLaser
-      })
-      return clienteEncontrado.save()
-    })
-    .then(clienteGuardado => {
-      return RESP._200(res, "Se agrego la marca laser correctamente.", [
-        { tipo: "cliente", datos: clienteGuardado }
-      ])
-    })
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error agregando la marca laser al cliente.",
-        err: err
-      })
-    })
-})
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app

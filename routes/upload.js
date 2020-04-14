@@ -6,8 +6,6 @@ const fs = require("fs")
 var app = express()
 
 
-// var mdAutenticacion = require("../middlewares/autenticacion")
-
 var Usuario = require("../models/usuario")
 var Requisicion = require("../models/requisiciones/requisicion.model")
 var Puesto = require("../models/recursosHumanos/puestos/puesto.model")

@@ -13,6 +13,8 @@ var permisos = require("../../config/permisos.config")
  * segun se vayan requiriendo los parametros.
  */
 
+
+
 /**
  *
  * Inicializamos los parametros creando un solo objeto. No debemos tener mas de un documento en la BD
@@ -31,8 +33,7 @@ app.post("/", (req, res, next) => {
     .catch(err => next(err))
 })
 
-
-//Despues de esto tiene que existir el docuemnto de parametros 
+//Despues de esto tiene que existir el docuemnto de parametros
 // para poder continuar
 app.use(async (req, res, next) => {
   var parametro = await Parametros.findOne().exec()
@@ -71,7 +72,7 @@ app.post("/super-admin/crear", async (req, res, next) => {
       nuevoUsuario.email = req.body.email
       nuevoUsuario.password = req.body.password
       nuevoUsuario.nombre = req.body.nombre
-      nuevoUsuario.role = permisos.lista
+      nuevoUsuario.permissions = permisos.lista
 
       return nuevoUsuario.save()
     })
@@ -91,72 +92,84 @@ app.post("/super-admin/crear", async (req, res, next) => {
 
 //DESPUES DE AQUI TODO LO DEBE SE HACER EL SUPER ADMIN
 
-app.use(guard.check(permisos.$('SUPER_ADMIN')))
+app.use(guard.check(permisos.$("SUPER_ADMIN")))
 
-app.put(
-  "/configurar-super-admin/cambiar",
-  async (req, res, next) => {
-    Promise.all(
-      //Contra fuerza bruta
-      await new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve([
-            Usuario.findById(req.body.id).exec(),
-            Parametros.findOne().exec(),
-            Usuario.findById(req.user.user).exec()
-          ])
-        }, 10)
-      })
-    )
-      .then(datos =>
-      {
-        
-        console.log(`req.user`,req.user)
-        const usuario = datos[0]
-        const parametros = datos[1]
-        const usuarioLogueado = datos[2]
 
-        if (!usuario) throw "No existe el usuario"
-        if (!usuarioLogueado) throw "Usuario logueado no existe mas."
+// ESTA FUNCION ES DE UN SOLO USO Y ES PARA ELIMINAR TODOS LOS
+// ROLES DE LOS USUARIOS QUE EXISTEN ACTUALMENTE. SE PUEDE 
+// ELIMINAR UNA VEZ SE APLIQUE EN EL SERVIDOR.
 
-        //Revisamos dos veces que tenga el permiso por que para llegar
-        // aqui usamos el token y ese todavia tiene el permiso.
-        if (!usuarioLogueado.role.includes(permisos.$("SUPER_ADMIN")))
-          throw "No puedes continuar con esta operacion"
+app.post("/limpiarRolesAtiguos", (req, res, next) => {
+  Usuario.updateMany({}, [{ $unset: ["role"] }])
+    .exec()
+    .then(update => {
+      console.log(update)
+      next()
+    })
+    .catch(err => next(err))
+})
 
-        const contrasenaCorrecta = bcrypt.compareSync(
-          req.body.password,
-          usuario.password
-        )
 
-        if (!contrasenaCorrecta) throw "Contrasena de super admin invalida"
-
-        while (usuario.role > 0) {
-          usuario.role.pop()
-        }
-
-        permisos.lista.forEach(p => usuario.role.push(p))
-        parametros.super.id = usuario._id
-
-        return Promise.all([
-          usuario.save(),
-          parametros.save(),
-          //NINGUN OTRO USUARIO DEBE DE TENER EL ROL SUPER ADMIN
-          Usuario.updateMany(
-            {},
-            { $pull: { role: permisos.$("SUPER_ADMIN") } }
-          ).exec()
+app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
+  Promise.all(
+    //Contra fuerza bruta
+    await new Promise((resolve, reject) => {
+      setTimeout(() => {
+        resolve([
+          Usuario.findById(req.body.id).exec(),
+          Parametros.findOne().exec(),
+          Usuario.findById(req.user.user).exec(),
         ])
-      })
-      .then(datos => {
-        const usuario = datos[0]
-        return res.send(
-          `Se establecio al usuario "${usuario.nombre}" como el nuevo super-admin`
+      }, 10)
+    })
+  )
+    .then(datos => {
+      console.log(`req.user`, req.user)
+      const usuario = datos[0]
+      const parametros = datos[1]
+      const usuarioLogueado = datos[2]
+
+      if (!usuario) throw "No existe el usuario"
+      if (!usuarioLogueado) throw "Usuario logueado no existe mas."
+
+      //Revisamos dos veces que tenga el permiso por que para llegar
+      // aqui usamos el token y ese todavia tiene el permiso.
+      if (!usuarioLogueado.permissions.includes(permisos.$("SUPER_ADMIN")))
+        throw "No puedes continuar con esta operacion"
+
+      const contrasenaCorrecta = bcrypt.compareSync(
+        req.body.password,
+        usuario.password
+      )
+
+      if (!contrasenaCorrecta) throw "Contrasena de super admin invalida"
+
+      while (usuario.permissions > 0) {
+        usuario.permissions.pop()
+      }
+
+      permisos.lista.forEach(p => usuario.permissions.push(p))
+      parametros.super.id = usuario._id
+
+      return Promise.all([
+        parametros.save(),
+        //NINGUN OTRO USUARIO DEBE DE TENER EL ROL SUPER ADMIN
+        Usuario.updateMany(
+          {},
+          { $pull: { permissions: permisos.$("SUPER_ADMIN") } }
         )
-      })
-      .catch(err => next(err))
-  }
-)
+          .exec()
+          .then(u => usuario.save()),
+      ])
+    })
+    .then(datos => {
+      const usuario = datos[1]
+      return res.send(
+        `Se establecio al usuario "${usuario.nombre}" como el nuevo super-admin`
+      )
+    })
+    .catch(err => next(err))
+})
 
 // LO QUE SIGUE SON PERSONALIZABLES PARA CADA PROYECTO
 

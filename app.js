@@ -92,16 +92,7 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   console.log(ENVIROMENT.msj_bd_ok)
 })
 
-// // ============================================
-// // Rutas - Middleware PARA SISTEMA CARRDUCI
-// // ============================================
-
-// Obtenemos el token
 app.use((req, res, next) => {
-  // const espera = 1000
-  // const espera = 0;
-
-  // setTimeout(function() {
   if (!ENVIROMENT.esModoProduccion) {
     console.log(
       `${new Date()}|` +
@@ -111,16 +102,7 @@ app.use((req, res, next) => {
     )
   }
 
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.split(" ")[0] === "Bearer"
-  ) {
-    req.token = req.headers.authorization.split(" ")[1]
-  } else if (req.query && req.query.token) {
-    req.token = req.query.token
-  }
   next()
-  // }, espera)
 })
 
 _ROUTES(app)

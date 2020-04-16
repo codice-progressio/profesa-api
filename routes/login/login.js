@@ -28,6 +28,7 @@ app.get("/renuevatoken", (req, res) => {
 app.post("/", (req, res) => {
   var body = req.body
   Usuario.findOne({ email: body.email })
+    .lean()
     .exec()
     .then((usuarioDB) => {
       if (!usuarioDB) throw "Credenciales incorrectas"
@@ -38,7 +39,7 @@ app.post("/", (req, res) => {
         throw "Credenciales incorrectas"
 
       // crear un token!
-      usuarioDB.password = ":D"
+      delete usuarioDB.password
       var token = jwt.sign({ ...usuarioDB }, SEED, {
         expiresIn: 14400,
       })

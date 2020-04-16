@@ -13,8 +13,6 @@ var permisos = require("../../config/permisos.config")
  * segun se vayan requiriendo los parametros.
  */
 
-
-
 /**
  *
  * Inicializamos los parametros creando un solo objeto. No debemos tener mas de un documento en la BD
@@ -94,9 +92,8 @@ app.post("/super-admin/crear", async (req, res, next) => {
 
 app.use(guard.check(permisos.$("SUPER_ADMIN")))
 
-
 // ESTA FUNCION ES DE UN SOLO USO Y ES PARA ELIMINAR TODOS LOS
-// ROLES DE LOS USUARIOS QUE EXISTEN ACTUALMENTE. SE PUEDE 
+// ROLES DE LOS USUARIOS QUE EXISTEN ACTUALMENTE. SE PUEDE
 // ELIMINAR UNA VEZ SE APLIQUE EN EL SERVIDOR.
 
 app.post("/limpiarRolesAtiguos", (req, res, next) => {
@@ -108,7 +105,6 @@ app.post("/limpiarRolesAtiguos", (req, res, next) => {
     })
     .catch(err => next(err))
 })
-
 
 app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
   Promise.all(
@@ -169,6 +165,27 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
       )
     })
     .catch(err => next(err))
+})
+
+app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
+  //Reiniciamos todos los permisos del super administrador para agregar permisos nuevos que existan o eliminar los que ya no existen.
+
+  Usuario.findById(req.parametros.super.id)
+    .exec()
+    .then(u => {
+      if (!u) throw "No existe usuario super-admin"
+
+      while (u.permissions.length > 0) {
+        u.permissions.pop()
+      }
+
+      permisos.lista.forEach(p => u.permissions.push(p))
+
+      return u.save()
+    })
+    .then(uS => {
+      return res.send("Se modificaron los permisos del super-administrador")
+    })
 })
 
 // LO QUE SIGUE SON PERSONALIZABLES PARA CADA PROYECTO

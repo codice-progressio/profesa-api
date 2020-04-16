@@ -81,7 +81,7 @@ app.get(
 
 app.get(
   "/almacenDeProduccion/faltantes",
-  guard.check(permisos.$("reportes:almacenDeProduccion/faltantes")),
+  guard.check(permisos.$("reportes:almacenDeProduccion:faltantes")),
   (req, res) => {
     var datosReporte = null
     // Genera los reportes faltanes.

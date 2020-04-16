@@ -79,7 +79,7 @@ const permisos = {
   "terminado:eliminar": NO_DEFINIDO,
   "terminado:modificar": NO_DEFINIDO,
   "reportes:productoTerminado:faltes": NO_DEFINIDO,
-  "reportes:almacenDeProduccion/faltantes": NO_DEFINIDO,
+  "reportes:almacenDeProduccion:faltantes": NO_DEFINIDO,
   "reportes:almacenDeProduccion:personalizado:id": NO_DEFINIDO,
   "almacenDeProductoTerminado:leer:todo": NO_DEFINIDO,
   "almacenProductoTerminado:leer:termino": NO_DEFINIDO,

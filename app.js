@@ -116,8 +116,27 @@ app.use(function (req, res) {
 })
 
 app.use(function (err, req, res, next) {
-  if (err.code === "permission_denied") {
-    return res.status(403).send("Permiso denegado")
+  console.log(`err`, err)
+  //Errores de permisos
+  const errores = [
+    //Cuando el token no trae un usuario
+    "user_object_not_found",
+    //No autorizado
+    "permission_denied",
+  ]
+
+  if (errores.includes(err.code)) {
+    return res
+      .status(403)
+      .send("No tienes permisos para acceder a este contenido")
+  }
+
+  if (err.code === "invalid_token") {
+    return res.status(401).send("Token invalido")
+  }
+
+  if (err.code === "credentials_required") {
+    return res.status(401).send("Es necesario loguearte")
   }
 
   return RESP._500(res, {

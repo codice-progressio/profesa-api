@@ -42,6 +42,8 @@ const AreaRoute = require("../routes/recursosHumanos/areas/area.route")
 const PuestoRoute = require("../routes/recursosHumanos/puestos/puesto.route")
 const EmpleadoRoute = require("../routes/recursosHumanos/empleado/empleado.route")
 
+const Parametros =  require("../routes/parametros/parametros.route")
+
 var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
 
 var ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
@@ -54,25 +56,32 @@ var permisos = require("../config/permisos.config")
 module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
-  app.use(jwt({ secret: seed }).unless({ path: ["/login", "/parametros"] }))
+  app.use(jwt({ secret: seed }).unless({
+    path:
+      [
+        "/parametros",
+        "/parametros/super-admin/crear",
+        "/login"
+      ]
+  }))
 
   //Este va primero por que se usan permisos especiales internamente
-  app.use("/parametros", require("../routes/parametros/parametros.route"))
+  app.use("/parametros", Parametros)
 
   //Cargamos todos los parametros en cada peticion para tener disponible
   //la informacion en req.parametros
-  var Parametros = require("../models/defautls/parametros.model")
+  const ParametrosModel = require("../models/defautls/parametros.model")
   app.use((req, res, next) => {
-    Parametros.findOne()
+    ParametrosModel.findOne()
       .exec()
-      .then((parametros) => {
+      .then(parametros => {
         if (!parametros)
           throw "No has definido el documento que contiene los parametros. Es necesario que los definas para poder continuar."
 
         req["parametros"] = parametros
         next()
       })
-      .catch((err) => next(err))
+      .catch(err => next(err))
   })
 
   app.use("/login", loginRoutes)

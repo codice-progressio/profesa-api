@@ -4,14 +4,14 @@ var CONST = require('../utils/constantes');
 var RESP = require('../utils/respStatus');
 
 function contieneElRole(usuario, role) {
-    return usuario.role.includes(role);
+    return req.user.permissions.includes(role);
 }
 
 function comprobarQueUnUsuarioNormalNoSeCambioElRole(usuario, rolesModificados) {
     if (
         // Es un usuario normal, sin super poderes.
-        (!usuario.role.include(CONST.ADMIN_ROLE) &&
-            !usuario.role.include(CONST.SUPER_ADMIN)) &&
+        (!req.user.permissions.include(CONST.ADMIN_ROLE) &&
+            !req.user.permissions.include(CONST.SUPER_ADMIN)) &&
         // Sus roles no deben ser difererntes
         rolesNoDebenSerDiferentes(usuario, rolesModificados)
     ) {
@@ -22,35 +22,19 @@ function comprobarQueUnUsuarioNormalNoSeCambioElRole(usuario, rolesModificados) 
 
 function rolesNoDebenSerDiferentes(usuario, rolesModificados) {
     // Ambos arreglos deben de medir lo mismo. 
-    if (usuario.role.length !== rolesModificados.length) {
+    if (req.user.permissions.length !== rolesModificados.length) {
         // El usuario modifico sus roles. 
         return false;
     }
     // Los roles deben ser los mismos aun despues de unirlos, 
     // si hay uno de más siginifica que el usuario esta 
     // intentando modificar sus roles. 
-    var a = rolesModificados.concat(usuario.role);
+    var a = rolesModificados.concat(req.user.permissions);
     a.unique();
-    return a.length === usuario.role.length;
+    return a.length === req.user.permissions.length;
 
 }
 
-// ============================================
-// Verificar token.
-// ============================================
-exports.verificarToken = function(req, res, next) {
-
-    var token = req.query.token;
-    jwt.verify(token, SEED, (err, decode) => {
-
-        if (err) return next('El token no es valido')
-
-        // Colocar la información del usuario en 
-        // cualquier petición. Lo extraemos del decode.
-        req.usuario = decode.usuario;
-        next();
-    });
-};
 
 // ============================================
 // Verificar ADMIN.

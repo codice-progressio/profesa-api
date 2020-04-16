@@ -121,7 +121,6 @@ function autoPopulate(next) {
 }
 
 function hidePass(requisicion) {
-  requisicion.usuario.role = []
   requisicion.usuario.password = ":D"
   if (requisicion.historialDeEstatus) {
     requisicion.historialDeEstatus.forEach(y => {

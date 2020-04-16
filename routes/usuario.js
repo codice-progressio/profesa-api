@@ -6,7 +6,6 @@ var Usuario = require("../models/usuario")
 var CONST = require("../utils/constantes")
 var RESP = require("../utils/respStatus")
 
-var mdAutenticacion = require("../middlewares/autenticacion")
 
 var app = express()
 
@@ -141,28 +140,7 @@ app.post(
         })
       })
 
-    // usuario.save((err, usuarioGuardado) => {
-    //     if (err) {
 
-    //         return res.status(400).json({
-    //             ok: false,
-    //             mensaje: 'Error al crear usuario.',
-    //             errors: err
-    //         });
-    //     }
-
-    //     res.status(201).json({
-    //         ok: true,
-    //         usuario: usuarioGuardado,
-    //         // Este usuario lo obtenemos desde la autenticacion
-    //         // "mdAutenticacion.verificarToken"
-    //         // Agregamos en el request (req) el usuario logueado
-    //         // actualmente para poder hacer algúnas
-    //         // cosas monitas
-    //         usuariotoken: req.usuario
-    //     });
-
-    // });
   }
 )
 
@@ -222,9 +200,9 @@ app.put(
       .then((usuario) => {
         if (!usuario) throw "No existe el usuario"
 
-        while (usuario.role > 0) usuario.role.pop()
+        while (usuario.permissions > 0) usuario.permissions.pop()
 
-        req.body.forEach((x) => usuario.role.push(x))
+        req.body.forEach((x) => usuario.permissions.push(x))
 
         return usuario.save()
       })

@@ -37,6 +37,8 @@ app.use(async (req, res, next) => {
   var parametro = await Parametros.findOne().exec()
   if (!parametro)
     return next("No existe un documento para poder establecer este parametro")
+  
+  req["parametros"] = parametro
   next()
 })
 

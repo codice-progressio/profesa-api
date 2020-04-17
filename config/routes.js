@@ -42,7 +42,7 @@ const AreaRoute = require("../routes/recursosHumanos/areas/area.route")
 const PuestoRoute = require("../routes/recursosHumanos/puestos/puesto.route")
 const EmpleadoRoute = require("../routes/recursosHumanos/empleado/empleado.route")
 
-const Parametros =  require("../routes/parametros/parametros.route")
+const Parametros = require("../routes/parametros/parametros.route")
 
 var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
 
@@ -56,14 +56,12 @@ var permisos = require("../config/permisos.config")
 module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
-  app.use(jwt({ secret: seed }).unless({
-    path:
-      [
-        "/parametros",
-        "/parametros/super-admin/crear",
-        "/login"
-      ]
-  }))
+  app.use("/img", imagenesRoutes)
+  app.use(
+    jwt({ secret: seed }).unless({
+      path: ["/parametros", "/parametros/super-admin/crear", "/login"],
+    })
+  )
 
   //Este va primero por que se usan permisos especiales internamente
   app.use("/parametros", Parametros)
@@ -94,9 +92,7 @@ module.exports.ROUTES = function (app) {
     "/reportePersonalizadoAlmacenProduccion",
     ReportePersonalizadoAlmacenProduccion
   )
-  //DEPRECIAR ESTO!!!
-  app.use("/defaults", defaultsRoute)
-  // -------------------------------
+
   app.use("/empleado", EmpleadoRoute)
   app.use("/puesto", PuestoRoute)
   app.use("/area", guard.check(permisos.$("SUPER_ADMIN")), AreaRoute)
@@ -118,7 +114,7 @@ module.exports.ROUTES = function (app) {
   //----------------------------
   app.use("/usuario", usuarioRoutes)
   app.use("/upload", uploadRoutes)
-  app.use("/img", imagenesRoutes)
+
   app.use("/modeloCompleto", modeloCompletoRoutes)
   app.use("/cliente", clienteRoutes)
   app.use("/departamento", departamentoRoutes)

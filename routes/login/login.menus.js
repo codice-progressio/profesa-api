@@ -1,13 +1,11 @@
 var CONST = require("../../utils/constantes")
-var permisos = require("../../config/permisos.config") 
+var permisos = require("../../config/permisos.config")
 
-module.exports = function (rolesDelUsuario)
-{
-  console.log(permisos)
+module.exports = function (permissions) {
   var menuSeleccionado = generarMenus()
 
-  if (!rolesDelUsuario.includes("SUPER_ADMIN")) {
-    menuSeleccionado = generarMenuSegunRoles(rolesDelUsuario, menuSeleccionado)
+  if (!permissions.includes("SUPER_ADMIN")) {
+    menuSeleccionado = generarMenuSegunRoles(permissions, menuSeleccionado)
   }
 
   //Obtenemos solo los valores
@@ -19,16 +17,16 @@ module.exports = function (rolesDelUsuario)
   return menu
 }
 
-function generarMenuSegunRoles(rolesDelUsuario, OBJETO_MENUS) {
+function generarMenuSegunRoles(permissions, OBJETO_MENUS) {
   //ES NECESARIO QUE LOS PERMISOS INCLUYAN EL TEXTO MENU!!!
   const menusSeleccionados = {}
 
-  rolesDelUsuario
-    .filter(rol => rol.includes("MENU"))
-    .forEach(rol => {
+  permissions
+    .filter(permiso => permiso.includes("MENU"))
+    .forEach(permiso => {
       for (const key in OBJETO_MENUS) {
         const menuCompleto = OBJETO_MENUS[key]
-        if (menuCompleto.roles.includes(rol))
+        if (menuCompleto.permissions.includes(permiso))
           menusSeleccionados[key] = menuCompleto
       }
     })
@@ -36,8 +34,8 @@ function generarMenuSegunRoles(rolesDelUsuario, OBJETO_MENUS) {
   for (const key in menusSeleccionados) {
     const menu = menusSeleccionados[key]
     menu.submenu = menu.submenu.filter(submenu => {
-      return submenu.roles.every(rolActual =>
-        rolesDelUsuario.includes(rolActual)
+      return submenu.permissions.every(rolActual =>
+        permissions.includes(rolActual)
       )
     })
   }
@@ -55,54 +53,54 @@ function generarMenus() {
     COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
     PRODUCCION: produccion(),
-    RH: rh()
+    RH: rh(),
   }
 }
 
 function principal() {
   const menu = {
     // TODO MUNDO DEBE DE TENER ESTO.
-    roles: [],
+    permiso: [],
     titulo: "Avisos",
     icono: "fas fa-comments",
     submenu: [
       {
         titulo: "Dashboard",
         url: "/dashboard",
-        roles: []
-      }
-    ]
+        permiso: [],
+      },
+    ],
   }
   return menu
 }
 
 function reportes() {
   const menu = {
-    roles: [CONST.ROLES.REPORTES_MENU],
+    permiso: permisos.$("menu:reportes"),
     titulo: "Reportes",
     icono: "fas fa-chart-pie",
     submenu: [
       {
         titulo: "Faltante producto terminado",
         url: "/reportes/productoTerminado/faltantes",
-        roles: [CONST.ROLES.REPORTES_PRODUCTO_TERMINADO_FALTANTES]
+        permiso: permisos.$("menu:reportes:productoTerminado:faltantes"),
       },
       {
         titulo: "Faltantes almacen de produccion",
         url: "/reportes/almacenDeProduccion/faltantes",
-        roles: [CONST.ROLES.REPORTES_ALMACEN_PRODUCCION_FALTANTES]
+        permiso: permisos.$("menu:reportes:almacenDeProduccion:faltantes"),
       },
       {
         titulo: "Personalizados",
         url: "/reportes/almacenDeProduccion/personalizado",
-        roles: [CONST.ROLES.REPORTES_ALMACEN_PRODUCCION_PERSONALIZADOS]
+        permiso: permisos.$("menu:reportes:almacenDeProduccion:personalizado"),
       },
       {
         titulo: "Transformacion",
         url: "/reportes/transformacion",
-        roles: [CONST.ROLES.REPORTES_TRANSFORMACION]
-      }
-    ]
+        permiso: permisos.$("menu:reportes:transformacion"),
+      },
+    ],
   }
 
   return menu
@@ -110,64 +108,64 @@ function reportes() {
 
 function almacenes() {
   const menu = {
-    roles: [CONST.ROLES.ALMACEN_MENU],
+    permiso: permisos.$("menu:almacen"),
     titulo: " Almacen",
     icono: "fas fa-warehouse",
     submenu: [
       {
         titulo: "Producto terminado",
         url: "/almacen/productoTerminado",
-        roles: [CONST.ROLES.ALMACEN_PRODUCTO_TERMINADO]
+        permiso: permisos.$("menu:almacen:productoTerminado"),
       },
       {
         titulo: "Produccion",
         url: "/almacen/produccion",
-        roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA]
+        permiso: permisos.$("menu:almacen:produccion"),
       },
       {
         titulo: "Produccion - ES",
         url: "/almacen/produccion/entradasYSalidas",
-        roles: [CONST.ROLES.ALMACEN_MATERIA_PRIMA_ENTRADA_Y_SALIDA]
+        permiso: permisos.$("menu:almacen:produccion:entradasYSalidas"),
       },
       {
         titulo: "Requisiciones",
         url: "/almacen/requisiciones",
-        roles: [CONST.ROLES.ALMACEN_REQUISICION]
+        permiso: permisos.$("menu:almacen:requisiciones"),
       },
       {
         titulo: "Reportes personalizados",
         url: "/almacen/reportesPersonalizados",
-        roles: [CONST.ROLES.ALMACEN_PRODUCCION_REPORTES_PERSONALIZADOS]
-      }
-    ]
+        permiso: permisos.$("menu:almacen:reportesPersonalizados"),
+      },
+    ],
   }
   return menu
 }
 
 function controlDeProduccion() {
   const menu = {
-    roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_MENU],
+    permiso: permisos.$("menu:controlDeProduccion"),
     titulo: "Control de Producción",
     icono: "fas fa-project-diagram",
     submenu: [
-      // { titulo: 'Registro de folios', url: '/folios', roles: [] },
-      // { titulo: 'Seguimiento', url: '/produccion', roles: [] },
+      // { titulo: 'Registro de folios', url: '/folios', permiso: [] },
+      // { titulo: 'Seguimiento', url: '/produccion', permiso: [] },
       {
         titulo: "Revision de folios",
         url: "/folios/revision",
-        roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_REVISION_DE_FOLIOS]
+        permiso: permisos.$("menu:controlDeProduccion:folios:revision"),
       },
       {
         titulo: "Seguimientos",
         url: "/folios/seguimiento",
-        roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_SEGUIMIENTOS]
+        permiso: permisos.$("menu:controlDeProduccion:folios:seguimiento"),
       },
       {
         titulo: "Asignar ordenes",
         url: "/folios/asignarOrdenes",
-        roles: [CONST.ROLES.CONTROL_DE_PRODUCCION_ASIGNAR_ORDENES]
+        permiso: permisos.$("menu:controlDeProduccion:folios:asignarOrdenes"),
       },
-    ]
+    ],
   }
 
   return menu
@@ -175,75 +173,75 @@ function controlDeProduccion() {
 
 function ingenieria() {
   const menu = {
-    roles: [CONST.ROLES.INGENIERIA_MENU],
+    permiso: permisos.$("menu:ingenieria:"),
     titulo: "Ingenieria",
     icono: "fas fa-cogs",
     submenu: [
       {
         titulo: "Procesos",
         url: "/procesos",
-        roles: [CONST.ROLES.INGENIERIA_PROCESOS]
+        permiso: permisos.$("menu:ingenieria:procesos"),
       },
       {
         titulo: "Procesos - Familias",
         url: "/familiaDeProcesos",
-        roles: [CONST.ROLES.INGENIERIA_FAMILIA_DE_PROCESOS]
+        permiso: permisos.$("menu:ingenieria:familiaDeProcesos"),
       },
       {
         titulo: "Modelos",
         url: "/modelos",
-        roles: [CONST.ROLES.INGENIERIA_MODELOS]
+        permiso: permisos.$("menu:ingenieria:modelos"),
       },
       {
         titulo: "Tamanos",
         url: "/tamanos",
-        roles: [CONST.ROLES.INGENIERIA_TAMANOS]
+        permiso: permisos.$("menu:ingenieria:tamanos"),
       },
       {
         titulo: "Colores",
         url: "/colores",
-        roles: [CONST.ROLES.INGENIERIA_COLORES]
+        permiso: permisos.$("menu:ingenieria:colores"),
       },
       {
         titulo: "Terminados",
         url: "/terminados",
-        roles: [CONST.ROLES.INGENIERIA_TERMINADOS]
+        permiso: permisos.$("menu:ingenieria:terminados"),
       },
       {
         titulo: "SKU - Produccion",
         url: "/sku",
-        roles: [CONST.ROLES.INGENIERIA_MODELOS_COMPLETOS]
+        permiso: permisos.$("menu:ingenieria:sku"),
       },
       {
         titulo: "Maquinas",
         url: "/maquinas",
-        roles: [CONST.ROLES.INGENIERIA_MAQUINAS]
-      }
+        permiso: permisos.$("menu:ingenieria:maquinas"),
+      },
 
-      // { titulo: 'Costos de proceso', url: '/procesos/costos', roles: [] },
-      // { titulo: 'Hit', url: '/hits', roles: [] },
-    ]
+      // { titulo: 'Costos de proceso', url: '/procesos/costos', permiso: [] },
+      // { titulo: 'Hit', url: '/hits', permiso: [] },
+    ],
   }
   return menu
 }
 
 function ventas() {
   const menu = {
-    roles: [CONST.ROLES.VENTAS_MENU],
+    permiso: permisos.$("menu:ventas"),
     titulo: "Ventas",
     icono: "fas fa-file-contract",
     submenu: [
       {
         titulo: "Mis folios",
         url: "/ventas/misFolios",
-        roles: [CONST.ROLES.VENTAS_MIS_FOLIOS]
+        permiso: permisos.$("menu:ventas:misFolios"),
       },
       {
         titulo: "Stock",
         url: "/ventas/stock",
-        roles: [CONST.ROLES.VENTAS_STOCK]
-      }
-    ]
+        permiso: permisos.$("menu:ventas:stock"),
+      },
+    ],
   }
 
   return menu
@@ -251,155 +249,137 @@ function ventas() {
 
 function compras() {
   const menu = {
-    roles: [CONST.ROLES.COMPRAS_MENU],
+    permiso: permisos.$("menu:"),
     titulo: "Compras",
     icono: "fas fa-shopping-bag",
     submenu: [
       {
         titulo: "Proveedores",
         url: "/proveedores",
-        roles: [CONST.ROLES.COMPRAS_PROVEEDORES]
+        permiso: permisos.$("menu:proveedores"),
       },
       {
         titulo: "Divisas",
         url: "/divisas",
-        roles: [CONST.ROLES.COMPRAS_DIVISAS]
-      }
-    ]
+        permiso: permisos.$("menu:divisas"),
+      },
+    ],
   }
   return menu
 }
 
 function administrador() {
   const menu = {
-    roles: [CONST.ROLES.ADMINISTRADOR_MENU],
+    permiso: permisos.$("menu:administrador"),
     titulo: "Administrador",
     icono: "fas fa-user-cog",
     submenu: [
       {
         titulo: "Usuarios",
         url: "/usuarios",
-        roles: [CONST.ROLES.ADMINISTRADOR_USUARIOS]
+        permiso: permisos.$("menu:administrador:usuarios"),
       },
       {
         titulo: "Departametos",
         url: "/departamentos",
-        roles: [CONST.ROLES.ADMINISTRADOR_DEPARTAMENTOS]
+        permiso: permisos.$("menu:administrador:departamentos"),
       },
       {
         titulo: "Areas",
         url: "/areas",
-        roles: [CONST.ROLES.ADMINISTRADOR_AREAS]
+        permiso: permisos.$("menu:administrador:areas"),
       },
       {
         titulo: "Clientes",
         url: "/clientes",
-        roles: [CONST.ROLES.ADMINISTRADOR_CLIENTES]
+        permiso: permisos.$("menu:administrador:clientes"),
       },
       {
         titulo: "Almacen descripcion",
         url: "/almacenDescripcion",
-        roles: [CONST.ROLES.ADMINISTRADOR_ALMACEN_DESCRIPCION]
+        permiso: permisos.$("menu:administrador:almacenDescripcion"),
       },
-     
-    ]
+    ],
   }
   return menu
 }
-function parametrosDelSistema() {
-  const menu = {
-    roles: [CONST.ROLES.ADMINISTRADOR_MENU],
-    titulo: "Administrador",
-    icono: "fas fa-user-cog",
-    submenu: [
-      {
-        titulo: "Usuarios",
-        url: "/usuarios",
-        roles: []
-      },
-     
-    ]
-  }
-  return menu
-}
-
 function produccion() {
   const menu = {
-    roles: [CONST.ROLES.PRODUCCION_MENU],
+    permiso: permisos.$("menu:produccion"),
     titulo: "Registros",
     icono: "fas fa-file-alt",
     submenu: [
       {
         titulo: "Almacen de boton",
         url: "/produccion/almacenDeBoton",
-        roles: [CONST.ROLES.PRODUCCION_ALMACEN_DE_BOTON]
+        permiso: permisos.$("menu:produccion:almacenDeBoton"),
       },
       {
         titulo: "Barnizado",
         url: "/produccion/barnizado",
-        roles: [CONST.ROLES.PRODUCCION_BARNIZADO]
+        permiso: permisos.$("menu:produccion:barnizado"),
       },
       {
         titulo: "Burato",
         url: "/produccion/burato",
-        roles: [CONST.ROLES.PRODUCCION_BURATO]
+        permiso: permisos.$("menu:produccion:burato"),
       },
       {
         titulo: "Control de produccion",
         url: "/produccion/controlDeProduccion",
-        roles: [CONST.ROLES.PRODUCCION_CONTROL_DE_PRODUCCION]
+        permiso: permisos.$("menu:produccion:controlDeProduccion"),
       },
       {
         titulo: "Empaque",
         url: "/produccion/empaque",
-        roles: [CONST.ROLES.PRODUCCION_EMPAQUE]
+        permiso: permisos.$("menu:produccion:empaque"),
       },
       {
         titulo: "Materiales",
         url: "/produccion/materiales",
-        roles: [CONST.ROLES.PRODUCCION_MATERIALES]
+        permiso: permisos.$("menu:produccion:materiales"),
       },
       {
         titulo: "Pastilla",
         url: "/produccion/pastilla",
-        roles: [CONST.ROLES.PRODUCCION_PASTILLA]
+        permiso: permisos.$("menu:produccion:pastilla"),
       },
       {
         titulo: "Laser",
         url: "/produccion/laser",
-        roles: [CONST.ROLES.PRODUCCION_LASER]
+        permiso: permisos.$("menu:produccion:laser"),
       },
       {
         titulo: "Metalizado",
         url: "/produccion/metalizado",
-        roles: [CONST.ROLES.PRODUCCION_METALIZADO]
+        permiso: permisos.$("menu:produccion:metalizado"),
       },
       {
         titulo: "Seleccion",
         url: "/produccion/seleccion",
-        roles: [CONST.ROLES.PRODUCCION_SELECCION]
+        permiso: permisos.$("menu:produccion:seleccion"),
       },
       {
         titulo: "Transformacion",
         url: "/produccion/transformacion",
-        roles: [CONST.ROLES.PRODUCCION_TRANSFORMACION]
+        permiso: permisos.$("menu:produccion:transformacion"),
       },
       {
         titulo: "Pulido",
         url: "/produccion/pulido",
-        roles: [CONST.ROLES.PRODUCCION_PULIDO]
+        permiso: permisos.$("menu:produccion:pulido"),
       },
       {
         titulo: "Producto terminado",
         url: "/produccion/productoTerminado",
-        roles: [CONST.ROLES.PRODUCCION_PRODUCTO_TERMINADO]
+        permiso: permisos.$("menu:produccion:productoTerminado"),
       },
       {
         titulo: "Teñido",
         url: "/produccion/tenido",
-        roles: [CONST.ROLES.PRODUCCION_TENIDO]
-      }
-    ]
+        permiso: permisos.$("menu:produccion:tenido"),
+      },
+    ],
   }
 
   return menu
@@ -407,26 +387,26 @@ function produccion() {
 
 function rh() {
   const menu = {
-    roles: [CONST.ROLES.RH_MENU],
+    permiso: permisos.$("menu:rh"),
     titulo: "RH",
     icono: "fas fa-user-plus",
     submenu: [
       {
         titulo: "Empleados",
         url: "/empleados",
-        roles: [CONST.ROLES.RH_EMPLEADOS]
+        permiso: permisos.$("menu:rh:empleados"),
       },
       {
         titulo: "Cursos",
         url: "/cursos",
-        roles: [CONST.ROLES.RH_CURSOS]
+        permiso: permisos.$("menu:rh:cursos"),
       },
       {
         titulo: "Puestos",
         url: "/puestos",
-        roles: [CONST.ROLES.RH_PUESTOS]
-      }
-    ]
+        permiso: permisos.$("menu:rh:puestos"),
+      },
+    ],
   }
   return menu
 }

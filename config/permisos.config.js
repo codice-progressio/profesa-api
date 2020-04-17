@@ -1,6 +1,6 @@
 const fs = require("fs")
 
-var NO_DEFINIDO = ''
+var NO_DEFINIDO = ""
 
 const permisos = {
   SUPER_ADMIN: "El usuario administrador",
@@ -187,6 +187,60 @@ const permisos = {
   "programacionTransformacion:desasignar": NO_DEFINIDO,
   "programacionTransformacion:ordenesPorAsignar": NO_DEFINIDO,
   "programacionTransformacion:actualizarUbicacion": NO_DEFINIDO,
+  "menu:reportes": NO_DEFINIDO,
+  "menu:reportes:productoTerminado:faltantes": NO_DEFINIDO,
+  "menu:reportes:almacenDeProduccion:faltantes": NO_DEFINIDO,
+  "menu:reportes:almacenDeProduccion:personalizado": NO_DEFINIDO,
+  "menu:reportes:transformacion": NO_DEFINIDO,
+  "menu:almacen": NO_DEFINIDO,
+  "menu:almacen:productoTerminado": NO_DEFINIDO,
+  "menu:almacen:produccion": NO_DEFINIDO,
+  "menu:almacen:produccion:entradasYSalidas": NO_DEFINIDO,
+  "menu:almacen:requisiciones": NO_DEFINIDO,
+  "menu:almacen:reportesPersonalizados": NO_DEFINIDO,
+  "menu:controlDeProduccion": NO_DEFINIDO,
+  "menu:controlDeProduccion:folios:revision": NO_DEFINIDO,
+  "menu:controlDeProduccion:folios:seguimiento": NO_DEFINIDO,
+  "menu:controlDeProduccion:folios:asignarOrdenes": NO_DEFINIDO,
+  "menu:ingenieria:": NO_DEFINIDO,
+  "menu:ingenieria:procesos": NO_DEFINIDO,
+  "menu:ingenieria:familiaDeProcesos": NO_DEFINIDO,
+  "menu:ingenieria:modelos": NO_DEFINIDO,
+  "menu:ingenieria:tamanos": NO_DEFINIDO,
+  "menu:ingenieria:colores": NO_DEFINIDO,
+  "menu:ingenieria:terminados": NO_DEFINIDO,
+  "menu:ingenieria:sku": NO_DEFINIDO,
+  "menu:ingenieria:maquinas": NO_DEFINIDO,
+  "menu:ventas": NO_DEFINIDO,
+  "menu:ventas:misFolios": NO_DEFINIDO,
+  "menu:ventas:stock": NO_DEFINIDO,
+  "menu:proveedores": NO_DEFINIDO,
+  "menu:divisas": NO_DEFINIDO,
+  "menu:administrador": NO_DEFINIDO,
+  "menu:administrador:usuarios": NO_DEFINIDO,
+  "menu:administrador:departamentos": NO_DEFINIDO,
+  "menu:administrador:areas": NO_DEFINIDO,
+  "menu:administrador:clientes": NO_DEFINIDO,
+  "menu:administrador:almacenDescripcion": NO_DEFINIDO,
+  "menu:produccion": NO_DEFINIDO,
+  "menu:produccion:almacenDeBoton": NO_DEFINIDO,
+  "menu:produccion:barnizado": NO_DEFINIDO,
+  "menu:produccion:burato": NO_DEFINIDO,
+  "menu:produccion:controlDeProduccion": NO_DEFINIDO,
+  "menu:produccion:empaque": NO_DEFINIDO,
+  "menu:produccion:materiales": NO_DEFINIDO,
+  "menu:produccion:pastilla": NO_DEFINIDO,
+  "menu:produccion:laser": NO_DEFINIDO,
+  "menu:produccion:metalizado": NO_DEFINIDO,
+  "menu:produccion:seleccion": NO_DEFINIDO,
+  "menu:produccion:transformacion": NO_DEFINIDO,
+  "menu:produccion:pulido": NO_DEFINIDO,
+  "menu:produccion:productoTerminado": NO_DEFINIDO,
+  "menu:produccion:tenido": NO_DEFINIDO,
+  "menu:rh": NO_DEFINIDO,
+  "menu:rh:empleados": NO_DEFINIDO,
+  "menu:rh:cursos": NO_DEFINIDO,
+  "menu:rh:puestos": NO_DEFINIDO,
 }
 
 /**
@@ -196,7 +250,7 @@ const permisos = {
  * @param {*} permiso
  * @returns
  */
-module.exports.$ = (permiso) => {
+module.exports.$ = permiso => {
   if (process.env.NODE_ENV === "production") return permiso
 
   if (permisos.hasOwnProperty(permiso)) return permiso

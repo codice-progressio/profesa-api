@@ -17,7 +17,7 @@ var usuarioSchema = new Schema({
     unique: true,
     required: [true, "El correo es necesario."]
   },
-  password: { type: String, required: [true, "La contraseña es necesaria."] },
+  password: { type: String, required: [true, "La contraseña es necesaria."], select: false },
   img: { type: String, required: false },
   // TODO: Un usuario debe poder tener varios roles.
   permissions: {

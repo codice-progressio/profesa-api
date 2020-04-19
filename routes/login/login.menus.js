@@ -1,15 +1,22 @@
 var CONST = require("../../utils/constantes")
 var permisos = require("../../config/permisos.config")
 
-module.exports = function (permissions) {
-  var menuSeleccionado = generarMenus()
+module.exports = function (permisos) {
+  var menusSeleccionables = generarMenus()
 
-  if (!permissions.includes("SUPER_ADMIN")) {
-    menuSeleccionado = generarMenuSegunRoles(permissions, menuSeleccionado)
+  if (!permisos.includes("SUPER_ADMIN")) {
+    //En caso de queno sea el SUPER_ADMIN debemos eliminar los
+    // menus que no coinciden contra los permisos que estan
+    // en el arreglo del usuario.
+    menusSeleccionables = generarMenuSegunPermisos(
+      permisos,
+      menusSeleccionables
+    )
   }
 
+  console.log(`menusSeleccionables`, menusSeleccionables)
   //Obtenemos solo los valores
-  var menu = Object.values(menuSeleccionado)
+  var menu = Object.values(menusSeleccionables)
   menu.sort((a, b) => (a.titulo > b.titulo ? 1 : -1))
   //Agregmos el dashboar
   menu.unshift(principal())
@@ -17,30 +24,18 @@ module.exports = function (permissions) {
   return menu
 }
 
-function generarMenuSegunRoles(permissions, OBJETO_MENUS) {
-  //ES NECESARIO QUE LOS PERMISOS INCLUYAN EL TEXTO MENU!!!
-  const menusSeleccionados = {}
-
-  permissions
-    .filter(permiso => permiso.includes("MENU"))
-    .forEach(permiso => {
-      for (const key in OBJETO_MENUS) {
-        const menuCompleto = OBJETO_MENUS[key]
-        if (menuCompleto.permissions.includes(permiso))
-          menusSeleccionados[key] = menuCompleto
-      }
-    })
-
-  for (const key in menusSeleccionados) {
-    const menu = menusSeleccionados[key]
-    menu.submenu = menu.submenu.filter(submenu => {
-      return submenu.permissions.every(rolActual =>
-        permissions.includes(rolActual)
-      )
-    })
-  }
-
-  return menusSeleccionados
+function generarMenuSegunPermisos(permisos, OBJETO_MENUS) {
+  return (
+    Object.keys(OBJETO_MENUS)
+      //Dejamos solo los menus generales de los que tenemos permiso
+      .filter(key => permisos.includes(OBJETO_MENUS[key].permiso))
+      .map(key => {
+        //Filtramos los submenus
+        const menu = OBJETO_MENUS[key]
+        menu.submenu = menu.submenu.filter(sm => permisos.includes(sm.permiso))
+        return menu
+      })
+  )
 }
 
 function generarMenus() {
@@ -60,14 +55,14 @@ function generarMenus() {
 function principal() {
   const menu = {
     // TODO MUNDO DEBE DE TENER ESTO.
-    permiso: [],
+    permiso: permisos.$("login"),
     titulo: "Avisos",
     icono: "fas fa-comments",
     submenu: [
       {
         titulo: "Dashboard",
         url: "/dashboard",
-        permiso: [],
+        permiso: permisos.$("login"),
       },
     ],
   }
@@ -249,19 +244,19 @@ function ventas() {
 
 function compras() {
   const menu = {
-    permiso: permisos.$("menu:"),
+    permiso: permisos.$("menu:compras"),
     titulo: "Compras",
     icono: "fas fa-shopping-bag",
     submenu: [
       {
         titulo: "Proveedores",
         url: "/proveedores",
-        permiso: permisos.$("menu:proveedores"),
+        permiso: permisos.$("menu:compras:proveedores"),
       },
       {
         titulo: "Divisas",
         url: "/divisas",
-        permiso: permisos.$("menu:divisas"),
+        permiso: permisos.$("menu:compras:divisas"),
       },
     ],
   }

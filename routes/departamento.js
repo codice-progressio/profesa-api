@@ -6,6 +6,8 @@ var Departamento = require("../models/departamento")
 var guard = require("express-jwt-permissions")()
 var permisos = require("../config/permisos.config")
 
+var RESP = require("../utils/respStatus")
+
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,

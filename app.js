@@ -132,7 +132,7 @@ app.use(function (err, req, res, next) {
   }
 
   if (err.code === "invalid_token") {
-    return res.status(401).send("Token invalido")
+    return res.status(401).send("Token invalido. Inicia sesion de nuevo")
   }
 
   if (err.code === "credentials_required") {

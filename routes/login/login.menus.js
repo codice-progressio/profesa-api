@@ -49,6 +49,7 @@ function generarMenus() {
     ADMINISTRADOR: administrador(),
     PRODUCCION: produccion(),
     RH: rh(),
+    parametros: parametros(),
   }
 }
 
@@ -242,6 +243,21 @@ function ventas() {
   return menu
 }
 
+function parametros() {
+  const menu = {
+    permiso: permisos.$("menu:parametros"),
+    titulo: "Parametros",
+    icono: "fas fa-microchip",
+    submenu: [
+      {
+        titulo: "Localizacion de ordenes",
+        url: "/parametros/localizacionDeOrdenes",
+        permiso: permisos.$("menu:parametros:localizacionDeOrdenes"),
+      },
+    ],
+  }
+  return menu
+}
 function compras() {
   const menu = {
     permiso: permisos.$("menu:compras"),

@@ -4,7 +4,7 @@ var NO_DEFINIDO = ""
 
 const permisos = {
   SUPER_ADMIN: NO_DEFINIDO,
-  login:'login',
+  login: "login",
   "XXXXX:multiplePuesto": NO_DEFINIDO,
   "administrador:usuario:crear": NO_DEFINIDO,
   "administrador:usuario:eliminar": NO_DEFINIDO,
@@ -244,6 +244,8 @@ const permisos = {
   "menu:ventas": NO_DEFINIDO,
   "menu:ventas:misFolios": NO_DEFINIDO,
   "menu:ventas:stock": NO_DEFINIDO,
+  "menu:parametros": NO_DEFINIDO,
+  "menu:parametros:localizacionDeOrdenes": NO_DEFINIDO,
 }
 
 /**

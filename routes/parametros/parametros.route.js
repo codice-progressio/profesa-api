@@ -6,6 +6,7 @@ var guard = require("express-jwt-permissions")()
 var bcrypt = require("bcryptjs")
 var Usuario = require("../../models/usuario")
 var permisos = require("../../config/permisos.config")
+var Proceso = require("../../models/procesos/proceso")
 
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.
@@ -37,7 +38,7 @@ app.use(async (req, res, next) => {
   var parametro = await Parametros.findOne().exec()
   if (!parametro)
     return next("No existe un documento para poder establecer este parametro")
-  
+
   req["parametros"] = parametro
   next()
 })
@@ -191,6 +192,24 @@ app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
 })
 
 // LO QUE SIGUE SON PERSONALIZABLES PARA CADA PROYECTO
+
+app.get("/localizacionDeOrdenes", (req, res, next) => {
+  Promise.all([
+    Proceso.find({
+      _id: { $in: req.parametros.localizacionDeOrdenes.procesosIniciales },
+    }),
+    Proceso.find({
+      _id: { $in: req.parametros.localizacionDeOrdenes.procesosFinales },
+    }),
+  ])
+    .then(r => {
+      return res.status(200).send({
+        procesosIniciales: r[0],
+        procesosFinales: r[1],
+      })
+    })
+    .catch(err => next(err))
+})
 
 app.put("/localizacionDeOrdenes", (req, res, next) => {
   Parametros.updateOne({}, { localizacionDeOrdenes: req.body })

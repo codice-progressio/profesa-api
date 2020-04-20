@@ -10,7 +10,7 @@ var permisos = require("../../config/permisos.config")
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
-    err: err
+    err: err,
   })
 }
 
@@ -25,7 +25,6 @@ app.get(
 
     const total = await AlmacenDescripcion.countDocuments().exec()
 
-    console.log(`total`, total)
     AlmacenDescripcion.find({})
       .sort({ [campo]: sort })
       .skip(desde)
@@ -34,7 +33,7 @@ app.get(
       .then(almacenes => {
         return RESP._200(res, null, [
           { tipo: "almacenesDescripcion", datos: almacenes },
-          { tipo: "total", datos: total }
+          { tipo: "total", datos: total },
         ])
       })
       .catch(err => erro(res, err, "Hubo un error buscando los almacenes"))
@@ -50,7 +49,7 @@ app.get(
       .then(almacen => {
         if (!almacen) throw "No existe el id"
         return RESP._200(res, null, [
-          { tipo: "almacenDescripcion", datos: almacen }
+          { tipo: "almacenDescripcion", datos: almacen },
         ])
       })
       .catch(err => erro(res, err, "Hubo un error buscando el almacen por id"))
@@ -72,20 +71,20 @@ app.get(
     const $match = {
       $or: [
         {
-          nombre: { $regex: termino, $options: "i" }
+          nombre: { $regex: termino, $options: "i" },
         },
         {
-          descripcion: { $regex: termino, $options: "i" }
+          descripcion: { $regex: termino, $options: "i" },
         },
         {
-          ubicacion: { $regex: termino, $options: "i" }
-        }
-      ]
+          ubicacion: { $regex: termino, $options: "i" },
+        },
+      ],
     }
 
     const total = await AlmacenDescripcion.aggregate([
       { $match },
-      { $count: "total" }
+      { $count: "total" },
     ]).exec()
 
     AlmacenDescripcion.aggregate([
@@ -95,14 +94,14 @@ app.get(
       { $limit: desde + limite },
       { $skip: desde },
       // Doble ordenada para no perder el estilo...
-      { $sort: { [campo]: sort } }
+      { $sort: { [campo]: sort } },
     ])
       .exec()
       .then(almacenes => {
         console.log(`almacenes.length`, almacenes.length)
         return RESP._200(res, null, [
           { tipo: "almacenesDescripcion", datos: almacenes },
-          { tipo: "total", datos: total.pop().total }
+          { tipo: "total", datos: total.pop().total },
         ])
       })
       .catch(err =>
@@ -114,14 +113,14 @@ app.get(
 app.post(
   "/",
   guard.check(permisos.$("almacenDescripcion:crear")),
-  (req, body) => {
+  (req, res) => {
     const alma = new AlmacenDescripcion(req.body)
 
     alma
       .save()
       .then(alma => {
         return RESP._200(res, "Se guardo el almacen de manera correcta", [
-          { tipo: "almacenDescripcion", datos: alma }
+          { tipo: "almacenDescripcion", datos: alma },
         ])
       })
       .catch(err => erro(res, err, "Hubo un error guardando el almacen"))
@@ -148,7 +147,7 @@ app.put(
       })
       .then(almacen => {
         return RESP._200(res, "Se modifico el almacen de manera correcta", [
-          { tipo: "almacenDescripcion", datos: almacen }
+          { tipo: "almacenDescripcion", datos: almacen },
         ])
       })
       .catch(err => erro(res, err, "Hubo un error modificando el almacen"))
@@ -167,7 +166,7 @@ app.delete(
       })
       .then(almacen => {
         return RESP._200(res, "Se elimino el almacen de manera correcta", [
-          { tipo: "almacenDescripcion", datos: almacen }
+          { tipo: "almacenDescripcion", datos: almacen },
         ])
       })
       .catch(err => erro(res, err, "Hubo un error eliminando el almacen"))

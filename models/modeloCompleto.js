@@ -157,8 +157,11 @@ let generarNombreCompleto = function(next) {
             this.nombreCompleto = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}`
             this.nombreCompleto +=
                 this.laserAlmacen.laser.length > 0 ? "-" + this.laserAlmacen.laser : ""
-            this.nombreCompleto +=
-                this.versionModelo.split("").length > 0 ? "-" + this.versionModelo : ""
+            
+            if( this.versionModelo ){
+                this.nombreCompleto +=
+                    this.versionModelo.split("").length > 0 ? "-" + this.versionModelo : ""
+            }
 
             next()
         })

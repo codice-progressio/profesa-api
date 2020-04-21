@@ -23,52 +23,14 @@ app.post(
   "/",
   guard.check(permisos.$("familiaDeProcesos:crear")),
   (req, res) => {
-    const familiaDeProcesos = new FamiliaDeProcesos(req.body)
-
-    // Comprobamos que el órden no este repetido.
-    let normal = []
-    familiaDeProcesos.procesos.forEach((f) => {
-      normal.push(f.orden)
-    })
-
-    if (normal.unique().length < normal.length) {
-      return RESP._400(res, {
-        msj: "No puede ser repetido",
-        err: "No se debe repetir el número de órden.",
-      })
-    }
-
-    // Guardamos por defecto CONTROL DE PRODUCCIÓN como el primer proceso que se debe realizar en la familia. y
-    // como primer departamento por defecto.
-    // Lo buscamos
-    const p = Proceso.findOne({ nombre: PROC.CONTROL_DE_PRODUCCION._n }).exec()
-    p.then((procesoD) => {
-      if (!procesoD) {
-        return RESP._500(res, {
-          msj:
-            "Hubo un error buscando el proceso por defecto: " +
-            PROC.CONTROL_PRODUCCION._n,
-          err:
-            "El sistema necesita este proceso para poder continuar. (¿Defaults no funcionan?)",
-          masInfo: [
-            {
-              infoAdicional:
-                CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.infoAdicional,
-              dataAdicional:
-                CONST.ERRORES.MAS_INFO.TIPO_ERROR.NO_DATA.dataAdicional,
-            },
-          ],
-        })
-      }
-      familiaDeProcesos.procesos.unshift({ proceso: procesoD._id, orden: 0 })
-      return familiaDeProcesos.save()
-    })
-      .then((familiaNueva) => {
+    new FamiliaDeProcesos(req.body)
+      .save()
+      .then(familiaNueva => {
         return RESP._200(res, "Se guardo la familia de manera correcta.", [
           { tipo: "familiaDeProcesos", datos: familiaNueva },
         ])
       })
-      .catch((err) => {
+      .catch(err => {
         return RESP._500(res, {
           msj: "Hubo un error guardando la familia de procesos.",
           err: err,
@@ -92,13 +54,13 @@ app.get(
       .limit(limite)
       .skip(desde)
       .exec()
-      .then((familiasDeProcesos) => {
+      .then(familiasDeProcesos => {
         return RESP._200(res, null, [
           { tipo: "familiaDeProcesos", datos: familiasDeProcesos },
           { tipo: "total", datos: total },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(res, err, "Hubo un error buscando las familias de procesos")
       )
   }
@@ -110,13 +72,13 @@ app.get(
   (req, res) => {
     FamiliaDeProcesos.findById(req.params.id)
       .exec()
-      .then((familiaDeProcesos) => {
+      .then(familiaDeProcesos => {
         if (!familiaDeProcesos) throw "No existe el id"
         return RESP._200(res, null, [
           { tipo: "familiaDeProcesos", datos: familiaDeProcesos },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(
           res,
           err,
@@ -136,7 +98,7 @@ app.get(
     const campo = String(req.query.campo || "nombre")
     const termino = req.params.termino
 
-    const b = (campo) => ({
+    const b = campo => ({
       [campo]: { $regex: termino, $options: "i" },
     })
     console.log(`termino`, termino)
@@ -144,7 +106,7 @@ app.get(
       $or: [],
     }
 
-    ;["nombre", "observaciones"].forEach((x) => $match.$or.push(b(x)))
+    ;["nombre", "observaciones"].forEach(x => $match.$or.push(b(x)))
 
     const total = await FamiliaDeProcesos.aggregate([
       { $match },
@@ -163,7 +125,7 @@ app.get(
       { $sort: { [campo]: sort } },
     ])
       .exec()
-      .then((familiasDeProcesos) => {
+      .then(familiasDeProcesos => {
         //Si no hay resultados no se crea la propiedad
         // y mas adelante nos da error.
         if (!total.length) total.push({ total: 0 })
@@ -173,7 +135,7 @@ app.get(
           { tipo: "total", datos: total.pop().total },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(
           res,
           err,
@@ -189,17 +151,17 @@ app.delete(
   (req, res) => {
     FamiliaDeProcesos.findById(req.params.id)
       .exec()
-      .then((familiaDeProcesos) => {
+      .then(familiaDeProcesos => {
         if (!familiaDeProcesos) throw "No existe el id"
 
         return familiaDeProcesos.remove()
       })
-      .then((familiaDeProcesos) => {
+      .then(familiaDeProcesos => {
         return RESP._200(res, "Se elimino de manera correcta", [
           { tipo: "familiaDeProcesos", datos: familiaDeProcesos },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(res, err, "Hubo un error eliminando la familia de procesos")
       )
   }
@@ -209,25 +171,25 @@ app.put(
   "/",
   guard.check(permisos.$("familiaDeProcesos:modificar")),
   (req, res) => {
-    FamiliaDeProcesos.findById(req.body._id)
+    return FamiliaDeProcesos.findById(req.body._id)
       .exec()
-      .then((familiaDeProcesos) => {
+      .then(familiaDeProcesos => {
         if (!familiaDeProcesos) throw "No existe el id"
         ;[
           "procesos",
           "nombre",
           "soloParaProductoTerminado",
           "observaciones",
-        ].forEach((x) => (familiaDeProcesos[x] = req.body[x]))
+        ].forEach(x => (familiaDeProcesos[x] = req.body[x]))
 
         return familiaDeProcesos.save()
       })
-      .then((familiaDeProcesos) => {
+      .then(familiaDeProcesos => {
         return RESP._200(res, "Se modifico correctamente", [
           { tipo: "familiaDeProcesos", datos: familiaDeProcesos },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(res, err, "Hubo un error actualizando el familiaDeProcesos")
       )
   }

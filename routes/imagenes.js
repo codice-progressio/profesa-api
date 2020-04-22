@@ -8,7 +8,7 @@ const fs = require('fs');
 var guard =  require('express-jwt-permissions')()
 var permisos = require('../config/permisos.config')
 
-app.get('/:tipo/:img', guard.check(permisos.$('imagenes:tipo:ver')), (req, res, next) => {
+app.get('/:tipo/:img', (req, res, next) => {
 
     var tipo = req.params.tipo;
     var img = req.params.img;

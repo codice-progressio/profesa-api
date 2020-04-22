@@ -9,29 +9,37 @@ var permisos = require('../../config/permisos.config')
  * Guardar nuevo lote. 
  * 
  */
-app.post('/', guard.check(permisos.$('almacenDeProductoTerminado:lote:crear')), (req, res) => {
+app.post(
+  "/",
+  guard.check(permisos.$("almacenDeProductoTerminado:lote:crear")),
+  (req, res) => {
+    let idModeloCompleto = req.body._id
+    let lote = req.body.lote
 
-    let idModeloCompleto = req.body._id;
-    let lote = req.body.lote;
+    if (!idModeloCompleto)
+      throw "No definiste el modelo para actualizar el lote."
 
-    if (!idModeloCompleto) throw new Error('No definiste el modelo para actualizar el lote.');
-
-    ModeloCompleto.
-        guardarLote(idModeloCompleto, lote)
-        .then(mcActualizado => {
-
-            return RESP._200(res, `Se guardo el lote para el modelo ${mcActualizado.nombreCompleto}`, [
-                { tipo: 'modeloCompleto', datos: mcActualizado.getCamposParaAlmacen() },
-            ]);
-
+    ModeloCompleto.guardarLote(idModeloCompleto, lote)
+      .then(mcActualizado => {
+        return RESP._200(
+          res,
+          `Se guardo el lote para el modelo ${mcActualizado.nombreCompleto}`,
+          [
+            {
+              tipo: "modeloCompleto",
+              datos: mcActualizado.getCamposParaAlmacen(),
+            },
+          ]
+        )
+      })
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error al guardar el lote.",
+          err: err,
         })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error al guardar el lote.',
-                err: err,
-            });
-        });
-});
+      })
+  }
+)
 
 
 

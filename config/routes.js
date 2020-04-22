@@ -59,7 +59,12 @@ module.exports.ROUTES = function (app) {
   app.use("/img", imagenesRoutes)
   app.use(
     jwt({ secret: seed }).unless({
-      path: ["/parametros", "/parametros/super-admin/crear", "/login"],
+      path: [
+        "/parametros",
+        "/parametros/super-admin/crear",
+        "/login",
+        "/img/usuarios/xxx",
+      ],
     })
   )
 

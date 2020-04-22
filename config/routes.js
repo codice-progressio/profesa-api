@@ -95,7 +95,7 @@ module.exports.ROUTES = function (app) {
 
   app.use("/empleado", EmpleadoRoute)
   app.use("/puesto", PuestoRoute)
-  app.use("/area",  AreaRoute)
+  app.use("/area", AreaRoute)
   app.use("/curso", CursoRoute)
   app.use("/requisicion", RequisicionRoute)
   app.use("/divisa", DivisaRoute)

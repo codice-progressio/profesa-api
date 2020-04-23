@@ -26,14 +26,10 @@ function generarMenuSegunPermisos(permisos, OBJETO_MENUS) {
   return (
     Object.keys(OBJETO_MENUS)
       //Dejamos solo los menus generales de los que tenemos permiso
-      .filter(key =>
-      {
-        console.log(`OBJETO_MENUS[key].permiso`,OBJETO_MENUS[key].permiso)
-       return permisos.includes(OBJETO_MENUS[key].permiso)
+      .filter(key => {
+        return permisos.includes(OBJETO_MENUS[key].permiso)
       })
-      .map(key =>
-      {
-        console.log(`key`,key)
+      .map(key => {
         //Filtramos los submenus
         const menu = OBJETO_MENUS[key]
         menu.submenu = menu.submenu.filter(sm => permisos.includes(sm.permiso))
@@ -88,12 +84,18 @@ function reportes() {
       {
         titulo: "Faltantes almacen de produccion",
         url: "/reportes/almacenDeProduccion/faltantes",
-        permiso: permisos.$("menu:reportes:almacenDeProduccion:faltantes", false),
+        permiso: permisos.$(
+          "menu:reportes:almacenDeProduccion:faltantes",
+          false
+        ),
       },
       {
         titulo: "Personalizados",
         url: "/reportes/almacenDeProduccion/personalizado",
-        permiso: permisos.$("menu:reportes:almacenDeProduccion:personalizado", false),
+        permiso: permisos.$(
+          "menu:reportes:almacenDeProduccion:personalizado",
+          false
+        ),
       },
       {
         titulo: "Transformacion",
@@ -158,12 +160,18 @@ function controlDeProduccion() {
       {
         titulo: "Seguimientos",
         url: "/folios/seguimiento",
-        permiso: permisos.$("menu:controlDeProduccion:folios:seguimiento", false),
+        permiso: permisos.$(
+          "menu:controlDeProduccion:folios:seguimiento",
+          false
+        ),
       },
       {
         titulo: "Asignar ordenes",
         url: "/folios/asignarOrdenes",
-        permiso: permisos.$("menu:controlDeProduccion:folios:asignarOrdenes", false),
+        permiso: permisos.$(
+          "menu:controlDeProduccion:folios:asignarOrdenes",
+          false
+        ),
       },
     ],
   }

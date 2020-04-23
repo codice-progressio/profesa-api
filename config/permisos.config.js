@@ -257,14 +257,15 @@ var guard = require("express-jwt-permissions")()
  * @param {*} permiso
  * @returns
  */
-module.exports.$ = permiso => {
+module.exports.$ = (permiso, esMiddleware = true) => {
   const funcion = function (req, res, next) {
     req["permisoSolicitado"] = permiso
     return guard.check(permiso)(req, res, next)
   }
-  if (process.env.NODE_ENV === "production") return funcion
+  if (process.env.NODE_ENV === "production")
+    return esMiddleware ? funcion : permiso
 
-  if (permisos.hasOwnProperty(permiso)) return funcion
+  if (permisos.hasOwnProperty(permiso)) return esMiddleware ? funcion : permiso
 
   const archivo = "config/permisos.config.txt"
 
@@ -288,6 +289,6 @@ module.exports.$ = permiso => {
     fs.writeFileSync(archivo, data)
   }
 
-  return funcion
+  return esMiddleware ? funcion : permiso
 }
 module.exports.lista = Object.keys(permisos)

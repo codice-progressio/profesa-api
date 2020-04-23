@@ -93,7 +93,7 @@ app.post("/super-admin/crear", async (req, res, next) => {
 
 //DESPUES DE AQUI TODO LO DEBE SE HACER EL SUPER ADMIN
 
-app.use(guard.check(permisos.$("SUPER_ADMIN")))
+app.use(permisos.$("SUPER_ADMIN"))
 
 // ESTA FUNCION ES DE UN SOLO USO Y ES PARA ELIMINAR TODOS LOS
 // ROLES DE LOS USUARIOS QUE EXISTEN ACTUALMENTE. SE PUEDE

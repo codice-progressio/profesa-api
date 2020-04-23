@@ -90,7 +90,7 @@ module.exports.ROUTES = function (app) {
   app.use("/login", loginRoutes)
 
   //Para usar esta parte debe tener permisos de login
-  app.use(guard.check(permisos.$("login")))
+  app.use(permisos.$("login"))
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(

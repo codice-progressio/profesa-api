@@ -39,7 +39,7 @@ const erro = (res, err, msj) => {
 // -->
 app.get(
   "/",
-  guard.check(permisos.$("empleado:leer:todo")),
+  permisos.$("empleado:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -74,7 +74,7 @@ app.get(
 //  Id
 // =====================================
 // -->
-app.get("/:id", guard.check(permisos.$("empleado:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("empleado:leer:id"), (req, res) => {
   Empleado.findById(req.params.id)
     .exec()
     .then(empleado => {
@@ -98,7 +98,7 @@ app.get("/:id", guard.check(permisos.$("empleado:leer:id")), (req, res) => {
 // -->
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("empleado:leer:termino")),
+  permisos.$("empleado:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -325,7 +325,7 @@ function guardarImagen(foto, id, nombreAnterior = "XXXXXXXXXX") {
 // =====================================
 // -->
 
-app.delete("/:id", guard.check(permisos.$("empleado:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("empleado:eliminar"), (req, res) => {
   Empleado.findById(req.params.id)
     .exec()
     .then(empleado => {
@@ -346,7 +346,7 @@ app.delete("/:id", guard.check(permisos.$("empleado:eliminar")), (req, res) => {
 
 app.put(
   "/evento/puesto",
-  guard.check(permisos.$("empleado:evento:puesto")),
+  permisos.$("empleado:evento:puesto"),
   (req, res) => {
     //Cambio de puesto
     var datos = {
@@ -377,7 +377,7 @@ app.put(
 
 app.put(
   "/evento/sueldo",
-  guard.check(permisos.$("empleado:evento:sueldo")),
+  permisos.$("empleado:evento:sueldo"),
   (req, res) => {
     // Con un aumento de sueldo necesitamos
     // comprobar que no supere el maximo.
@@ -410,7 +410,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/baja",
-  guard.check(permisos.$("empleado:evento:estatusLaboral:baja")),
+  permisos.$("empleado:evento:estatusLaboral:baja"),
   (req, res) => {
     var datos = req.body
 
@@ -425,7 +425,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/reingreso",
-  guard.check(permisos.$("empleado:evento:estatusLaboral:reingreso")),
+  permisos.$("empleado:evento:estatusLaboral:reingreso"),
   (req, res) => {
     var datos = req.body
 
@@ -534,7 +534,7 @@ app.put(
 
 app.put(
   "/evento/permiso",
-  guard.check(permisos.$("empleado:evento:permiso")),
+  permisos.$("empleado:evento:permiso"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
@@ -559,7 +559,7 @@ app.put(
 
 app.put(
   "/evento/permiso/autorizar",
-  guard.check(permisos.$("empleado:evento:permiso:autorizar")),
+  permisos.$("empleado:evento:permiso:autorizar"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
@@ -575,7 +575,7 @@ app.put(
 )
 app.put(
   "/evento/permiso/rechazar",
-  guard.check(permisos.$("empleado:evento:permiso:rechazar")),
+  permisos.$("empleado:evento:permiso:rechazar"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
@@ -604,7 +604,7 @@ app.put(
 // -->
 app.put(
   "/evento/vacaciones",
-  guard.check(permisos.$("empleado:evento:vacaciones")),
+  permisos.$("empleado:evento:vacaciones"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
@@ -634,7 +634,7 @@ app.put(
 
 app.put(
   "/evento/curso",
-  guard.check(permisos.$("empleado:evento:curso")),
+  permisos.$("empleado:evento:curso"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
@@ -663,7 +663,7 @@ app.put(
 // -->
 app.put(
   "/evento/castigo",
-  guard.check(permisos.$("empleado:evento:castigo")),
+  permisos.$("empleado:evento:castigo"),
   (req, res) => {
     var datos = {
       _id: JSON.parse(req.body._id),
@@ -721,7 +721,7 @@ function moverDocumentoDeEmpleado(foto, id, tipoEvento) {
 
 app.put(
   "/evento/felicitacion",
-  guard.check(permisos.$("empleado:evento:felicitacion")),
+  permisos.$("empleado:evento:felicitacion"),
   (req, res) => {
     const datos = {
       _id: JSON.parse(req.body._id),
@@ -759,7 +759,7 @@ app.put(
 
 app.put(
   "/evento/amonestacion",
-  guard.check(permisos.$("empleado:evento:amonestacion")),
+  permisos.$("empleado:evento:amonestacion"),
   (req, res) => {
     var datos = {
       _id: JSON.parse(req.body._id),
@@ -795,7 +795,7 @@ app.put(
 // =====================================
 // -->
 
-app.put("/evento/bono", guard.check(permisos.$('empleado:evento:bono')), (req, res) => {
+app.put("/evento/bono", permisos.$('empleado:evento:bono'), (req, res) => {
   var datos = {
     _id: req.body._id,
     porAsistencia: req.body.porAsistencia,
@@ -823,7 +823,7 @@ app.put("/evento/bono", guard.check(permisos.$('empleado:evento:bono')), (req, r
 // =====================================
 // -->
 
-app.delete("/evento/:idEmpleado/:idEvento", guard.check(permisos.$('empleado:evento:eliminar')), (req, res) => {
+app.delete("/evento/:idEmpleado/:idEvento", permisos.$('empleado:evento:eliminar'), (req, res) => {
   var datos = {
     _id: req.params.idEmpleado,
     _idEvento: req.params.idEvento

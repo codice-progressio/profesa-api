@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("area:crear")), (req, res) => {
+app.post("/", permisos.$("area:crear"), (req, res) => {
   return new Area(req.body)
     .save()
     .then(area => {
@@ -25,7 +25,7 @@ app.post("/", guard.check(permisos.$("area:crear")), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando el area"))
 })
 
-app.get("/", guard.check(permisos.$("area:leer:todo")), async (req, res) => {
+app.get("/", permisos.$("area:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -47,7 +47,7 @@ app.get("/", guard.check(permisos.$("area:leer:todo")), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando las areas"))
 })
 
-app.get("/:id", guard.check(permisos.$("area:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("area:leer:id"), (req, res) => {
   Area.findById(req.params.id)
     .exec()
     .then(area => {
@@ -60,7 +60,7 @@ app.get("/:id", guard.check(permisos.$("area:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("area:leer:termino")),
+  permisos.$("area:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -113,7 +113,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("area:modificar")), (req, res) => {
+app.put("/", permisos.$("area:modificar"), (req, res) => {
   Area.findById(req.body._id)
     .exec()
     .then(area => {
@@ -135,7 +135,7 @@ app.put("/", guard.check(permisos.$("area:modificar")), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando el area"))
 })
 
-app.delete("/:id", guard.check(permisos.$("area:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("area:eliminar"), (req, res) => {
   Area.findById(req.params.id)
     .exec()
     .then(area => {

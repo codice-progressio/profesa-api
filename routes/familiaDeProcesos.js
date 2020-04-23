@@ -21,7 +21,7 @@ const erro = (res, err, msj) => {
 // ============================================
 app.post(
   "/",
-  guard.check(permisos.$("familiaDeProcesos:crear")),
+  permisos.$("familiaDeProcesos:crear"),
   (req, res) => {
     new FamiliaDeProcesos(req.body)
       .save()
@@ -41,7 +41,7 @@ app.post(
 
 app.get(
   "/",
-  guard.check(permisos.$("familiaDeProcesos:leer:todo")),
+  permisos.$("familiaDeProcesos:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -68,7 +68,7 @@ app.get(
 
 app.get(
   "/:id",
-  guard.check(permisos.$("familiaDeProcesos:leer:id")),
+  permisos.$("familiaDeProcesos:leer:id"),
   (req, res) => {
     FamiliaDeProcesos.findById(req.params.id)
       .exec()
@@ -90,7 +90,7 @@ app.get(
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("familiaDeProcesos:leer:termino")),
+  permisos.$("familiaDeProcesos:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -147,7 +147,7 @@ app.get(
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("familiaDeProcesos:eliminar")),
+  permisos.$("familiaDeProcesos:eliminar"),
   (req, res) => {
     FamiliaDeProcesos.findById(req.params.id)
       .exec()
@@ -169,7 +169,7 @@ app.delete(
 
 app.put(
   "/",
-  guard.check(permisos.$("familiaDeProcesos:modificar")),
+  permisos.$("familiaDeProcesos:modificar"),
   (req, res) => {
     return FamiliaDeProcesos.findById(req.body._id)
       .exec()

@@ -80,7 +80,7 @@ app.post("/", (req, res) => {
 })
 
 // Retorna todos los roles que hay en la api.
-app.get("/permisos", guard.check(permisos.$("SUPER_ADMIN")), (req, res) => {
+app.get("/permisos", permisos.$("SUPER_ADMIN"), (req, res) => {
   RESP._200(res, null, [{ tipo: "permisos", datos: permisos.lista }])
 })
 

@@ -17,7 +17,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("proveedor:crear")), (req, res) => {
+app.post("/", permisos.$("proveedor:crear"), (req, res) => {
   return new Proveedor(req.body)
     .save()
     .then(proveedor => {
@@ -30,7 +30,7 @@ app.post("/", guard.check(permisos.$("proveedor:crear")), (req, res) => {
 
 app.get(
   "/",
-  guard.check(permisos.$("proveedor:leer:todo")),
+  permisos.$("proveedor:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -54,7 +54,7 @@ app.get(
   }
 )
 
-app.get("/:id", guard.check(permisos.$("proveedor:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("proveedor:leer:id"), (req, res) => {
   Proveedor.findById(req.params.id)
     .exec()
     .then(proveedor => {
@@ -69,7 +69,7 @@ app.get("/:id", guard.check(permisos.$("proveedor:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("proveedor:leer:termino")),
+  permisos.$("proveedor:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -125,7 +125,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("proveedor:modificar")), (req, res) => {
+app.put("/", permisos.$("proveedor:modificar"), (req, res) => {
   Proveedor.findById(req.body._id)
     .exec()
     .then(proveedor => {
@@ -161,7 +161,7 @@ app.put("/", guard.check(permisos.$("proveedor:modificar")), (req, res) => {
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("proveedor:eliminar")),
+  permisos.$("proveedor:eliminar"),
   (req, res) => {
     Proveedor.findById(req.params.id)
       .exec()

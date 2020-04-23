@@ -128,7 +128,9 @@ app.use(function (err, req, res, next) {
   if (errores.includes(err.code)) {
     return res
       .status(403)
-      .send("No tienes permisos para acceder a este contenido")
+      .send(
+        `No tienes permisos para acceder a este contenido: '${req.permisoSolicitado}'`
+      )
   }
 
   if (err.code === "invalid_token") {

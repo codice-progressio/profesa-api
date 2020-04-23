@@ -20,7 +20,7 @@ const erro = (res, err, msj) => {
 
 app.post(
   "/asignar",
-  guard.check(permisos.$("programacionTransformacion:asignar")),
+  permisos.$("programacionTransformacion:asignar"),
   (req, res) => {
     /**
      * Valores que recibimos
@@ -72,7 +72,7 @@ app.post(
 
 app.delete(
   "/desasignar",
-  guard.check(permisos.$("programacionTransformacion:desasignar")),
+  permisos.$("programacionTransformacion:desasignar"),
   (req, res) => {
     /**
      * Valores que recibimos
@@ -109,7 +109,7 @@ app.delete(
 
 app.get(
   "/ordenesPorAsignar/:id",
-  guard.check(permisos.$("programacionTransformacion:ordenesPorAsignar")),
+  permisos.$("programacionTransformacion:ordenesPorAsignar"),
   async (req, res) => {
     //El id actual de transformacion
     const idT = req.params.id
@@ -425,7 +425,7 @@ function obtenerPaso(orden) {
 }
 
 var datos = null
-app.put("/actualizarUbicacion/:idT", guard.check(permisos.$('programacionTransformacion:actualizarUbicacion')), (req, res) => {
+app.put("/actualizarUbicacion/:idT", permisos.$('programacionTransformacion:actualizarUbicacion'), (req, res) => {
   Maquina.aggregate([
     {
       $match: {

@@ -13,7 +13,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("tamano:crear")), (req, res) => {
+app.post("/", permisos.$("tamano:crear"), (req, res) => {
   return new Tamano(req.body)
     .save()
     .then((tamano) => {
@@ -24,7 +24,7 @@ app.post("/", guard.check(permisos.$("tamano:crear")), (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error guardando el tamano"))
 })
 
-app.get("/", guard.check(permisos.$("tamano:leer:todo")), async (req, res) => {
+app.get("/", permisos.$("tamano:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -46,7 +46,7 @@ app.get("/", guard.check(permisos.$("tamano:leer:todo")), async (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error buscando los tamanos"))
 })
 
-app.get("/:id", guard.check(permisos.$("tamano:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("tamano:leer:id"), (req, res) => {
   Tamano.findById(req.params.id)
     .exec()
     .then((tamano) => {
@@ -61,7 +61,7 @@ app.get("/:id", guard.check(permisos.$("tamano:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("tamano:leer:termino")),
+  permisos.$("tamano:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -117,7 +117,7 @@ app.get(
   }
 )
 
-app.delete("/:id", guard.check(permisos.$("tamano:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("tamano:eliminar"), (req, res) => {
   Tamano.findById(req.params.id)
     .exec()
     .then((tamano) => {
@@ -133,7 +133,7 @@ app.delete("/:id", guard.check(permisos.$("tamano:eliminar")), (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error eliminando el tamano"))
 })
 
-app.put("/", guard.check(permisos.$("tamano:modificar")), (req, res) => {
+app.put("/", permisos.$("tamano:modificar"), (req, res) => {
   Tamano.findById(req.body._id)
     .exec()
     .then((tamano) => {

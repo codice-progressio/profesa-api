@@ -17,7 +17,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("divisa:crear")), (req, res) => {
+app.post("/", permisos.$("divisa:crear"), (req, res) => {
   return new Divisa(req.body)
     .save()
     .then(divisa => {
@@ -28,7 +28,7 @@ app.post("/", guard.check(permisos.$("divisa:crear")), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando la divisa"))
 })
 
-app.get("/", guard.check(permisos.$("divisa:leer:todo")), async (req, res) => {
+app.get("/", permisos.$("divisa:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -50,7 +50,7 @@ app.get("/", guard.check(permisos.$("divisa:leer:todo")), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando las divisas"))
 })
 
-app.get("/:id", guard.check(permisos.$("divisa:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("divisa:leer:id"), (req, res) => {
   Divisa.findById(req.params.id)
     .exec()
     .then(divisa => {
@@ -63,7 +63,7 @@ app.get("/:id", guard.check(permisos.$("divisa:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("divisa:leer:termino")),
+  permisos.$("divisa:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -119,7 +119,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("divisa:modificar")), (req, res) => {
+app.put("/", permisos.$("divisa:modificar"), (req, res) => {
   Divisa.findById(req.body._id)
     .exec()
     .then(divisa => {
@@ -141,7 +141,7 @@ app.put("/", guard.check(permisos.$("divisa:modificar")), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando la divisa"))
 })
 
-app.delete("/:id", guard.check(permisos.$("divisa:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("divisa:eliminar"), (req, res) => {
   Divisa.findById(req.params.id)
     .exec()
     .then(divisa => {

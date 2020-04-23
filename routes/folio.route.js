@@ -19,7 +19,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.delete("/:id", guard.check(permisos.$("folio:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("folio:eliminar"), (req, res) => {
   const id = req.params.id
 
   if (!id) {
@@ -44,7 +44,7 @@ app.delete("/:id", guard.check(permisos.$("folio:eliminar")), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
 })
 
-app.post("/", guard.check(permisos.$("folio:crear")), (req, res) => {
+app.post("/", permisos.$("folio:crear"), (req, res) => {
   new Folio(req.body)
     .save()
     .then(folio => {
@@ -57,7 +57,7 @@ app.post("/", guard.check(permisos.$("folio:crear")), (req, res) => {
 
 app.get(
   "/buscar/id/:id",
-  guard.check(permisos.$("folio:leer:id")),
+  permisos.$("folio:leer:id"),
   (req, res) => {
     Folio.findById(req.params.id)
       .exec()
@@ -72,7 +72,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("folio:modificar")), (req, res) => {
+app.put("/", permisos.$("folio:modificar"), (req, res) => {
   Folio.findById(req.body._id)
     .exec()
     .then(folio => {
@@ -100,7 +100,7 @@ app.put("/", guard.check(permisos.$("folio:modificar")), (req, res) => {
 
 app.get(
   "/folioImpreso/:id",
-  guard.check(permisos.$("folio:marcarComoImpreso")),
+  permisos.$("folio:marcarComoImpreso"),
   (req, res) => {
     Folio.findById(req.params.id)
       .then(folio => {
@@ -127,7 +127,7 @@ app.get(
  */
 app.post(
   "/ordenesImpresas",
-  guard.check(permisos.$("folio:modificar:senalarOrdenesImpresas")),
+  permisos.$("folio:modificar:senalarOrdenesImpresas"),
   (req, res) => {
     Folio.findById(req.body._id)
       .then(folioEncontrado => {
@@ -154,7 +154,7 @@ app.post(
 
 app.get(
   "/detalle/orden/:folio/:pedido/:orden",
-  guard.check(permisos.$("folio:detalle:orden")),
+  permisos.$("folio:detalle:orden"),
   (req, res) => {
     Folio.findById(req.params.folio)
       .exec()
@@ -177,7 +177,7 @@ app.get(
 )
 app.get(
   "/detalle/pedido/:folio/:pedido",
-  guard.check(permisos.$("folio:detalle:pedido")),
+  permisos.$("folio:detalle:pedido"),
   (req, res) => {
     Folio.findById(req.params.folio)
       .exec()
@@ -198,7 +198,7 @@ app.get(
 )
 app.get(
   "/detalle/folio/:folio",
-  guard.check(permisos.$("folio:detalle:folio")),
+  permisos.$("folio:detalle:folio"),
   (req, res) => {
     Folio.findById(req.params.folio)
       .exec()
@@ -216,7 +216,7 @@ app.get(
 
 app.get(
   "/reporte/paraRevision",
-  guard.check(permisos.$("folio:reporte:paraRevision")),
+  permisos.$("folio:reporte:paraRevision"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -315,7 +315,7 @@ app.get(
 
 app.get(
   "/filtrar",
-  guard.check(permisos.$("folio:filtrar")),
+  permisos.$("folio:filtrar"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -523,7 +523,7 @@ app.get(
 
 app.get(
   "/porEntregarAProduccion/:vendedor",
-  guard.check(permisos.$("folio:porEntregarAProduccion:vendedor")),
+  permisos.$("folio:porEntregarAProduccion:vendedor"),
   (req, res) => {
     Folio.aggregate([
       {
@@ -567,7 +567,7 @@ app.get(
 
 app.put(
   "/retornarAlVendedor",
-  guard.check(permisos.$("folio:retornarAlVendedor")),
+  permisos.$("folio:retornarAlVendedor"),
   (req, res) => {
     const id = req.body.id
 
@@ -603,7 +603,7 @@ app.put(
  */
 app.put(
   "/entregarARevision",
-  guard.check(permisos.$("folio:entregarARevision")),
+  permisos.$("folio:entregarARevision"),
   (req, res) => {
     Folio.updateOne(
       { _id: ObjectId(req.body._id) },
@@ -627,7 +627,7 @@ app.put(
 
 app.put(
   "/liberarParaProduccion",
-  guard.check(permisos.$("folio:liberarParaProduccion")),
+  permisos.$("folio:liberarParaProduccion"),
   (req, res) => {
     return res.send("No existe")
   }

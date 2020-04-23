@@ -13,7 +13,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("maquina:crear")), (req, res) => {
+app.post("/", permisos.$("maquina:crear"), (req, res) => {
   const maquina = new Maquina(req.body)
   maquina
     .save()
@@ -25,7 +25,7 @@ app.post("/", guard.check(permisos.$("maquina:crear")), (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error guardando la maquina"))
 })
 
-app.get("/", guard.check(permisos.$("maquina:leer:todo")), async (req, res) => {
+app.get("/", permisos.$("maquina:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -52,7 +52,7 @@ app.get("/", guard.check(permisos.$("maquina:leer:todo")), async (req, res) => {
 //  Id
 // =====================================
 // -->
-app.get("/:id", guard.check(permisos.$("maquina:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("maquina:leer:id"), (req, res) => {
   Maquina.findById(req.params.id)
     .exec()
     .then((maquina) => {
@@ -73,7 +73,7 @@ app.get("/:id", guard.check(permisos.$("maquina:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("maquina:leer:termino")),
+  permisos.$("maquina:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -171,7 +171,7 @@ app.get(
 //    Modificar
 //   =====================================
 //   -->
-app.put("/", guard.check(permisos.$("maquina:modificar")), (req, res) => {
+app.put("/", permisos.$("maquina:modificar"), (req, res) => {
   Maquina.findById(req.body._id)
     .exec()
     .then((maquina) => {
@@ -206,7 +206,7 @@ app.put("/", guard.check(permisos.$("maquina:modificar")), (req, res) => {
 //   =====================================
 //   -->
 
-app.delete("/:id", guard.check(permisos.$("maquina:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("maquina:eliminar"), (req, res) => {
   Maquina.findById(req.params.id)
     .exec()
     .then((maquina) => {
@@ -228,7 +228,7 @@ app.delete("/:id", guard.check(permisos.$("maquina:eliminar")), (req, res) => {
  */
 app.get(
   "/departamento/:id",
-  guard.check(permisos.$("maquina:leer:departamento")),
+  permisos.$("maquina:leer:departamento"),
   (req, res) => {
     /**
      *  El id del departamento que queremos otener sus maquinas.

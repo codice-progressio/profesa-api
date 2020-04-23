@@ -18,7 +18,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("modeloCompleto:crear")), (req, res) => {
+app.post("/", permisos.$("modeloCompleto:crear"), (req, res) => {
   console.log(`llego`,req.body)
   new ModeloCompleto(req.body)
     .save()
@@ -32,7 +32,7 @@ app.post("/", guard.check(permisos.$("modeloCompleto:crear")), (req, res) => {
 
 app.get(
   "/",
-  guard.check(permisos.$("modeloCompleto:leer:todo")),
+  permisos.$("modeloCompleto:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -94,7 +94,7 @@ app.get(
 
 app.get(
   "/buscar/id/:id",
-  guard.check(permisos.$("modeloCompleto:leer:id")),
+  permisos.$("modeloCompleto:leer:id"),
   (req, res) => {
     ModeloCompleto.findById(req.params.id)
       .exec()
@@ -111,7 +111,7 @@ app.get(
 
 app.get(
   "/buscar/termino/:termino",
-  guard.check(permisos.$("modeloCompleto:leer:termino")),
+  permisos.$("modeloCompleto:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -194,7 +194,7 @@ app.get(
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("modeloCompleto:eliminar")),
+  permisos.$("modeloCompleto:eliminar"),
   (req, res) => {
     ModeloCompleto.findById(req.params.id)
       .exec()
@@ -214,7 +214,7 @@ app.delete(
 
 app.put(
   "/",
-  guard.check(permisos.$("modeloCompleto:modificar")),
+  permisos.$("modeloCompleto:modificar"),
   (req, res) => {
     ModeloCompleto.findById(req.body._id)
       .exec()
@@ -244,7 +244,7 @@ app.put(
 
 app.get(
   "/transito/:id",
-  guard.check(permisos.$("modeloCompleto:leer:transito")),
+  permisos.$("modeloCompleto:leer:transito"),
   (req, res) => {
     let id = req.params.id
 
@@ -316,7 +316,7 @@ app.get(
 
 app.post(
   "/stock",
-  guard.check(permisos.$("modeloCompleto:stock:modificar")),
+  permisos.$("modeloCompleto:stock:modificar"),
   (req, res) => {
     let datos = req.body
 

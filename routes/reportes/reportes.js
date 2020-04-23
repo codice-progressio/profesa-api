@@ -30,7 +30,7 @@ const erro = (res, err, msj) => {
 
 app.get(
   "/productoTerminado/faltantes",
-  guard.check(permisos.$("reportes:productoTerminado:faltes")),
+  permisos.$("reportes:productoTerminado:faltes"),
   (req, res) => {
     // Genera los reportes faltanes.
 
@@ -81,7 +81,7 @@ app.get(
 
 app.get(
   "/almacenDeProduccion/faltantes",
-  guard.check(permisos.$("reportes:almacenDeProduccion:faltantes")),
+  permisos.$("reportes:almacenDeProduccion:faltantes"),
   (req, res) => {
     var datosReporte = null
     // Genera los reportes faltanes.
@@ -143,7 +143,7 @@ app.get(
 
 app.get(
   "/almacenDeProduccion/personalizado/:id",
-  guard.check(permisos.$("reportes:almacenDeProduccion:personalizado:id")),
+  permisos.$("reportes:almacenDeProduccion:personalizado:id"),
   (req, res) => {
     var articulosRepo = null
 

@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("proceso:crear")), (req, res) => {
+app.post("/", permisos.$("proceso:crear"), (req, res) => {
   return new Proceso(req.body)
     .save()
     .then((proceso) => {
@@ -25,7 +25,7 @@ app.post("/", guard.check(permisos.$("proceso:crear")), (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error guardando el proceso"))
 })
 
-app.get("/", guard.check(permisos.$("proceso:leer:todo")), async (req, res) => {
+app.get("/", permisos.$("proceso:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -47,7 +47,7 @@ app.get("/", guard.check(permisos.$("proceso:leer:todo")), async (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error buscando los procesos"))
 })
 
-app.get("/:id", guard.check(permisos.$("proceso:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("proceso:leer:id"), (req, res) => {
   Proceso.findById(req.params.id)
     .exec()
     .then((proceso) => {
@@ -62,7 +62,7 @@ app.get("/:id", guard.check(permisos.$("proceso:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("proceso:leer:termino")),
+  permisos.$("proceso:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -168,7 +168,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("proceso:modificar")), (req, res) => {
+app.put("/", permisos.$("proceso:modificar"), (req, res) => {
   Proceso.findById(req.body._id)
     .exec()
     .then((proceso) => {
@@ -199,7 +199,7 @@ app.put("/", guard.check(permisos.$("proceso:modificar")), (req, res) => {
     .catch((err) => erro(res, err, "Hubo un error actualizando el proceso"))
 })
 
-app.delete("/:id", guard.check(permisos.$("proceso:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("proceso:eliminar"), (req, res) => {
   Proceso.findById(req.params.id)
     .exec()
     .then((proceso) => {
@@ -217,7 +217,7 @@ app.delete("/:id", guard.check(permisos.$("proceso:eliminar")), (req, res) => {
 
 app.post(
   "/buscar_multiple",
-  guard.check(permisos.$("proceso:leer:multiple")),
+  permisos.$("proceso:leer:multiple"),
   (req, res) => {
     Proceso.find({ _id: { $in: req.body.busqueda } })
       .exec()

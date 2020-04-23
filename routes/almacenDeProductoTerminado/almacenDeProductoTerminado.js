@@ -10,7 +10,7 @@ var permisos = require('../../config/permisos.config')
 
 app.get(
   "/",
-  guard.check(permisos.$("almacenDeProductoTerminado:leer:todo")),
+  permisos.$("almacenDeProductoTerminado:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -56,7 +56,7 @@ app.get(
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("almacenProductoTerminado:leer:termino")),
+  permisos.$("almacenProductoTerminado:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -141,7 +141,7 @@ const erro = (res, err, msj) => {
  */
 app.get(
   "/consolidar/:idModelo",
-  guard.check(permisos.$("almacenDeProductoTerminado:consolidar:modelo")),
+  permisos.$("almacenDeProductoTerminado:consolidar:modelo"),
   (req, res) => {
     const idModelo = req.params.idModelo
     ModeloCompleto.findById(idModelo)

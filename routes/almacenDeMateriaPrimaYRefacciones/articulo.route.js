@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("articulo:crear")), (req, res) => {
+app.post("/", permisos.$("articulo:crear"), (req, res) => {
   return new Articulo(req.body)
     .save()
     .then(articulo => {
@@ -27,7 +27,7 @@ app.post("/", guard.check(permisos.$("articulo:crear")), (req, res) => {
 
 app.get(
   "/",
-  guard.check(permisos.$("articulo:leer:todo")),
+  permisos.$("articulo:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -51,7 +51,7 @@ app.get(
   }
 )
 
-app.get("/:id", guard.check(permisos.$("articulo:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("articulo:leer:id"), (req, res) => {
   Articulo.findById(req.params.id)
     .exec()
     .then(articulo => {
@@ -66,7 +66,7 @@ app.get("/:id", guard.check(permisos.$("articulo:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("articulo:leer:termino")),
+  permisos.$("articulo:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -135,7 +135,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("articulo:modificar")), (req, res) => {
+app.put("/", permisos.$("articulo:modificar"), (req, res) => {
   Articulo.findById(req.body._id)
     .exec()
     .then(articulo => {
@@ -169,7 +169,7 @@ app.put("/", guard.check(permisos.$("articulo:modificar")), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando el articulo"))
 })
 
-app.delete("/:id", guard.check(permisos.$("articulo:eliminar")), (req, res) => {
+app.delete("/:id", permisos.$("articulo:eliminar"), (req, res) => {
   Articulo.findById(req.params.id)
     .exec()
     .then(articulo => {

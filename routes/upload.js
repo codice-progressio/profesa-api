@@ -90,7 +90,7 @@ function moverImagenesParaGuardar(archivo, id, tipo, res) {
   return nombreArchivo
 }
 
-app.put("/:tipo/:id", guard.check(permisos.$('upload:tipo:id')), (req, res) => {
+app.put("/:tipo/:id", permisos.$('upload:tipo:id'), (req, res) => {
   // Obtenemos el tipo de fichero que es el que nos
   // va a dar la carpeta donde vamos a guardar.
   var tipo = req.params.tipo

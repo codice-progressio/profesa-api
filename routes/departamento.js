@@ -15,7 +15,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("departamento:crear")), (req, res) => {
+app.post("/", permisos.$("departamento:crear"), (req, res) => {
   return new Departamento(req.body)
     .save()
     .then((departamento) => {
@@ -28,7 +28,7 @@ app.post("/", guard.check(permisos.$("departamento:crear")), (req, res) => {
 
 app.get(
   "/",
-  guard.check(permisos.$("departamento:leer:todo")),
+  permisos.$("departamento:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -54,7 +54,7 @@ app.get(
   }
 )
 
-app.get("/:id", guard.check(permisos.$("departamento:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("departamento:leer:id"), (req, res) => {
   Departamento.findById(req.params.id)
     .exec()
     .then((departamento) => {
@@ -71,7 +71,7 @@ app.get("/:id", guard.check(permisos.$("departamento:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("departamento:leer:termino")),
+  permisos.$("departamento:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -127,7 +127,7 @@ app.get(
   }
 )
 
-app.put("/", guard.check(permisos.$("departamento:modificar")), (req, res) => {
+app.put("/", permisos.$("departamento:modificar"), (req, res) => {
   Departamento.findById(req.body._id)
     .exec()
     .then((departamento) => {
@@ -153,7 +153,7 @@ app.put("/", guard.check(permisos.$("departamento:modificar")), (req, res) => {
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("departamento:eliminar")),
+  permisos.$("departamento:eliminar"),
   (req, res) => {
     Departamento.findById(req.params.id)
       .exec()
@@ -175,7 +175,7 @@ app.delete(
 
 app.post(
   "/buscar_multiple",
-  guard.check(permisos.$("departamento:leer:multiple")),
+  permisos.$("departamento:leer:multiple"),
   (req, res) => {
     Departamento.find({ _id: { $in: req.body.busqueda } })
       .exec()

@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$("terminado:crear")), (req, res) => {
+app.post("/", permisos.$("terminado:crear"), (req, res) => {
   return new Terminado(req.body)
     .save()
     .then((terminado) => {
@@ -27,7 +27,7 @@ app.post("/", guard.check(permisos.$("terminado:crear")), (req, res) => {
 
 app.get(
   "/",
-  guard.check(permisos.$("terminado:leer:todo")),
+  permisos.$("terminado:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -51,7 +51,7 @@ app.get(
   }
 )
 
-app.get("/:id", guard.check(permisos.$("terminado:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("terminado:leer:id"), (req, res) => {
   Terminado.findById(req.params.id)
     .exec()
     .then((terminado) => {
@@ -66,7 +66,7 @@ app.get("/:id", guard.check(permisos.$("terminado:leer:id")), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("terminado:leer:termino")),
+  permisos.$("terminado:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -124,7 +124,7 @@ app.get(
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("terminado:eliminar")),
+  permisos.$("terminado:eliminar"),
   (req, res) => {
     Terminado.findById(req.params.id)
       .exec()
@@ -142,7 +142,7 @@ app.delete(
   }
 )
 
-app.put("/", guard.check(permisos.$("terminado:modificar")), (req, res) => {
+app.put("/", permisos.$("terminado:modificar"), (req, res) => {
   Terminado.findById(req.body._id)
     .exec()
     .then((terminado) => {

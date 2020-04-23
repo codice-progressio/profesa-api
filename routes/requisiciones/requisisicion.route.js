@@ -18,7 +18,7 @@ var respuesta = (reqSave, res, tipo, msj) => {
   return RESP._200(res, msj, [{ tipo: tipo, datos: reqSave }])
 }
 
-app.post("/", guard.check(permisos.$("requisicion:crear")), (req, res) => {
+app.post("/", permisos.$("requisicion:crear"), (req, res) => {
   const r = new Requisicion(req.body)
 
   r.save(req.body)
@@ -31,7 +31,7 @@ app.post("/", guard.check(permisos.$("requisicion:crear")), (req, res) => {
     })
 })
 
-app.put("/", guard.check(permisos.$("requisicion:modificar")), (req, res) => {
+app.put("/", permisos.$("requisicion:modificar"), (req, res) => {
   Requisicion.findById(req.body._id)
     .exec()
     .then(requisicion => {
@@ -67,7 +67,7 @@ app.put("/", guard.check(permisos.$("requisicion:modificar")), (req, res) => {
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("requisicion:eliminar")),
+  permisos.$("requisicion:eliminar"),
   (req, res) => {
     Requisicion.findById(req.params.id)
       .exec()
@@ -92,7 +92,7 @@ app.delete(
   }
 )
 
-app.get("/:id", guard.check(permisos.$("requisicion:leer:id")), (req, res) => {
+app.get("/:id", permisos.$("requisicion:leer:id"), (req, res) => {
   Requisicion.findById(req.params.id)
     .exec()
     .then(requisicion => {
@@ -114,7 +114,7 @@ app.get("/:id", guard.check(permisos.$("requisicion:leer:id")), (req, res) => {
 // =====================================
 // -->
 
-app.get("/", guard.check(permisos.$("requisicion:leer:todo")), (req, res) => {
+app.get("/", permisos.$("requisicion:leer:todo"), (req, res) => {
   var b = requisicionFiltros.obtenerFiltros(req.query)
 
   let arregloRedact = requisicionFiltros.generarArregloRedact(b)
@@ -175,7 +175,7 @@ function estatusEsRequisicion(requisicion, requisicionBody) {
 
 app.put(
   "/estatus/actualizar/:id",
-  guard.check(permisos.$("requisicion:estatus:actualizar")),
+  permisos.$("requisicion:estatus:actualizar"),
   (req, res) => {
     obtenerRequisicion(req.params.id)
       // Pasamos toda la requisicion pero solo vamos a utilizar

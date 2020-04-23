@@ -248,8 +248,7 @@ const permisos = {
   "menu:parametros:localizacionDeOrdenes": NO_DEFINIDO,
 }
 
-var guard =  require('express-jwt-permissions')()
-
+var guard = require("express-jwt-permissions")()
 
 /**
  *Comprueba que el permiso esta definido. Si el estring
@@ -258,10 +257,14 @@ var guard =  require('express-jwt-permissions')()
  * @param {*} permiso
  * @returns
  */
-module.exports.$ = (permiso) => {
-  if (process.env.NODE_ENV === "production") return guard.check(permiso)
+module.exports.$ = permiso => {
+  const funcion = function (req, res, next) {
+    req["permisoSolicitado"] = permiso
+    return guard.check(permiso)(req, res, next)
+  }
+  if (process.env.NODE_ENV === "production") return funcion
 
-  if (permisos.hasOwnProperty(permiso)) return guard.check(permiso)
+  if (permisos.hasOwnProperty(permiso)) return funcion
 
   const archivo = "config/permisos.config.txt"
 
@@ -284,5 +287,7 @@ module.exports.$ = (permiso) => {
 
     fs.writeFileSync(archivo, data)
   }
+
+  return funcion
 }
 module.exports.lista = Object.keys(permisos)

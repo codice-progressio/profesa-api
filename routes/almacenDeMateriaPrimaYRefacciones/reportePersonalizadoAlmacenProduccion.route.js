@@ -16,7 +16,7 @@ const erro = (res, err, msj) => {
 
 app.post(
   "/",
-  guard.check(permisos.$("reportePersonalizadoAlmacenDeProduccion:crear")),
+  permisos.$("reportePersonalizadoAlmacenDeProduccion:crear"),
   (req, res) => {
     const newRepo = new RepoPer(req.body)
     newRepo
@@ -34,7 +34,7 @@ app.post(
 
 app.get(
   "/",
-  guard.check(permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:todo")),
+  permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -67,7 +67,7 @@ app.get(
 // -->
 app.get(
   "/:id",
-  guard.check(permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:id")),
+  permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:id"),
   (req, res) => {
     RepoPer.findById(req.params.id)
       .exec()
@@ -201,7 +201,7 @@ app.get(
 //   -->
 app.put(
   "/",
-  guard.check(permisos.$("reportePersonalizadoAlmacenDeProduccion:modificar")),
+  permisos.$("reportePersonalizadoAlmacenDeProduccion:modificar"),
   (req, res) => {
     RepoPer.findById(req.body._id)
       .exec()
@@ -237,7 +237,7 @@ app.put(
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("reportePersonalizadoAlmacenDeProduccion:eliminar")),
+  permisos.$("reportePersonalizadoAlmacenDeProduccion:eliminar"),
   (req, res) => {
     RepoPer.findById(req.params.id)
       .exec()

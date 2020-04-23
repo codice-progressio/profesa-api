@@ -16,7 +16,7 @@ const erro = (res, err, msj) => {
 
 app.get(
   "/",
-  guard.check(permisos.$("almacenDescripcion:leer:todo")),
+  permisos.$("almacenDescripcion:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -42,7 +42,7 @@ app.get(
 
 app.get(
   "/:id",
-  guard.check(permisos.$("almacenDescripcion:leer:id")),
+  permisos.$("almacenDescripcion:leer:id"),
   (req, res) => {
     AlmacenDescripcion.findById(req.params.id)
       .exec()
@@ -58,7 +58,7 @@ app.get(
 
 app.get(
   "/buscar/:termino",
-  guard.check(permisos.$("almacenDescripcion:leer:termino")),
+  permisos.$("almacenDescripcion:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -112,7 +112,7 @@ app.get(
 
 app.post(
   "/",
-  guard.check(permisos.$("almacenDescripcion:crear")),
+  permisos.$("almacenDescripcion:crear"),
   (req, res) => {
     const alma = new AlmacenDescripcion(req.body)
 
@@ -129,7 +129,7 @@ app.post(
 
 app.put(
   "/",
-  guard.check(permisos.$("almacenDescripcion:modificar")),
+  permisos.$("almacenDescripcion:modificar"),
   (req, res) => {
     const alma = req.body
 
@@ -156,7 +156,7 @@ app.put(
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("almacenDescripcion:eliminar")),
+  permisos.$("almacenDescripcion:eliminar"),
   (req, res) => {
     AlmacenDescripcion.findById(req.params.id)
       .exec()

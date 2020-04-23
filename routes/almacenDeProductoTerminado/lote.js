@@ -11,7 +11,7 @@ var permisos = require('../../config/permisos.config')
  */
 app.post(
   "/",
-  guard.check(permisos.$("almacenDeProductoTerminado:lote:crear")),
+  permisos.$("almacenDeProductoTerminado:lote:crear"),
   (req, res) => {
     let idModeloCompleto = req.body._id
     let lote = req.body.lote
@@ -50,7 +50,7 @@ app.post(
  * 
  */
 
-app.delete('/:idModeloCompleto/:idLote', guard.check(permisos.$('almacenDeProductoTerminado:lote:eliminar')),(req, res) => {
+app.delete('/:idModeloCompleto/:idLote', permisos.$('almacenDeProductoTerminado:lote:eliminar'),(req, res) => {
 
     let idModeloCompleto = req.params.idModeloCompleto;
     let idLote = req.params.idLote;
@@ -89,7 +89,7 @@ app.delete('/:idModeloCompleto/:idLote', guard.check(permisos.$('almacenDeProduc
  * El middleware del modelo completo deberia de hacer el 
  * ajuste de la existencia de manera automatica.
  */
-app.put("/:idModeloCompleto/:idLote", guard.check(permisos.$('almacenDeProductoTerminado:lote:modificar')), (req, res) => {
+app.put("/:idModeloCompleto/:idLote", permisos.$('almacenDeProductoTerminado:lote:modificar'), (req, res) => {
   /**
    * El id del modelo completo.
    */

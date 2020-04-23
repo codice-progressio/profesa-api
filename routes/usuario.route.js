@@ -16,7 +16,7 @@ var permisos = require("../config/permisos.config")
 // ============================================
 app.get(
   "/",
-  guard.check(permisos.$("administrador:usuario:leer")),
+  permisos.$("administrador:usuario:leer"),
   (req, res, next) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -41,7 +41,7 @@ app.get(
 // ============================================
 app.put(
   "/",
-  guard.check(permisos.$("administrador:usuario:modificar")),
+  permisos.$("administrador:usuario:modificar"),
   (req, res) => {
     var id = req.body._id
     var body = req.body
@@ -100,7 +100,7 @@ app.put(
 // ============================================
 app.post(
   "/",
-  guard.check(permisos.$("administrador:usuario:crear")),
+  permisos.$("administrador:usuario:crear"),
   (req, res) => {
     var usuario = new Usuario(req.body)
     usuario
@@ -122,7 +122,7 @@ app.post(
 
 app.delete(
   "/:id",
-  guard.check(permisos.$("administrador:usuario:eliminar")),
+  permisos.$("administrador:usuario:eliminar"),
   (req, res) => {
     Usuario.findById(req.params.id)
       .exec()
@@ -146,7 +146,7 @@ app.delete(
 
 app.get(
   "/buscar/termino/:termino",
-  guard.check(permisos.$("administrador:usuario:leer:termino")),
+  permisos.$("administrador:usuario:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -204,7 +204,7 @@ app.get(
 
 app.get(
   "/buscar/id/:id",
-  guard.check(permisos.$("administrador:usuario:leer:id")),
+  permisos.$("administrador:usuario:leer:id"),
   (req, res) => {
     Usuario.findById(req.params.id)
       .exec()

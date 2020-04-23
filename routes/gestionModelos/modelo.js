@@ -13,7 +13,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", guard.check(permisos.$('modelo:crear')), (req, res) => {
+app.post("/", permisos.$('modelo:crear'), (req, res) => {
   return new Modelo(req.body)
     .save()
     .then(modelo => {
@@ -24,7 +24,7 @@ app.post("/", guard.check(permisos.$('modelo:crear')), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando el modelo"))
 })
 
-app.get("/", guard.check(permisos.$('modelo:leer:todo')), async (req, res) => {
+app.get("/", permisos.$('modelo:leer:todo'), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -46,7 +46,7 @@ app.get("/", guard.check(permisos.$('modelo:leer:todo')), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los modelos"))
 })
 
-app.get("/:id", guard.check(permisos.$('modelo:leer:id')), (req, res) => {
+app.get("/:id", permisos.$('modelo:leer:id'), (req, res) => {
   Modelo.findById(req.params.id)
     .exec()
     .then(modelo => {
@@ -57,7 +57,7 @@ app.get("/:id", guard.check(permisos.$('modelo:leer:id')), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el modelo por su id"))
 })
 
-app.get("/buscar/:termino", guard.check(permisos.$('modelo:leer:termino')), async (req, res) => {
+app.get("/buscar/:termino", permisos.$('modelo:leer:termino'), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -108,7 +108,7 @@ app.get("/buscar/:termino", guard.check(permisos.$('modelo:leer:termino')), asyn
     )
 })
 
-app.delete("/:id", guard.check(permisos.$('modelo:eliminar')), (req, res) => {
+app.delete("/:id", permisos.$('modelo:eliminar'), (req, res) => {
   Modelo.findById(req.params.id)
     .exec()
     .then(modelo => {
@@ -124,7 +124,7 @@ app.delete("/:id", guard.check(permisos.$('modelo:eliminar')), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el modelo"))
 })
 
-app.put("/", guard.check(permisos.$('modelo:modificar')), (req, res) => {
+app.put("/", permisos.$('modelo:modificar'), (req, res) => {
   Modelo.findById(req.body._id)
     .exec()
     .then(modelo => {

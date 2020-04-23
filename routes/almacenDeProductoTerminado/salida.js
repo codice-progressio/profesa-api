@@ -9,7 +9,7 @@ var permisos = require('../../config/permisos.config')
  * Guarda una nueva salida en en el lote
  * que se le especifique.
  */
-app.post("/", guard.check(permisos.$('almacenDeProductoTerminado:salida')), (req, res) => {
+app.post("/", permisos.$('almacenDeProductoTerminado:salida'), (req, res) => {
   /**
    * El id del modelo completo del cual se va a guardar sus datos.
    */

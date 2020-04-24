@@ -51,7 +51,7 @@ app.get(
   }
 )
 
-app.get("/:id", permisos.$("articulo:leer:id"), (req, res) => {
+app.get("/buscar/id/:id", permisos.$("articulo:leer:id"), (req, res) => {
   Articulo.findById(req.params.id)
     .exec()
     .then(articulo => {
@@ -65,7 +65,7 @@ app.get("/:id", permisos.$("articulo:leer:id"), (req, res) => {
 })
 
 app.get(
-  "/buscar/:termino",
+  "/buscar/termino/:termino",
   permisos.$("articulo:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)

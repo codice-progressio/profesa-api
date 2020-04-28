@@ -17,11 +17,13 @@ var permisos = require("../config/permisos.config")
 app.get(
   "/",
   permisos.$("administrador:usuario:leer"),
-  (req, res, next) => {
+  async (req, res, next) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
     const sort = Number(req.query.sort || 1)
     const campo = String(req.query.campo || "nombre")
+
+    const total = await Usuario.countDocuments().exec() 
 
     Usuario.find()
       //Se salta los primeros "desde" registros y carga los siguientes.
@@ -31,7 +33,10 @@ app.get(
       .sort({ [campo]: sort })
       .exec()
       .then(usuarios => {
-        return RESP._200(res, null, [{ tipo: "usuarios", datos: usuarios }])
+        return RESP._200(res, null, [
+          { tipo: "usuarios", datos: usuarios },
+          { tipo: "total", datos: total },
+        ])
       })
   }
 )

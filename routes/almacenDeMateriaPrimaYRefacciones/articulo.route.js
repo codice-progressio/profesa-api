@@ -140,20 +140,17 @@ app.put("/", permisos.$("articulo:modificar"), (req, res) => {
       }
 
       ;[
-        "nombre",
-        "razonSocial",
-        "domicilios",
-        "contactos",
-        "tiempoDeEntregaEstimadoEnDias",
-        "relacionArticulos",
-        "rfc",
-        "metodosDePagoAceptados",
-        "condicionesDePago",
-        "formasDePago",
-        "cuentas",
         "codigoLocalizacion",
         "codigoInterno",
         "codigoProveedor",
+        "almacen",
+        "nombre",
+        "presentacion",
+        "unidad",
+        "kgPorUnidad",
+        "existencia",
+        "stockMinimo",
+        "stockMaximo",
       ].forEach(x => {
         articulo[x] = req.body[x]
       })

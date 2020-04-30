@@ -69,49 +69,6 @@ function obtenerUsuario(token, self, next, cb) {
   })
 }
 
-// <!--
-// =====================================
-//  Cargas necesarias - Usuario, historial, etc
-// =====================================
-// -->
-
-var cargarUsuarioActivo = function(next) {
-  if (!this.usuario) {
-    // Obtenemos el usuario logueado
-
-    var cb = (self, decodeUser, next) => {
-      self.usuario = decodeUser
-      next()
-    }
-    throw '#httpContexArreglar1 De aqui se elimino el httpContex'
-    // obtenerUsuario(), this, next, cb)
-  } else {
-    next()
-  }
-}
-
-var copiarDatosAHistorial = function(next) {
-  var cb = (self, decodeUser, next) => {
-    self.historialDeEstatus.unshift({
-      estatus: self.estatus,
-      razonDeCambio: self.razonDeCambioTemp
-        ? self.razonDeCambioTemp
-        : `EL USUARIO '${decodeUser.nombre}' NO DEFINIO LA RAZON `,
-      usuarioQueModifica: decodeUser
-    })
-
-    next()
-  }
-  throw "#httpContexArreglar2 Quitamos no esta definido"
-  // obtenerUsuario(ttphContext.get("token"), this, next, cb)
-}
-
-// <!--
-// =====================================
-//  END Cargas necesarias - Usuario, historial, etc
-// =====================================
-// -->
-
 function autoPopulate(next) {
   this.populate("usuario")
   this.populate("articulo")
@@ -196,16 +153,11 @@ function obtenerDiferenciaEntreEstatus(requisicion) {
   return diferencia
 }
 
-RequisicionSchema.pre("validate", cargarUsuarioActivo)
-  .pre("validate", copiarDatosAHistorial)
+RequisicionSchema
   .pre("find", autoPopulate)
   .pre("findOne", autoPopulate)
   .pre("findById", autoPopulate)
   .pre("save", abonarAlArticulo)
-  .post("find", function(requisicion) {
-    requisicion.forEach(x => hidePass(x))
-  })
-  .post("findOne", hidePass)
-  .post("findById", hidePass)
+  
 
 module.exports = mongoose.model("Requisicion", RequisicionSchema)

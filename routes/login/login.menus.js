@@ -266,6 +266,11 @@ function parametros() {
         url: "/parametros/localizacionDeOrdenes",
         permiso: permisos.$("menu:parametros:localizacionDeOrdenes", false),
       },
+      {
+        titulo: "Restablecer o cambiar administrador",
+        url: "/parametros/administrador",
+        permiso: permisos.$("SUPER_ADMIN", false),
+      },
     ],
   }
   return menu

@@ -13,8 +13,11 @@ const parametrosDeTrabajoSchema = new Schema(
 
     localizacionDeOrdenes: {
       procesosIniciales: [String],
+      procesosInicialesAlmacen: [String],
       procesosFinales: [String]
     },
+
+    procesosEspeciales: [String],
     jwtInvalid: [String]
   },
   { collection: "parametrosDeTrabajo" }

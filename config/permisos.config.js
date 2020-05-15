@@ -250,6 +250,7 @@ const permisos = {
   "menu:ventas:stock": NO_DEFINIDO,
   "menu:parametros": NO_DEFINIDO,
   "menu:parametros:localizacionDeOrdenes": NO_DEFINIDO,
+  "menu:parametros:procesosEspeciales":NO_DEFINIDO
 }
 
 var guard = require("express-jwt-permissions")()

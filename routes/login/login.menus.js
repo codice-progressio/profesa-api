@@ -267,6 +267,11 @@ function parametros() {
         permiso: permisos.$("menu:parametros:localizacionDeOrdenes", false),
       },
       {
+        titulo: "Procesos Especiales",
+        url: "/parametros/procesosEspeciales",
+        permiso: permisos.$("menu:parametros:procesosEspeciales", false),
+      },
+      {
         titulo: "Restablecer o cambiar administrador",
         url: "/parametros/administrador",
         permiso: permisos.$("SUPER_ADMIN", false),

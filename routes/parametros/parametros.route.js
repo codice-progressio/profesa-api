@@ -115,15 +115,14 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
     await new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve([
-          Usuario.findById(req.body.id).exec(),
+          Usuario.findById(req.body.id).select('+password').exec(),
           Parametros.findOne().exec(),
-          Usuario.findById(req.user.user).exec(),
+          Usuario.findById(req.user._id).exec(),
         ])
       }, 10)
     })
   )
     .then(datos => {
-      console.log(`req.user`, req.user)
       const usuario = datos[0]
       const parametros = datos[1]
       const usuarioLogueado = datos[2]
@@ -133,7 +132,9 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
 
       //Revisamos dos veces que tenga el permiso por que para llegar
       // aqui usamos el token y ese todavia tiene el permiso.
-      if (!usuarioLogueado.permissions.includes(permisos.$("SUPER_ADMIN")))
+      if (
+        !usuarioLogueado.permissions.includes(permisos.$("SUPER_ADMIN", false))
+      )
         throw "No puedes continuar con esta operacion"
 
       const contrasenaCorrecta = bcrypt.compareSync(
@@ -187,25 +188,27 @@ app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
       return u.save()
     })
     .then(uS => {
-      return res.send("Se modificaron los permisos del super-administrador")
+      return res.send({
+        mensaje: "Se actualizaron los permisos del super-administrador",
+      })
     })
 })
 
 // LO QUE SIGUE SON PERSONALIZABLES PARA CADA PROYECTO
 
 app.get("/localizacionDeOrdenes", (req, res, next) => {
-  Promise.all([
-    Proceso.find({
-      _id: { $in: req.parametros.localizacionDeOrdenes.procesosIniciales },
-    }),
-    Proceso.find({
-      _id: { $in: req.parametros.localizacionDeOrdenes.procesosFinales },
-    }),
-  ])
+  Parametros.findOne({})
+    .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
+    .populate("localizacionDeOrdenes.procesosInicialesAlmacen", null, "Proceso")
+    .populate("localizacionDeOrdenes.procesosEspeciales", null, "Proceso")
+    .exec()
+
     .then(r => {
       return res.status(200).send({
-        procesosIniciales: r[0],
-        procesosFinales: r[1],
+        procesosIniciales: r.localizacionDeOrdenes.procesosIniciales,
+        procesosFinales: r.localizacionDeOrdenes.procesosFinales,
+        procesosInicialesAlmacen:
+          r.localizacionDeOrdenes.procesosInicialesAlmacen,
       })
     })
     .catch(err => next(err))
@@ -217,6 +220,21 @@ app.put("/localizacionDeOrdenes", (req, res, next) => {
     .then(nParSave => {
       return res.json(nParSave)
     })
+    .catch(err => next(err))
+})
+
+app.put("/procesosEspeciales", (req, res, next) => {
+  Parametros.updateOne({}, { procesosEspeciales: req.body })
+    .exec()
+    .then(n => res.json(n))
+    .catch(err => next(err))
+})
+
+app.get("/procesosEspeciales", (req, res) => {
+  Proceso.find({
+    _id: { $in: req.parametros.procesosEspeciales },
+  })
+    .then(p => res.json(p))
     .catch(err => next(err))
 })
 

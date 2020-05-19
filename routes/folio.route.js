@@ -732,11 +732,113 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
 
       ordenAgregada["ruta"].set(p._id.toString(), estructuraBasica)
       actual = false
-      consecutivo ++
+      consecutivo++
     })
 
     contador++
   })
+}
+
+app.put("/aplicarActualizacionDeOrdenes", (req, res, next) => {
+  Folio.find({})
+    .exec()
+    .then(folios => {
+      folios.map(folio => generarCambios(folio))
+
+      return Promise.all(folios)
+    })
+    .then(folios => {
+      res.send("Se actualizaron " + folios.length + " folios")
+    })
+    .catch(err => next(err))
+})
+
+function generarCambios(folio) {
+  folio.folioLineas.forEach(pedido => {
+    if (!pedido.modeloCompleto) return
+
+    const procesosAUsar = pedido.modeloCompleto.familiaDeProcesos.procesos.map(
+      x => x.proceso
+    )
+    pedido.ordenes.forEach(orden => {
+      //Inicializamos la ruta para que no nos marque undefined
+      orden["ruta"] = {}
+
+      var consecutivo = 0
+      procesosAUsar.forEach(p => {
+        const estructuraBasica = {
+          departamento: p.departamento._id.toString(),
+          entrada: null,
+          salida: null,
+          recibida: false,
+          recepcion: null,
+          ubicacionActual: orden.ubicacionActual
+            ? orden.ubicacionActual.orden == consecutivo
+            : false,
+          consecutivo: consecutivo,
+          datos: {},
+        }
+
+        trayectoReccorrido = obtenerDatosDeTrayectoRecorrido(
+          orden,
+          consecutivo,
+          estructuraBasica
+        )
+
+        orden["ruta"].set(p._id.toString(), estructuraBasica)
+
+        consecutivo++
+      })
+    })
+  })
+
+  return folio.save()
+}
+
+function obtenerDatosDeTrayectoRecorrido(orden, consecutivo, estructuraBasica) {
+  //si hay menos de trayecto recorrido quiere decir que no hay ningun dato
+  // a tomar en cuenta, por lo tanto no es necesario que hagamos ninguna
+  // modificacion
+  if (orden.trayectoRecorrido.length - 1 < consecutivo) {
+    return estructuraBasica
+  }
+  const trayecto = orden.trayectoRecorrido[consecutivo]
+
+  // Si hay trayectos recorridos copiamos todos los datos
+  estructuraBasica.entrada = trayecto.entrada
+  estructuraBasica.salida = trayecto.salida
+  estructuraBasica.recibida = trayecto.recivida
+  estructuraBasica.recepcion = trayecto.recepcion
+  // estructuraBasica.ubicacionActual = trayecto.
+  // estructuraBasica.consecutivo = trayecto.
+  estructuraBasica.datos = copiarDatos(trayecto)
+}
+
+function copiarDatos(trayecto) {
+  var keys = [
+    "controlDeProduccion",
+    "materiales",
+    "pastilla",
+    "transformacion",
+    "pulido",
+    "seleccion",
+    "empaque",
+    "productoTerminado",
+    "metalizado",
+    "barnizado",
+    "burato",
+    "laser",
+    "almacenDeBoton",
+    "tenido",
+  ]
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i]
+
+    if (trayecto[key]) return trayecto[key]
+  }
+
+  return null
 }
 
 module.exports = app

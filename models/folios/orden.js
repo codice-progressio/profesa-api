@@ -27,11 +27,11 @@ const ordenSchema = new Schema({
     observaciones: { type: String },
 
     // //El trayecto que se define para que siga la orden. 
-    // trayectoNormal: [trayecto],
+    trayectoNormal: [trayecto],
 
-    // trayectoRecorrido: [trayecto],
+    trayectoRecorrido: [trayecto],
 
-    // ubicacionActual: trayecto,
+    ubicacionActual: trayecto,
 
 
     // Estas son las propiedades que debe de llevar cada

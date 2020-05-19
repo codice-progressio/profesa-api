@@ -7,17 +7,12 @@ var transformacionSchema = new Schema({
     trabajando: { type: Boolean },
 
     cantidadDeBoton: {
-        min: [0, 'La cantidad no puede ser menor que 0.'],
-        max: [999999, 'La cantidad no puede ser mayor que 999999.'],
+       
         type: Number,
-        required: [function() {
-                return this.guardar;
-            },
-            'La cantidad de botón es necesaria.'
-        ]
+       
     },
-    espesorBoton: { type: Number, required: [() => { return this.guardar; }, 'El espesor del botón es necesario.'] },
-    bl: { type: Number, required: [() => { return this.guardar; }, 'La velocidad es necesaria.'] },
+    espesorBoton: { type: Number },
+    bl: { type: Number},
     maquinaActual: { type: Schema.Types.ObjectId, ref: 'Maquina' },
 
 }, { timestamps: true, _id: false });

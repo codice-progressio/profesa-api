@@ -7,7 +7,7 @@ var productoTerminadoSchema = new Schema({
     guardar: { type: Boolean, default: true },
     trabajando: { type: Boolean, default: false },
 
-    terminada: { type: Boolean, required: [() => { return this.guardar; }, 'Es necesario definir si la orden esta terminada.'] }
+    terminada: { type: Boolean }
 
 }, { timestamps: true });
 

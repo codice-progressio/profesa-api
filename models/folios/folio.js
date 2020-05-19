@@ -91,6 +91,8 @@ let autoPopulate = function(next) {
   next()
 }
 
-FolioSchema.pre("findOne", autoPopulate).pre("findById", autoPopulate)
+FolioSchema.pre("findOne", autoPopulate)
+  .pre("findById", autoPopulate)
+  .pre("find", autoPopulate)
 
 module.exports = mongoose.model("Folio", FolioSchema)

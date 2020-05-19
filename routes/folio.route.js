@@ -9,13 +9,15 @@ var RESP = require("../utils/respStatus")
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
-var guard =  require('express-jwt-permissions')()
-var permisos = require('../config/permisos.config')
+const Proceso = require("../models/procesos/proceso")
+
+var guard = require("express-jwt-permissions")()
+var permisos = require("../config/permisos.config")
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
-    err: err
+    err: err,
   })
 }
 
@@ -25,7 +27,7 @@ app.delete("/:id", permisos.$("folio:eliminar"), (req, res) => {
   if (!id) {
     return RESP._400(res, {
       msj: "No definiste un id para eliminar.",
-      err: "Es necesario que definas un id."
+      err: "Es necesario que definas un id.",
     })
   }
 
@@ -38,7 +40,7 @@ app.delete("/:id", permisos.$("folio:eliminar"), (req, res) => {
     })
     .then(folio => {
       return RESP._200(res, "Se elimino el folio", [
-        { tipo: "folio", datos: folio }
+        { tipo: "folio", datos: folio },
       ])
     })
     .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
@@ -49,28 +51,22 @@ app.post("/", permisos.$("folio:crear"), (req, res) => {
     .save()
     .then(folio => {
       return RESP._200(res, "Se guardo el folio", [
-        { tipo: "folio", datos: folio }
+        { tipo: "folio", datos: folio },
       ])
     })
     .catch(err => erro(res, err, "Hubo un error guardando el folio"))
 })
 
-app.get(
-  "/buscar/id/:id",
-  permisos.$("folio:leer:id"),
-  (req, res) => {
-    Folio.findById(req.params.id)
-      .exec()
-      .then(folio => {
-        if (!folio) throw "No existe el folio"
+app.get("/buscar/id/:id", permisos.$("folio:leer:id"), (req, res) => {
+  Folio.findById(req.params.id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
 
-        return RESP._200(res, null, [{ tipo: "folio", datos: folio }])
-      })
-      .catch(err =>
-        erro(res, err, "Hubo un error obteniendo el folio por su id")
-      )
-  }
-)
+      return RESP._200(res, null, [{ tipo: "folio", datos: folio }])
+    })
+    .catch(err => erro(res, err, "Hubo un error obteniendo el folio por su id"))
+})
 
 app.put("/", permisos.$("folio:modificar"), (req, res) => {
   Folio.findById(req.body._id)
@@ -86,13 +82,13 @@ app.put("/", permisos.$("folio:modificar"), (req, res) => {
         "nivelDeUrgencia",
         "porcentajeAvance",
         "terminado",
-        "cantidadProducida"
+        "cantidadProducida",
       ].forEach(x => (folio[x] = req.body[x]))
       return folio.save()
     })
     .then(folio => {
       return RESP._200(res, "Se modifico el folio", [
-        { tipo: "folio", datos: folio }
+        { tipo: "folio", datos: folio },
       ])
     })
     .catch(err => erro(res, err, "Hubo un error modificando el folio"))
@@ -116,7 +112,7 @@ app.get(
       .catch(err => {
         return RESP._500(res, {
           msj: "Hubo un error marcando el folio como impreso. ",
-          err: err
+          err: err,
         })
       })
   }
@@ -134,7 +130,7 @@ app.post(
         if (!folioEncontrado) {
           return RESP._400(res, {
             msj: "No existe el folio.",
-            err: "El id del folio que ingresaste no existe."
+            err: "El id del folio que ingresaste no existe.",
           })
         }
         folioEncontrado.impreso = true
@@ -146,7 +142,7 @@ app.post(
       .catch(err => {
         return RESP._500(res, {
           msj: "Hubo un error buscando el folio para senalarlo como impreso",
-          err: err
+          err: err,
         })
       })
   }
@@ -227,11 +223,11 @@ app.get(
       {
         $match: {
           ordenesGeneradas: false,
-          terminado: false
-        }
+          terminado: false,
+        },
       },
 
-      { $count: "total" }
+      { $count: "total" },
     ]).exec()
 
     Folio.aggregate([
@@ -239,8 +235,8 @@ app.get(
         $match: {
           ordenesGeneradas: false,
           terminado: false,
-          entregarAProduccion: true
-        }
+          entregarAProduccion: true,
+        },
       },
 
       { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
@@ -249,8 +245,8 @@ app.get(
         $group: {
           _id: "$_id",
           folio: { $first: "$$ROOT" },
-          totalDePiezas: { $sum: "$folioLineas.cantidad" }
-        }
+          totalDePiezas: { $sum: "$folioLineas.cantidad" },
+        },
       },
       { $addFields: { "folio.totalDePiezas": "$totalDePiezas" } },
       { $replaceRoot: { newRoot: "$folio" } },
@@ -263,44 +259,44 @@ app.get(
           vendedor: "$vendedor",
           idVendedor: "$vendedor",
           fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
-          totalDePiezas: "$totalDePiezas"
-        }
+          totalDePiezas: "$totalDePiezas",
+        },
       },
       {
         $lookup: {
           from: "clientes",
           foreignField: "_id",
           localField: "cliente",
-          as: "cliente"
-        }
+          as: "cliente",
+        },
       },
       { $unwind: { path: "$cliente" } },
       {
-        $addFields: { cliente: "$cliente.nombre" }
+        $addFields: { cliente: "$cliente.nombre" },
       },
       {
         $lookup: {
           from: "usuarios",
           foreignField: "_id",
           localField: "vendedor",
-          as: "vendedor"
-        }
+          as: "vendedor",
+        },
       },
       { $unwind: { path: "$vendedor" } },
       {
-        $addFields: { vendedor: "$vendedor.nombre" }
+        $addFields: { vendedor: "$vendedor.nombre" },
       },
 
       { $sort: { [campo]: sort } },
       //Desde aqui limitamos unicamente lo que queremos ver
       { $limit: desde + limite },
       { $skip: desde },
-      { $sort: { [campo]: sort } }
+      { $sort: { [campo]: sort } },
     ])
       .then(folios => {
         return RESP._200(res, null, [
           { tipo: "folios", datos: folios },
-          { tipo: "total", datos: total }
+          { tipo: "total", datos: total },
         ])
       })
       .catch(err =>
@@ -313,213 +309,209 @@ app.get(
   }
 )
 
-app.get(
-  "/filtrar",
-  permisos.$("folio:filtrar"),
-  async (req, res) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "folio")
+app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "folio")
 
-    delete req.query.desde
-    delete req.query.limite
-    delete req.query.sort
-    delete req.query.campo
+  delete req.query.desde
+  delete req.query.limite
+  delete req.query.sort
+  delete req.query.campo
 
-    // Hay tres elementos que deben ser objecto id. Hacemos un
-    // hard code para convertirlos
+  // Hay tres elementos que deben ser objecto id. Hacemos un
+  // hard code para convertirlos
 
-    if (req.query["cliente"]) req.query.cliente = ObjectId(req.query.cliente)
-    if (req.query["vendedor"]) req.query.vendedor = ObjectId(req.query.vendedor)
+  if (req.query["cliente"]) req.query.cliente = ObjectId(req.query.cliente)
+  if (req.query["vendedor"]) req.query.vendedor = ObjectId(req.query.vendedor)
 
-    if (req.query["folioLineas.modeloCompleto"]) {
-      req.query["folioLineas.modeloCompleto"] = ObjectId(
-        req.query["folioLineas.modeloCompleto"]
-      )
-    }
-    if (req.query.hasOwnProperty("folioLineas.laserado")) {
-      var ob = {}
-
-      const esLaserado = req.query["folioLineas.laserado"]
-
-      if (esLaserado) {
-        ob["$and"] = [
-          {
-            "folioLineas.laserCliente.laser": { $not: { $eq: null } }
-          },
-          {
-            "folioLineas.laserCliente.laser": {
-              $exists: true
-            }
-          }
-        ]
-      } else {
-        ob["$and"] = [
-          {
-            "folioLineas.laserCliente.laser": { $eq: null }
-          },
-          {
-            "folioLineas.laserCliente.laser": {
-              $exists: false
-            }
-          }
-        ]
-      }
-
-      req.query = { ...req.query, ...ob }
-
-      delete req.query["folioLineas.laserado"]
-    }
-
-    //Separam que aplican a los filtros por que
-    // asi podemos retornar todo mas limpio como pedidos.
-
-    console.log(`req.query`, req.query["$and"])
-
-    var $folio = null
-    var $pedido = null
-
-    Object.keys(req.query).forEach(x => {
-      console.log(`x`, typeof x)
-      if (x.includes("folioLineas.") || x.includes("$and")) {
-        if (!$pedido) $pedido = { $match: {} }
-        $pedido.$match[x] = req.query[x]
-      } else {
-        if (!$folio) $folio = { $match: {} }
-        $folio.$match[x] = req.query[x]
-      }
-    })
-
-    var agg = []
-
-    if ($folio) agg.push($folio)
-    agg.push({
-      $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-    })
-    if ($pedido) agg.push($pedido)
-
-    agg = agg.concat([
-      { $unset: "folioLineas.ordenes" },
-      {
-        $project: {
-          idFolio: "$_id",
-          idPedido: "$folioLineas._id",
-          folio: "$numeroDeFolio",
-          idCliente: "$cliente",
-          idVendedor: "$vendedor",
-          idSKU: "$folioLineas.modeloCompleto",
-          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
-          fechaTerminadoFolio: "$fechaTerminado",
-          fechaTerminadoPedido: "$folioLineas.fechaTerminado",
-          cantidadProducidaFolio: "$cantidadProducida",
-          porcentajeAvanceFolio: "$porcentajeAvance",
-          //Datos sobre el pedido
-          pedido: "$folioLineas.pedido",
-          laserCliente: "$folioLineas.laserCliente.laser",
-
-          porcentajeAvancePedido: "$folioLineas.porcentajeAvance",
-          cantidadProducidaPedido: "$folioLineas.cantidadProducida",
-
-          cantidadSolicitadaPedido: "$folioLineas.cantidad"
-        }
-      },
-      { $unset: "_id" },
-      // <!--
-      // =====================================
-      //  Cliente
-      // =====================================
-      // -->
-      {
-        $lookup: {
-          from: "clientes",
-          foreignField: "_id",
-          localField: "idCliente",
-          as: "cliente"
-        }
-      },
-      { $unwind: { path: "$cliente" } },
-
-      { $addFields: { cliente: "$cliente.nombre" } },
-      // <!--
-      // =====================================
-      //  END Cliente
-      // =====================================
-      // -->
-
-      // <!--
-      // =====================================
-      //  Vendedor
-      // =====================================
-      // -->
-
-      {
-        $lookup: {
-          from: "usuarios",
-          foreignField: "_id",
-          localField: "idVendedor",
-          as: "vendedor"
-        }
-      },
-      { $unwind: { path: "$vendedor" } },
-
-      { $addFields: { vendedor: "$vendedor.nombre" } },
-
-      // <!--
-      // =====================================
-      //  END Vendedor
-      // =====================================
-      // -->
-      // <!--
-      // =====================================
-      //  sku
-      // =====================================
-      // -->
-
-      {
-        $lookup: {
-          from: "modelosCompletos",
-          foreignField: "_id",
-          localField: "idSKU",
-          as: "sku"
-        }
-      },
-      { $unwind: { path: "$sku" } },
-
-      { $addFields: { sku: "$sku.nombreCompleto" } }
-
-      // <!--
-      // =====================================
-      //  END Vendedor
-      // =====================================
-      // -->
-    ])
-
-    //Obtenemos el total de elementos filtrados para la paginacion
-    const aggTotal = agg.concat([{ $count: "total" }])
-    const total = await Folio.aggregate(aggTotal).exec()
-
-    agg = agg.concat([
-      //Primera ordeneda para que todo entre bien al limte antes de cortar.
-      // De otra manera cortamos y luego ordenamos dando mal los datos.
-      { $sort: { [campo]: sort } },
-      //Desde aqui limitamos unicamente lo que queremos ver
-      { $limit: desde + limite },
-      { $skip: desde },
-      { $sort: { [campo]: sort } }
-    ])
-
-    Folio.aggregate(agg)
-      .exec()
-      .then(foliosConsulta => {
-        return RESP._200(res, null, [
-          { tipo: "pedidos", datos: foliosConsulta },
-          { tipo: "total", datos: total[0] ? total[0] : 0 }
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error obteniendo "))
+  if (req.query["folioLineas.modeloCompleto"]) {
+    req.query["folioLineas.modeloCompleto"] = ObjectId(
+      req.query["folioLineas.modeloCompleto"]
+    )
   }
-)
+  if (req.query.hasOwnProperty("folioLineas.laserado")) {
+    var ob = {}
+
+    const esLaserado = req.query["folioLineas.laserado"]
+
+    if (esLaserado) {
+      ob["$and"] = [
+        {
+          "folioLineas.laserCliente.laser": { $not: { $eq: null } },
+        },
+        {
+          "folioLineas.laserCliente.laser": {
+            $exists: true,
+          },
+        },
+      ]
+    } else {
+      ob["$and"] = [
+        {
+          "folioLineas.laserCliente.laser": { $eq: null },
+        },
+        {
+          "folioLineas.laserCliente.laser": {
+            $exists: false,
+          },
+        },
+      ]
+    }
+
+    req.query = { ...req.query, ...ob }
+
+    delete req.query["folioLineas.laserado"]
+  }
+
+  //Separam que aplican a los filtros por que
+  // asi podemos retornar todo mas limpio como pedidos.
+
+  console.log(`req.query`, req.query["$and"])
+
+  var $folio = null
+  var $pedido = null
+
+  Object.keys(req.query).forEach(x => {
+    console.log(`x`, typeof x)
+    if (x.includes("folioLineas.") || x.includes("$and")) {
+      if (!$pedido) $pedido = { $match: {} }
+      $pedido.$match[x] = req.query[x]
+    } else {
+      if (!$folio) $folio = { $match: {} }
+      $folio.$match[x] = req.query[x]
+    }
+  })
+
+  var agg = []
+
+  if ($folio) agg.push($folio)
+  agg.push({
+    $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true },
+  })
+  if ($pedido) agg.push($pedido)
+
+  agg = agg.concat([
+    { $unset: "folioLineas.ordenes" },
+    {
+      $project: {
+        idFolio: "$_id",
+        idPedido: "$folioLineas._id",
+        folio: "$numeroDeFolio",
+        idCliente: "$cliente",
+        idVendedor: "$vendedor",
+        idSKU: "$folioLineas.modeloCompleto",
+        fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+        fechaTerminadoFolio: "$fechaTerminado",
+        fechaTerminadoPedido: "$folioLineas.fechaTerminado",
+        cantidadProducidaFolio: "$cantidadProducida",
+        porcentajeAvanceFolio: "$porcentajeAvance",
+        //Datos sobre el pedido
+        pedido: "$folioLineas.pedido",
+        laserCliente: "$folioLineas.laserCliente.laser",
+
+        porcentajeAvancePedido: "$folioLineas.porcentajeAvance",
+        cantidadProducidaPedido: "$folioLineas.cantidadProducida",
+
+        cantidadSolicitadaPedido: "$folioLineas.cantidad",
+      },
+    },
+    { $unset: "_id" },
+    // <!--
+    // =====================================
+    //  Cliente
+    // =====================================
+    // -->
+    {
+      $lookup: {
+        from: "clientes",
+        foreignField: "_id",
+        localField: "idCliente",
+        as: "cliente",
+      },
+    },
+    { $unwind: { path: "$cliente" } },
+
+    { $addFields: { cliente: "$cliente.nombre" } },
+    // <!--
+    // =====================================
+    //  END Cliente
+    // =====================================
+    // -->
+
+    // <!--
+    // =====================================
+    //  Vendedor
+    // =====================================
+    // -->
+
+    {
+      $lookup: {
+        from: "usuarios",
+        foreignField: "_id",
+        localField: "idVendedor",
+        as: "vendedor",
+      },
+    },
+    { $unwind: { path: "$vendedor" } },
+
+    { $addFields: { vendedor: "$vendedor.nombre" } },
+
+    // <!--
+    // =====================================
+    //  END Vendedor
+    // =====================================
+    // -->
+    // <!--
+    // =====================================
+    //  sku
+    // =====================================
+    // -->
+
+    {
+      $lookup: {
+        from: "modelosCompletos",
+        foreignField: "_id",
+        localField: "idSKU",
+        as: "sku",
+      },
+    },
+    { $unwind: { path: "$sku" } },
+
+    { $addFields: { sku: "$sku.nombreCompleto" } },
+
+    // <!--
+    // =====================================
+    //  END Vendedor
+    // =====================================
+    // -->
+  ])
+
+  //Obtenemos el total de elementos filtrados para la paginacion
+  const aggTotal = agg.concat([{ $count: "total" }])
+  const total = await Folio.aggregate(aggTotal).exec()
+
+  agg = agg.concat([
+    //Primera ordeneda para que todo entre bien al limte antes de cortar.
+    // De otra manera cortamos y luego ordenamos dando mal los datos.
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } },
+  ])
+
+  Folio.aggregate(agg)
+    .exec()
+    .then(foliosConsulta => {
+      return RESP._200(res, null, [
+        { tipo: "pedidos", datos: foliosConsulta },
+        { tipo: "total", datos: total[0] ? total[0] : 0 },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error obteniendo "))
+})
 
 app.get(
   "/porEntregarAProduccion/:vendedor",
@@ -531,32 +523,32 @@ app.get(
           vendedor: ObjectId(req.params.vendedor),
           ordenesGeneradas: false,
           entregarAProduccion: false,
-          terminado: false
-        }
+          terminado: false,
+        },
       },
       {
         $project: {
           folio: "$numeroDeFolio",
           cliente: "$cliente",
-          fechaDeCreacion: "$createdAt"
-        }
+          fechaDeCreacion: "$createdAt",
+        },
       },
       {
         $lookup: {
           from: "clientes",
           foreignField: "_id",
           localField: "cliente",
-          as: "cliente"
-        }
+          as: "cliente",
+        },
       },
 
       { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
       {
         $addFields: {
           cliente: "$cliente.nombre",
-          idCliente: "$cliente._id"
-        }
-      }
+          idCliente: "$cliente._id",
+        },
+      },
     ])
       .exec()
       .then(folios => {
@@ -619,7 +611,7 @@ app.put(
       .catch(err => {
         return RESP._500(res, {
           msj: "Hubo un error buscando el folio.",
-          err: err
+          err: err,
         })
       })
   }
@@ -629,8 +621,122 @@ app.put(
   "/liberarParaProduccion",
   permisos.$("folio:liberarParaProduccion"),
   (req, res) => {
-    return res.send("No existe")
+    const procesosFijos = {
+      procesosIniciales: [],
+      procesosInicialesAlmacen: [],
+      procesosFinales: [],
+    }
+
+    Promise.all([
+      Proceso.find({
+        _id: { $in: req.parametros.localizacionDeOrdenes.procesosIniciales },
+      }).exec(),
+      Proceso.find({
+        _id: {
+          $in: req.parametros.localizacionDeOrdenes.procesosInicialesAlmacen,
+        },
+      }).exec(),
+      Proceso.find({
+        _id: { $in: req.parametros.localizacionDeOrdenes.procesosFinales },
+      }).exec(),
+    ])
+      .then(respuesta => {
+        //Asignamos los procesos
+        procesosFijos.procesosIniciales = respuesta[0]
+        procesosFijos.procesosInicialesAlmacen = respuesta[1]
+        procesosFijos.procesosFinales = respuesta[2]
+
+        return Folio.findById(req.body._id).exec()
+      })
+
+      .then(folio => {
+        if (!folio) throw "No existe el folio"
+
+        var contadorPedido = 0
+        //Vamos a hacer todas las modificaciones aqui.
+        folio.folioLineas.forEach(pedidoBD => {
+          //Obtenemos el pedido que corresponda
+          // al gui contra el pedido en la BD
+          const pedidoGUI = req.body.folioLineas.find(
+            p => p._id.toString() === pedidoBD._id.toString()
+          )
+          pedidoBD.pedido = folio.numeroDeFolio + "-" + contadorPedido
+          contadorPedido++
+
+          //Aqui hacemos todas las operaciones.
+          generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos)
+        })
+
+        folio.ordenesGeneradas = true
+
+        return folio.save()
+      })
+      .then(folio => {
+        return RESP._200(res, "El folio esta en produccion", [
+          { tipo: "folio", datos: folio },
+        ])
+      })
+
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error buscando el folio.",
+          err: err,
+        })
+      })
   }
 )
+
+function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
+  // Asignamos generales
+  pedidoBD.observaciones = pedidoGUI.observaciones
+
+  const procesosAUsar = pedidoGUI.ususarProcesosExtraordinarios
+    ? pedidoGUI.procesosExtraordinarios
+    : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
+
+  if (pedidoGUI.almacen) {
+    procesosAUsar.unshift(...procesosFijos.procesosInicialesAlmacen)
+  } else {
+    procesosAUsar.unshift(...procesosFijos.procesosIniciales)
+  }
+
+  procesosAUsar.push(...procesosFijos.procesosFinales)
+
+  //Copiamos las ordenes
+  var contador = 0
+  pedidoGUI.ordenes.forEach(ordenGUI => {
+    //Inicializamos la ruta para que no nos marque undefined
+    ordenGUI["ruta"] = {}
+
+    pedidoBD.ordenes.push(ordenGUI)
+    const ordenAgregada = pedidoBD.ordenes[pedidoBD.ordenes.length - 1]
+
+    ordenAgregada.modeloCompleto = pedidoBD.modeloCompleto
+    ordenAgregada.pedido = pedidoBD.pedido
+    ordenAgregada.orden = pedidoBD.pedido + "-" + contador
+    ordenAgregada.numeroDeOrden = contador
+
+    var actual = true
+    var consecutivo = 0
+    procesosAUsar.forEach(p => {
+      const estructuraBasica = {
+        departamento: p.departamento._id.toString(),
+        entrada: null,
+        salida: null,
+        recibida: false,
+        recepcion: null,
+        ubicacionActual: actual,
+        consecutivo: consecutivo,
+        datos: {},
+      }
+
+      ordenAgregada["ruta"].set(p._id.toString(), estructuraBasica)
+      actual = false
+      consecutivo ++
+    })
+
+    contador++
+  })
+}
 
 module.exports = app

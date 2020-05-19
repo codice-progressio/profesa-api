@@ -19,38 +19,38 @@ var tenidoSchema = require("./infoDeptos/tenido")
 var almacenDeBotonSchema = require("./infoDeptos/almacenDeBoton")
 
 var trayectoSchema = new Schema({
-    //El departamento en el que se encuentra actualmente.
-    departamento: {
-        type: Schema.Types.ObjectId,
-        ref: "Departamento",
-        require: [true, "El departamento es obligatorio."]
-    },
+  //El departamento en el que se encuentra actualmente.
+  departamento: {
+    type: Schema.Types.ObjectId,
+    ref: "Departamento",
+    require: [true, "El departamento es obligatorio."],
+  },
 
-    controlDeProduccion: controlDeProduccionSchema,
-    materiales: materialesSchema,
-    pastilla: pastillaSchema,
-    transformacion: transformacionSchema,
-    pulido: pulidoSchema,
-    seleccion: seleccionSchema,
-    empaque: empaqueSchema,
-    productoTerminado: productoTerminadoSchema,
-    metalizado: metalizadoSchema,
-    barnizado: barnizadoSchema,
-    burato: buratoSchema,
-    laser: laserSchema,
-    almacenDeBoton: almacenDeBotonSchema,
-    tenido: tenidoSchema,
+//   controlDeProduccion: controlDeProduccionSchema,
+//   materiales: materialesSchema,
+//   pastilla: pastillaSchema,
+//   transformacion: transformacionSchema,
+//   pulido: pulidoSchema,
+//   seleccion: seleccionSchema,
+//   empaque: empaqueSchema,
+//   productoTerminado: productoTerminadoSchema,
+//   metalizado: metalizadoSchema,
+//   barnizado: barnizadoSchema,
+//   burato: buratoSchema,
+//   laser: laserSchema,
+//   almacenDeBoton: almacenDeBotonSchema,
+//   tenido: tenidoSchema,
 
-    // Esta se guarda cuando se modifica la órden.
-    entrada: { type: Date },
-    salida: { type: Date },
-    // Referente al orden secuencial de los departamentos.
-    orden: { type: String, require: [true, "El órden es obligatorio."] },
+  // Esta se guarda cuando se modifica la órden.
+  entrada: { type: Date },
+  salida: { type: Date },
+  // Referente al orden secuencial de los departamentos.
+  orden: { type: String, require: [true, "El órden es obligatorio."] },
 
-    // El primer paso comenzar a trabajar una órden es recibirla en el proceso
-    // actual donde esta. (trayecto).
-    recivida: { type: Boolean, default: false },
-    // La fecha en que se recive.
-    recepcion: { type: Date }
+  // El primer paso comenzar a trabajar una órden es recibirla en el proceso
+  // actual donde esta. (trayecto).
+  recivida: { type: Boolean, default: false },
+  // La fecha en que se recive.
+  recepcion: { type: Date },
 })
 module.exports = trayectoSchema

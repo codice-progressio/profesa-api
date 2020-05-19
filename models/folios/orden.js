@@ -26,12 +26,47 @@ const ordenSchema = new Schema({
     piezasFinales: { type: Number, min: 1 },
     observaciones: { type: String },
 
-    //El trayecto que se define para que siga la orden. 
-    trayectoNormal: [trayecto],
+    // //El trayecto que se define para que siga la orden. 
+    // trayectoNormal: [trayecto],
 
-    trayectoRecorrido: [trayecto],
+    // trayectoRecorrido: [trayecto],
 
-    ubicacionActual: trayecto,
+    // ubicacionActual: trayecto,
+
+
+    // Estas son las propiedades que debe de llevar cada
+    // uno de los elementos que se agreguen como ruta. 
+    // departamento
+    // entrada
+    // salida
+    // recivida
+    // recepcion
+    // datos
+
+    /** Esto se podria ver como un json:
+
+    "elIdDelDepartamento": {
+        departamento: "String",
+        entrada: "Date",
+        salida: "Date",
+        recibida: "boolean",
+        recepcion: "Date",
+        datos: //--> ESte varia entre cada uno
+    }
+
+    */
+    
+
+
+    ruta: {
+        type: Map,
+        of: Schema.Types.Mixed
+    },
+
+    //------------------------------------
+
+
+
 
     //Si vuelve a este trayecto quiere decir
     // que se retoma el cause normal en ubicación.

@@ -200,7 +200,7 @@ app.get("/localizacionDeOrdenes", (req, res, next) => {
   Parametros.findOne({})
     .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
     .populate("localizacionDeOrdenes.procesosInicialesAlmacen", null, "Proceso")
-    .populate("localizacionDeOrdenes.procesosEspeciales", null, "Proceso")
+    .populate("localizacionDeOrdenes.procesosFinales", null, "Proceso")
     .exec()
 
     .then(r => {

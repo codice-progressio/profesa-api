@@ -11,7 +11,6 @@ const ObjectId = mongoose.Types.ObjectId
 
 const Proceso = require("../models/procesos/proceso")
 
-var guard = require("express-jwt-permissions")()
 var permisos = require("../config/permisos.config")
 
 const erro = (res, err, msj) => {
@@ -215,7 +214,7 @@ app.get(
   permisos.$("folio:reporte:paraRevision"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
+    const limite = Number(req.query.limite || 300)
     const sort = Number(req.query.sort || 1)
     const campo = String(req.query.campo || "fechaDeEntregaAProduccion")
 
@@ -270,7 +269,7 @@ app.get(
           as: "cliente",
         },
       },
-      { $unwind: { path: "$cliente" } },
+      { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
       {
         $addFields: { cliente: "$cliente.nombre" },
       },
@@ -282,7 +281,7 @@ app.get(
           as: "vendedor",
         },
       },
-      { $unwind: { path: "$vendedor" } },
+      { $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true } },
       {
         $addFields: { vendedor: "$vendedor.nombre" },
       },
@@ -368,13 +367,10 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
   //Separam que aplican a los filtros por que
   // asi podemos retornar todo mas limpio como pedidos.
 
-  console.log(`req.query`, req.query["$and"])
-
   var $folio = null
   var $pedido = null
 
   Object.keys(req.query).forEach(x => {
-    console.log(`x`, typeof x)
     if (x.includes("folioLineas.") || x.includes("$and")) {
       if (!$pedido) $pedido = { $match: {} }
       $pedido.$match[x] = req.query[x]
@@ -479,6 +475,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
     },
     { $unwind: { path: "$sku" } },
 
+    { $addFields: { laserSKU: "$sku.laserAlmacen.laser" } },
     { $addFields: { sku: "$sku.nombreCompleto" } },
 
     // <!--
@@ -507,7 +504,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
     .then(foliosConsulta => {
       return RESP._200(res, null, [
         { tipo: "pedidos", datos: foliosConsulta },
-        { tipo: "total", datos: total[0] ? total[0] : 0 },
+        { tipo: "total", datos: total[0] ? total[0].total : 0 },
       ])
     })
     .catch(err => erro(res, err, "Hubo un error obteniendo "))
@@ -689,7 +686,7 @@ app.put(
 function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   // Asignamos generales
   pedidoBD.observaciones = pedidoGUI.observaciones
-
+  pedidoBD.ordenesGeneradas = true
   const procesosAUsar = pedidoGUI.ususarProcesosExtraordinarios
     ? pedidoGUI.procesosExtraordinarios
     : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
@@ -730,7 +727,10 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
         datos: {},
       }
 
-      ordenAgregada["ruta"].set(p._id.toString(), estructuraBasica)
+      ordenAgregada["ruta"].set(
+        p._id.toString() + "-" + consecutivo,
+        estructuraBasica
+      )
       actual = false
       consecutivo++
     })
@@ -779,13 +779,15 @@ function generarCambios(folio) {
           datos: {},
         }
 
-        trayectoReccorrido = obtenerDatosDeTrayectoRecorrido(
-          orden,
-          consecutivo,
+        obtenerDatosDeTrayectoRecorrido(orden, consecutivo, estructuraBasica)
+
+        if (orden.ubicacionActual)
+          obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica)
+
+        orden["ruta"].set(
+          p._id.toString() + "-" + consecutivo,
           estructuraBasica
         )
-
-        orden["ruta"].set(p._id.toString(), estructuraBasica)
 
         consecutivo++
       })
@@ -839,6 +841,16 @@ function copiarDatos(trayecto) {
   }
 
   return null
+}
+
+function obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica) {
+  const ubicacionActual = orden.ubicacionActual
+
+  if (ubicacionActual.orden != consecutivo) return
+
+  estructuraBasica.recibida = ubicacionActual.recivida
+  estructuraBasica.recepcion = ubicacionActual.recepcion
+  estructuraBasica.entrada = ubicacionActual.entrada
 }
 
 module.exports = app

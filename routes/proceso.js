@@ -17,12 +17,12 @@ const erro = (res, err, msj) => {
 app.post("/", permisos.$("proceso:crear"), (req, res) => {
   return new Proceso(req.body)
     .save()
-    .then((proceso) => {
+    .then(proceso => {
       return RESP._200(res, "Se guardo el proceso", [
         { tipo: "proceso", datos: proceso },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error guardando el proceso"))
+    .catch(err => erro(res, err, "Hubo un error guardando el proceso"))
 })
 
 app.get("/", permisos.$("proceso:leer:todo"), async (req, res) => {
@@ -38,26 +38,24 @@ app.get("/", permisos.$("proceso:leer:todo"), async (req, res) => {
     .limit(limite)
     .skip(desde)
     .exec()
-    .then((procesos) => {
+    .then(procesos => {
       return RESP._200(res, null, [
         { tipo: "procesos", datos: procesos },
         { tipo: "total", datos: total },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error buscando los procesos"))
+    .catch(err => erro(res, err, "Hubo un error buscando los procesos"))
 })
 
 app.get("/:id", permisos.$("proceso:leer:id"), (req, res) => {
   Proceso.findById(req.params.id)
     .exec()
-    .then((proceso) => {
+    .then(proceso => {
       if (!proceso) throw "No existe el id"
 
       return RESP._200(res, null, [{ tipo: "proceso", datos: proceso }])
     })
-    .catch((err) =>
-      erro(res, err, "Hubo un error buscando el proceso por su id")
-    )
+    .catch(err => erro(res, err, "Hubo un error buscando el proceso por su id"))
 })
 
 app.get(
@@ -71,7 +69,7 @@ app.get(
     const termino = String(
       req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     )
-    const b = (campo) => ({
+    const b = campo => ({
       [campo]: { $regex: termino, $options: "i" },
     })
 
@@ -79,7 +77,7 @@ app.get(
       $or: [],
     }
 
-    ;["nombre", "observaciones", "departamento.nombre"].forEach((x) =>
+    ;["nombre", "observaciones", "departamento.nombre"].forEach(x =>
       $match.$or.push(b(x))
     )
 
@@ -148,7 +146,7 @@ app.get(
       { $sort: { [campo]: sort } },
     ])
       .exec()
-      .then((procesos) => {
+      .then(procesos => {
         //Si no hay resultados no se crea la propiedad
         // y mas adelante nos da error.
         if (!total.length) total.push({ total: 0 })
@@ -158,7 +156,7 @@ app.get(
           { tipo: "total", datos: total.pop().total },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(
           res,
           err,
@@ -171,7 +169,7 @@ app.get(
 app.put("/", permisos.$("proceso:modificar"), (req, res) => {
   Proceso.findById(req.body._id)
     .exec()
-    .then((proceso) => {
+    .then(proceso => {
       if (!proceso) {
         throw "No existe el proceso"
       }
@@ -185,34 +183,34 @@ app.put("/", permisos.$("proceso:modificar"), (req, res) => {
         "gastos",
         "maquinas",
         "requiereProduccion",
-      ].forEach((x) => {
+      ].forEach(x => {
         proceso[x] = req.body[x]
       })
 
       return proceso.save()
     })
-    .then((proceso) => {
+    .then(proceso => {
       return RESP._200(res, "Se modifico correctamente", [
         { tipo: "proceso", datos: proceso },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error actualizando el proceso"))
+    .catch(err => erro(res, err, "Hubo un error actualizando el proceso"))
 })
 
 app.delete("/:id", permisos.$("proceso:eliminar"), (req, res) => {
   Proceso.findById(req.params.id)
     .exec()
-    .then((proceso) => {
+    .then(proceso => {
       if (!proceso) throw "No existe el proceso"
 
       return proceso.remove()
     })
-    .then((proceso) => {
+    .then(proceso => {
       return RESP._200(res, "Se elimino de manera correcta", [
         { tipo: "proceso", datos: proceso },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error eliminando el proceso"))
+    .catch(err => erro(res, err, "Hubo un error eliminando el proceso"))
 })
 
 app.post(
@@ -221,12 +219,56 @@ app.post(
   (req, res) => {
     Proceso.find({ _id: { $in: req.body.busqueda } })
       .exec()
-      .then((procesos) => {
+      .then(procesos => {
         return RESP._200(res, null, [{ tipo: "procesos", datos: procesos }])
       })
-      .catch((err) => erro(res, err, "Hubo un error buscando los procesos"))
+      .catch(err => erro(res, err, "Hubo un error buscando los procesos"))
   }
 )
+
+app.get("/especiales/pool", (req, res, next) => {
+  Proceso.aggregate([
+    {
+      $match: {
+        DDXrass: {
+          $exists: false,
+        },
+      },
+    },
+    {
+      $project: {
+        _id: "$_id",
+        departamento: "$departamento",
+        _idDepartamento: "$departamento",
+        nombre: "$nombre",
+      },
+    },
+    {
+      $lookup: {
+        from: "departamentos",
+        localField: "departamento",
+        foreignField: "_id",
+        as: "departamento",
+      },
+    },
+    {
+      $unwind: {
+        path: "$departamento",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        departamento: "$departamento.nombre",
+      },
+    },
+  ])
+    .exec()
+    .then(procesos => {
+      return RESP._200(res, null, [{ tipo: "procesos", datos: procesos }])
+    })
+    .catch(err => erro(res, err, "Hubo un error generando pool de procesos"))
+})
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app

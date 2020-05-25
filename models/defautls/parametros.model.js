@@ -18,6 +18,7 @@ const parametrosDeTrabajoSchema = new Schema(
     },
 
     procesosEspeciales: [String],
+    departamentoTransformacion: String,
     jwtInvalid: [String]
   },
   { collection: "parametrosDeTrabajo" }

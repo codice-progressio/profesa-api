@@ -7,6 +7,7 @@ var bcrypt = require("bcryptjs")
 var Usuario = require("../../models/usuario")
 var permisos = require("../../config/permisos.config")
 var Proceso = require("../../models/procesos/proceso")
+var Departamento = require("../../models/departamento")
 
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.
@@ -115,7 +116,7 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
     await new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve([
-          Usuario.findById(req.body.id).select('+password').exec(),
+          Usuario.findById(req.body.id).select("+password").exec(),
           Parametros.findOne().exec(),
           Usuario.findById(req.user._id).exec(),
         ])
@@ -236,6 +237,25 @@ app.get("/procesosEspeciales", (req, res) => {
   })
     .then(p => res.json(p))
     .catch(err => next(err))
+})
+
+app.put("/departamentoTransformacion", (req, res, next) => {
+  Parametros.updateOne(
+    {},
+    { $set: { departamentoTransformacion: req.body.id } }
+  )
+    .exec()
+    .then(p => res.json(p))
+    .catch(err => next(err))
+})
+
+app.get("/departamentoTransformacion", (req, res, next) => {
+  
+  Departamento.findById(req.parametros.departamentoTransformacion)
+    .exec()
+    .then(dep => {
+      return res.json(dep)
+    })
 })
 
 module.exports = app

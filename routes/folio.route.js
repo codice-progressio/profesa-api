@@ -427,7 +427,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         as: "cliente",
       },
     },
-    { $unwind: { path: "$cliente" } },
+    { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
 
     { $addFields: { cliente: "$cliente.nombre" } },
     // <!--
@@ -450,7 +450,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         as: "vendedor",
       },
     },
-    { $unwind: { path: "$vendedor" } },
+    { $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true } },
 
     { $addFields: { vendedor: "$vendedor.nombre" } },
 
@@ -473,7 +473,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         as: "sku",
       },
     },
-    { $unwind: { path: "$sku" } },
+    { $unwind: { path: "$sku", preserveNullAndEmptyArrays: true } },
 
     { $addFields: { laserSKU: "$sku.laserAlmacen.laser" } },
     { $addFields: { sku: "$sku.nombreCompleto" } },
@@ -703,21 +703,21 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   var contador = 0
   pedidoGUI.ordenes.forEach(ordenGUI => {
     //Inicializamos la ruta para que no nos marque undefined
-    ordenGUI["ruta"] = {}
+    ordenGUI.ruta = []
 
-    pedidoBD.ordenes.push(ordenGUI)
-    const ordenAgregada = pedidoBD.ordenes[pedidoBD.ordenes.length - 1]
+    
 
-    ordenAgregada.modeloCompleto = pedidoBD.modeloCompleto
-    ordenAgregada.pedido = pedidoBD.pedido
-    ordenAgregada.orden = pedidoBD.pedido + "-" + contador
-    ordenAgregada.numeroDeOrden = contador
+    ordenGUI.modeloCompleto = pedidoBD.modeloCompleto
+    ordenGUI.pedido = pedidoBD.pedido
+    ordenGUI.orden = pedidoBD.pedido + "-" + contador
+    ordenGUI.numeroDeOrden = contador
 
     var actual = true
     var consecutivo = 0
     procesosAUsar.forEach(p => {
       const estructuraBasica = {
-        departamento: p.departamento._id.toString(),
+        idProceso: p._id.toString(),
+        idDepartamento: p._id.toString(),
         entrada: null,
         salida: null,
         recibida: false,
@@ -727,15 +727,17 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
         datos: {},
       }
 
-      ordenAgregada["ruta"].set(
-        p._id.toString() + "-" + consecutivo,
-        estructuraBasica
-      )
+      ordenGUI.ruta.push(estructuraBasica)
+      console.log('ordenGUI.ruta', ordenGUI.ruta)
+      // throw 'Parale a tu tren'
       actual = false
       consecutivo++
     })
 
     contador++
+
+
+    pedidoBD.ordenes.push(ordenGUI)
   })
 }
 
@@ -748,7 +750,7 @@ app.put("/aplicarActualizacionDeOrdenes", (req, res, next) => {
       return Promise.all(folios)
     })
     .then(folios => {
-      res.send("Se actualizaron " + folios.length + " folios")
+      return res.send("Se actualizaron " + folios.length + " folios")
     })
     .catch(err => next(err))
 })
@@ -762,12 +764,13 @@ function generarCambios(folio) {
     )
     pedido.ordenes.forEach(orden => {
       //Inicializamos la ruta para que no nos marque undefined
-      orden["ruta"] = {}
+      orden["ruta"] = []
 
       var consecutivo = 0
       procesosAUsar.forEach(p => {
         const estructuraBasica = {
-          departamento: p.departamento._id.toString(),
+          idProceso: p._id.toString(),
+          idDepartamento: p._id.toString(),
           entrada: null,
           salida: null,
           recibida: false,
@@ -784,10 +787,7 @@ function generarCambios(folio) {
         if (orden.ubicacionActual)
           obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica)
 
-        orden["ruta"].set(
-          p._id.toString() + "-" + consecutivo,
-          estructuraBasica
-        )
+        orden["ruta"].push(estructuraBasica)
 
         consecutivo++
       })

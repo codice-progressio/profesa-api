@@ -717,7 +717,7 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
     procesosAUsar.forEach(p => {
       const estructuraBasica = {
         idProceso: p._id.toString(),
-        idDepartamento: p._id.toString(),
+        idDepartamento: p.departamento._id.toString(),
         entrada: null,
         salida: null,
         recibida: false,
@@ -770,7 +770,7 @@ function generarCambios(folio) {
       procesosAUsar.forEach(p => {
         const estructuraBasica = {
           idProceso: p._id.toString(),
-          idDepartamento: p._id.toString(),
+          idDepartamento: p.departamento._id.toString(),
           entrada: null,
           salida: null,
           recibida: false,

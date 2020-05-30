@@ -78,6 +78,7 @@ const ordenSchema = new Schema({
       recepcion: Date,
       ubicacionActual: Boolean,
       consecutivo: Number,
+      trabajando:Boolean,
       datos: {}, //--> ESte varia entre cada uno
     },
   ],

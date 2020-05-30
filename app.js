@@ -33,6 +33,8 @@ var ENVIROMENT = db.enviroment(process.env.NODE_ENV === "production")
 // Inicializar variables.
 var app = express()
 
+app.disable('x-powered-by');
+
 // Esta función nos ayuda a quitar duplicados dentro
 //  del array.
 Array.prototype.unique = (function (a) {
@@ -178,8 +180,8 @@ if (ENVIROMENT.esModoProduccion) {
   https
     .createServer(
       {
-        key: fs.readFileSync("certificado/angular.key"),
-        cert: fs.readFileSync("certificado/angular.crt"),
+        key: fs.readFileSync("certificado/desarrollo.key"),
+        cert: fs.readFileSync("certificado/desarrollo.crt"),
       },
       app
     )

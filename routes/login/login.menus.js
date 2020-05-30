@@ -276,6 +276,11 @@ function parametros() {
         url: "/parametros/administrador",
         permiso: permisos.$("SUPER_ADMIN", false),
       },
+      {
+        titulo: "Crear estaciones de escaneo",
+        url: "/parametros/scanners",
+        permiso: permisos.$("SUPER_ADMIN", false),
+      },
     ],
   }
   return menu

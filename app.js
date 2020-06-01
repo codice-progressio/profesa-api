@@ -10,6 +10,7 @@ mongoose.Promise = global.Promise
 var colores = require("./utils/colors")
 var bodyParser = require("body-parser")
 var db = require("./config/db")
+var cors = require("cors")
 
 var RESP = require("./utils/respStatus")
 
@@ -33,7 +34,9 @@ var ENVIROMENT = db.enviroment(process.env.NODE_ENV === "production")
 // Inicializar variables.
 var app = express()
 
-app.disable('x-powered-by');
+app.use(cors())
+
+app.disable("x-powered-by")
 
 // Esta función nos ayuda a quitar duplicados dentro
 //  del array.

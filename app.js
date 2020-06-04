@@ -54,7 +54,8 @@ app.use(compression())
 app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Origin",
-    ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
+    // ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
+    "https://127.0.0.1:4200"
   )
   res.header(
     "Access-Control-Allow-Headers",

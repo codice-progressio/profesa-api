@@ -10,7 +10,7 @@ const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
 const Proceso = require("../models/procesos/proceso")
-
+const Departamento = require("../models/departamento")
 var permisos = require("../config/permisos.config")
 
 const erro = (res, err, msj) => {
@@ -705,8 +705,6 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
     //Inicializamos la ruta para que no nos marque undefined
     ordenGUI.ruta = []
 
-    
-
     ordenGUI.modeloCompleto = pedidoBD.modeloCompleto
     ordenGUI.pedido = pedidoBD.pedido
     ordenGUI.orden = pedidoBD.pedido + "-" + contador
@@ -728,14 +726,13 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
       }
 
       ordenGUI.ruta.push(estructuraBasica)
-      console.log('ordenGUI.ruta', ordenGUI.ruta)
+      console.log("ordenGUI.ruta", ordenGUI.ruta)
       // throw 'Parale a tu tren'
       actual = false
       consecutivo++
     })
 
     contador++
-
 
     pedidoBD.ordenes.push(ordenGUI)
   })
@@ -852,5 +849,107 @@ function obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica) {
   estructuraBasica.recepcion = ubicacionActual.recepcion
   estructuraBasica.entrada = ubicacionActual.entrada
 }
+
+app.get("/ordenes/:idDepartamento", async (req, res, next) => {
+  Departmento.findById(req.params.idDepartamento)
+    .exec()
+    .then(dep => {
+      if (!dep) throw "No existe el departamento"
+
+      return Folio.aggregate([
+        {
+          $match: {
+            ordenesGeneradas: true,
+            terminado: false,
+          },
+        },
+        {
+          $unwind: {
+            path: "$folioLineas",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            "folioLineas.terminado": false,
+          },
+        },
+        {
+          $unwind: {
+            path: "$folioLineas.ordenes",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            "folioLineas.ordenes.terminada": false,
+          },
+        },
+
+        {
+          $unset: [
+            "folioLineas.ordenes.trayectoNormal",
+            "folioLineas.ordenes.trayectoRecorrido",
+          ],
+        },
+
+        {
+          $addFields: {
+            "folioLineas.ordenes.rutaTemp": "$folioLineas.ordenes.ruta",
+          },
+        },
+        {
+          $unwind: {
+            path: "$folioLineas.ordenes.ruta",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $match: {
+            "folioLineas.ordenes.ruta.idDepartamento":
+              req.params.idDepartamento,
+            "folioLineas.ordenes.ruta.ubicacionActual": true,
+          },
+        },
+
+        {
+          $project: {
+            _id: {
+              estatusDeLaOrden: "$folioLineas.ordenes.ruta.recibida",
+              consecutivo: "$folioLineas.ordenes.ruta.consecutivo",
+              procesoActual: "$folioLineas.ordenes.ruta.idProceso",
+              idProcesoActual: "$folioLineas.ordenes.ruta.idProceso",
+              numeroDeOrden: "$folioLineas.ordenes.orden",
+              fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+              sku: "$folioLineas.ordenes.modeloCompleto",
+              idSKU: "$folioLineas.ordenes.modeloCompleto",
+              laser: "$folioLineas.modeloCompleto",
+              laserAlmacen: "$folioLineas.laserCliente",
+              unidad: "$folioLineas.ordenes.unidad",
+              piezas: "$folioLineas.ordenes.piezas",
+              observaciones: "$folioLineas.ordenes.observaciones",
+              idFolio: "$_id",
+              idPedido: "$folioLineas._id",
+              idOrden: "$folioLineas.ordenes._id",
+
+              ubicacionActual: "$folioLineas.ordenes.ruta",
+              ruta: "$folioLineas.ordenes.rutaTemp",
+            },
+          },
+        },
+        {
+          $replaceRoot: { newRoot: "$_id" },
+        },
+      ]).exec()
+    })
+
+    .then(folios => {
+      return RESP._200(res, null, [{ tipo: "ordenes", datos: folios }])
+    })
+    .catch(_ => next(_))
+})
 
 module.exports = app

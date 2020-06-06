@@ -9,1418 +9,947 @@ var RESP = require("../utils/respStatus")
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
-var CRUD = require("./CRUD")
-CRUD.app = app
-CRUD.modelo = Folio
-CRUD.nombreDeObjetoSingular = "folio"
-CRUD.nombreDeObjetoPlural = "folios"
-CRUD.campoSortDefault = "fechaEntrega"
-CRUD.camposActualizables = {
-  // numeroDeFolio: null ,
-  cliente: null,
-  // fechaFolio: null,
-  // fechaEntrega: null,
-  vendedor: null,
-  observaciones: null,
-  observacionesVendedor: null,
-  folioLineas: null,
-  nivelDeUrgencia: null,
-  porcentajeAvance: null,
-  // ordenesGeneradas: null,
-  // impreso: null,
-  terminado: null,
-  // fechaTerminado: null,
-  cantidadProducida: null
+const Proceso = require("../models/procesos/proceso")
+const Departamento = require("../models/departamento")
+var permisos = require("../config/permisos.config")
+
+const erro = (res, err, msj) => {
+  return RESP._500(res, {
+    msj: msj,
+    err: err,
+  })
 }
 
-CRUD.camposDeBusqueda = ["numeroDeFolio", "observaciones"]
+app.delete("/:id", permisos.$("folio:eliminar"), (req, res) => {
+  const id = req.params.id
 
-CRUD.crud("delete", "post", "getById", "put")
-
-app.get("/folioImpreso/:id", (req, res) => {
-  Folio.findById(req.params.id)
-    .then((folio) => {
-      if (!folio) throw "No existe el folio."
-      folio.impreso = true
-      return folio.save()
+  if (!id) {
+    return RESP._400(res, {
+      msj: "No definiste un id para eliminar.",
+      err: "Es necesario que definas un id.",
     })
-    .then(() => {
-      return RESP._200(res, "El folio se marco como impreso", [
-        //  { tipo: 'folio', datos: folio },
+  }
+
+  Folio.findById(id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+
+      return folio.remove()
+    })
+    .then(folio => {
+      return RESP._200(res, "Se elimino el folio", [
+        { tipo: "folio", datos: folio },
       ])
     })
-    .catch((err) => {
-      return RESP._500(res, {
-        msj: "Hubo un error marcando el folio como impreso. ",
-        err: err
-      })
-    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
 })
+
+app.post("/", permisos.$("folio:crear"), (req, res) => {
+  new Folio(req.body)
+    .save()
+    .then(folio => {
+      return RESP._200(res, "Se guardo el folio", [
+        { tipo: "folio", datos: folio },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error guardando el folio"))
+})
+
+app.get("/buscar/id/:id", permisos.$("folio:leer:id"), (req, res) => {
+  Folio.findById(req.params.id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+
+      return RESP._200(res, null, [{ tipo: "folio", datos: folio }])
+    })
+    .catch(err => erro(res, err, "Hubo un error obteniendo el folio por su id"))
+})
+
+app.put("/", permisos.$("folio:modificar"), (req, res) => {
+  Folio.findById(req.body._id)
+    .exec()
+    .then(folio => {
+      if (!folio) throw "No existe el folio"
+      ;[
+        "cliente",
+        "vendedor",
+        "observaciones",
+        "observacionesVendedor",
+        "folioLineas",
+        "nivelDeUrgencia",
+        "porcentajeAvance",
+        "terminado",
+        "cantidadProducida",
+      ].forEach(x => (folio[x] = req.body[x]))
+      return folio.save()
+    })
+    .then(folio => {
+      return RESP._200(res, "Se modifico el folio", [
+        { tipo: "folio", datos: folio },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error modificando el folio"))
+})
+
+app.get(
+  "/folioImpreso/:id",
+  permisos.$("folio:marcarComoImpreso"),
+  (req, res) => {
+    Folio.findById(req.params.id)
+      .then(folio => {
+        if (!folio) throw "No existe el folio."
+        folio.impreso = true
+        return folio.save()
+      })
+      .then(() => {
+        return RESP._200(res, null, [
+          //  { tipo: 'folio', datos: folio },
+        ])
+      })
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error marcando el folio como impreso. ",
+          err: err,
+        })
+      })
+  }
+)
+
+/**
+ * Senala el folio con ordenes impresas.
+ */
+app.post(
+  "/ordenesImpresas",
+  permisos.$("folio:modificar:senalarOrdenesImpresas"),
+  (req, res) => {
+    Folio.findById(req.body._id)
+      .then(folioEncontrado => {
+        if (!folioEncontrado) {
+          return RESP._400(res, {
+            msj: "No existe el folio.",
+            err: "El id del folio que ingresaste no existe.",
+          })
+        }
+        folioEncontrado.impreso = true
+        return folioEncontrado.save()
+      })
+      .then(folioGrabado => {
+        return RESP._200(res, null, [{ tipo: "folio", datos: folioGrabado }])
+      })
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error buscando el folio para senalarlo como impreso",
+          err: err,
+        })
+      })
+  }
+)
+
+app.get(
+  "/detalle/orden/:folio/:pedido/:orden",
+  permisos.$("folio:detalle:orden"),
+  (req, res) => {
+    Folio.findById(req.params.folio)
+      .exec()
+
+      .then(folio => {
+        if (!folio) throw "No existe el folio"
+
+        const orden = folio.folioLineas
+          .id(req.params.pedido)
+          .ordenes.id(req.params.orden)
+
+        if (!orden) throw "No existe la orden"
+
+        return RESP._200(res, null, [{ tipo: "orden", datos: orden }])
+      })
+      .catch(err =>
+        erro(res, err, "Hubo un error obteniendo el detalle de la orden")
+      )
+  }
+)
+app.get(
+  "/detalle/pedido/:folio/:pedido",
+  permisos.$("folio:detalle:pedido"),
+  (req, res) => {
+    Folio.findById(req.params.folio)
+      .exec()
+
+      .then(folio => {
+        if (!folio) throw "No existe el folio"
+
+        const pedido = folio.folioLineas.id(req.params.pedido)
+
+        if (!pedido) throw "No existe el pedido"
+
+        return RESP._200(res, null, [{ tipo: "pedido", datos: pedido }])
+      })
+      .catch(err =>
+        erro(res, err, "Hubo un error obteniendo el detalle del pedido")
+      )
+  }
+)
+app.get(
+  "/detalle/folio/:folio",
+  permisos.$("folio:detalle:folio"),
+  (req, res) => {
+    Folio.findById(req.params.folio)
+      .exec()
+
+      .then(folio => {
+        if (!folio) throw "No existe el folio"
+
+        return RESP._200(res, null, [{ tipo: "folio", datos: folio }])
+      })
+      .catch(err =>
+        erro(res, err, "Hubo un error obteniendo el detalle del folio ")
+      )
+  }
+)
+
+app.get(
+  "/reporte/paraRevision",
+  permisos.$("folio:reporte:paraRevision"),
+  async (req, res) => {
+    const desde = Number(req.query.desde || 0)
+    const limite = Number(req.query.limite || 300)
+    const sort = Number(req.query.sort || 1)
+    const campo = String(req.query.campo || "fechaDeEntregaAProduccion")
+
+    const total = await Folio.aggregate([
+      {
+        $match: {
+          ordenesGeneradas: false,
+          terminado: false,
+        },
+      },
+
+      { $count: "total" },
+    ]).exec()
+
+    Folio.aggregate([
+      {
+        $match: {
+          ordenesGeneradas: false,
+          terminado: false,
+          entregarAProduccion: true,
+        },
+      },
+
+      { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
+
+      {
+        $group: {
+          _id: "$_id",
+          folio: { $first: "$$ROOT" },
+          totalDePiezas: { $sum: "$folioLineas.cantidad" },
+        },
+      },
+      { $addFields: { "folio.totalDePiezas": "$totalDePiezas" } },
+      { $replaceRoot: { newRoot: "$folio" } },
+      {
+        $project: {
+          folio: "$numeroDeFolio",
+          idFolio: "$_id",
+          cliente: "$cliente",
+          idCliente: "$cliente",
+          vendedor: "$vendedor",
+          idVendedor: "$vendedor",
+          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+          totalDePiezas: "$totalDePiezas",
+        },
+      },
+      {
+        $lookup: {
+          from: "clientes",
+          foreignField: "_id",
+          localField: "cliente",
+          as: "cliente",
+        },
+      },
+      { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: { cliente: "$cliente.nombre" },
+      },
+      {
+        $lookup: {
+          from: "usuarios",
+          foreignField: "_id",
+          localField: "vendedor",
+          as: "vendedor",
+        },
+      },
+      { $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: { vendedor: "$vendedor.nombre" },
+      },
+
+      { $sort: { [campo]: sort } },
+      //Desde aqui limitamos unicamente lo que queremos ver
+      { $limit: desde + limite },
+      { $skip: desde },
+      { $sort: { [campo]: sort } },
+    ])
+      .then(folios => {
+        return RESP._200(res, null, [
+          { tipo: "folios", datos: folios },
+          { tipo: "total", datos: total },
+        ])
+      })
+      .catch(err =>
+        erro(
+          res,
+          err,
+          "Hubo un error obteniendo el reporte de folios para revision"
+        )
+      )
+  }
+)
+
+app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "folio")
+
+  delete req.query.desde
+  delete req.query.limite
+  delete req.query.sort
+  delete req.query.campo
+
+  // Hay tres elementos que deben ser objecto id. Hacemos un
+  // hard code para convertirlos
+
+  if (req.query["cliente"]) req.query.cliente = ObjectId(req.query.cliente)
+  if (req.query["vendedor"]) req.query.vendedor = ObjectId(req.query.vendedor)
+
+  if (req.query["folioLineas.modeloCompleto"]) {
+    req.query["folioLineas.modeloCompleto"] = ObjectId(
+      req.query["folioLineas.modeloCompleto"]
+    )
+  }
+  if (req.query.hasOwnProperty("folioLineas.laserado")) {
+    var ob = {}
+
+    const esLaserado = req.query["folioLineas.laserado"]
+
+    if (esLaserado) {
+      ob["$and"] = [
+        {
+          "folioLineas.laserCliente.laser": { $not: { $eq: null } },
+        },
+        {
+          "folioLineas.laserCliente.laser": {
+            $exists: true,
+          },
+        },
+      ]
+    } else {
+      ob["$and"] = [
+        {
+          "folioLineas.laserCliente.laser": { $eq: null },
+        },
+        {
+          "folioLineas.laserCliente.laser": {
+            $exists: false,
+          },
+        },
+      ]
+    }
+
+    req.query = { ...req.query, ...ob }
+
+    delete req.query["folioLineas.laserado"]
+  }
+
+  //Separam que aplican a los filtros por que
+  // asi podemos retornar todo mas limpio como pedidos.
+
+  var $folio = null
+  var $pedido = null
+
+  Object.keys(req.query).forEach(x => {
+    if (x.includes("folioLineas.") || x.includes("$and")) {
+      if (!$pedido) $pedido = { $match: {} }
+      $pedido.$match[x] = req.query[x]
+    } else {
+      if (!$folio) $folio = { $match: {} }
+      $folio.$match[x] = req.query[x]
+    }
+  })
+
+  var agg = []
+
+  if ($folio) agg.push($folio)
+  agg.push({
+    $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true },
+  })
+  if ($pedido) agg.push($pedido)
+
+  agg = agg.concat([
+    { $unset: "folioLineas.ordenes" },
+    {
+      $project: {
+        idFolio: "$_id",
+        idPedido: "$folioLineas._id",
+        folio: "$numeroDeFolio",
+        idCliente: "$cliente",
+        idVendedor: "$vendedor",
+        idSKU: "$folioLineas.modeloCompleto",
+        fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+        fechaTerminadoFolio: "$fechaTerminado",
+        fechaTerminadoPedido: "$folioLineas.fechaTerminado",
+        cantidadProducidaFolio: "$cantidadProducida",
+        porcentajeAvanceFolio: "$porcentajeAvance",
+        //Datos sobre el pedido
+        pedido: "$folioLineas.pedido",
+        laserCliente: "$folioLineas.laserCliente.laser",
+
+        porcentajeAvancePedido: "$folioLineas.porcentajeAvance",
+        cantidadProducidaPedido: "$folioLineas.cantidadProducida",
+
+        cantidadSolicitadaPedido: "$folioLineas.cantidad",
+      },
+    },
+    { $unset: "_id" },
+    // <!--
+    // =====================================
+    //  Cliente
+    // =====================================
+    // -->
+    {
+      $lookup: {
+        from: "clientes",
+        foreignField: "_id",
+        localField: "idCliente",
+        as: "cliente",
+      },
+    },
+    { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
+
+    { $addFields: { cliente: "$cliente.nombre" } },
+    // <!--
+    // =====================================
+    //  END Cliente
+    // =====================================
+    // -->
+
+    // <!--
+    // =====================================
+    //  Vendedor
+    // =====================================
+    // -->
+
+    {
+      $lookup: {
+        from: "usuarios",
+        foreignField: "_id",
+        localField: "idVendedor",
+        as: "vendedor",
+      },
+    },
+    { $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true } },
+
+    { $addFields: { vendedor: "$vendedor.nombre" } },
+
+    // <!--
+    // =====================================
+    //  END Vendedor
+    // =====================================
+    // -->
+    // <!--
+    // =====================================
+    //  sku
+    // =====================================
+    // -->
+
+    {
+      $lookup: {
+        from: "modelosCompletos",
+        foreignField: "_id",
+        localField: "idSKU",
+        as: "sku",
+      },
+    },
+    { $unwind: { path: "$sku", preserveNullAndEmptyArrays: true } },
+
+    { $addFields: { laserSKU: "$sku.laserAlmacen.laser" } },
+    { $addFields: { sku: "$sku.nombreCompleto" } },
+
+    // <!--
+    // =====================================
+    //  END Vendedor
+    // =====================================
+    // -->
+  ])
+
+  //Obtenemos el total de elementos filtrados para la paginacion
+  const aggTotal = agg.concat([{ $count: "total" }])
+  const total = await Folio.aggregate(aggTotal).exec()
+
+  agg = agg.concat([
+    //Primera ordeneda para que todo entre bien al limte antes de cortar.
+    // De otra manera cortamos y luego ordenamos dando mal los datos.
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } },
+  ])
+
+  Folio.aggregate(agg)
+    .exec()
+    .then(foliosConsulta => {
+      return RESP._200(res, null, [
+        { tipo: "pedidos", datos: foliosConsulta },
+        { tipo: "total", datos: total[0] ? total[0].total : 0 },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error obteniendo "))
+})
+
+app.get(
+  "/porEntregarAProduccion/:vendedor",
+  permisos.$("folio:porEntregarAProduccion:vendedor"),
+  (req, res) => {
+    Folio.aggregate([
+      {
+        $match: {
+          vendedor: ObjectId(req.params.vendedor),
+          ordenesGeneradas: false,
+          entregarAProduccion: false,
+          terminado: false,
+        },
+      },
+      {
+        $project: {
+          folio: "$numeroDeFolio",
+          cliente: "$cliente",
+          fechaDeCreacion: "$createdAt",
+        },
+      },
+      {
+        $lookup: {
+          from: "clientes",
+          foreignField: "_id",
+          localField: "cliente",
+          as: "cliente",
+        },
+      },
+
+      { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
+      {
+        $addFields: {
+          cliente: "$cliente.nombre",
+          idCliente: "$cliente._id",
+        },
+      },
+    ])
+      .exec()
+      .then(folios => {
+        return RESP._200(res, null, [{ tipo: "folios", datos: folios }])
+      })
+  }
+)
+
+app.put(
+  "/retornarAlVendedor",
+  permisos.$("folio:retornarAlVendedor"),
+  (req, res) => {
+    const id = req.body.id
+
+    Folio.findById(id)
+      .exec()
+      .then(folio => {
+        if (!folio) throw "No existe el folio"
+        if (folio.ordenesGeneradas)
+          throw "Imposible retornar. Las ordenes ya estan generadas"
+        ;(folio.entregarAProduccion = false),
+          (folio.fechaDeEntregaAProduccion = null),
+          folio.folioLineas.forEach(pedido => {
+            pedido.ordenesGeneradas = false
+            pedido.trayectoGenerado = false
+            pedido.porcentajeDeAvance = false
+            pedido.ordenes = []
+          })
+        return folio.save()
+      })
+      .then(respuesta => {
+        return RESP._200(res, "Se retorno el folio al vendedor", [])
+      })
+      .catch(err =>
+        erro(res, err, "Hubo un error retornando el folio al vendedor")
+      )
+  }
+)
 
 /**
  * Senala el folio listo para produccion o no dependiendo de
  * que valor tenga la bandera. que se le pase como parametro.
  *
  */
-app.post("/enviarAProduccion", (req, res) => {
-  let msj = ""
+app.put(
+  "/entregarARevision",
+  permisos.$("folio:entregarARevision"),
+  (req, res) => {
+    Folio.updateOne(
+      { _id: ObjectId(req.body._id) },
+      { entregarAProduccion: true, fechaDeEntregaAProduccion: new Date() }
+    )
+      .exec()
+      .then(respuesta => {
+        if (respuesta.nModified != 1)
+          throw "No se pudo enviar el folio a produccion"
 
-  Folio.findById(req.body._id)
-    .then((folio) => {
-      if (!folio) {
-        return RESP._400(res, {
-          msj: "No existe el folio.",
-          err:
-            "El id que ingresaste no coincide contra ninguno en la base de datos."
-        })
-      }
-
-      if (folio.ordenesGeneradas) {
-        return RESP._400(res, {
-          msj: "Imposible retornar al vendedor.",
-          err:
-            "Este folio ya tiene las ordenes generadas y no puede ser modificado por el vendedor. Es necesario cancerlo y crear uno nuevo."
-        })
-      }
-
-      if (req.body.entregarAProduccion) {
-        folio.entregarAProduccion = true
-        folio.fechaDeEntregaAProduccion = new Date()
-        msj = "Este folio se mando a producir de manera correcta."
-      } else {
-        folio.entregarAProduccion = false
-        folio.fechaDeEntregaAProduccion = null
-        msj = "Se retorno este folio al vendedor."
-      }
-
-      return folio.save()
-    })
-    .then((folioGrabado) => {
-      return RESP._200(res, msj, [{ tipo: "folio", datos: folioGrabado }])
-    })
-    .catch((err) => {
-      return RESP._500(res, {
-        msj: "Hubo un error buscando el folio.",
-        err: err
+        return RESP._200(res, "Folio enviado a produccion", [])
       })
-    })
-})
-
-/**
- * Senala el folio con ordenes impresas.
- */
-app.post("/ordenesImpresas", (req, res) => {
-  Folio.findById(req.body._id)
-    .then((folioEncontrado) => {
-      if (!folioEncontrado) {
-        return RESP._400(res, {
-          msj: "No existe el folio.",
-          err: "El id del folio que ingresaste no existe."
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error buscando el folio.",
+          err: err,
         })
-      }
-      folioEncontrado.impreso = true
-      return folioEncontrado.save()
-    })
-    .then((folioGrabado) => {
-      return RESP._200(res, null, [{ tipo: "folio", datos: folioGrabado }])
-    })
-    .catch((err) => {
-      return RESP._500(res, {
-        msj: "Hubo un error buscando el folio para senalarlo como impreso",
-        err: err
       })
-    })
-})
+  }
+)
 
-/**
- *
- * El filtro general para los folios. No es nesario definir otro, automaticamente
- * toma los datos de los paramentros y hace la busqueda. Si no se definie ninguno
- * retorna todas las coincidencias.
- *
- *
- * Hay que ver todos los paramentros que tiene. Por que si son bastantes.
- *
- */
-app.get("/", (req, res) => {
-  // Obtenemos todos los parametros.
-  let query = req.query
-  // Cargamos los objetos de busqueda para obtener
-  // los parametros que mandamos por el query.
-  let objetoDeBusqueda = {
-    /**
-     * Define si se va a buscar dentro de los folios terminados
-     * o los que todavia estan en produccion.
-     */
-    folioTerminado: query.foliosTerminados,
-    /**
-     * El id del folio que se quiere buscar.
-     */
-    numeroDeFolio: query.folio,
-    /**
-     * El id del pedido que se quiere buscar.
-     */
-    folioLineas_pedido: query.pedido,
-    /**
-     * El id del modelo que se quiere buscar.
-     */
-    folioLineas_modelo: query.modelo,
-    /**
-     * El id del tamano que se quiere buscar.
-     */
-    folioLineas_tamano: query.tamano,
-    /**
-     * El id del color que se quiere buscar.
-     */
-    folioLineas_color: query.color,
-    /**
-     * El id del terminado que se quiere buscar.
-     */
-    folioLineas_terminado: query.terminado,
-    /**
-     * El id del cliente
-     */
-    cliente: query.cliente,
-    /**
-     * El id del vendedor.
-     */
-    vendedor: query.vendedor,
-    /**
-     * La cantidad de registros que se van a mostrar.
-     */
-    limite: query.limite | 5,
-    /**
-     * Cantidad de resgistros que se va a saltar. Se usa con skip.
-     */
-    desde: query.desde | 0,
-    // fechas
-    /**
-     * La fecha de creacion desde donde se va a empezar a filtrar.
-     */
-    fechaCreacionDesdeEl: query.fechaCreacionDesdeEl,
-    /**
-     * La fecha de creacion hasta la cual se va a filtrar.
-     */
-    fechaCreacionHasta: query.fechaCreacionHasta,
-    /**
-     * La fecha de entrega estimada desde donde se va a empezar a filtrar.
-     */
-    fechaEntregaEstimadaDesdeEl: query.fechaEntregaEstimadaDesdeEl,
-    /**
-     * La fecha de entrega hasta la cual se va a filtrar.
-     */
-    fechaEntregaEstimadaHasta: query.fechaEntregaEstimadaHasta,
-    /**
-     * La fecha de finalizacion desde donde se va a empezar a filtrar.
-     */
-    fechaFinalizacionFolioDesdeEl: query.fechaFinalizacionFolioDesdeEl,
-    /**
-     * La fecha de finalizacion hasta la cual se va a filtrar.
-     */
-    fechaFinalizacionFolioHasta: query.fechaFinalizacionFolioHasta,
-    /**
-     * Los campos para ordenar. Se utiliza la notacioin tipo campo1>-1@campo2>1
-     */
-    sortCampos: query.sortCampos,
-    /**
-     * Define si se muestran los folios con ordenes generadas o no.
-     */
-    ordenesGeneradas: query.ordenesGeneradas,
-    /**
-     * Filtra los folios que ya fueron entregados por los vendedores a produccion.
-     */
-    entregarAProduccion: query.entregarAProduccion,
-    /**
-     * La fecha de entrega a produccion desde donde se va a empezar a filtrar.
-     */
-    fechaDeEntregaAProduccionDesdeEl: query.fechaDeEntregaAProduccionDesdeEl,
-    /**
-     * La fecha de entrega a produccion hasta donde se va a filtrar.
-     */
-    fechaDeEntregaAProduccionHasta: query.fechaDeEntregaAProduccionHasta
+app.put(
+  "/liberarParaProduccion",
+  permisos.$("folio:liberarParaProduccion"),
+  (req, res) => {
+    const procesosFijos = {
+      procesosIniciales: [],
+      procesosInicialesAlmacen: [],
+      procesosFinales: [],
+    }
+
+    Promise.all([
+      Proceso.find({
+        _id: { $in: req.parametros.localizacionDeOrdenes.procesosIniciales },
+      }).exec(),
+      Proceso.find({
+        _id: {
+          $in: req.parametros.localizacionDeOrdenes.procesosInicialesAlmacen,
+        },
+      }).exec(),
+      Proceso.find({
+        _id: { $in: req.parametros.localizacionDeOrdenes.procesosFinales },
+      }).exec(),
+    ])
+      .then(respuesta => {
+        //Asignamos los procesos
+        procesosFijos.procesosIniciales = respuesta[0]
+        procesosFijos.procesosInicialesAlmacen = respuesta[1]
+        procesosFijos.procesosFinales = respuesta[2]
+
+        return Folio.findById(req.body._id).exec()
+      })
+
+      .then(folio => {
+        if (!folio) throw "No existe el folio"
+
+        var contadorPedido = 0
+        //Vamos a hacer todas las modificaciones aqui.
+        folio.folioLineas.forEach(pedidoBD => {
+          //Obtenemos el pedido que corresponda
+          // al gui contra el pedido en la BD
+          const pedidoGUI = req.body.folioLineas.find(
+            p => p._id.toString() === pedidoBD._id.toString()
+          )
+          pedidoBD.pedido = folio.numeroDeFolio + "-" + contadorPedido
+          contadorPedido++
+
+          //Aqui hacemos todas las operaciones.
+          generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos)
+        })
+
+        folio.ordenesGeneradas = true
+
+        return folio.save()
+      })
+      .then(folio => {
+        return RESP._200(res, "El folio esta en produccion", [
+          { tipo: "folio", datos: folio },
+        ])
+      })
+
+      .catch(err => {
+        return RESP._500(res, {
+          msj: "Hubo un error buscando el folio.",
+          err: err,
+        })
+      })
+  }
+)
+
+function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
+  // Asignamos generales
+  pedidoBD.observaciones = pedidoGUI.observaciones
+  pedidoBD.ordenesGeneradas = true
+  const procesosAUsar = pedidoGUI.ususarProcesosExtraordinarios
+    ? pedidoGUI.procesosExtraordinarios
+    : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
+
+  if (pedidoGUI.almacen) {
+    procesosAUsar.unshift(...procesosFijos.procesosInicialesAlmacen)
+  } else {
+    procesosAUsar.unshift(...procesosFijos.procesosIniciales)
   }
 
-  // Eliminar vacios
-  let keys = Object.keys(objetoDeBusqueda)
-  // Quitamos todos los parametros de los cuales
-  // no se recivio nada. Nos brincamos el primer
-  // parametro (foliosTermianados) por que al ser un boleano lo mandamos
-  // a volar siempre que sea false
+  procesosAUsar.push(...procesosFijos.procesosFinales)
+
+  //Copiamos las ordenes
+  var contador = 0
+  pedidoGUI.ordenes.forEach(ordenGUI => {
+    //Inicializamos la ruta para que no nos marque undefined
+    ordenGUI.ruta = []
+
+    ordenGUI.modeloCompleto = pedidoBD.modeloCompleto
+    ordenGUI.pedido = pedidoBD.pedido
+    ordenGUI.orden = pedidoBD.pedido + "-" + contador
+    ordenGUI.numeroDeOrden = contador
+
+    var actual = true
+    var consecutivo = 0
+    procesosAUsar.forEach(p => {
+      const estructuraBasica = {
+        idProceso: p._id.toString(),
+        idDepartamento: p.departamento._id.toString(),
+        entrada: null,
+        salida: null,
+        recibida: false,
+        recepcion: null,
+        ubicacionActual: actual,
+        consecutivo: consecutivo,
+        datos: {},
+      }
+
+      ordenGUI.ruta.push(estructuraBasica)
+      console.log("ordenGUI.ruta", ordenGUI.ruta)
+      // throw 'Parale a tu tren'
+      actual = false
+      consecutivo++
+    })
+
+    contador++
+
+    pedidoBD.ordenes.push(ordenGUI)
+  })
+}
+
+app.put("/aplicarActualizacionDeOrdenes", (req, res, next) => {
+  Folio.find({})
+    .exec()
+    .then(folios => {
+      folios.map(folio => generarCambios(folio))
+
+      return Promise.all(folios)
+    })
+    .then(folios => {
+      return res.send("Se actualizaron " + folios.length + " folios")
+    })
+    .catch(err => next(err))
+})
+
+function generarCambios(folio) {
+  folio.folioLineas.forEach(pedido => {
+    if (!pedido.modeloCompleto) return
+
+    const procesosAUsar = pedido.modeloCompleto.familiaDeProcesos.procesos.map(
+      x => x.proceso
+    )
+    pedido.ordenes.forEach(orden => {
+      //Inicializamos la ruta para que no nos marque undefined
+      orden["ruta"] = []
+
+      var consecutivo = 0
+      procesosAUsar.forEach(p => {
+        const estructuraBasica = {
+          idProceso: p._id.toString(),
+          idDepartamento: p.departamento._id.toString(),
+          entrada: null,
+          salida: null,
+          recibida: false,
+          recepcion: null,
+          ubicacionActual: orden.ubicacionActual
+            ? orden.ubicacionActual.orden == consecutivo
+            : false,
+          consecutivo: consecutivo,
+          datos: {},
+        }
+
+        obtenerDatosDeTrayectoRecorrido(orden, consecutivo, estructuraBasica)
+
+        if (orden.ubicacionActual)
+          obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica)
+
+        orden["ruta"].push(estructuraBasica)
+
+        consecutivo++
+      })
+    })
+  })
+
+  return folio.save()
+}
+
+function obtenerDatosDeTrayectoRecorrido(orden, consecutivo, estructuraBasica) {
+  //si hay menos de trayecto recorrido quiere decir que no hay ningun dato
+  // a tomar en cuenta, por lo tanto no es necesario que hagamos ninguna
+  // modificacion
+  if (orden.trayectoRecorrido.length - 1 < consecutivo) {
+    return estructuraBasica
+  }
+  const trayecto = orden.trayectoRecorrido[consecutivo]
+
+  // Si hay trayectos recorridos copiamos todos los datos
+  estructuraBasica.entrada = trayecto.entrada
+  estructuraBasica.salida = trayecto.salida
+  estructuraBasica.recibida = trayecto.recivida
+  estructuraBasica.recepcion = trayecto.recepcion
+  // estructuraBasica.ubicacionActual = trayecto.
+  // estructuraBasica.consecutivo = trayecto.
+  estructuraBasica.datos = copiarDatos(trayecto)
+}
+
+function copiarDatos(trayecto) {
+  var keys = [
+    "controlDeProduccion",
+    "materiales",
+    "pastilla",
+    "transformacion",
+    "pulido",
+    "seleccion",
+    "empaque",
+    "productoTerminado",
+    "metalizado",
+    "barnizado",
+    "burato",
+    "laser",
+    "almacenDeBoton",
+    "tenido",
+  ]
+
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i]
-    if (objetoDeBusqueda[key] === undefined) {
-      delete objetoDeBusqueda[key]
-    }
+
+    if (trayecto[key]) return trayecto[key]
   }
 
-  /**
-   * Este arreglo contiene los diferentes pasos de filtro del aggregate.
-   */
-  let arregloRedact = []
+  return null
+}
 
-  let arregloAnd = []
+function obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica) {
+  const ubicacionActual = orden.ubicacionActual
 
-  if (objetoDeBusqueda.ordenesGeneradas) {
-    arregloAnd.push({
-      ordenesGeneradas:
-        objetoDeBusqueda.ordenesGeneradas == 1
-          ? true
-          : objetoDeBusqueda.ordenesGeneradas == 0
-          ? false
-          : false
-    })
-  }
+  if (ubicacionActual.orden != consecutivo) return
 
-  if (objetoDeBusqueda.entregarAProduccion) {
-    arregloAnd.push({
-      entregarAProduccion:
-        query.entregarAProduccion == 1
-          ? true
-          : query.entregarAProduccion == 0
-          ? false
-          : false
-    })
-  }
+  estructuraBasica.recibida = ubicacionActual.recivida
+  estructuraBasica.recepcion = ubicacionActual.recepcion
+  estructuraBasica.entrada = ubicacionActual.entrada
+}
 
-  if (objetoDeBusqueda.folioTerminado) {
-    let conversion =
-      objetoDeBusqueda.folioTerminado == "0"
-        ? false
-        : objetoDeBusqueda.folioTerminado === "1"
-        ? true
-        : -1
+app.get("/ordenes/:idDepartamento", async (req, res, next) => {
+  Departmento.findById(req.params.idDepartamento)
+    .exec()
+    .then(dep => {
+      if (!dep) throw "No existe el departamento"
 
-    if (conversion === -1) {
-      throw `El valor del filtro para folios terminados no es valido val:(${
-        objetoDeBusqueda.folioTerminado
-      })`
-    }
-    arregloAnd.push({ terminado:  conversion })
-  }
-
-  if (arregloAnd.length > 0)
-    arregloRedact.push({ $match: { $and: arregloAnd } })
-
-  // <!--
-  // =====================================
-  //  Filtros de fechas
-  // =====================================
-  // -->
-
-  // fechaDeEntregaAProduccion
-  if (
-    objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionDesdeEl") ||
-    objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionHasta")
-  ) {
-    /**
-     * Guarda la construccion para la busqueda de la fecha de creacion
-     */
-    let obCreacion = {
-      fechaDeEntregaAProduccion: {
-        $gte: new Date(),
-        $lte: new Date()
-      }
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionDesdeEl")) {
-      obCreacion.fechaFolio.$gte = new Date(
-        objetoDeBusqueda.fechaDeEntregaAProduccionDesdeEl
-      )
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionHasta")) {
-      obCreacion.fechaFolio.$lte = new Date(
-        objetoDeBusqueda.fechaDeEntregaAProduccionHasta
-      )
-    }
-
-    if (!objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionDesdeEl"))
-      delete obCreacion.fechaFolio.$gte
-    if (!objetoDeBusqueda.hasOwnProperty("fechaDeEntregaAProduccionHasta"))
-      delete obCreacion.fechaFolio.$lte
-
-    if (arregloRedact.length > 0) {
-      arregloRedact[0].$match.$and.push(obCreacion)
-    } else {
-      arregloRedact.push({ $match: { $and: [obCreacion] } })
-    }
-  }
-
-  // fechaCreacion
-  if (
-    objetoDeBusqueda.hasOwnProperty("fechaCreacionDesdeEl") ||
-    objetoDeBusqueda.hasOwnProperty("fechaCreacionHasta")
-  ) {
-    /**
-     * Guarda la construccion para la busqueda de la fecha de creacion
-     */
-    let obCreacion = {
-      fechaFolio: {
-        $gte: new Date(),
-        $lte: new Date()
-      }
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaCreacionDesdeEl")) {
-      obCreacion.fechaFolio.$gte = new Date(
-        objetoDeBusqueda.fechaCreacionDesdeEl
-      )
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaCreacionHasta")) {
-      obCreacion.fechaFolio.$lte = new Date(objetoDeBusqueda.fechaCreacionHasta)
-    }
-
-    if (!objetoDeBusqueda.hasOwnProperty("fechaCreacionDesdeEl"))
-      delete obCreacion.fechaFolio.$gte
-    if (!objetoDeBusqueda.hasOwnProperty("fechaCreacionHasta"))
-      delete obCreacion.fechaFolio.$lte
-
-    if (arregloRedact.length > 0) {
-      arregloRedact[0].$match.$and.push(obCreacion)
-    } else {
-      arregloRedact.push({ $match: { $and: [obCreacion] } })
-    }
-  }
-
-  // fechaEntregaEstimada
-  if (
-    objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaDesdeEl") ||
-    objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaHasta")
-  ) {
-    /**
-     * Guarda la construccion para la busqueda de la fecha de creacion
-     */
-    let obCreacion = {
-      fechaEntrega: {
-        $gte: new Date(),
-        $lte: new Date()
-      }
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaDesdeEl")) {
-      obCreacion.fechaEntrega.$gte = new Date(
-        objetoDeBusqueda.fechaEntregaEstimadaDesdeEl
-      )
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaHasta")) {
-      obCreacion.fechaEntrega.$lte = new Date(
-        objetoDeBusqueda.fechaEntregaEstimadaHasta
-      )
-    }
-
-    if (!objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaDesdeEl"))
-      delete obCreacion.fechaEntrega.$gte
-    if (!objetoDeBusqueda.hasOwnProperty("fechaEntregaEstimadaHasta"))
-      delete obCreacion.fechaEntrega.$lte
-
-    if (arregloRedact.length > 0) {
-      arregloRedact[0].$match.$and.push(obCreacion)
-    } else {
-      arregloRedact.push({ $match: { $and: [obCreacion] } })
-    }
-  }
-  // fechaFinalizacionFolio
-  if (
-    objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioDesdeEl") ||
-    objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioHasta")
-  ) {
-    /**
-     * Guarda la construccion para la busqueda de la fecha de creacion
-     */
-    let obCreacion = {
-      fechaTerminado: {
-        $gte: new Date(),
-        $lte: new Date()
-      }
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioDesdeEl")) {
-      obCreacion.fechaTerminado.$gte = new Date(
-        objetoDeBusqueda.fechaFinalizacionFolioDesdeEl
-      )
-    }
-
-    if (objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioHasta")) {
-      obCreacion.fechaTerminado.$lte = new Date(
-        objetoDeBusqueda.fechaFinalizacionFolioHasta
-      )
-    }
-
-    if (!objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioDesdeEl"))
-      delete obCreacion.fechaTerminado.$gte
-    if (!objetoDeBusqueda.hasOwnProperty("fechaFinalizacionFolioHasta"))
-      delete obCreacion.fechaTerminado.$lte
-
-    if (arregloRedact.length > 0) {
-      arregloRedact[0].$match.$and.push(obCreacion)
-    } else {
-      arregloRedact.push({ $match: { $and: [obCreacion] } })
-    }
-  }
-
-  //folio
-  if (objetoDeBusqueda.hasOwnProperty("numeroDeFolio")) {
-    if (isNaN(objetoDeBusqueda.numeroDeFolio))
-      throw "El numero de folio debe ser un numero valido."
-
-    arregloRedact.push({
-      $match: {
-        numeroDeFolio: Number(objetoDeBusqueda.numeroDeFolio)
-      }
-    })
-  }
-
-  // Cliente
-  if (objetoDeBusqueda.hasOwnProperty("cliente")) {
-    arregloRedact.push({
-      $match: { cliente: ObjectId(objetoDeBusqueda.cliente) }
-    })
-  }
-
-  // vendedor
-  if (objetoDeBusqueda.hasOwnProperty("vendedor")) {
-    arregloRedact.push({
-      $match: { vendedor: ObjectId(objetoDeBusqueda.vendedor) }
-    })
-  }
-
-  // Buscamos todas las coincidencias con el pedido y solo dejamos el pedido del folio que coincide.
-  if (objetoDeBusqueda.hasOwnProperty("folioLineas_pedido")) {
-    // Si hay pedido pero no hay numero de folio entones hacemos un match con folioLineas.pedido.
-    // De esta manera
-    if (!objetoDeBusqueda.hasOwnProperty("numeroDeFolio")) {
-      // Si no hay pedido, buscamos que solo coincida contra el pedido de manera
-      // que solo se muestre el folio que contiene el pedido.
-      arregloRedact.push({
-        $match: { "folioLineas.pedido": objetoDeBusqueda.folioLineas_pedido }
-      })
-    }
-
-    arregloRedact.push({
-      // Vamos a filtrar los pedidos que coincidan con el folioLineas_pedido que se paso.
-      $project: {
-        folioLineas: {
-          $filter: {
-            // La nueva propiedad que se va crear para poder traer solo los
-            // pedidos que coincidan.
-            input: "$folioLineas",
-            cond: {
-              $or: [
-                { $eq: ["$$this.pedido", objetoDeBusqueda.folioLineas_pedido] }
-              ]
-            }
-          }
-        },
-
-        // Los campos que si puede retornar project. Si no los especificamos no aparecen.
-        nivelDeUrgencia: true,
-        ordenesGeneradas: true,
-        impreso: true,
-        terminado: true,
-        numeroDeFolio: true,
-        cliente: true,
-        fechaFolio: true,
-        fechaEntrega: true,
-        vendedor: true,
-        observaciones: true,
-        porcentajeAvance: true,
-        cantidadProducida: true
-      }
-    })
-  }
-
-  // <!--
-  // =====================================
-  //  NUEVA SECCION
-  // =====================================
-  // -->
-
-  let $unwind_FolioLineas = [
-    {
-      $unwind: {
-        path: "$folioLineas",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  /**
-   * Requiere $unwind de folioLineas
-   */
-  let $lookUp_ModeloCompleto = [
-    {
-      $lookup: {
-        from: "modelosCompletos",
-        localField: "folioLineas.modeloCompleto",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto"
-      }
-    },
-
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  /**
-   * Requiere $unwind de modeloCompleto
-   */
-  let $unwind_$lookup_modeloTamanoColorTerminado = [
-    // modelo
-    {
-      $lookup: {
-        // Modelo
-        from: "modelos",
-        localField: "folioLineas.modeloCompleto.modelo",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.modelo"
-      }
-    },
-
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.modelo",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $lookup: {
-        from: "tamanos",
-        localField: "folioLineas.modeloCompleto.tamano",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.tamano"
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.tamano",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-
-    {
-      $lookup: {
-        from: "colores",
-        localField: "folioLineas.modeloCompleto.color",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.color"
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.color",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $lookup: {
-        from: "terminados",
-        localField: "folioLineas.modeloCompleto.terminado",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.terminado"
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.terminado",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  /**
-   * Requiere $unwind de folioLineas
-   */
-  let $lookup_FamiliaDeProcesos = [
-    {
-      $lookup: {
-        from: "familiadeprocesos",
-        localField: "folioLineas.modeloCompleto.familiaDeProcesos",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.familiaDeProcesos"
-      }
-    },
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.familiaDeProcesos",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  /**
-   * Requiere $unwind de folioLineas
-   */
-  let $unwind_Ordenes = [
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  let $group_OrdenesPorPedido = [
-    {
-      $group: {
-        _id: "$folioLineas._id",
-        folio: { $first: "$$ROOT" },
-        ordenes: {
-          $push: "$folioLineas.ordenes"
-        }
-      }
-    },
-
-    {
-      $addFields: {
-        "folio.folioLineas.ordenes": "$ordenes"
-      }
-    },
-
-    {
-      $replaceRoot: { newRoot: "$folio" }
-    }
-  ]
-
-  // Deshacemos el arreglo del trayecto normal.
-  let $unwind_Orden_TrayectoNormal = [
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.trayectoNormal",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-  // Deshacemos e arreglo del trayecto recorrido.
-
-  let $unwind_Orden_TrayectoRecorrido = [
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.trayectoRecorrido",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  // Cargamos los departaemtos del trayecto normal
-
-  let $lookUp_Orden_TrayectoNormal_Departamento = [
-    {
-      $lookup: {
-        from: "departamentos",
-        localField: "folioLineas.ordenes.trayectoNormal.departamento",
-        foreignField: "_id",
-        as: "folioLineas.ordenes.trayectoNormal.departamento"
-      }
-    },
-    // Quitamos el arreglo que se hizo en trayecto normal del departamento.
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.trayectoNormal.departamento",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  let $group_Orden_TrayectoNormalAOrden = [
-    // Agrupamos por ordenes para obtener el trayecto.
-    {
-      $group: {
-        _id: {
-          // Se requiere agrupar por estos dos id debido
-          // a que las rutas que esten folioLinas.ordenes._id como undefined
-          // no se agrupan y se pierden esos pedidos.
-          idOrden: "$folioLineas.ordenes._id",
-          idPedido: "$folioLineas._id"
-        },
-        trayectos: { $push: "$folioLineas.ordenes.trayectoNormal" },
-        folio: { $first: "$$ROOT" }
-      }
-    },
-    // Agregamos los trayectos a alas ordenes.
-    {
-      $addFields: {
-        "folio.folioLineas.ordenes.trayectoNormal": "$trayectos"
-      }
-    },
-    {
-      $replaceRoot: { newRoot: "$folio" }
-    }
-  ]
-  
-  let $group_Orden_TrayectoRecorridoAOrden = [
-    // Agrupamos por ordenes para obtener el trayecto.
-    {
-      $group: {
-        _id: {
-          // Se requiere agrupar por estos dos id debido
-          // a que las rutas que esten folioLinas.ordenes._id como undefined
-          // no se agrupan y se pierden esos pedidos.
-          idOrden: "$folioLineas.ordenes._id",
-          idPedido: "$folioLineas._id"
-        },
-        trayectos: { $push: "$folioLineas.ordenes.trayectoRecorrido" },
-        folio: { $first: "$$ROOT" }
-      }
-    },
-    // Agregamos los trayectos a alas ordenes.
-    {
-      $addFields: {
-        "folio.folioLineas.ordenes.trayectoRecorrido": "$trayectos"
-      }
-    },
-    {
-      $replaceRoot: { newRoot: "$folio" }
-    }
-  ]
-
-  // Cargamos los departamentos del trayectoRecorrido
-  let $lookUp_Orden_TrayectoRecorridoDepartamento = [
-    {
-      $lookup: {
-        from: "departamentos",
-        localField: "folioLineas.ordenes.trayectoRecorrido.departamento",
-        foreignField: "_id",
-        as: "folioLineas.ordenes.trayectoRecorrido.departamento"
-      }
-    },
-    // Deshacemos el arreglo que se hizo en trayectorecorrido del departamento
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.trayectoRecorrido.departamento",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  // Cargamos el departamento de ubicacion actual.
-  let $lookUp_Orden_UbicacionActual = [
-    {
-      $lookup: {
-        from: "departamentos",
-        localField: "folioLineas.ordenes.ubicacionActual.departamento",
-        foreignField: "_id",
-        as: "folioLineas.ordenes.ubicacionActual.departamento"
-      }
-    },
-
-    // Deshacemos el arreglo de ubicacion actual.
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.ubicacionActual.departamento",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  // cargamos los departamentos de siguiente departamaneto.
-  let $lookUp_Orden_SiguienteDepartamento = [
-    {
-      $lookup: {
-        from: "departamentos",
-        localField: "folioLineas.ordenes.siguienteDepartamento.departamento",
-        foreignField: "_id",
-        as: "folioLineas.ordenes.siguienteDepartamento.departamento"
-      }
-    },
-    // Deshacemos el arreglo.
-    {
-      $unwind: {
-        path: "$folioLineas.ordenes.siguienteDepartamento.departamento",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  /**
-   * Requiere $unwind de folioLineas
-   */
-  let $unwind_$lookup_familiaDeProcesos_Procesos_Departamentos = [
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-
-    {
-      $lookup: {
-        from: "procesos",
-        localField:
-          "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso"
-      }
-    },
-
-      {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-      
-    {
-      $lookup: {
-        from: "procesos",
-        localField:
-          "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre",
-        foreignField: "_id",
-        as: "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre"
-      }
-    },
-    // Hack para que proceso sea un objeto.
-    {
-      $unwind: {
-        path: "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $unwind: {
-        path:
-          "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    // Cargamos los departamentos
-    {
-      $lookup: {
-        from: "departamentos",
-        localField:
-          "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento",
-        foreignField: "_id",
-        as:
-          "folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento"
-      }
-    },
-    {
-      $lookup: {
-        from: "departamentos",
-        localField:
-          "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento",
-        foreignField: "_id",
-        as:
-          "folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento"
-      }
-    },
-    // Hack para que departamento sea un objeto.
-    {
-      $unwind: {
-        path:
-          "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.proceso.departamento",
-        preserveNullAndEmptyArrays: true
-      }
-    },
-    {
-      $unwind: {
-        path:
-          "$folioLineas.modeloCompleto.familiaDeProcesos.procesos.procesoPadre.departamento",
-        preserveNullAndEmptyArrays: true
-      }
-    }
-  ]
-
-  /**
-   * Agrupa los procesos de familia de procesos. Aqui no se toma en cuenta las
-   * maquinas del procesos por que hasta el momento anaden demasiada complejidad.
-   * para volver a juntar los datos. Entrega  como pedido.
-   */
-  let $group_FamiliaDeProcesos_procesos = [
-    // Agrupamos por pedido
-    {
-      $group: {
-        _id: "$folioLineas._id",
-        folio: { $first: "$$ROOT" },
-        procesos: {
-          $push:
-            "$folioLineas.modeloCompleto.familiaDeProcesos.procesos"
-        }
-      }
-    },
-
-    {
-      $addFields: {
-        "folio.folioLineas.modeloCompleto.familiaDeProcesos.procesos":
-          "$procesos"
-      }
-    },
-
-    {
-      $replaceRoot: { newRoot: "$folio" }
-    }
-  ]
-
-  let $lookup_ClienteYVendedor = [
-    {
-      $lookup: {
-        from: "clientes",
-        localField: "cliente",
-        foreignField: "_id",
-        as: "cliente"
-      }
-    },
-    { $unwind: { path: "$cliente", preserveNullAndEmptyArrays: true } },
-
-    {
-      $lookup: {
-        from: "usuarios",
-        localField: "vendedor",
-        foreignField: "_id",
-        as: "vendedor"
-      }
-    },
-    {
-      // Quitamos el password.
-      $project: { "vendedor.password": 0 }
-    },
-    {
-      // Unimos ahora si todo.
-      $unwind: { path: "$vendedor", preserveNullAndEmptyArrays: true }
-    }
-  ]
-
-  /**Agrupa los pedidos en sus respectivos folios.
-   */
-  let $group_Folios_1 = [
-    // En este punto obtenemos desordenados los pedidos asi 
-    // que creamos un nuevo campo para ordenar por el numero
-    // de pedido, para esto primero lo separamos desde "pedido"
-    {
-      $addFields: {
-        folioLineas: {
-          _ordenarPedido: {
-            // $toInt: { $substrBytes: ["$folioLineas.pedido", 2, 1]}
-            $toInt: {
-              $arrayElemAt : [{ $split: ["$folioLineas.pedido", "-"] }, 1]
-            }
-          }
-        }
-      }
-    },
-
-    
-    // Ordenamos los pedidos en base a su numero. 
-    {
-      $sort: {
-        'folioLineas._ordenarPedido': 1
-      }
-    },
-
-
-    //------------------------------------
-    {
-      $group: {
-        _id: "$_id",
-        folio: { $first: "$$ROOT" },
-        pedidos: { $push: "$folioLineas" }
-      }
-    },
-
-    {
-      $addFields: {
-        "folio.folioLineas": "$pedidos"
-      }
-    },
-    {
-      // Volvemos a la estuctura original .
-      $replaceRoot: { newRoot: "$folio" }
-    }
-  ]
-
-  // ModeloCompleto
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact = arregloRedact.concat($lookUp_ModeloCompleto)
-  arregloRedact = arregloRedact.concat(
-    $unwind_$lookup_modeloTamanoColorTerminado
-  )
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  // Cliente y vendedor
-  arregloRedact = arregloRedact.concat($lookup_ClienteYVendedor)
-  // No se ocupa ningun $group
-
-  // Familia de procesos.
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact = arregloRedact.concat($lookup_FamiliaDeProcesos)
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  // FamiliaDeProcesos.procesos.proceso, departamento,
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact = arregloRedact.concat(
-    $unwind_$lookup_familiaDeProcesos_Procesos_Departamentos
-  )
-  arregloRedact = arregloRedact.concat($group_FamiliaDeProcesos_procesos)//Arreglado
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  // Ordenes Ubicacion Actual y Siguiente departameto
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact = arregloRedact.concat($unwind_Ordenes)
-  arregloRedact = arregloRedact.concat($lookUp_Orden_UbicacionActual)
-  arregloRedact = arregloRedact.concat($lookUp_Orden_SiguienteDepartamento)
-  arregloRedact = arregloRedact.concat($group_OrdenesPorPedido)
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  // // Ordenes | trayectoNormal | Departamento
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact = arregloRedact.concat($unwind_Ordenes)
-  arregloRedact = arregloRedact.concat($unwind_Orden_TrayectoNormal)
-  arregloRedact = arregloRedact.concat(
-    $lookUp_Orden_TrayectoNormal_Departamento
-  )
-  arregloRedact = arregloRedact.concat($group_Orden_TrayectoNormalAOrden)
-  arregloRedact = arregloRedact.concat($group_OrdenesPorPedido)
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  // Ordenes | trayectoReccorrido | Departamento
-
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact = arregloRedact.concat($unwind_Ordenes)
-  arregloRedact = arregloRedact.concat($unwind_Orden_TrayectoRecorrido)
-  arregloRedact = arregloRedact.concat(
-    $lookUp_Orden_TrayectoRecorridoDepartamento
-  )
-  arregloRedact = arregloRedact.concat($group_Orden_TrayectoRecorridoAOrden)
-  arregloRedact = arregloRedact.concat($group_OrdenesPorPedido)
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  arregloRedact = arregloRedact.concat($unwind_FolioLineas)
-  arregloRedact.push(
-    {
-      $project: {
-        folio: "$$ROOT",
-        ordenes: {
-          $filter: {
-            input: "$folioLineas.ordenes",
-            as: "orden",
-            cond: { $ifNull: ["$$orden._id", false] }
-          }
-        }
-      }
-    },
-    {
-      $addFields: {
-        "folio.folioLineas.ordenes": "$ordenes"
-      }
-    },
-    {
-      $replaceRoot: { newRoot: "$folio" }
-    }
-  )
-
-  arregloRedact = arregloRedact.concat($group_Folios_1)
-
-  // <!--
-  // =====================================
-  //  END NUEVA SECCION
-  // =====================================
-  // -->
-
-  /**
-   * Un arreglo que contiene la agrupacion y proyeccion para volver a
-   * la estructura original del folio. Es necesario hacer un concat()
-   * al array arregloRedact para agregar cada uno.
-   */
-  let agruparYProyectarFolio = [
-    {
-      // Una vez que cargamos los datos ahora hay que volver a agrupar. Primero hacemos un grupo
-      // que contenga todos los datos del folio. Este es el id. En este grupo tambien se agregan
-      // Las folio lineas.
-
-      $group: {
-        _id: {
-          _id: "$_id",
-          nivelDeUrgencia: "$nivelDeUrgencia",
-          ordenesGeneradas: "$ordenesGeneradas",
-          impreso: "$impreso",
-          terminado: "$terminado",
-          numeroDeFolio: "$numeroDeFolio",
-          cliente: "$cliente",
-          fechaFolio: "$fechaFolio",
-          fechaEntrega: "$fechaEntrega",
-          vendedor: "$vendedor",
-          observaciones: "$observaciones",
-          observacionesVendedor: "$observacionesVendedor",
-          porcentajeAvance: "$porcentajeAvance",
-          cantidadProducida: "$cantidadProducida",
-          fechaTerminado: "$fechaTerminado",
-          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
-          entregarAProduccion: "$entregarAProduccion"
-        },
-
-        folioLineas: { $push: "$folioLineas" }
-      }
-    },
-
-    // Proyectamos todo para volver a tener la estructura original.
-
-    {
-      $project: {
-        _id: "$_id._id",
-        nivelDeUrgencia: "$_id.nivelDeUrgencia",
-        ordenesGeneradas: "$_id.ordenesGeneradas",
-        impreso: "$_id.impreso",
-        terminado: "$_id.terminado",
-        numeroDeFolio: "$_id.numeroDeFolio",
-        cliente: "$_id.cliente",
-        fechaFolio: "$_id.fechaFolio",
-        fechaEntrega: "$_id.fechaEntrega",
-        vendedor: "$_id.vendedor",
-        observaciones: "$_id.observaciones",
-        observacionesVendedor: "$_id.observacionesVendedor",
-        folioLineas: "$folioLineas",
-        porcentajeAvance: "$_id.porcentajeAvance",
-        cantidadProducida: "$_id.cantidadProducida",
-        fechaTerminado: "$_id.fechaTerminado",
-        fechaDeEntregaAProduccion: "$_id.fechaDeEntregaAProduccion",
-        entregarAProduccion: "$_id.entregarAProduccion"
-      }
-    }
-  ]
-
-  // Como ya tenemos los datos referenciados de modeloCompleto ahora buscamos
-  // por cada uno en particular.
-
-  // Estos dos son necesarios por que hay que convertir el id de un string
-
-  // Si hay alguno de los siguientes dentro del objeto de busqueda aplicamos
-  // el unwind para que no se haga por cada elemento que queremos buscar
-
-  const arregloDeDisparadoresDeUnwind = [
-    "folioLineas_modelo",
-    "folioLineas_tamano",
-    "folioLineas_color",
-    "folioLineas_terminado"
-  ]
-
-  let generarUwind = false
-
-  let llavesActuales = Object.keys(objetoDeBusqueda).join(" ")
-  for (let i = 0; i < arregloDeDisparadoresDeUnwind.length; ++i) {
-    const element = arregloDeDisparadoresDeUnwind[i]
-
-    if (llavesActuales.includes(element)) {
-      generarUwind = true
-      break
-    }
-  }
-
-  if (generarUwind) {
-    // No podemos hacer un match dentro de un arreglo.
-    // Separamos cada linea en sus respectivos objetos.
-    arregloRedact.push({
-      $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true }
-    })
-
-    // Modelo
-    if (objetoDeBusqueda.hasOwnProperty("folioLineas_modelo")) {
-      arregloRedact.push(
-        // Buscamos la coincidencia con el modelo
+      return Folio.aggregate([
         {
           $match: {
-            "folioLineas.modeloCompleto.modelo._id": ObjectId(
-              objetoDeBusqueda.folioLineas_modelo
-            )
-          }
-        }
-      )
-    }
-
-    // tamano
-    if (objetoDeBusqueda.hasOwnProperty("folioLineas_tamano")) {
-      arregloRedact.push(
-        // Buscamos la coincidencia con el tamano
+            ordenesGeneradas: true,
+            terminado: false,
+          },
+        },
+        {
+          $unwind: {
+            path: "$folioLineas",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         {
           $match: {
-            "folioLineas.modeloCompleto.tamano._id": ObjectId(
-              objetoDeBusqueda.folioLineas_tamano
-            )
-          }
-        }
-      )
-    }
-
-    // color
-    if (objetoDeBusqueda.hasOwnProperty("folioLineas_color")) {
-      arregloRedact.push(
-        // Buscamos la coincidencia con el color
+            "folioLineas.terminado": false,
+          },
+        },
+        {
+          $unwind: {
+            path: "$folioLineas.ordenes",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         {
           $match: {
-            "folioLineas.modeloCompleto.color._id": ObjectId(
-              objetoDeBusqueda.folioLineas_color
-            )
-          }
-        }
-      )
-    }
+            "folioLineas.ordenes.terminada": false,
+          },
+        },
 
-    // terminado
-    if (objetoDeBusqueda.hasOwnProperty("folioLineas_terminado")) {
-      arregloRedact.push(
-        // Buscamos la coincidencia con el terminado
+        {
+          $unset: [
+            "folioLineas.ordenes.trayectoNormal",
+            "folioLineas.ordenes.trayectoRecorrido",
+          ],
+        },
+
+        {
+          $addFields: {
+            "folioLineas.ordenes.rutaTemp": "$folioLineas.ordenes.ruta",
+          },
+        },
+        {
+          $unwind: {
+            path: "$folioLineas.ordenes.ruta",
+            includeArrayIndex: "string",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
         {
           $match: {
-            "folioLineas.modeloCompleto.terminado._id": ObjectId(
-              objetoDeBusqueda.folioLineas_terminado
-            )
-          }
-        }
-      )
-    }
+            "folioLineas.ordenes.ruta.idDepartamento":
+              req.params.idDepartamento,
+            "folioLineas.ordenes.ruta.ubicacionActual": true,
+          },
+        },
 
-    // Volvemos a juntar todo
-    arregloRedact = arregloRedact.concat(agruparYProyectarFolio)
-  }
+        {
+          $project: {
+            _id: {
+              estatusDeLaOrden: "$folioLineas.ordenes.ruta.recibida",
+              consecutivo: "$folioLineas.ordenes.ruta.consecutivo",
+              procesoActual: "$folioLineas.ordenes.ruta.idProceso",
+              idProcesoActual: "$folioLineas.ordenes.ruta.idProceso",
+              numeroDeOrden: "$folioLineas.ordenes.orden",
+              fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+              sku: "$folioLineas.ordenes.modeloCompleto",
+              idSKU: "$folioLineas.ordenes.modeloCompleto",
+              laser: "$folioLineas.modeloCompleto",
+              laserAlmacen: "$folioLineas.laserCliente",
+              unidad: "$folioLineas.ordenes.unidad",
+              piezas: "$folioLineas.ordenes.piezas",
+              observaciones: "$folioLineas.ordenes.observaciones",
+              idFolio: "$_id",
+              idPedido: "$folioLineas._id",
+              idOrden: "$folioLineas.ordenes._id",
 
-  // <!--
-  // =====================================
-  //  Sort, Limit & skip
-  // =====================================
-  // -->
-  if (objetoDeBusqueda.hasOwnProperty("sortCampos")) {
-    /**
-     * Los campos por los cuales se puede ordenar.
-     */
-    let camposSorteables = [
-      "nivelDeUrgencia",
-      "ordenesGeneradas",
-      "impreso",
-      "terminado",
-      "numeroDeFolio",
-      "cliente",
-      "fechaFolio",
-      "fechaEntrega",
-      "vendedor",
-      "observaciones",
-      "folioLineas",
-      "fechaDeEntregaAProduccion"
-    ]
-    // Separamos los valores
-    let lv1 = objetoDeBusqueda.sortCampos.split("@")
-
-    for (let i = 0; i < lv1.length; i++) {
-      const ele = lv1[i].toString().trim()
-      const regex = /.*>(-|)1/gm
-      if (!regex.test(ele)) {
-        return RESP._500(res, {
-          msj: "El elemento para ordenar no coincide con el patron aceptado. ",
-          err: `'${ele}' = Patron aceptado => ${regex.toString()}`
-        })
-      }
-    }
-
-    let lv2 = {}
-
-    for (let i = 0; i < lv1.length; i++) {
-      const element = lv1[i]
-      let c = element.split(">")[0]
-      let o = element.split(">")[1]
-
-      lv2[c] = Number(o)
-    }
-
-    let llavesLv2 = Object.keys(lv2)
-
-    let inexistentes = llavesLv2.filter((x) => {
-      return !camposSorteables.join(" ").includes(x)
+              ubicacionActual: "$folioLineas.ordenes.ruta",
+              ruta: "$folioLineas.ordenes.rutaTemp",
+            },
+          },
+        },
+        {
+          $replaceRoot: { newRoot: "$_id" },
+        },
+      ]).exec()
     })
 
-    let t = inexistentes.length
-    if (t > 0) {
-      return RESP._500(res, {
-        msj: `${t > 1 ? "Los campos" : "El campo"} '${inexistentes.join(
-          ", "
-        )}' no ${t > 1 ? "son validos" : "es valido."} `,
-        err: "Es necesario que corrijas el filtro para poder continuar."
-      })
-    }
-
-    arregloRedact.push({ $sort: lv2 })
-  }
-
-  /**
-   * Agregamos los resultados hasta ahora para contarlos y poder paginar.
-   * La idea aqui es agrupar todo bajo un _id null y crear un nueva propiedad
-   * llamada total donde se suman todos los elementos. Despues creamos el paramentro folios
-   * y asigamos el $$ROOT para mantener los datos.
-   */
-  arregloRedact.push({
-    $group: { _id: null, total: { $sum: 1 }, folios: { $push: "$$ROOT" } }
-  })
-
-  /**
-   * Una vez que tenemos el total es necesario restringir la cantidad de elemento que vamos a devolver.
-   * Para eso utilizamos $project...
-   *
-   */
-  arregloRedact.push({
-    $project: {
-      // Este define que si se muestre la propiedad total.
-      total: 1,
-      // Ahora le dicimos que si muetre la propiedad folios pero...
-      folios: {
-        // Primero la vamos a cortar.
-        $slice: [
-          // Le decimos el arreglo que va cortar.
-          "$folios",
-          // Desde donde va a empezar a cortar.
-          Number(objetoDeBusqueda.desde),
-          // Hasta donde va a dejar de cortar.
-          Number(objetoDeBusqueda.limite)
-          // Para estos elememntos previamente ya habiamos
-          // definido que si no llega desde o limite damos
-          // valores por defecto para usar el paginador.
-        ]
-      }
-    }
-  })
-
-  // <!--
-  // =====================================
-  //  END Sort, Limit & skip
-  // =====================================
-  // -->
-
-  let error = (err) => {
-    return RESP._500(res, {
-      msj: "Hubo un error filtrando los folios",
-      err: err
+    .then(folios => {
+      return RESP._200(res, null, [{ tipo: "ordenes", datos: folios }])
     })
-  }
-
-  if (arregloRedact.length === 0) {
-    Promise.all([
-      Folio.find()
-        .limit(objetoDeBusqueda.limite)
-        .skip(objetoDeBusqueda.desde)
-        .exec(),
-      Folio.find()
-        .limit(objetoDeBusqueda.limite)
-        .skip(objetoDeBusqueda.desde)
-        .countDocuments()
-    ])
-      .then((resp) => {
-        return RESP._200(res, null, [
-          { tipo: "folios", datos: resp[0] },
-          { tipo: "total", datos: resp[1] }
-        ])
-      })
-      .catch(error)
-  } else {
-    Folio.aggregate(arregloRedact)
-      .then((folios) => {
-        return RESP._200(res, null, [
-          { tipo: "total", datos: folios[0] ? folios[0].total : 0 },
-          { tipo: "folios", datos: folios[0] ? folios[0].folios : [] }
-        ])
-      })
-      .catch(error)
-  }
+    .catch(_ => next(_))
 })
 
 module.exports = app

@@ -127,14 +127,18 @@ var modeloCompletoSchema = new Schema({
         valildate: [{
             validator: function(v) {
                 return new Promise((resolve) => {
-                    resolve(this.stockMinimo > v)
+                    resolve(this.stockMinimo >= v)
                 })
             },
             msg: "El valor maximo de stock no puede ser menor que el valor minimo de stock"
         }]
     }
 }, { collection: "modelosCompletos" })
-
+/**
+ *
+ *
+ * @param {*} next
+ */
 let generarNombreCompleto = function(next) {
     // Obtenemos los id.
 
@@ -153,8 +157,11 @@ let generarNombreCompleto = function(next) {
             this.nombreCompleto = `${modelo.modelo}-${tamano.tamano}-${color.color}-${terminado.terminado}`
             this.nombreCompleto +=
                 this.laserAlmacen.laser.length > 0 ? "-" + this.laserAlmacen.laser : ""
-            this.nombreCompleto +=
-                this.versionModelo.split("").length > 0 ? "-" + this.versionModelo : ""
+            
+            if( this.versionModelo ){
+                this.nombreCompleto +=
+                    this.versionModelo.split("").length > 0 ? "-" + this.versionModelo : ""
+            }
 
             next()
         })
@@ -280,7 +287,8 @@ modeloCompletoSchema.methods.getCamposParaAlmacen = function() {
 modeloCompletoSchema.statics.guardarLote = function(id, lote) {
     return this.findById( id )
         .exec()
-        .then((modeloCompleto) => {
+        .then((modeloCompleto) =>
+        {
             if (!modeloCompleto) throw "No existe el modelo"
             let mc = asignacionDeLote(modeloCompleto, lote)
 
@@ -309,12 +317,12 @@ function asignacionDeLote(modeloCompleto, lote) {
     }
 
     // Lote existente. Solo le sumamos a la cantidad entrada
-    datos.ultimoLote.existencia += lote.cantidadEntrada
-    datos.ultimoLote.cantidadEntrada += lote.cantidadEntrada
+    datos.ultimoLote.existencia += lote.cantidadEntrada * 1
+    datos.ultimoLote.cantidadEntrada += lote.cantidadEntrada *1
     datos.ultimoLote.entradas.push({
         //  Como ya existe un lote solo registramos la entrada con su
         // respectiva fecha.
-        cantidad: lote.cantidadEntrada,
+        cantidad: lote.cantidadEntrada*1, 
         observaciones: lote.observaciones
     })
 

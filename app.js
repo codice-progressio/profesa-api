@@ -13,18 +13,13 @@ var db = require("./config/db")
 
 var RESP = require("./utils/respStatus")
 
-var defaults = require("./config/defaultData")
 var _ROUTES = require("./config/routes").ROUTES
 
-var _PERMISOS = require("./middlewares/permisos").PERMISOS
-
 /**
- * Este codigo nos permite agregar datos al htttp 
+ * Este codigo nos permite agregar datos al htttp
  * para tenerlos donde sea?
- * 
+ *
  */
-
-const httpContext = require("express-http-context");
 
 // ============================================
 // ENVIROMENT
@@ -38,26 +33,29 @@ var ENVIROMENT = db.enviroment(process.env.NODE_ENV === "production")
 // Inicializar variables.
 var app = express()
 
+app.disable('x-powered-by');
+
 // Esta función nos ayuda a quitar duplicados dentro
 //  del array.
-Array.prototype.unique = (function(a) {
-  return function() {
+Array.prototype.unique = (function (a) {
+  return function () {
     return this.filter(a)
   }
-})(function(a, b, c) {
+})(function (a, b, c) {
   return c.indexOf(a, b + 1) < 0
 })
 
-Array.prototype.greaterThan0 = function(a) {
+Array.prototype.greaterThan0 = function (a) {
   return a.length >= 1
 }
 
 app.use(compression())
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Origin",
-    ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
+    // ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
+    "https://127.0.0.1:4200"
   )
   res.header(
     "Access-Control-Allow-Headers",
@@ -75,8 +73,16 @@ app.use(function(req, res, next) {
 
 //  Body parser
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.json({limit: '50mb'}));
-app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
+app.use(bodyParser.json({ limit: "50mb" }))
+app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }))
+
+//Convierte los valores de los query que se pasan por url
+// en valores. Ej. 'true'=> true, '1000' => 1000
+app.use(require("express-query-auto-parse")())
+
+mongoose.set("useNewUrlParser", true)
+mongoose.set("useUnifiedTopology", true)
+mongoose.set("useCreateIndex", true)
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   // Mensaje de conexion a la base de datos.
   console.log(ENVIROMENT.msj_bienvenida)
@@ -89,86 +95,58 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   console.log(ENVIROMENT.msj_bd_ok)
 })
 
-// // ============================================
-// // Rutas - Middleware PARA SISTEMA CARRDUCI
-// // ============================================
-
-
-
-// Tiene que estar aqui por que segun la documentacion...
-// Note that some popular middlewares (such as body-parser, express-jwt) may 
-// cause context to get lost. To workaround such issues, you are advised to use 
-// any third party middleware that does NOT need the context BEFORE you use 
-// this middleware.
-app.use(httpContext.middleware);
-
-// Obtenemos el token
 app.use((req, res, next) => {
-  // const espera = Math.random() * 2 * 5000
-  // const espera = 0;
-
-//   setTimeout(function() {
-  if (!ENVIROMENT.esModoProduccion)
-  {
+  if (!ENVIROMENT.esModoProduccion) {
     console.log(
       `${new Date()}|` +
         colores.success("PETICION RECIBIDA") +
         colores.danger(req.method) +
         colores.info(req.originalUrl)
     )
-    
   }
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.split(" ")[0] === "Bearer"
-    ) {
-      req.token = req.headers.authorization.split(" ")[1]
-    } else if (req.query && req.query.token) {
-      req.token = req.query.token
-  }
-  httpContext.set("token", req.token );
-    next()
-//   }, espera)
+  next()
 })
 
-// NOTA: EL ORDEN ES IMPORTANTE. Primero hay que ejecutar este middleware.
-app.use(
-  // [_PERMISOS()],
-  (req, res, next) =>
-  {
-    if (!ENVIROMENT.esModoProduccion)
-    {
-      console.log(
-        colores.success("SEGURIDAD") + colores.info(req.originalUrl) + "Validado."
-      )
-    }
-    next()
-  }
-)
-
-
-
-// Luego creamos las routes.
-for (const key in _ROUTES) {
-  if (_ROUTES.hasOwnProperty(key)) {
-    const route = _ROUTES[key]
-    app.use(route.url, route.route)
-  }
-}
+_ROUTES(app)
 
 // Llamamos a los errores.
-app.use(function(req, res) {
+app.use(function (req, res) {
   return RESP._404(res, {
     msj: "La pagina solicitada no existe.",
-    err: "La pagina que solicitaste no existe."
+    err: "La pagina que solicitaste no existe.",
   })
 })
 
-app.use(function(err, req, res) {
+app.use(function (err, req, res, next) {
+  console.log(`err`, err)
+  //Errores de permisos
+  const errores = [
+    //Cuando el token no trae un usuario
+    "user_object_not_found",
+    //No autorizado
+    "permission_denied",
+  ]
+
+  if (errores.includes(err.code)) {
+    return res
+      .status(403)
+      .send(
+        `No tienes permisos para acceder a este contenido: '${req.permisoSolicitado}'`
+      )
+  }
+
+  if (err.code === "invalid_token") {
+    return res.status(401).send("Token invalido. Inicia sesion de nuevo")
+  }
+
+  if (err.code === "credentials_required") {
+    return res.status(401).send("Es necesario loguearte")
+  }
+
   return RESP._500(res, {
     msj: "Hubo un error.",
-    err: err
+    err: err,
   })
 })
 
@@ -192,25 +170,23 @@ if (ENVIROMENT.esModoProduccion) {
     .createServer(
       {
         key: fs.readFileSync("certificado/api.192.168.1.149.key"),
-        cert: fs.readFileSync("certificado/api.192.168.1.149.crt")
+        cert: fs.readFileSync("certificado/api.192.168.1.149.crt"),
       },
       app
     )
     .listen(ENVIROMENT.port, () => {
       console.log(ENVIROMENT.msj_mongoose_ok)
-      defaults()
     })
 } else {
   https
     .createServer(
       {
-        key: fs.readFileSync("certificado/api.localhost.key"),
-        cert: fs.readFileSync("certificado/api.localhost.crt")
+        key: fs.readFileSync("certificado/desarrollo.key"),
+        cert: fs.readFileSync("certificado/desarrollo.crt"),
       },
       app
     )
     .listen(ENVIROMENT.port, () => {
       console.log(ENVIROMENT.msj_mongoose_ok)
-      defaults()
     })
 }

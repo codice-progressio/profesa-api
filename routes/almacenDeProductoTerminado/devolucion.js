@@ -3,9 +3,10 @@ let app = express();
 let RESP = require('../../utils/respStatus');
 var ModeloCompleto = require('../../models/modeloCompleto');
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
 
-
-app.post('/', (req, res) => {
+app.post('/', permisos.$('almacenDeProductoTerminado:devolucion'), (req, res) => {
     /*
      * El id del modelo completo del cual se va a guardar sus datos. 
      */

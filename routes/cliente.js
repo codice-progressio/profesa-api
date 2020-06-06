@@ -1,182 +1,156 @@
 //Esto es necesario
-var express = require("express");
-var Cliente = require("../models/cliente");
-var colores = require("../utils/colors");
-var MarcaLaser = require("../models/marcaLaser");
-var RESP = require('../utils/respStatus');
-var ModeloCompleto = require('../models/modeloCompleto');
-var Usuario = require('../models/usuario');
+var express = require("express")
+var Cliente = require("../models/cliente")
+var RESP = require("../utils/respStatus")
+var ModeloCompleto = require("../models/modeloCompleto")
+var Usuario = require("../models/usuario")
 
-var app = express();
+var app = express()
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../config/permisos.config')
 
-var CRUD = require('../routes/CRUD');
-CRUD.app = app;
-CRUD.modelo = Cliente;
-CRUD.nombreDeObjetoSingular = 'cliente';
-CRUD.nombreDeObjetoPlural = 'clientes';
-CRUD.campoSortDefault = 'nombre';
-CRUD.camposActualizables = {
-    sae: null,
-    nombre: null,
-    laserados: null,
-    modelosCompletosAutorizados: null,
-};
+const erro = (res, err, msj) => {
+  return RESP._500(res, {
+    msj: msj,
+    err: err
+  })
+}
 
+app.post("/", permisos.$('cliente:crear'), (req, res) => {
+  return new Cliente(req.body)
+    .save()
+    .then(cliente => {
+      return RESP._200(res, "Se guardo el cliente", [
+        { tipo: "cliente", datos: cliente }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error guardando el cliente"))
+})
+app.get("/", permisos.$('cliente:leer:todo'), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "nombre")
 
+  const total = await Cliente.countDocuments().exec()
 
-CRUD.camposDeBusqueda = [
-    'nombre',
-    'sae',
-    'laserados.laser',
-];
+  Cliente.find()
+    .sort({ [campo]: sort })
+    .limit(limite)
+    .skip(desde)
+    .exec()
+    .then(cliente => {
+      return RESP._200(res, null, [
+        { tipo: "clientes", datos: cliente },
+        { tipo: "total", datos: total }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los clientes"))
+})
 
-CRUD.crud();
+app.get("/:id", permisos.$('cliente:leer:id'), (req, res) => {
+  Cliente.findById(req.params.id)
+    .exec()
+    .then(cliente => {
+      if (!cliente) throw "No existe el id"
 
+      return RESP._200(res, null, [{ tipo: "cliente", datos: cliente }])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando el cliente por su id"))
+})
 
-// ============================================
-// Busca una marca laser del cliente por id de la misma. 
-// ============================================
-// El id de la marca embebida. 
+app.get("/buscar/:termino", permisos.$('cliente:leer:termino'), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "nombre")
+  const termino = String(
+    req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const b = campo => ({
+    [campo]: { $regex: termino, $options: "i" }
+  })
 
-app.get('/laser/:idLaser', (req, res, next) => {
-    const id = req.params.idLaser;
-    Cliente.findOne({ laserados: { $elemMatch: { _id: id } } }).exec()
-        .then(clienteEncontrado => {
-            if (!clienteEncontrado) {
-                return RESP._400(res, {
-                    msj: 'No hubo coincidencias para la marca laser.',
-                    err: 'El id de la marca laser que ingresaste no existe.',
-                });
-            }
-            return RESP._200(res, null, [
-                { tipo: 'marcaLaser', datos: clienteEncontrado.laserados.id(id) },
-            ]);
+  const $match = {
+    $or: []
+  }
 
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error buscando la marca laser.',
-                err: err,
-            });
-        });
+  ;["nombre", "sae"].forEach(x => $match.$or.push(b(x)))
 
-});
+  const total = await Cliente.aggregate([
+    { $match },
+    { $count: "total" }
+  ]).exec()
 
-// // ============================================
-// // Agregar una marca laser al cliente.
-// // ============================================
+  Cliente.aggregate([
+    { $match },
 
-app.put("/laser/:idCliente", (req, res) => {
-    var idCliente = req.params.idCliente;
+    //Fin de populacion
 
-    var marcaLaser = req.body.laser;
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } }
+  ])
+    .exec()
+    .then(clientes => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error.
+      if (!total.length) total.push({ total: 0 })
 
-    Cliente.findById(idCliente).exec()
-        .then(clienteEncontrado => {
-            if (!clienteEncontrado) {
-                return RESP._400(res, {
-                    msj: 'El cliente no existe',
-                    err: 'El id que ingresaste no coincide contra ningun cliente.',
-                });
-            }
+      return RESP._200(res, null, [
+        { tipo: "clientes", datos: clientes },
+        { tipo: "total", datos: total.pop().total }
+      ])
+    })
+    .catch(err =>
+      erro(
+        res,
+        err,
+        "Hubo un error buscando los clientes por el termino " + termino
+      )
+    )
+})
 
-            clienteEncontrado.laserados.push({
-                laser: marcaLaser
-            });
-            return clienteEncontrado.save();
-        }).then(clienteGuardado => {
-            return RESP._200(res, 'Se agrego la marca laser correctamente.', [
-                { tipo: 'cliente', datos: clienteGuardado },
-            ]);
+app.delete("/:id", permisos.$('cliente:eliminar'),(req, res) => {
+  Cliente.findById(req.params.id)
+    .exec()
+    .then(cliente => {
+      if (!cliente) throw "No existe el cliente"
 
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error agregando la marca laser al cliente.',
-                err: err,
-            });
-        });
+      return cliente.remove()
+    })
+    .then(cliente => {
+      return RESP._200(res, "Se elimino de manera correcta", [
+        { tipo: "cliente", datos: cliente }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el cliente"))
+})
 
+app.put("/", permisos.$('cliente:modificar'), (req, res) => {
+  Cliente.findById(req.body._id)
+    .exec()
+    .then(cliente => {
+      if (!cliente) throw "No existe el cliente"
+      
+        ;["sae", "nombre", "laserados"].forEach(x => (cliente[x] = req.body[x]))
 
-});
-
-// ============================================
-// Hace una peticion de agregar un modelo a un cliente. 
-// ============================================
-app.put("/solicitarAutorizacion/modeloCompleto/:idCliente", (req, res, next) => {
-    // Comprobamos que el usuario y el modelo existan
-    const idCliente = req.params.idCliente;
-    Promise.all([
-            ModeloCompleto.findById(req.body.modeloCompleto).exec(),
-            Usuario.findById(req.body.usuarioQueSolicitaAutorizacion).exec(),
-            Cliente.findById(idCliente).exec()
-        ])
-        .then(respuestas => {
-            const modeloCompleto = respuestas[0];
-            const usuario = respuestas[1];
-            const cliente = respuestas[2];
-            if (!modeloCompleto) {
-                return RESP._400(res, {
-                    msj: 'No existe el modelo completo.',
-                    err: 'El id que ingresaste no existe.',
-
-                });
-            }
-
-            if (!usuario) {
-                return RESP._400(res, {
-                    msj: 'No existe el usuario.',
-                    err: 'El id que ingresaste no existe.',
-                });
-            }
-
-            if (!cliente) {
-                return RESP._400(res, {
-                    msj: 'El cliente no existe.',
-                    err: 'El id que ingresaste no existe.',
-                });
-            }
-
-            const existe = cliente.modelosCompletosAutorizados.find(x => {
-                console.log(x.modeloCompleto.id + '' + modeloCompleto._id.toString())
-                return x.modeloCompleto.id === modeloCompleto._id.toString();
-            });
-            if (existe) {
-                return RESP._400(res, {
-                    msj: existe.autorizado ? 'Modelo autorizado' : 'Autorizacion pendiente.',
-                    err: existe.autorizado ? 'Este modelo ya fue autorizado para este cliente.' : 'La solicitud ya esta echa pero aun no se autoriza.',
-                });
-            }
-
-            // Modificamos el cliente
-            cliente.modelosCompletosAutorizados.push({
-                modeloCompleto: modeloCompleto._id,
-                usuarioQueSolicitaAutorizacion: usuario._id,
-                autorizacionSolicitada: true
-            });
-
-            return cliente.save();
-        })
-        .then(clienteGrabado => {
-            return RESP._200(res, 'Se realizo la solicitud para este cliente', [
-                { tipo: 'cliente', datos: clienteGrabado },
-            ]);
-
-        })
-        .catch(err => {
-            return RESP._500(res, {
-                msj: 'Hubo un error solicitando la autorizacion.',
-                err: err,
-            });
-        });
+      return cliente.save()
+    })
+    .then(cliente => {
+      return RESP._200(res, "Se modifico correctamente", [
+        { tipo: "cliente", datos: cliente }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error actualizando el cliente"))
+})
 
 
-});
 
-// ============================================
-// END Hace una peticion de agregar un modelo a un cliente. 
-// ============================================
+
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
-module.exports = app;
+module.exports = app

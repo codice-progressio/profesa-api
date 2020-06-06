@@ -10,7 +10,7 @@ var seleccionSchema = new Schema({
     seleccionadoPor: {
         type: Schema.Types.ObjectId,
         ref: 'Usuario',
-        required: [() => { return this.guardar; }, 'Es obligatorio definir quien seleccionó.']
+        
     },
 
     /** 

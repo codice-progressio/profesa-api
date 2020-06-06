@@ -3,11 +3,13 @@ let app = express()
 let RESP = require("../../utils/respStatus")
 let ModeloCompleto = require("../../models/modeloCompleto")
 
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
 /**
  * Guarda una nueva salida en en el lote
  * que se le especifique.
  */
-app.post("/", (req, res) => {
+app.post("/", permisos.$('almacenDeProductoTerminado:salida'), (req, res) => {
   /**
    * El id del modelo completo del cual se va a guardar sus datos.
    */

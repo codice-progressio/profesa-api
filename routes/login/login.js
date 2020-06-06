@@ -10,75 +10,78 @@ const RESP = require("../../utils/respStatus")
 
 // Google
 
-const mdAutenticacion = require("../../middlewares/autenticacion")
 const pjson = require("../../package.json")
 
 const obtenerMenu = require("./login.menus")
 
-// ============================================
-// Autenticación de google.
-// ============================================
+var guard = require("express-jwt-permissions")()
+var permisos = require("../../config/permisos.config")
 
-app.get("/renuevatoken", mdAutenticacion.verificarToken, (req, res) => {
-  var token = jwt.sign({ usuario: req.usuario }, SEED, { expiresIn: 14400 })
-
-  return res.status(200).send({
-    ok: true,
-    token: token
+function crearToken(usuario) {
+  return jwt.sign({ ...usuario }, SEED, {
+    //Una hora 3600
+    expiresIn: 3600*2,
   })
+}
+
+app.post("/renuevatoken", (req, res) => {
+  Usuario.findById(req.user._id)
+    .select('+passsword')
+    .lean()
+    .exec()
+    .then(usuario => {
+      if (!usuario) throw "No se renovo la sesion"
+
+      let token = crearToken(usuario)
+      return RESP._200(res, "Se renovo la sesion", [
+        { tipo: "token", datos: token },
+      ])
+    })
+    .catch(err => {
+      return RESP._500(res, {
+        msj: "Hubo un error en el login.",
+        err: err,
+      })
+    })
 })
 
 app.post("/", (req, res) => {
   var body = req.body
   Usuario.findOne({ email: body.email })
+    .select('+password')
+    .lean()
     .exec()
-    .then((usuarioDB) => {
-      if (!usuarioDB) {
-        return RESP._400(res, {
-          msj: "Credencianles incorrectas",
-          err: "No se pudo loguear."
-        })
-      }
+    .then(usuarioDB => {
+      if (!usuarioDB) throw "Credenciales incorrectas"
 
-      if (!body.password) {
-        return RESP._400(res, {
-          msj: "El password no debe estar vacio.",
-          err: "Parece que olvidaste escribir el password."
-        })
-      }
+      if (!body.password) throw "El password no debe estar vacio."
 
-      if (!bcrypt.compareSync(body.password, usuarioDB.password)) {
-        return RESP._400(res, {
-          msj: "Credencianles incorrectas",
-          err: "No se pudo loguear."
-        })
-      }
+      if (!bcrypt.compareSync(body.password, usuarioDB.password))
+        throw "Credenciales incorrectas"
 
       // crear un token!
-      usuarioDB.password = ":D"
-      var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 })
+      delete usuarioDB.password
+      var token = crearToken(usuarioDB)
 
       return RESP._200(res, `Bienvenido ${usuarioDB.nombre}`, [
         { tipo: "usuario", datos: usuarioDB },
         { tipo: "token", datos: token },
         { tipo: "id", datos: usuarioDB.id },
-        { tipo: "menu", datos: obtenerMenu(usuarioDB.role) },
-        { tipo: "apiVersion", datos: pjson.version }
+        { tipo: "menu", datos: obtenerMenu(usuarioDB.permissions) },
+        { tipo: "apiVersion", datos: pjson.version },
       ])
     })
-    .catch((err) => {
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error en el login.",
-        err: err
+        err: err,
       })
     })
 })
 
 // Retorna todos los roles que hay en la api.
-app.get("/roles", (req, res) => {
-  let roles = CONST.ROLES
-
-  RESP._200(res, null, [{ tipo: "roles", datos: roles }])
+app.get("/permisos", permisos.$("SUPER_ADMIN"), (req, res) => {
+  RESP._200(res, null, [{ tipo: "permisos", datos: permisos.lista }])
 })
 
 module.exports = app

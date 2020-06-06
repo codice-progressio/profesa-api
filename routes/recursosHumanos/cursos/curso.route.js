@@ -4,36 +4,167 @@ var app = express()
 var Curso = require("../../../models/recursosHumanos/cursos/curso.model")
 const RESP = require("../../../utils/respStatus")
 
-var CRUD = require("../../CRUD")
-CRUD.app = app
-CRUD.modelo = Curso
-CRUD.nombreDeObjetoSingular = "curso"
-CRUD.nombreDeObjetoPlural = "cursos"
-CRUD.campoSortDefault = "nombre"
-CRUD.camposActualizables = {
-  nombre: null,
-  fechaDeCurso: null,
-  duracion: null,
-  instructor: null,
-  descripcionDeCurso: null,
-  esCursoDeTroncoComun: null,
-  esCursoDeEspecializacion: null
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../../config/permisos.config')
+
+const erro = (res, err, msj) => {
+  return RESP._500(res, {
+    msj: msj,
+    err: err
+  })
 }
 
-CRUD.camposDeBusqueda = ["nombre", "instructor", "descripcionDeCurso"]
+app.post("/", permisos.$('curso:crear'), (req, res) => {
+  return new Curso(req.body)
+    .save()
+    .then(curso => {
+      return RESP._200(res, "Se guardo el curso", [
+        { tipo: "curso", datos: curso }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error guardo el curso"))
+})
 
-CRUD.crud()
+app.get("/", permisos.$('curso:leer:todo'), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "nombre")
 
-app.get("/tipoDeCurso/troncoComun", (req, res) => {
+  const total = await Curso.countDocuments().exec()
+
+  Curso.find()
+    .sort({ [campo]: sort })
+    .limit(limite)
+    .skip(desde)
+    .exec()
+    .then(cursos => {
+      return RESP._200(res, null, [
+        { tipo: "cursos", datos: cursos },
+        { tipo: "total", datos: total }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando las cursos"))
+})
+
+app.get("/:id", permisos.$('curso:leer:id'), (req, res) => {
+  Curso.findById(req.params.id)
+    .exec()
+    .then(curso => {
+      if (!curso) throw "No existe el id"
+
+      return RESP._200(res, null, [{ tipo: "curso", datos: curso }])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando el curso por su id"))
+})
+
+app.get("/buscar/:termino", permisos.$('curso:leer:termino'), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "nombre")
+  const termino = String(
+    req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const b = campo => ({
+    [campo]: { $regex: termino, $options: "i" }
+  })
+
+  const $match = {
+    $or: []
+  }
+
+  ;["nombre", "instructor", "descripcionDeCurso"].forEach(x =>
+    $match.$or.push(b(x))
+  )
+
+  const total = await Curso.aggregate([{ $match }, { $count: "total" }]).exec()
+
+  Curso.aggregate([
+    { $match },
+
+    //Fin de populacion
+
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } }
+  ])
+    .exec()
+    .then(cursos => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error.
+      if (!total.length) total.push({ total: 0 })
+
+      return RESP._200(res, null, [
+        { tipo: "cursos", datos: cursos },
+        { tipo: "total", datos: total.pop().total }
+      ])
+    })
+    .catch(err =>
+      erro(
+        res,
+        err,
+        "Hubo un error buscando los cursos por el termino " + termino
+      )
+    )
+})
+
+app.put("/", permisos.$('curso:modificar'), (req, res) => {
+  Curso.findById(req.body._id)
+    .exec()
+    .then(curso => {
+      if (!curso) {
+        throw "No existe el curso"
+      }
+
+      ;[
+        "nombre",
+        "fechaDeCurso",
+        "duracion",
+        "instructor",
+        "descripcionDeCurso",
+        "esCursoDeTroncoComun",
+        "esCursoDeEspecializacion"
+      ].forEach(x => {
+        curso[x] = req.body[x]
+      })
+
+      return curso.save()
+    })
+    .then(curso => {
+      return RESP._200(res, "Se modifico correctamente", [
+        { tipo: "curso", datos: curso }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error actualizando el curso"))
+})
+
+
+app.delete("/:id", permisos.$('curso:eliminar'),(req, res) => {
+  Curso.findById(req.params.id)
+    .exec()
+    .then(curso => {
+      if (!curso) throw "No existe el curso"
+
+      return curso.remove()
+    })
+    .then(curso => {
+      return RESP._200(res, "Se elimino de manera correcta", [
+        { tipo: "curso", datos: curso }
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el curso"))
+})
+
+app.get("/tipoDeCurso/troncoComun", permisos.$('curso:leer:tipoDeCurso:troncoComun'), (req, res) => {
   Curso.find({ esCursoDeTroncoComun: true })
     .exec()
-    .then((cursos) => {
+    .then(cursos => {
       if (cursos.length < 1)
         throw 'No hay cursos definidos como de "ronco comun"'
-        return RESP._200(res, null , [
-            { tipo: 'cursos', datos: cursos },
-        ]);
-        
+      return RESP._200(res, null, [{ tipo: "cursos", datos: cursos }])
     })
 })
 

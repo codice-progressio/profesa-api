@@ -4,7 +4,6 @@ var uniqueValidator = require("mongoose-unique-validator")
 var AutoIncrement = require("mongoose-sequence")(mongoose)
 var EstatusRequisicionsSchema = require("./estatusRequisicion.model")
 var HistorialDeEstatusSchema = require("./historialDeEstatusRequisicion.model")
-var httpContext = require("express-http-context")
 
 var ArticuloSchema = require("../almacenRefaccionesYMateriaPrima/articulo.model")
 
@@ -53,7 +52,11 @@ RequisicionSchema.plugin(uniqueValidator, {
 })
 
 function obtenerUsuario(token, self, next, cb) {
-  jwt.verify(token, SEED, (err, decode) => {
+ 
+  throw 'No esta funcionado'
+ 
+  jwt.verify(token, SEED, (err, decode) =>
+  {
     if (err) {
       next(new Error(err))
       return
@@ -66,48 +69,6 @@ function obtenerUsuario(token, self, next, cb) {
   })
 }
 
-// <!--
-// =====================================
-//  Cargas necesarias - Usuario, historial, etc
-// =====================================
-// -->
-
-var cargarUsuarioActivo = function(next) {
-  if (!this.usuario) {
-    // Obtenemos el usuario logueado
-
-    var cb = (self, decodeUser, next) => {
-      self.usuario = decodeUser
-      next()
-    }
-    obtenerUsuario(httpContext.get("token"), this, next, cb)
-  } else {
-    next()
-  }
-}
-
-var copiarDatosAHistorial = function(next) {
-  var cb = (self, decodeUser, next) => {
-    self.historialDeEstatus.unshift({
-      estatus: self.estatus,
-      razonDeCambio: self.razonDeCambioTemp
-        ? self.razonDeCambioTemp
-        : `EL USUARIO '${decodeUser.nombre}' NO DEFINIO LA RAZON `,
-      usuarioQueModifica: decodeUser
-    })
-
-    next()
-  }
-
-  obtenerUsuario(httpContext.get("token"), this, next, cb)
-}
-
-// <!--
-// =====================================
-//  END Cargas necesarias - Usuario, historial, etc
-// =====================================
-// -->
-
 function autoPopulate(next) {
   this.populate("usuario")
   this.populate("articulo")
@@ -117,7 +78,6 @@ function autoPopulate(next) {
 }
 
 function hidePass(requisicion) {
-  requisicion.usuario.role = []
   requisicion.usuario.password = ":D"
   if (requisicion.historialDeEstatus) {
     requisicion.historialDeEstatus.forEach(y => {
@@ -193,16 +153,11 @@ function obtenerDiferenciaEntreEstatus(requisicion) {
   return diferencia
 }
 
-RequisicionSchema.pre("validate", cargarUsuarioActivo)
-  .pre("validate", copiarDatosAHistorial)
+RequisicionSchema
   .pre("find", autoPopulate)
   .pre("findOne", autoPopulate)
   .pre("findById", autoPopulate)
   .pre("save", abonarAlArticulo)
-  .post("find", function(requisicion) {
-    requisicion.forEach(x => hidePass(x))
-  })
-  .post("findOne", hidePass)
-  .post("findById", hidePass)
+  
 
 module.exports = mongoose.model("Requisicion", RequisicionSchema)

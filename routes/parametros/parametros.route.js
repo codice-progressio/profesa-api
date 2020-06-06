@@ -250,12 +250,27 @@ app.put("/departamentoTransformacion", (req, res, next) => {
 })
 
 app.get("/departamentoTransformacion", (req, res, next) => {
-  
   Departamento.findById(req.parametros.departamentoTransformacion)
     .exec()
     .then(dep => {
+      ;``
       return res.json(dep)
     })
+})
+
+app.put("/estacionesDeEscaneo", (req, res, next) => {
+  Parametros.updateOne({}, { $set: { estacionesDeEscaneo: req.body } })
+    .exec()
+    .then(p => res.json(p))
+    .catch(err => next(err))
+})
+
+app.get("/estacionesDeEscaneo", (req, res, next) => {
+  Parametros.findOne({})
+    .populate(" estacionesDeEscaneo.departamento")
+    .populate(" estacionesDeEscaneo.usuario")
+    .then(p => res.json(p))
+    .catch(err => next(err))
 })
 
 module.exports = app

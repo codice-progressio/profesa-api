@@ -180,11 +180,7 @@ app.get(
 
 app.use(fileUpload())
 app.post(
-  "/",
-  guard.check(
-    [permisos.$("empleado:crear")],
-    [permisos.$("empleado:modificar")]
-  ),
+  "/", permisos.$("empleado:crear"),
   (req, res) => {
     var empleado = parsearBody(req.body)
     var foto = req.files ? req.files.fotografia : null

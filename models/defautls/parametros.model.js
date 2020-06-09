@@ -21,7 +21,7 @@ const parametrosDeTrabajoSchema = new Schema(
     estacionesDeEscaneo: [
       {
         departamento: String,
-        usuario: String,
+        usuarios: [String],
       },
     ],
   },

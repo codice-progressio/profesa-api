@@ -49,6 +49,7 @@ app.get("/", permisos.$("articulo:leer:todo"), async (req, res) => {
 
 app.get("/buscar/id/:id", permisos.$("articulo:leer:id"), (req, res) => {
   Articulo.findById(req.params.id)
+    .populate("almacen")
     .exec()
     .then(articulo => {
       if (!articulo) throw "No existe el id"

@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken")
 const SEED = require("../../config/config").SEED
 const CONST = require("../../utils/constantes")
 const RESP = require("../../utils/respStatus")
+const Parametros = require("../../models/defautls/parametros.model")
 
 // Google
 
@@ -20,13 +21,13 @@ var permisos = require("../../config/permisos.config")
 function crearToken(usuario) {
   return jwt.sign({ ...usuario }, SEED, {
     //Una hora 3600
-    expiresIn: 3600*2,
+    expiresIn: 3600 * 2,
   })
 }
 
 app.post("/renuevatoken", (req, res) => {
   Usuario.findById(req.user._id)
-    .select('+passsword')
+    .select("+passsword")
     .lean()
     .exec()
     .then(usuario => {
@@ -47,8 +48,10 @@ app.post("/renuevatoken", (req, res) => {
 
 app.post("/", (req, res) => {
   var body = req.body
+  var datos = []
+  var usuarioLogueado = null
   Usuario.findOne({ email: body.email })
-    .select('+password')
+    .select("+password")
     .lean()
     .exec()
     .then(usuarioDB => {
@@ -62,14 +65,44 @@ app.post("/", (req, res) => {
       // crear un token!
       delete usuarioDB.password
       var token = crearToken(usuarioDB)
-
-      return RESP._200(res, `Bienvenido ${usuarioDB.nombre}`, [
+      usuarioLogueado = usuarioDB
+      datos = [
         { tipo: "usuario", datos: usuarioDB },
         { tipo: "token", datos: token },
         { tipo: "id", datos: usuarioDB.id },
         { tipo: "menu", datos: obtenerMenu(usuarioDB.permissions) },
         { tipo: "apiVersion", datos: pjson.version },
-      ])
+      ]
+
+      return Parametros.findOne({})
+        .populate("estacionesDeEscaneo.departamento", null, "Departamento")
+        .exec()
+    })
+    .then(parametros => {
+      let estacionesDeEscaneo = parametros.estacionesDeEscaneo
+
+      const menu = {
+        titulo: "Registros",
+        icono: "fas fa-qrcode",
+        submenu: [],
+      }
+
+      //Comprobar que el usuario tiene asignado algun menu.
+      estacionesDeEscaneo
+        .filter(estacion =>
+          estacion.usuarios.includes(usuarioLogueado._id.toString())
+        )
+        .forEach(estacion => {
+          menu.submenu.push({
+            titulo: estacion.departamento.nombre,
+            url: `/escaner/${estacion.departamento.nombre}/${estacion.departamento._id}`,
+            permiso: permisos.$("login", false),
+          })
+        })
+
+      datos.find(x => x.tipo === "menu").datos.push(menu)
+
+      return RESP._200(res, `Bienvenido ${usuarioLogueado.nombre}`, datos)
     })
     .catch(err => {
       return RESP._500(res, {

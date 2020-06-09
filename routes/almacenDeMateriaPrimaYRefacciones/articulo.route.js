@@ -144,6 +144,7 @@ app.put("/", permisos.$("articulo:modificar"), (req, res) => {
         "codigoInterno",
         "codigoProveedor",
         "almacen",
+        "tipoDeProducto",
         "nombre",
         "presentacion",
         "unidad",

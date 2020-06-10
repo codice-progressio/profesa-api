@@ -851,7 +851,7 @@ function obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica) {
 }
 
 app.get("/ordenes/:idDepartamento", async (req, res, next) => {
-  Departmento.findById(req.params.idDepartamento)
+  Departamento.findById(req.params.idDepartamento)
     .exec()
     .then(dep => {
       if (!dep) throw "No existe el departamento"
@@ -873,6 +873,12 @@ app.get("/ordenes/:idDepartamento", async (req, res, next) => {
         {
           $match: {
             "folioLineas.terminado": false,
+          },
+        },
+
+        {
+          $addFields: {
+            "folioLineas.totalOrdenes": { $size: "$folioLineas.ordenes" },
           },
         },
         {
@@ -918,30 +924,79 @@ app.get("/ordenes/:idDepartamento", async (req, res, next) => {
         {
           $project: {
             _id: {
-              estatusDeLaOrden: "$folioLineas.ordenes.ruta.recibida",
-              consecutivo: "$folioLineas.ordenes.ruta.consecutivo",
-              procesoActual: "$folioLineas.ordenes.ruta.idProceso",
-              idProcesoActual: "$folioLineas.ordenes.ruta.idProceso",
-              numeroDeOrden: "$folioLineas.ordenes.orden",
-              fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
-              sku: "$folioLineas.ordenes.modeloCompleto",
-              idSKU: "$folioLineas.ordenes.modeloCompleto",
-              laser: "$folioLineas.modeloCompleto",
-              laserAlmacen: "$folioLineas.laserCliente",
-              unidad: "$folioLineas.ordenes.unidad",
-              piezas: "$folioLineas.ordenes.piezas",
-              observaciones: "$folioLineas.ordenes.observaciones",
-              idFolio: "$_id",
-              idPedido: "$folioLineas._id",
-              idOrden: "$folioLineas.ordenes._id",
+              recibida: "$folioLineas.ordenes.ruta.recibida",//
+              consecutivoRuta: "$folioLineas.ordenes.ruta.consecutivo",//
+              totalDeOrdenes: '$folioLineas.totalOrdenes',//
+              consecutivoOrden: '$folioLineas.ordenes.numeroDeOrden',//
+              procesoActual: {//
+                $toObjectId: "$folioLineas.ordenes.ruta.idProceso",
+              },
+              idProcesoActual: "$folioLineas.ordenes.ruta.idProceso",//
+              numeroDeOrden: "$folioLineas.ordenes.orden",//
+              fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",//
+              sku: { $toObjectId: "$folioLineas.ordenes.modeloCompleto" },//
+              idSKU: "$folioLineas.ordenes.modeloCompleto",//
+              laser: "$folioLineas.laserCliente.laser", //
+              laserAlmacen: null,//  
+              unidad: "$folioLineas.ordenes.unidad",//
+              piezas: "$folioLineas.ordenes.piezasTeoricas",//
+              observacionesOrden: "$folioLineas.ordenes.observaciones",//`
+              observacionesPedido: "$folioLineas.observaciones",//`
+              observacionesFolio: "$observaciones",//`
+              folio: "$_id",
+              pedido: "$folioLineas._id",
+              orden: "$folioLineas.ordenes._id",
 
               ubicacionActual: "$folioLineas.ordenes.ruta",
               ruta: "$folioLineas.ordenes.rutaTemp",
             },
           },
         },
+
         {
           $replaceRoot: { newRoot: "$_id" },
+        },
+
+        {
+          $lookup: {
+            from: "procesos",
+            localField: "procesoActual",
+            foreignField: "_id",
+            as: "procesoActual",
+          },
+        },
+        {
+          $unwind: {
+            path: "$procesoActual",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+
+        {
+          $addFields: {
+            procesoActual: "$procesoActual.nombre",
+          },
+        },
+
+        {
+          $lookup: {
+            from: "modelosCompletos",
+            localField: "sku",
+            foreignField: "_id",
+            as: "sku",
+          },
+        },
+        {
+          $unwind: {
+            path: "$sku",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            sku: "$sku.nombreCompleto",
+            laserAlmacen: "$sku.laserAlmacen.laser"
+          },
         },
       ]).exec()
     })

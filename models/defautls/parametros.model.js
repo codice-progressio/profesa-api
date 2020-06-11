@@ -22,6 +22,7 @@ const parametrosDeTrabajoSchema = new Schema(
       {
         departamento: String,
         usuarios: [String],
+        ponerATrabajar: {type: Boolean, default: false}
       },
     ],
   },

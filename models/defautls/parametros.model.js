@@ -13,6 +13,7 @@ const parametrosDeTrabajoSchema = new Schema(
       procesosIniciales: [String],
       procesosInicialesAlmacen: [String],
       procesosFinales: [String],
+      campoFinal: String
     },
 
     procesosEspeciales: [String],
@@ -22,11 +23,28 @@ const parametrosDeTrabajoSchema = new Schema(
       {
         departamento: String,
         usuarios: [String],
-        ponerATrabajar: {type: Boolean, default: false}
+        ponerATrabajar: { $type: Boolean, default: false },
+        recibirTodo: { $type: Boolean, default: false },
+        registrarTodo: { $type: Boolean, default: false },
+        ultimoDepartamento: { $type: Boolean, default: false },
+        //QuestionBase in GUI
+        inputsFormulario: [{
+          value: String,
+          key: String,
+          label: String,
+          required: Boolean,
+          order: Number,
+          controlType: String,
+          type: String,
+          classForGroup: String,
+          mask: String,
+          thousandSeparator: String,
+          suffix: String,
+        }]
       },
     ],
   },
-  { collection: "parametrosDeTrabajo" }
+  { collection: "parametrosDeTrabajo", typeKey: '$type' }
 )
 
 module.exports = mongoose.model(

@@ -103,10 +103,7 @@ app.use(permisos.$("SUPER_ADMIN"))
 app.post("/limpiarRolesAtiguos", (req, res, next) => {
   Usuario.updateMany({}, [{ $unset: ["role"] }])
     .exec()
-    .then(update => {
-      console.log(update)
-      next()
-    })
+    .then(update => next())
     .catch(err => next(err))
 })
 
@@ -210,6 +207,7 @@ app.get("/localizacionDeOrdenes", (req, res, next) => {
         procesosFinales: r.localizacionDeOrdenes.procesosFinales,
         procesosInicialesAlmacen:
           r.localizacionDeOrdenes.procesosInicialesAlmacen,
+        campoFinal: r.localizacionDeOrdenes.campoFinal,
       })
     })
     .catch(err => next(err))
@@ -259,7 +257,7 @@ app.get("/departamentoTransformacion", (req, res, next) => {
 })
 
 app.put("/estacionesDeEscaneo", (req, res, next) => {
-  Parametros.updateOne({}, { $set: { estacionesDeEscaneo: req.body } })
+    Parametros.updateOne({}, { $set: { estacionesDeEscaneo: req.body } })
     .exec()
     .then(p => res.json(p))
     .catch(err => next(err))
@@ -267,8 +265,8 @@ app.put("/estacionesDeEscaneo", (req, res, next) => {
 
 app.get("/estacionesDeEscaneo", (req, res, next) => {
   Parametros.findOne({})
-    .populate(" estacionesDeEscaneo.departamento", null, 'Departamento')
-    .populate(" estacionesDeEscaneo.usuarios", null, 'Usuario')
+    .populate(" estacionesDeEscaneo.departamento", null, "Departamento")
+    .populate(" estacionesDeEscaneo.usuarios", null, "Usuario")
     .then(p => res.json(p.estacionesDeEscaneo))
     .catch(err => next(err))
 })

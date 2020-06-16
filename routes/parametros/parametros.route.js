@@ -267,6 +267,7 @@ app.get("/estacionesDeEscaneo", (req, res, next) => {
   Parametros.findOne({})
     .populate(" estacionesDeEscaneo.departamento", null, "Departamento")
     .populate(" estacionesDeEscaneo.usuarios", null, "Usuario")
+    .populate(" estacionesDeEscaneo.maquinas", null, "Maquina")
     .then(p => res.json(p.estacionesDeEscaneo))
     .catch(err => next(err))
 })

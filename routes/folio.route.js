@@ -1277,6 +1277,10 @@ app.get(
 
         return RESP._200(res, null, [
           { tipo: "ponerATrabajar", datos: estaEstacion.ponerATrabajar },
+          {
+            tipo: "ponerATrabajarConMaquina",
+            datos: estaEstacion.ponerATrabajarConMaquina,
+          },
           { tipo: "yaEstaTrabajando", datos: yaEstaTrabajando },
         ])
       })

@@ -728,8 +728,6 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
       }
 
       ordenGUI.ruta.push(estructuraBasica)
-      console.log("ordenGUI.ruta", ordenGUI.ruta)
-      // throw 'Parale a tu tren'
       actual = false
       consecutivo++
     })
@@ -1124,8 +1122,6 @@ app.put("/ponerATrabajarORegistrar", (req, res, next) => {
           if (!campoFinal)
             throw "No se ha definido el campo final en los parametros de localizacion de ordenes. Para poder continuar el adminitrador del sistema debe definir estos datos. No se puede continuar"
           if (esPenultimo) {
-            console.log("Es penultimo: ", campoFinal)
-            console.log("siguiente", siguiente, "ubicacion", ubicacion)
 
             if (!siguiente.hasOwnProperty("datos"))
               siguiente.datos = { [campoFinal]: 0 }

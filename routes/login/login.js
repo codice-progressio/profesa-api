@@ -7,78 +7,114 @@ const jwt = require("jsonwebtoken")
 const SEED = require("../../config/config").SEED
 const CONST = require("../../utils/constantes")
 const RESP = require("../../utils/respStatus")
+const Parametros = require("../../models/defautls/parametros.model")
 
 // Google
 
-const mdAutenticacion = require("../../middlewares/autenticacion")
 const pjson = require("../../package.json")
 
 const obtenerMenu = require("./login.menus")
 
-// ============================================
-// Autenticación de google.
-// ============================================
+var guard = require("express-jwt-permissions")()
+var permisos = require("../../config/permisos.config")
 
-app.get("/renuevatoken", mdAutenticacion.verificarToken, (req, res) => {
-  var token = jwt.sign({ usuario: req.usuario }, SEED, { expiresIn: 14400 })
-
-  return res.status(200).send({
-    ok: true,
-    token: token
+function crearToken(usuario) {
+  return jwt.sign({ ...usuario }, SEED, {
+    //Una hora 3600
+    expiresIn: 3600 * 2,
   })
+}
+
+app.post("/renuevatoken", (req, res) => {
+  Usuario.findById(req.user._id)
+    .select("+passsword")
+    .lean()
+    .exec()
+    .then(usuario => {
+      if (!usuario) throw "No se renovo la sesion"
+
+      let token = crearToken(usuario)
+      return RESP._200(res, "Se renovo la sesion", [
+        { tipo: "token", datos: token },
+      ])
+    })
+    .catch(err => {
+      return RESP._500(res, {
+        msj: "Hubo un error en el login.",
+        err: err,
+      })
+    })
 })
 
 app.post("/", (req, res) => {
   var body = req.body
+  var datos = []
+  var usuarioLogueado = null
   Usuario.findOne({ email: body.email })
+    .select("+password")
+    .lean()
     .exec()
-    .then((usuarioDB) => {
-      if (!usuarioDB) {
-        return RESP._400(res, {
-          msj: "Credencianles incorrectas",
-          err: "No se pudo loguear."
-        })
-      }
+    .then(usuarioDB => {
+      if (!usuarioDB) throw "Credenciales incorrectas"
 
-      if (!body.password) {
-        return RESP._400(res, {
-          msj: "El password no debe estar vacio.",
-          err: "Parece que olvidaste escribir el password."
-        })
-      }
+      if (!body.password) throw "El password no debe estar vacio."
 
-      if (!bcrypt.compareSync(body.password, usuarioDB.password)) {
-        return RESP._400(res, {
-          msj: "Credencianles incorrectas",
-          err: "No se pudo loguear."
-        })
-      }
+      if (!bcrypt.compareSync(body.password, usuarioDB.password))
+        throw "Credenciales incorrectas"
 
       // crear un token!
-      usuarioDB.password = ":D"
-      var token = jwt.sign({ usuario: usuarioDB }, SEED, { expiresIn: 14400 })
-
-      return RESP._200(res, `Bienvenido ${usuarioDB.nombre}`, [
+      delete usuarioDB.password
+      var token = crearToken(usuarioDB)
+      usuarioLogueado = usuarioDB
+      datos = [
         { tipo: "usuario", datos: usuarioDB },
         { tipo: "token", datos: token },
         { tipo: "id", datos: usuarioDB.id },
-        { tipo: "menu", datos: obtenerMenu(usuarioDB.role) },
-        { tipo: "apiVersion", datos: pjson.version }
-      ])
+        { tipo: "menu", datos: obtenerMenu(usuarioDB.permissions) },
+        { tipo: "apiVersion", datos: pjson.version },
+      ]
+
+      return Parametros.findOne({})
+        .populate("estacionesDeEscaneo.departamento", null, "Departamento")
+        .exec()
     })
-    .catch((err) => {
+    .then(parametros => {
+      let estacionesDeEscaneo = parametros.estacionesDeEscaneo
+
+      const menu = {
+        titulo: "Registros",
+        icono: "fas fa-qrcode",
+        submenu: [],
+      }
+
+      //Comprobar que el usuario tiene asignado algun menu.
+      estacionesDeEscaneo
+        .filter(estacion =>
+          estacion.usuarios.includes(usuarioLogueado._id.toString())
+        )
+        .forEach(estacion => {
+          menu.submenu.push({
+            titulo: estacion.departamento.nombre,
+            url: `/escaner/${estacion.departamento.nombre}/${estacion.departamento._id}`,
+            permiso: permisos.$("login", false),
+          })
+        })
+
+      datos.find(x => x.tipo === "menu").datos.push(menu)
+
+      return RESP._200(res, `Bienvenido ${usuarioLogueado.nombre}`, datos)
+    })
+    .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error en el login.",
-        err: err
+        err: err,
       })
     })
 })
 
 // Retorna todos los roles que hay en la api.
-app.get("/roles", (req, res) => {
-  let roles = CONST.ROLES
-
-  RESP._200(res, null, [{ tipo: "roles", datos: roles }])
+app.get("/permisos", permisos.$("SUPER_ADMIN"), (req, res) => {
+  RESP._200(res, null, [{ tipo: "permisos", datos: permisos.lista }])
 })
 
 module.exports = app

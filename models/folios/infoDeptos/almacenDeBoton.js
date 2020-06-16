@@ -1,26 +1,17 @@
-var mongoose = require('mongoose');
+var mongoose = require("mongoose")
 
-var Schema = mongoose.Schema;
+var Schema = mongoose.Schema
 
-var almacenDeBotonSchema = new Schema({
-
+var almacenDeBotonSchema = new Schema(
+  {
     guardar: { type: Boolean, default: false },
     trabajando: { type: Boolean },
 
-
     cantidadDeBoton: {
-        min: [1, 'La cantidad no puede ser menor que 0.'],
-        max: [999999, 'La cantidad no puede ser mayor que 999999.'],
-        type: Number,
-        required: [function() {
-                return this.guardar;
-            },
-            'La cantidad de botón es necesaria.'
-        ]
+      type: Number,
     },
+  },
+  { timestamps: true }
+)
 
-
-
-}, { timestamps: true });
-
-module.exports = almacenDeBotonSchema;
+module.exports = almacenDeBotonSchema

@@ -2,39 +2,125 @@ let express = require("express")
 let app = express()
 
 var ModeloCompleto = require("../../models/modeloCompleto")
-var CRUD = require("../CRUD")
 
 const RESP = require("../../utils/respStatus")
+var guard =  require('express-jwt-permissions')()
+var permisos = require('../../config/permisos.config')
 
-CRUD.app = app
-CRUD.modelo = ModeloCompleto
-CRUD.nombreDeObjetoSingular = "modeloCompleto"
-CRUD.nombreDeObjetoPlural = "modelosCompletos"
-CRUD.campoSortDefault = "nombreCompleto"
-CRUD.camposDeBusqueda = ["nombreCompleto"]
 
-/**
- * Excluimmos de aqui por que las consultas para el almacen
- * de producto termiando no requieren tanta informacion del modelo
- * completo.
- */
+app.get(
+  "/",
+  permisos.$("almacenDeProductoTerminado:leer:todo"),
+  async (req, res) => {
+    const desde = Number(req.query.desde || 0)
+    const limite = Number(req.query.limite || 30)
+    const sort = Number(req.query.sort || 1)
+    const campo = String(req.query.campo || "nombreCompleto")
 
-CRUD.excluir = [
-  "medias",
-  "modelo",
-  "tamano",
-  "color",
-  "terminado",
-  "laserAlmacen",
-  "versionModelo",
-  "familiaDeProcesos",
-  "procesosEspeciales",
-  "porcentajeDeMerma",
-  "espesor",
-  "actualizarLotesYExistencias"
-]
+    const total = await ModeloCompleto.countDocuments().exec()
 
-CRUD.crud("get", "getBuscar")
+    ModeloCompleto.aggregate([
+      { $match: {} },
+      {
+        $project: {
+          nombreCompleto: "$nombreCompleto",
+          existencia: "$existencia",
+          lotes: "$lotes",
+          esBaston: "$esBaston",
+          stockMinimo: "$stockMinimo",
+          stockMaximo: "$stockMaximo"
+        }
+      },
+      { $sort: { [campo]: sort } },
+      //Desde aqui limitamos unicamente lo que queremos ver
+      { $limit: desde + limite },
+      { $skip: desde },
+      { $sort: { [campo]: sort } }
+    ])
+      .exec()
+      .then(modelosCompletos => {
+        //Si no hay resultados no se crea la propiedad
+        // y mas adelante nos da error.
+        if (!total.length) total.push({ total: 0 })
+
+        return RESP._200(res, null, [
+          { tipo: "modelosCompletos", datos: modelosCompletos },
+          { tipo: "total", datos: total.pop().total }
+        ])
+      })
+      .catch(err =>
+        erro(res, err, "Hubo un error buscando los modelos completos")
+      )
+  }
+)
+
+app.get(
+  "/buscar/:termino",
+  permisos.$("almacenProductoTerminado:leer:termino"),
+  async (req, res) => {
+    const desde = Number(req.query.desde || 0)
+    const limite = Number(req.query.limite || 30)
+    const sort = Number(req.query.sort || 1)
+    const campo = String(req.query.campo || "nombre")
+    const termino = String(
+      req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    )
+    const b = campo => ({
+      [campo]: { $regex: termino, $options: "i" }
+    })
+
+    const $match = {
+      $or: []
+    }
+
+    ;["nombreCompleto"].forEach(x => $match.$or.push(b(x)))
+
+    const total = await ModeloCompleto.aggregate([
+      { $match },
+      { $count: "total" }
+    ]).exec()
+
+    ModeloCompleto.aggregate([
+      { $match },
+
+      {
+        $project: {
+          nombreCompleto: "$nombreCompleto",
+          existencia: "$existencia",
+          lotes: "$lotes",
+          esBaston: "$esBaston",
+          stockMinimo: "$stockMinimo",
+          stockMaximo: "$stockMaximo"
+        }
+      },
+
+      { $sort: { [campo]: sort } },
+      //Desde aqui limitamos unicamente lo que queremos ver
+      { $limit: desde + limite },
+      { $skip: desde },
+      { $sort: { [campo]: sort } }
+    ])
+      .exec()
+      .then(modeloscompletos => {
+        //Si no hay resultados no se crea la propiedad
+        // y mas adelante nos da error.
+        if (!total.length) total.push({ total: 0 })
+
+        return RESP._200(res, null, [
+          { tipo: "modeloscompletos", datos: modeloscompletos },
+          { tipo: "total", datos: total.pop().total }
+        ])
+      })
+      .catch(err =>
+        erro(
+          res,
+          err,
+          "Hubo un error buscando las modeloscompletos por el termino " +
+            termino
+        )
+      )
+  }
+)
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -53,116 +139,96 @@ const erro = (res, err, msj) => {
  *
  *
  */
-app.get("/consolidar/:idModelo", (req, res) => {
-  const idModelo = req.params.idModelo
-  ModeloCompleto.findById(idModelo)
-    .exec()
-    .then(mod => {
-      if (!mod) throw "No existe el modelo"
-      //Organizamos todo en base a una llave
-      const lotesOrganizados = {}
+app.get(
+  "/consolidar/:idModelo",
+  permisos.$("almacenDeProductoTerminado:consolidar:modelo"),
+  (req, res) => {
+    const idModelo = req.params.idModelo
+    ModeloCompleto.findById(idModelo)
+      .exec()
+      .then(mod => {
+        if (!mod) throw "No existe el modelo"
+        //Organizamos todo en base a una llave
+        const lotesOrganizados = {}
 
-      mod.lotes.forEach(lote => {
-        const fl = lote.createAt
-        // la estructura de la llave se obtiene de la fecha de creacion
-        // del lote y tiene la siguientee estructura 2020@01 que representa
-        // anio y mes. No afecta demasiado pero si pasan varios anios
-        // se puede confundir un lote de 2019-01 con 2020-01 si no se toma
-        // en cuenta la fecha.
-        const mesLote = fl.getFullYear() + "@" + fl.getMonth()
+        mod.lotes.forEach(lote => {
+          const fl = lote.createAt
+          // la estructura de la llave se obtiene de la fecha de creacion
+          // del lote y tiene la siguientee estructura 2020@01 que representa
+          // anio y mes. No afecta demasiado pero si pasan varios anios
+          // se puede confundir un lote de 2019-01 con 2020-01 si no se toma
+          // en cuenta la fecha.
+          const mesLote = fl.getFullYear() + "@" + fl.getMonth()
 
-        if (!lotesOrganizados.hasOwnProperty(mesLote))
-          lotesOrganizados[mesLote] = []
+          if (!lotesOrganizados.hasOwnProperty(mesLote))
+            lotesOrganizados[mesLote] = []
 
-        lotesOrganizados[mesLote].push(lote)
-      })
+          lotesOrganizados[mesLote].push(lote)
+        })
 
-      //Almacenamos la estructura final de los lotes.
-      const lotesFinales = []
+        //Almacenamos la estructura final de los lotes.
+        const lotesFinales = []
 
-      //Recorremos todos los lotes semi-ordenados para
-      //obtener los nuevos calculos.
-      for (const key in lotesOrganizados) {
-        if (lotesOrganizados.hasOwnProperty(key)) {
-          const lotes = lotesOrganizados[key]
+        //Recorremos todos los lotes semi-ordenados para
+        //obtener los nuevos calculos.
+        for (const key in lotesOrganizados) {
+          if (lotesOrganizados.hasOwnProperty(key)) {
+            const lotes = lotesOrganizados[key]
 
-          const lnew = {
-            existencia: 0,
-            cantidadEntrada: 0,
-            salidas: [],
-            entradas: [],
-            devoluciones: [],
-            validandoDevolucion: false,
-            observaciones: "",
-            createAt: null
+            const lnew = {
+              existencia: 0,
+              cantidadEntrada: 0,
+              salidas: [],
+              entradas: [],
+              devoluciones: [],
+              validandoDevolucion: false,
+              observaciones: "",
+              createAt: null
+            }
+
+            lotes.forEach(lote => {
+              //Reciclamos la operacion de reduccion.
+              const reduce = (a, b) => +a + +b.cantidad
+              //Sumamos todas las salidas y las entradas
+              const salidas = lote.salidas.reduce(reduce, 0)
+              const entradas = lote.entradas.reduce(reduce, 0)
+              //Calculamos de nuevo la existencia para el nuevo lote
+              lnew.existencia += entradas - salidas
+
+              //Guardamos la cantidad de entrada que se registraron
+              lnew.cantidadEntrada += entradas
+
+              //Concatenamos los arreglos de cada lote sin arreglar
+              // para que queden dentro del nuevo grupo.
+              lnew.salidas = lnew.salidas.concat(lote.salidas)
+              lnew.entradas = lnew.entradas.concat(lote.entradas)
+              lnew.devoluciones = lnew.devoluciones.concat(lote.devoluciones)
+            })
+            const loteParaDatos = lotes.pop()
+            //Copiamos la fecha del primer lote del grupo.
+            //Funciona por que los lotes ya estaban ordenados.
+            lnew.createAt = loteParaDatos.createAt
+            lnew.observaciones = loteParaDatos.observaciones
+            lnew.validandoDevolucion = loteParaDatos.validandoDevolucion
+
+            lotesFinales.push(lnew)
           }
-
-          lotes.forEach(lote => {
-            //Reciclamos la operacion de reduccion.
-            const reduce = (a, b) => +a + +b.cantidad
-            //Sumamos todas las salidas y las entradas
-            const salidas = lote.salidas.reduce(reduce, 0)
-            const entradas = lote.entradas.reduce(reduce, 0)
-            //Calculamos de nuevo la existencia para el nuevo lote
-            lnew.existencia += entradas - salidas
-
-            //Guardamos la cantidad de entrada que se registraron
-            lnew.cantidadEntrada += entradas
-
-            //Concatenamos los arreglos de cada lote sin arreglar
-            // para que queden dentro del nuevo grupo.
-            lnew.salidas = lnew.salidas.concat(lote.salidas)
-            lnew.entradas = lnew.entradas.concat(lote.entradas)
-            lnew.devoluciones = lnew.devoluciones.concat(lote.devoluciones)
-          })
-          const loteParaDatos = lotes.pop()
-          //Copiamos la fecha del primer lote del grupo.
-          //Funciona por que los lotes ya estaban ordenados.
-          lnew.createAt = loteParaDatos.createAt
-          lnew.observaciones = loteParaDatos.observaciones
-          lnew.validandoDevolucion = loteParaDatos.validandoDevolucion
-
-          lotesFinales.push(lnew)
         }
-      }
-      //Asignamos los lotes.
-      mod.lotes = lotesFinales
-      //Sumanos la existencia de cada lote nuevo.
-      mod.existencia = mod.lotes.reduce((a, b) => +a + +b.existencia, 0)
-      return mod.save()
-    })
-    .then(mod => {
-      return RESP._200(
-        res,
-        "Se consolidaron los lotes del modelo de manera correcta",
-        [{ tipo: "modeloCompleto", datos: mod }]
-      )
-    })
-    .catch(err => erro(res, err, "Error consolidando"))
-})
-
-function comprobarLote(modeloCompleto) {
-  //Si no hay un lote debemos obtener null, por lo tanto vamos a crear
-  // uno. Si hay un lote obtenemos el ultimo por que es el que nos interesa
-  // para comparar y agregar el lote.
-  var ultimoLote = modeloCompleto.lotes[modeloCompleto.lotes.length - 1]
-  var nuevoLote = !ultimoLote
-
-  if (!ultimoLote) {
-    // Si hay un lote comprobamos sus fechas.
-    var mesActual = new Date().getMonth()
-    // Si no hay un lote entonces mandamos un menos uno
-    // para que la comprobacion nunca sea igual
-    var mesLote = ultimoLote ? ultimoLote.getMonth() : -1
-    // Si las fechas son iguales quiere decir que no
-    // debemos crear nuevo lote.
-    nuevoLote = !(mesActual === mesLote)
+        //Asignamos los lotes.
+        mod.lotes = lotesFinales
+        //Sumanos la existencia de cada lote nuevo.
+        mod.existencia = mod.lotes.reduce((a, b) => +a + +b.existencia, 0)
+        return mod.save()
+      })
+      .then(mod => {
+        return RESP._200(
+          res,
+          "Se consolidaron los lotes del modelo de manera correcta",
+          [{ tipo: "modeloCompleto", datos: mod }]
+        )
+      })
+      .catch(err => erro(res, err, "Error consolidando"))
   }
-
-  return {
-    ultimoLote,
-    nuevoLote
-  }
-}
+)
 
 module.exports = app

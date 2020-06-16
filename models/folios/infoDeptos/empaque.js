@@ -10,9 +10,9 @@ var empaqueSchema = new Schema({
     contadoPor: {
         type: Schema.Types.ObjectId,
         ref: 'Usuario',
-        required: [() => { return this.guardar; }, 'Quien contó es obligatorio.']
+       
     },
-    cantidadDeBoton: { type: Number, required: [() => { return this.guardar; }, 'La cantidad de botón es obligatoria.'] }
+    cantidadDeBoton: { type: Number}
 
 }, { timestamps: true });
 module.exports = empaqueSchema;

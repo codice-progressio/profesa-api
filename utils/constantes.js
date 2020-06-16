@@ -1,11 +1,9 @@
 let DEPTO = require('../config/departametosDefaults');
 let PROC = require('../config/procesosDefault');
 
-let ROLES = require('../config/roles');
 let colores = require('../utils/colors');
 
 module.exports = {
-    ROLES: ROLES,
     PROCESOS: PROC,
     DEPARTAMENTOS: DEPTO,
     ERRORES: {

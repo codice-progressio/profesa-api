@@ -10,7 +10,7 @@ var materialesSchema = new Schema({
     cargo: {
         type: Schema.Types.ObjectId,
         ref: 'Usuario',
-        required: [() => { return this.guardar; }, 'Es necesario definir quien cargó la órden.']
+       
     },
 
     // maquinaActual: { type: Schema.Types.ObjectId, ref: 'Maquina' },

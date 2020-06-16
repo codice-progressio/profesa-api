@@ -11,40 +11,6 @@ var procesosSchema = require('../procesos/procesos');
 
 // <!-- 
 // =====================================
-//  validaciones
-// =====================================
-// -->
-
-
-var Tenido = [{
-    color: {
-        type: String,
-        require: [true, 'Es necesario que definas el color para teñir.']
-    },
-    cantidad: {
-        type: Number,
-        require: [true, 'Es necesario que definas la cantidad a teñir.'],
-        min: [1, "La cantidad mínima a teñir es 1."]
-    },
-    observaciones: String,
-    terminado: { type: Boolean, default: false },
-    fechaTerminado: Date
-}];
-
-function comprobarCantidadesDeTenido(value) {
-    var total = 0;
-    value.forEach(e => {
-        // Sumamos todas las cantidades que se pasaron. 
-        total += e.cantidad;
-    });
-    // Si el total supera a la cantidad del pedido retornamos error. 
-
-    if (this.cantidad < total) return false;
-    return true;
-}
-
-// <!-- 
-// =====================================
 //  END validaciones
 // =====================================
 // -->
@@ -61,7 +27,7 @@ const folioLineaSchema = new Schema({
         required: [true, 'La cantidad es necesaria']
     },
 
-    nivelDeUrgencia: NVU.KEY,
+  
 
     // Esta marca laser se tiene que duplicar por que modeloCompleto
     // tambien lleva marcaLaser, pero no son iguales. La de 
@@ -80,10 +46,6 @@ const folioLineaSchema = new Schema({
     ordenesGeneradas: { type: Boolean, default: false },
     trayectoGenerado: { type: Boolean, default: false },
     porcentajeAvance: { type: Number, min: 0, max: 100 },
-
-    // Para la descripcion de colores teñidos. Este solo va para el departamento de teñido. 
-    // coloresTenidos: [{ type: Tenido, validate: [comprobarCantidadesDeTenido, "El total de botones a teñir supera el del pedido."] }]
-    coloresTenidos: { type: Tenido, validate: [comprobarCantidadesDeTenido, "El total de botones a teñir supera el del pedido."] },
 
     // Este proceso debe afectar al órden en que se estable las órdenes. 
     procesos: [procesosSchema],

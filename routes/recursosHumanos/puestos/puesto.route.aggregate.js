@@ -263,7 +263,7 @@ function motivoDeCambio_usuario() {
         {
           $unset: [
             "motivoDeCambio.usuario.password",
-            "motivoDeCambio.usuario.role"
+            "motivoDeCambio.usuario.permissions"
           ]
         }
 

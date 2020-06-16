@@ -17,12 +17,12 @@ app.post("/", permisos.$("maquina:crear"), (req, res) => {
   const maquina = new Maquina(req.body)
   maquina
     .save()
-    .then((maquina) => {
+    .then(maquina => {
       return RESP._200(res, "Se guardo la maquina de manera correcta", [
         { tipo: "maquina", datos: maquina },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error guardando la maquina"))
+    .catch(err => erro(res, err, "Hubo un error guardando la maquina"))
 })
 
 app.get("/", permisos.$("maquina:leer:todo"), async (req, res) => {
@@ -38,13 +38,13 @@ app.get("/", permisos.$("maquina:leer:todo"), async (req, res) => {
     .limit(limite)
     .skip(desde)
     .exec()
-    .then((maquinas) => {
+    .then(maquinas => {
       return RESP._200(res, null, [
         { tipo: "maquinas", datos: maquinas },
         { tipo: "total", datos: total },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error buscando las maquinas"))
+    .catch(err => erro(res, err, "Hubo un error buscando las maquinas"))
 })
 
 // <!--
@@ -55,14 +55,12 @@ app.get("/", permisos.$("maquina:leer:todo"), async (req, res) => {
 app.get("/:id", permisos.$("maquina:leer:id"), (req, res) => {
   Maquina.findById(req.params.id)
     .exec()
-    .then((maquina) => {
+    .then(maquina => {
       if (!maquina) throw "No existe el id"
 
       return RESP._200(res, null, [{ tipo: "maquina", datos: maquina }])
     })
-    .catch((err) =>
-      erro(res, err, "Hubo un error buscando la maquina por su id")
-    )
+    .catch(err => erro(res, err, "Hubo un error buscando la maquina por su id"))
 })
 
 // <!--
@@ -72,7 +70,7 @@ app.get("/:id", permisos.$("maquina:leer:id"), (req, res) => {
 // -->
 
 app.get(
-  "/buscar/:termino",
+  "/buscar/termino/:termino",
   permisos.$("maquina:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
@@ -82,7 +80,7 @@ app.get(
     const termino = String(
       req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     )
-    const b = (campo) => ({
+    const b = campo => ({
       [campo]: { $regex: termino, $options: "i" },
     })
 
@@ -90,7 +88,7 @@ app.get(
       $or: [],
     }
 
-    ;["nombre", "clave", "numeroDeSerie", "observaciones"].forEach((x) =>
+    ;["nombre", "clave", "numeroDeSerie", "observaciones"].forEach(x =>
       $match.$or.push(b(x))
     )
 
@@ -146,7 +144,7 @@ app.get(
       { $sort: { [campo]: sort } },
     ])
       .exec()
-      .then((maquinas) => {
+      .then(maquinas => {
         //Si no hay resultados no se crea la propiedad
         // y mas adelante nos da error.
         if (!total.length) total.push({ total: 0 })
@@ -156,7 +154,7 @@ app.get(
           { tipo: "total", datos: total.pop().total },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(
           res,
           err,
@@ -166,6 +164,33 @@ app.get(
   }
 )
 
+app.get("/buscar/ligero", (req, res, next) => {
+  Maquina.aggregate([
+    { $match: { cualquierCampo: { $exists: false } } },
+
+    {
+      $project: {
+        _id: {
+          _id: "$_id",
+          nombre: "$nombre",
+          clave: "$clave",
+        },
+      },
+    },
+
+    {
+      $replaceRoot: {
+        newRoot: "$_id",
+      },
+    },
+  ])
+    .exec()
+    .then(maquinas => {
+      return RESP._200(res, null, [{ tipo: "maquinas", datos: maquinas }])
+    })
+    .catch(_ => next(_))
+})
+
 //   <!--
 //   =====================================
 //    Modificar
@@ -174,7 +199,7 @@ app.get(
 app.put("/", permisos.$("maquina:modificar"), (req, res) => {
   Maquina.findById(req.body._id)
     .exec()
-    .then((maquina) => {
+    .then(maquina => {
       if (!maquina) {
         throw "No existe la maquina"
       }
@@ -186,18 +211,18 @@ app.put("/", permisos.$("maquina:modificar"), (req, res) => {
         "departamentos",
         "numeroDeSerie",
         "observaciones",
-      ].forEach((x) => {
+      ].forEach(x => {
         maquina[x] = req.body[x]
       })
 
       return maquina.save()
     })
-    .then((maquina) => {
+    .then(maquina => {
       return RESP._200(res, "Se modifico correctamente la maquina", [
         { tipo: "maquina", datos: maquina },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error actualizando la maquina"))
+    .catch(err => erro(res, err, "Hubo un error actualizando la maquina"))
 })
 
 //   <!--
@@ -209,17 +234,17 @@ app.put("/", permisos.$("maquina:modificar"), (req, res) => {
 app.delete("/:id", permisos.$("maquina:eliminar"), (req, res) => {
   Maquina.findById(req.params.id)
     .exec()
-    .then((maquina) => {
+    .then(maquina => {
       if (!maquina) throw "No existe la maquina"
 
       return maquina.remove()
     })
-    .then((maquina) => {
+    .then(maquina => {
       return RESP._200(res, "Se elimino de manera correcta la maquina", [
         { tipo: "maquina", datos: maquina },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error eliminando la maquina"))
+    .catch(err => erro(res, err, "Hubo un error eliminando la maquina"))
 })
 
 /**
@@ -237,7 +262,7 @@ app.get(
 
     Maquina.find({ departamentos: { $all: { _id: idDepto } } })
       .exec()
-      .then((maquinas) => {
+      .then(maquinas => {
         if (maquinas.length === 0) {
           throw "No hay maquinas registradas para este departamento. Para poder continuar es necesario que registres maquinas y se las asignes a este departamento."
         }
@@ -249,7 +274,7 @@ app.get(
           },
         ])
       })
-      .catch((err) => {
+      .catch(err => {
         return RESP._500(res, {
           msj: "Hubo un error al obtener las maquinas para este departamento.",
           err: err,

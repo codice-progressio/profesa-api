@@ -689,7 +689,7 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   // Asignamos generales
   pedidoBD.observaciones = pedidoGUI.observaciones
   pedidoBD.ordenesGeneradas = true
-  const procesosAUsar = pedidoGUI.ususarProcesosExtraordinarios
+  const procesosAUsar = pedidoBD.almacen
     ? pedidoGUI.procesosExtraordinarios
     : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
 
@@ -1122,7 +1122,6 @@ app.put("/ponerATrabajarORegistrar", (req, res, next) => {
           if (!campoFinal)
             throw "No se ha definido el campo final en los parametros de localizacion de ordenes. Para poder continuar el adminitrador del sistema debe definir estos datos. No se puede continuar"
           if (esPenultimo) {
-
             if (!siguiente.hasOwnProperty("datos"))
               siguiente.datos = { [campoFinal]: 0 }
 

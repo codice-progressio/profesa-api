@@ -267,9 +267,9 @@ app.put("/estacionesDeEscaneo", (req, res, next) => {
 
 app.get("/estacionesDeEscaneo", (req, res, next) => {
   Parametros.findOne({})
-    .populate(" estacionesDeEscaneo.departamento")
-    .populate(" estacionesDeEscaneo.usuario")
-    .then(p => res.json(p))
+    .populate(" estacionesDeEscaneo.departamento", null, 'Departamento')
+    .populate(" estacionesDeEscaneo.usuarios", null, 'Usuario')
+    .then(p => res.json(p.estacionesDeEscaneo))
     .catch(err => next(err))
 })
 

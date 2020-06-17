@@ -54,8 +54,7 @@ app.use(compression())
 app.use(function (req, res, next) {
   res.header(
     "Access-Control-Allow-Origin",
-    // ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
-    "https://127.0.0.1:4200"
+    ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
   )
   res.header(
     "Access-Control-Allow-Headers",
@@ -109,6 +108,17 @@ app.use((req, res, next) => {
 })
 
 _ROUTES(app)
+
+//Especial para un solo uso
+app.put("/eliminar-minimos-y-maximos", (req, res) => {
+  require("./models/modeloCompleto")
+    .updateMany({}, { $set: { stockMinimo: 0, stockMaximo: 0 } })
+    .exec()
+    .then(dato => {
+      res.send(dato)
+    })
+    .catch(err => res.send(err))
+})
 
 // Llamamos a los errores.
 app.use(function (req, res) {

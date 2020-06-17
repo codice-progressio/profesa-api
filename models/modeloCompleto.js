@@ -310,7 +310,8 @@ function asignacionDeLote(modeloCompleto, lote) {
         lote.entradas = []
         lote.entradas.push({
             cantidad: lote.cantidadEntrada,
-            observaciones: lote.observaciones
+            observaciones: lote.observaciones,
+            idOrden: lote.idOrden,
         })
         modeloCompleto.lotes.push(lote)
         return modeloCompleto

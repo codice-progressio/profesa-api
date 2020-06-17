@@ -101,7 +101,6 @@ app.get(
     const b = campo => ({
       [campo]: { $regex: termino, $options: "i" },
     })
-    console.log(`termino`, termino)
     const $match = {
       $or: [],
     }

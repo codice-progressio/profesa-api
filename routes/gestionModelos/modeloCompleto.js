@@ -19,7 +19,6 @@ const erro = (res, err, msj) => {
 }
 
 app.post("/", permisos.$("modeloCompleto:crear"), (req, res) => {
-  console.log(`llego`,req.body)
   new ModeloCompleto(req.body)
     .save()
     .then(modeloCompleto => {

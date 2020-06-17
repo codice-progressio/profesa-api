@@ -17,6 +17,11 @@ var ArticuloSchema = new Schema(
       ref: "AlmacenDescripcion",
       required: [true, "Es necesario definir el almacen."],
     },
+    tipoDeProducto: {
+      type: String,
+      required: [true, "Es necesario definir el tipo."],
+      enum: ["MATERIA PRIMA", "CONSUMIBLE"]
+    },
 
     nombre: {
       type: String,

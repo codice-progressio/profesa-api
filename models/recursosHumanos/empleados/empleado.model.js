@@ -24,6 +24,13 @@ const EmpleadoSchema = new Schema(
       type: Schema.Types.ObjectId,
       ref: "Puesto"
     },
+    puestoActualTexto: {
+      type: String,
+      required: [
+        true,
+        "Es necesario el puesto actual"
+      ]
+    },
     email: String,
     celular: String,
     telCasa: String,
@@ -35,7 +42,7 @@ const EmpleadoSchema = new Schema(
       type: Boolean,
       required: [true, "Es necesario el estado civil  "]
     },
-    hijos: [],
+    hijos: [Date],
     nivelDeEstudios: String,
 
     domicilio: {

@@ -36,7 +36,7 @@ const ordenSchema = new Schema({
     ],
   },
 
-  piezasFinales: { type: Number, min: 1 },
+  piezasFinales: { type: Number, default:0 },
   observaciones: { type: String },
 
   // //El trayecto que se define para que siga la orden.
@@ -78,7 +78,8 @@ const ordenSchema = new Schema({
       recepcion: Date,
       ubicacionActual: Boolean,
       consecutivo: Number,
-      trabajando:Boolean,
+      trabajando: Boolean,
+      trabajandoDesde: Date,
       datos: {}, //--> ESte varia entre cada uno
     },
   ],

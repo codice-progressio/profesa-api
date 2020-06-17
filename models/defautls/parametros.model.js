@@ -5,7 +5,7 @@ const parametrosDeTrabajoSchema = new Schema(
   {
     // El usuario administrador
     super: {
-      definido: { type: Boolean, default: false },
+      definido: { $type: Boolean, default: false },
       id: String,
     },
 

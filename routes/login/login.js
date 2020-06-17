@@ -66,6 +66,8 @@ app.post("/", (req, res) => {
       delete usuarioDB.password
       var token = crearToken(usuarioDB)
       usuarioLogueado = usuarioDB
+
+      if(!usuarioDB.permissions) usuarioDB.permissions = []
       datos = [
         { tipo: "usuario", datos: usuarioDB },
         { tipo: "token", datos: token },

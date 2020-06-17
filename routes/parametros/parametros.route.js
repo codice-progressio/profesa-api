@@ -112,7 +112,7 @@ app.use(permisos.$("SUPER_ADMIN"))
 app.post("/limpiarRolesAtiguos", (req, res, next) => {
   Usuario.updateMany({}, [{ $unset: ["role"] }])
     .exec()
-    .then(update => next())
+    .then(update => res.send(update))
     .catch(err => next(err))
 })
 

@@ -98,7 +98,6 @@ app.get(
     ])
       .exec()
       .then(almacenes => {
-        console.log(`almacenes.length`, almacenes.length)
         return RESP._200(res, null, [
           { tipo: "almacenesDescripcion", datos: almacenes },
           { tipo: "total", datos: total.pop().total },

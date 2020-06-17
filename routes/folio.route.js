@@ -11,6 +11,8 @@ const ObjectId = mongoose.Types.ObjectId
 
 const Proceso = require("../models/procesos/proceso")
 const Departamento = require("../models/departamento")
+const SKU = require("../models/modeloCompleto")
+
 var permisos = require("../config/permisos.config")
 
 const erro = (res, err, msj) => {
@@ -687,7 +689,7 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   // Asignamos generales
   pedidoBD.observaciones = pedidoGUI.observaciones
   pedidoBD.ordenesGeneradas = true
-  const procesosAUsar = pedidoGUI.ususarProcesosExtraordinarios
+  const procesosAUsar = pedidoBD.almacen
     ? pedidoGUI.procesosExtraordinarios
     : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
 
@@ -726,8 +728,6 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
       }
 
       ordenGUI.ruta.push(estructuraBasica)
-      console.log("ordenGUI.ruta", ordenGUI.ruta)
-      // throw 'Parale a tu tren'
       actual = false
       consecutivo++
     })
@@ -851,7 +851,7 @@ function obtenerDatosDeUbicacionActual(orden, consecutivo, estructuraBasica) {
 }
 
 app.get("/ordenes/:idDepartamento", async (req, res, next) => {
-  Departmento.findById(req.params.idDepartamento)
+  Departamento.findById(req.params.idDepartamento)
     .exec()
     .then(dep => {
       if (!dep) throw "No existe el departamento"
@@ -873,6 +873,12 @@ app.get("/ordenes/:idDepartamento", async (req, res, next) => {
         {
           $match: {
             "folioLineas.terminado": false,
+          },
+        },
+
+        {
+          $addFields: {
+            "folioLineas.totalOrdenes": { $size: "$folioLineas.ordenes" },
           },
         },
         {
@@ -918,30 +924,80 @@ app.get("/ordenes/:idDepartamento", async (req, res, next) => {
         {
           $project: {
             _id: {
-              estatusDeLaOrden: "$folioLineas.ordenes.ruta.recibida",
-              consecutivo: "$folioLineas.ordenes.ruta.consecutivo",
-              procesoActual: "$folioLineas.ordenes.ruta.idProceso",
-              idProcesoActual: "$folioLineas.ordenes.ruta.idProceso",
-              numeroDeOrden: "$folioLineas.ordenes.orden",
-              fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
-              sku: "$folioLineas.ordenes.modeloCompleto",
-              idSKU: "$folioLineas.ordenes.modeloCompleto",
-              laser: "$folioLineas.modeloCompleto",
-              laserAlmacen: "$folioLineas.laserCliente",
-              unidad: "$folioLineas.ordenes.unidad",
-              piezas: "$folioLineas.ordenes.piezas",
-              observaciones: "$folioLineas.ordenes.observaciones",
-              idFolio: "$_id",
-              idPedido: "$folioLineas._id",
-              idOrden: "$folioLineas.ordenes._id",
+              recibida: "$folioLineas.ordenes.ruta.recibida", //
+              consecutivoRuta: "$folioLineas.ordenes.ruta.consecutivo", //
+              totalDeOrdenes: "$folioLineas.totalOrdenes", //
+              consecutivoOrden: "$folioLineas.ordenes.numeroDeOrden", //
+              procesoActual: {
+                //
+                $toObjectId: "$folioLineas.ordenes.ruta.idProceso",
+              },
+              idProcesoActual: "$folioLineas.ordenes.ruta.idProceso", //
+              numeroDeOrden: "$folioLineas.ordenes.orden", //
+              fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion", //
+              sku: { $toObjectId: "$folioLineas.ordenes.modeloCompleto" }, //
+              idSKU: "$folioLineas.ordenes.modeloCompleto", //
+              laser: "$folioLineas.laserCliente.laser", //
+              laserAlmacen: null, //
+              unidad: "$folioLineas.ordenes.unidad", //
+              piezas: "$folioLineas.ordenes.piezasTeoricas", //
+              observacionesOrden: "$folioLineas.ordenes.observaciones", //`
+              observacionesPedido: "$folioLineas.observaciones", //`
+              observacionesFolio: "$observaciones", //`
+              folio: "$_id",
+              pedido: "$folioLineas._id",
+              orden: "$folioLineas.ordenes._id",
 
               ubicacionActual: "$folioLineas.ordenes.ruta",
               ruta: "$folioLineas.ordenes.rutaTemp",
             },
           },
         },
+
         {
           $replaceRoot: { newRoot: "$_id" },
+        },
+
+        {
+          $lookup: {
+            from: "procesos",
+            localField: "procesoActual",
+            foreignField: "_id",
+            as: "procesoActual",
+          },
+        },
+        {
+          $unwind: {
+            path: "$procesoActual",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+
+        {
+          $addFields: {
+            procesoActual: "$procesoActual.nombre",
+          },
+        },
+
+        {
+          $lookup: {
+            from: "modelosCompletos",
+            localField: "sku",
+            foreignField: "_id",
+            as: "sku",
+          },
+        },
+        {
+          $unwind: {
+            path: "$sku",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            sku: "$sku.nombreCompleto",
+            laserAlmacen: "$sku.laserAlmacen.laser",
+          },
         },
       ]).exec()
     })
@@ -951,5 +1007,280 @@ app.get("/ordenes/:idDepartamento", async (req, res, next) => {
     })
     .catch(_ => next(_))
 })
+
+app.put("/recibirOrden", (req, res, next) => {
+  var orden = null
+  Folio.findOne({ _id: req.body.idFolio })
+    .exec()
+    .then(async folio => {
+      if (!folio) throw "No existe la orden."
+
+      orden = folio.folioLineas
+        .id(req.body.idPedido)
+        .ordenes.id(req.body.idOrden)
+
+      var ubicacion = orden.ruta.find(x => x.ubicacionActual)
+
+      //No debe estar terminada
+
+      if (orden.terminada) throw "Esta orden ya fue terminada"
+
+      //Debe ser el mismo departamento
+      if (req.body.idDepartamento !== ubicacion.idDepartamento) {
+        var deptoActual = await Departamento.findById(
+          ubicacion.idDepartamento
+        ).exec()
+
+        throw `Esta orden no esta ubicada en este departamento. Actualmente se encuentra en el departamento de ${deptoActual.nombre}`
+      }
+
+      //No debe estar recibida
+      if (ubicacion.recibida) throw "Esta orden ya fue recibida"
+
+      ubicacion.recibida = true
+      ubicacion.recepcion = new Date()
+
+      return folio.save()
+    })
+    .then(folio => {
+      return RESP._200(res, `Orden ${orden.orden} recibida`, [
+        {
+          tipo: "orden",
+          datos: folio.folioLineas
+            .id(req.body.idPedido)
+            .ordenes.id(req.body.idOrden),
+        },
+      ])
+    })
+    .catch(_ => next(_))
+})
+
+app.put("/ponerATrabajarORegistrar", (req, res, next) => {
+  var orden = null
+  var msj = null
+  var folio = null
+
+  if (!req.body.datos) req.body.datos = {}
+  req.body.datos["user"] = req.user._id
+
+  Folio.findOne({ _id: req.body.idFolio })
+    .exec()
+    .then(async f => {
+      folio = f
+      if (!folio) throw "No existe la orden."
+      orden = folio.folioLineas
+        .id(req.body.idPedido)
+        .ordenes.id(req.body.idOrden)
+
+      var ubicacion = orden.ruta.find(x => x.ubicacionActual)
+      //No debe estar terminada
+
+      if (orden.terminada) throw "Esta orden ya fue terminada"
+      //Debe ser el mismo departamento
+      if (req.body.idDepartamento !== ubicacion.idDepartamento) {
+        var deptoActual = await Departamento.findById(
+          ubicacion.idDepartamento
+        ).exec()
+
+        throw `Esta orden no esta ubicada en este departamento. Actualmente se encuentra en el departamento de ${deptoActual.nombre}`
+      }
+      //Debe estar recibida
+
+      if (!ubicacion.recibida) throw "No has recibido la orden"
+      //Extraemos de los parametros los permisos si
+      // esta estacion pone a trabajar o no.
+      const estacion = req.parametros.estacionesDeEscaneo.find(
+        x => x.departamento === req.body.idDepartamento
+      )
+      //Si no esta trabajando la ponemos a trabajar.
+
+      if (estacion.ponerATrabajar && !ubicacion.trabajando) {
+        ubicacion.trabajando = true
+        ubicacion.trabajandoDesde = new Date()
+
+        msj = `La orden ${orden.orden} empezo a trabajar. `
+      } else {
+        ubicacion.salida = new Date()
+        ubicacion.ubicacionActual = false
+        ubicacion.trabajando = false
+        ubicacion.datos = req.body.datos
+        ubicacion.markModified("datos")
+        //Obtenemos el siguiente departamento en base
+        //  al consecutivo que tenemos + 1
+
+        var siguiente = orden.ruta[ubicacion.consecutivo + 1]
+        if (siguiente) {
+          siguiente.ubicacionActual = true
+          siguiente.entrada = new Date()
+
+          //Si es la penultima ubicacion agregamos la cantidad
+          //desde datos a siguiente definido en los parametros
+          // de localizacion de ordenes, en campoFinal.
+
+          const esPenultimo = orden.ruta.length - 2 === ubicacion.consecutivo
+          const campoFinal = req.parametros.localizacionDeOrdenes.campoFinal
+          if (!campoFinal)
+            throw "No se ha definido el campo final en los parametros de localizacion de ordenes. Para poder continuar el adminitrador del sistema debe definir estos datos. No se puede continuar"
+          if (esPenultimo) {
+            if (!siguiente.hasOwnProperty("datos"))
+              siguiente.datos = { [campoFinal]: 0 }
+
+            if (!req.body.hasOwnProperty("datos"))
+              throw `Es necesario enviar la propiedad datos con la sub propiedad '${campoFinal}' para anexarla al ultimo departamento. Este error debe ser reportado al administrador del sistema.`
+
+            if (!req.body.datos.hasOwnProperty(campoFinal))
+              throw `Es necesario definir en el formulario de esta estacion el campo '${campoFinal}' para definir el valor total de la orden al finalizar en el siguiente departamento. Este error debe ser reportado al administrador. `
+
+            siguiente.datos[campoFinal] = req.body.datos[campoFinal]
+            siguiente.markModified("datos")
+          }
+
+          msj = `La orden ${orden.orden} se registro correctamente.`
+        } else {
+          //Termino el proceso modificando el folio
+          accionesDeOrdenFinalizada(folio, orden, ubicacion, req)
+          msj = `La orden ${orden.orden} esta finalizada.`
+
+          const idSKU = folio.folioLineas.id(req.body.idPedido).modeloCompleto
+            ._id
+
+          const sk = null
+          try {
+            const lote = {
+              cantidadEntrada: orden.piezasFinales,
+              observaciones: `[SISTEMA] Entrada automatica desde produccion orden # ${orden.orden}`,
+              idOrden: orden._id,
+            }
+
+            await SKU.guardarLote(idSKU, lote)
+          } catch (error) {
+            next(err)
+          }
+        }
+        //Actualizamos el porcentaje de avance del folio
+        actualizarPorcentajesDeAvance(folio, orden, ubicacion)
+      }
+
+      return folio.save()
+    })
+    .then(folio => {
+      return RESP._200(res, msj, [
+        {
+          tipo: "orden",
+          datos: folio.folioLineas
+            .id(req.body.idPedido)
+            .ordenes.id(req.body.idOrden),
+        },
+      ])
+    })
+    .catch(_ => next(_))
+})
+
+function actualizarPorcentajesDeAvance(folio, orden, ubicacionActual) {
+  const porcentajeOrden =
+    ((ubicacionActual.consecutivo + 1) / (orden.ruta.length + 1)) * 100
+
+  orden.porcentajeAvance = orden.terminada ? 100 : porcentajeOrden
+
+  //Calculamos el porcentaje actual del pedido sacando el promedio de
+  // las ordenes
+
+  var sumaPedidos = 0
+  folio.folioLineas.forEach(pedido => {
+    var suma = 0
+
+    suma = pedido.ordenes.reduce((a, b) => (a += b.porcentajeAvance), 0)
+    var promedio = suma / pedido.ordenes.length + 1
+    pedido.porcentajeAvance = promedio
+    sumaPedidos += promedio
+  })
+
+  folio.porcentajeAvance = sumaPedidos / folio.folioLineas.length + 1
+}
+
+function accionesDeOrdenFinalizada(folio, orden, ubicacion, req) {
+  //Como es el ultimo departamento y no hay mas en la ruta por seguir
+  // el ultimo departamento debe contener la estructura que corresponde
+  // al campoFinal de localizacionDeOrdenes. Este campo lo copiamos a la orden
+  // como el total de piezas producidas.
+
+  orden.piezasFinales =
+    ubicacion.datos[req.parametros.localizacionDeOrdenes.campoFinal]
+  //Primero terminamos la orden y la marcamos como finzalizada.
+  orden.terminada = true
+  orden.porcentajeAvance = 100
+
+  var totalDelFolio = 0
+  folio.folioLineas.forEach(pedido => {
+    pedido.cantidadProducida = pedido.ordenes
+      .filter(x => x.terminada)
+      .reduce((a, b) => (a += b.piezasFinales), 0)
+
+    totalDelFolio += pedido.cantidadProducida
+    var ordenesTerminadas = pedido.ordenes.filter(orden => orden.terminada)
+      .length
+
+    if (ordenesTerminadas === pedido.ordenes.length) {
+      //El pedido esta terminado
+
+      pedido.terminado = true
+      pedido.fechaTerminado = new Date()
+    }
+  })
+
+  folio.cantidadProducida = totalDelFolio
+  var pedidosTerminados = folio.folioLineas.filter(pedido => pedido.terminado)
+    .length
+
+  if (pedidosTerminados === folio.folioLineas.length) {
+    folio.terminado = true
+    folio.fechaTerminado = new Date()
+  }
+}
+
+app.get(
+  "/estatusDeLaOrdenParaRegistro/:folio/:pedido/:orden/:departamento",
+  (req, res, next) => {
+    Folio.findById(req.params.folio)
+      .exec()
+      .then(async folio => {
+        if (!folio) throw "No existe el folio"
+        var orden = folio.folioLineas
+          .id(req.params.pedido)
+          .ordenes.id(req.params.orden)
+
+        if (!orden) throw "No existe la orden"
+
+        var rutaActual = orden.ruta.find(r => r.ubicacionActual)
+
+        var deptoActual = await Departamento.findById(
+          rutaActual.idDepartamento
+        ).exec()
+
+        if (rutaActual.idDepartamento !== req.params.departamento)
+          throw `Esta orden no esta ubicada en este departamento. Actualmente esta ubicada en ${deptoActual.nombre}.`
+
+        if (!rutaActual.recibida) throw "Esta orden no ha sido recibida."
+
+        //Requiere poner a trabajar o no
+
+        const estaEstacion = req.parametros.estacionesDeEscaneo.find(
+          x => x.departamento === req.params.departamento
+        )
+
+        const yaEstaTrabajando = rutaActual.trabajando
+
+        return RESP._200(res, null, [
+          { tipo: "ponerATrabajar", datos: estaEstacion.ponerATrabajar },
+          {
+            tipo: "ponerATrabajarConMaquina",
+            datos: estaEstacion.ponerATrabajarConMaquina,
+          },
+          { tipo: "yaEstaTrabajando", datos: yaEstaTrabajando },
+        ])
+      })
+      .catch(_ => next(_))
+  }
+)
 
 module.exports = app

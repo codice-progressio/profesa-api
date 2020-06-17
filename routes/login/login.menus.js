@@ -47,7 +47,6 @@ function generarMenus() {
     VENTAS: ventas(),
     COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
-    PRODUCCION: produccion(),
     RH: rh(),
     parametros: parametros(),
   }
@@ -341,89 +340,9 @@ function administrador() {
   }
   return menu
 }
-function produccion() {
-  const menu = {
-    permiso: permisos.$("menu:produccion", false),
-    titulo: "Registros",
-    icono: "fas fa-file-alt",
-    submenu: [
-      {
-        titulo: "Almacen de boton",
-        url: "/produccion/almacenDeBoton",
-        permiso: permisos.$("menu:produccion:almacenDeBoton", false),
-      },
-      {
-        titulo: "Barnizado",
-        url: "/produccion/barnizado",
-        permiso: permisos.$("menu:produccion:barnizado", false),
-      },
-      {
-        titulo: "Burato",
-        url: "/produccion/burato",
-        permiso: permisos.$("menu:produccion:burato", false),
-      },
-      {
-        titulo: "Control de produccion",
-        url: "/produccion/controlDeProduccion",
-        permiso: permisos.$("menu:produccion:controlDeProduccion", false),
-      },
-      {
-        titulo: "Empaque",
-        url: "/produccion/empaque",
-        permiso: permisos.$("menu:produccion:empaque", false),
-      },
-      {
-        titulo: "Materiales",
-        url: "/produccion/materiales",
-        permiso: permisos.$("menu:produccion:materiales", false),
-      },
-      {
-        titulo: "Pastilla",
-        url: "/produccion/pastilla",
-        permiso: permisos.$("menu:produccion:pastilla", false),
-      },
-      {
-        titulo: "Laser",
-        url: "/produccion/laser",
-        permiso: permisos.$("menu:produccion:laser", false),
-      },
-      {
-        titulo: "Metalizado",
-        url: "/produccion/metalizado",
-        permiso: permisos.$("menu:produccion:metalizado", false),
-      },
-      {
-        titulo: "Seleccion",
-        url: "/produccion/seleccion",
-        permiso: permisos.$("menu:produccion:seleccion", false),
-      },
-      {
-        titulo: "Transformacion",
-        url: "/produccion/transformacion",
-        permiso: permisos.$("menu:produccion:transformacion", false),
-      },
-      {
-        titulo: "Pulido",
-        url: "/produccion/pulido",
-        permiso: permisos.$("menu:produccion:pulido", false),
-      },
-      {
-        titulo: "Producto terminado",
-        url: "/produccion/productoTerminado",
-        permiso: permisos.$("menu:produccion:productoTerminado", false),
-      },
-      {
-        titulo: "Teñido",
-        url: "/produccion/tenido",
-        permiso: permisos.$("menu:produccion:tenido", false),
-      },
-    ],
-  }
 
-  return menu
-}
-
-function rh() {
+function rh()
+{
   const menu = {
     permiso: permisos.$("menu:rh", false),
     titulo: "RH",

@@ -8,7 +8,7 @@ const URI_DEVELOPMENT = 'mongodb://localhost:27017/carrduci';
 
 const ACCESS_CONTROL_ALLOW_ORIGIN = {
     PRODUCTION: 'https://192.168.1.149',
-    DEVELOPMENT: 'https://127.0.0.1'
+    DEVELOPMENT: 'https://127.0.0.1:4200'
 };
 
 

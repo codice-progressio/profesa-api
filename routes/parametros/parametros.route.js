@@ -33,6 +33,15 @@ app.post("/", (req, res, next) => {
     .catch(err => next(err))
 })
 
+app.delete("/", (req, res, next) => {
+  Parametros.deleteOne({})
+    .exec()
+    .then(datos => {
+      return res.json(datos)
+    })
+    .catch(_ => next(_))
+})
+
 //Despues de esto tiene que existir el docuemnto de parametros
 // para poder continuar
 app.use(async (req, res, next) => {
@@ -257,7 +266,7 @@ app.get("/departamentoTransformacion", (req, res, next) => {
 })
 
 app.put("/estacionesDeEscaneo", (req, res, next) => {
-    Parametros.updateOne({}, { $set: { estacionesDeEscaneo: req.body } })
+  Parametros.updateOne({}, { $set: { estacionesDeEscaneo: req.body } })
     .exec()
     .then(p => res.json(p))
     .catch(err => next(err))

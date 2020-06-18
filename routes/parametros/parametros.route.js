@@ -105,7 +105,7 @@ app.post("/super-admin/crear", async (req, res, next) => {
 
 app.get(
   "/localizacionDeOrdenes",
-  guard.check(permisos.$("parametros:localizacionDeOrdenes")),
+  permisos.$("parametros:localizacionDeOrdenes"),
   (req, res, next) => {
     Parametros.findOne({})
       .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
@@ -132,7 +132,7 @@ app.get(
 
 app.get(
   "/procesosEspeciales",
-  guard.check(permisos.$("parametros:procesosEspeciales")),
+  permisos.$("parametros:procesosEspeciales"),
   (req, res) => {
     Proceso.find({
       _id: { $in: req.parametros.procesosEspeciales },
@@ -143,7 +143,7 @@ app.get(
 )
 app.get(
   "/departamentoTransformacion",
-  guard.check(permisos.$("parametros:departamentoTransformacion")),
+  permisos.$("parametros:departamentoTransformacion"),
   (req, res, next) => {
     Departamento.findById(req.parametros.departamentoTransformacion)
       .exec()
@@ -156,7 +156,7 @@ app.get(
 
 app.get(
   "/estacionesDeEscaneo",
-  guard.check(permisos.$("parametros:estacionesDeEscaneo")),
+  permisos.$("parametros:estacionesDeEscaneo"),
   (req, res, next) => {
     Parametros.findOne({})
       .populate(" estacionesDeEscaneo.departamento", null, "Departamento")

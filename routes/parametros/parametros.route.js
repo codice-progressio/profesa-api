@@ -101,6 +101,72 @@ app.post("/super-admin/crear", async (req, res, next) => {
     .catch(err => next(err))
 })
 
+//Requiere permisos especificos pues todos los usuarios los van a utilizar.
+
+app.get(
+  "/localizacionDeOrdenes",
+  guard.check(permisos.$("parametros:localizacionDeOrdenes")),
+  (req, res, next) => {
+    Parametros.findOne({})
+      .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
+      .populate(
+        "localizacionDeOrdenes.procesosInicialesAlmacen",
+        null,
+        "Proceso"
+      )
+      .populate("localizacionDeOrdenes.procesosFinales", null, "Proceso")
+      .exec()
+
+      .then(r => {
+        return res.status(200).send({
+          procesosIniciales: r.localizacionDeOrdenes.procesosIniciales,
+          procesosFinales: r.localizacionDeOrdenes.procesosFinales,
+          procesosInicialesAlmacen:
+            r.localizacionDeOrdenes.procesosInicialesAlmacen,
+          campoFinal: r.localizacionDeOrdenes.campoFinal,
+        })
+      })
+      .catch(err => next(err))
+  }
+)
+
+app.get(
+  "/procesosEspeciales",
+  guard.check(permisos.$("parametros:procesosEspeciales")),
+  (req, res) => {
+    Proceso.find({
+      _id: { $in: req.parametros.procesosEspeciales },
+    })
+      .then(p => res.json(p))
+      .catch(err => next(err))
+  }
+)
+app.get(
+  "/departamentoTransformacion",
+  guard.check(permisos.$("parametros:departamentoTransformacion")),
+  (req, res, next) => {
+    Departamento.findById(req.parametros.departamentoTransformacion)
+      .exec()
+      .then(dep => {
+        ;``
+        return res.json(dep)
+      })
+  }
+)
+
+app.get(
+  "/estacionesDeEscaneo",
+  guard.check(permisos.$("parametros:estacionesDeEscaneo")),
+  (req, res, next) => {
+    Parametros.findOne({})
+      .populate(" estacionesDeEscaneo.departamento", null, "Departamento")
+      .populate(" estacionesDeEscaneo.usuarios", null, "Usuario")
+      .populate(" estacionesDeEscaneo.maquinas", null, "Maquina")
+      .then(p => res.json(p.estacionesDeEscaneo))
+      .catch(err => next(err))
+  }
+)
+
 //DESPUES DE AQUI TODO LO DEBE SE HACER EL SUPER ADMIN
 
 app.use(permisos.$("SUPER_ADMIN"))
@@ -203,25 +269,6 @@ app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
 
 // LO QUE SIGUE SON PERSONALIZABLES PARA CADA PROYECTO
 
-app.get("/localizacionDeOrdenes", (req, res, next) => {
-  Parametros.findOne({})
-    .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
-    .populate("localizacionDeOrdenes.procesosInicialesAlmacen", null, "Proceso")
-    .populate("localizacionDeOrdenes.procesosFinales", null, "Proceso")
-    .exec()
-
-    .then(r => {
-      return res.status(200).send({
-        procesosIniciales: r.localizacionDeOrdenes.procesosIniciales,
-        procesosFinales: r.localizacionDeOrdenes.procesosFinales,
-        procesosInicialesAlmacen:
-          r.localizacionDeOrdenes.procesosInicialesAlmacen,
-        campoFinal: r.localizacionDeOrdenes.campoFinal,
-      })
-    })
-    .catch(err => next(err))
-})
-
 app.put("/localizacionDeOrdenes", (req, res, next) => {
   Parametros.updateOne({}, { localizacionDeOrdenes: req.body })
     .exec()
@@ -238,14 +285,6 @@ app.put("/procesosEspeciales", (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.get("/procesosEspeciales", (req, res) => {
-  Proceso.find({
-    _id: { $in: req.parametros.procesosEspeciales },
-  })
-    .then(p => res.json(p))
-    .catch(err => next(err))
-})
-
 app.put("/departamentoTransformacion", (req, res, next) => {
   Parametros.updateOne(
     {},
@@ -256,28 +295,10 @@ app.put("/departamentoTransformacion", (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.get("/departamentoTransformacion", (req, res, next) => {
-  Departamento.findById(req.parametros.departamentoTransformacion)
-    .exec()
-    .then(dep => {
-      ;``
-      return res.json(dep)
-    })
-})
-
 app.put("/estacionesDeEscaneo", (req, res, next) => {
   Parametros.updateOne({}, { $set: { estacionesDeEscaneo: req.body } })
     .exec()
     .then(p => res.json(p))
-    .catch(err => next(err))
-})
-
-app.get("/estacionesDeEscaneo", (req, res, next) => {
-  Parametros.findOne({})
-    .populate(" estacionesDeEscaneo.departamento", null, "Departamento")
-    .populate(" estacionesDeEscaneo.usuarios", null, "Usuario")
-    .populate(" estacionesDeEscaneo.maquinas", null, "Maquina")
-    .then(p => res.json(p.estacionesDeEscaneo))
     .catch(err => next(err))
 })
 

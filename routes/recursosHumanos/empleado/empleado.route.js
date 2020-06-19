@@ -196,10 +196,11 @@ app.post(
       }
     }
 
-    if (empleado._id) {
-      modificar(res, empleado, foto)
-    } else {
-      crear(res, empleado, foto)
+    if (empleado.hasOwnProperty("_id")){
+      return modificar(res, empleado, foto)
+    }
+    else {
+      return crear(res, empleado, foto)
     }
   }
 )

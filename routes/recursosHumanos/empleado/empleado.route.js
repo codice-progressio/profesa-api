@@ -254,6 +254,7 @@ function modificar(res, empModificaciones, foto) {
         "rfc",
         "numeroDeCuenta",
         "numeroDeSeguridadSocial",
+        "puestoActualTexto",
         "email",
         "celular",
         "telCasa",

@@ -20,10 +20,10 @@ const EmpleadoSchema = new Schema(
     numeroDeSeguridadSocial: { type: String },
     fotografia: String,
     sueldoActual: Number,
-    puestoActual: {
-      type: Schema.Types.ObjectId,
-      ref: "Puesto"
-    },
+    // puestoActual: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: "Puesto"
+    // },
     puestoActualTexto: {
       type: String,
       required: [
@@ -88,9 +88,9 @@ function crearEventoAltaDeNuevoEmpleado(next) {
   // Antes de guardar un nuevo empleado creamos el evento
   // de alta
   if (this.isNew) {
-    Puesto.findById(this.puestoActual._id)
-      .then(puesto => {
-        if (!puesto) throw "El puesto no existe"
+    //Puesto.findById(this.puestoActual._id) 
+      //.then(puesto => {
+        //if (!puesto) throw "El puesto no existe"
         if (!this.eventos) this.eventos = []
         this.eventos.unshift({
           fechaDeRegistroDeEvento: new Date(),
@@ -108,16 +108,17 @@ function crearEventoAltaDeNuevoEmpleado(next) {
           evento: {
             puesto: {
               anterior: null,
-              nuevo: puesto._id,
+              nuevo: this.puestoActualTexto,
               observaciones: "SISTEMA - Asignacion de puesto por ingreso"
             }
           }
         })
 
-        this.sueldoActual = puesto.sueldoBase
+        // this.sueldoActual = puesto.sueldoBase
+        this.sueldoActual = 0
         next()
-      })
-      .catch(err => next(err))
+      // })
+      // .catch(err => next(err))
   } else {
     next()
   }
@@ -158,7 +159,6 @@ function eliminarAsistenciasDeCurso(next) {
   //Buscamos todos los cursos que contengan a este
   // empleado en la asistencia y los eliminamos.
   const Curso = mongoose.model("Curso")
-
   Curso.find({ asistencias: { empleado: this._id } })
     .exec()
     .then(cursos => {

@@ -222,7 +222,7 @@ const permisos = {
   "menu:ingenieria:tamanos": NO_DEFINIDO,
   "menu:ingenieria:terminados": NO_DEFINIDO,
   "menu:produccion": NO_DEFINIDO,
-  "menu:produccion:scanner": NO_DEFINIDO,
+  "menu:scanner": NO_DEFINIDO,
   "menu:reportes": NO_DEFINIDO,
   "menu:reportes:almacenDeProduccion:faltantes": NO_DEFINIDO,
   "menu:reportes:almacenDeProduccion:personalizado": NO_DEFINIDO,
@@ -237,7 +237,12 @@ const permisos = {
   "menu:ventas:stock": NO_DEFINIDO,
   "menu:parametros": NO_DEFINIDO,
   "menu:parametros:localizacionDeOrdenes": NO_DEFINIDO,
-  "menu:parametros:procesosEspeciales":NO_DEFINIDO
+  "menu:parametros:procesosEspeciales": NO_DEFINIDO,
+  "folio:seguimientos": NO_DEFINIDO,
+  "parametros:departamentoTransformacion": NO_DEFINIDO,
+  "parametros:estacionesDeEscaneo": NO_DEFINIDO,
+  "parametros:localizacionDeOrdenes": NO_DEFINIDO,
+  "parametros:procesosEspeciales": NO_DEFINIDO,
 }
 
 var guard = require("express-jwt-permissions")()

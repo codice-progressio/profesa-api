@@ -1190,7 +1190,7 @@ function actualizarPorcentajesDeAvance(folio, orden, ubicacionActual) {
     var suma = 0
 
     suma = pedido.ordenes.reduce((a, b) => (a += b.porcentajeAvance), 0)
-    var promedio = suma / pedido.ordenes.length + 1
+    var promedio = suma / pedido.ordenes.length
     pedido.porcentajeAvance = promedio
     sumaPedidos += promedio
   })

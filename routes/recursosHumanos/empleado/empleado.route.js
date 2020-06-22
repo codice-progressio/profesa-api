@@ -347,10 +347,7 @@ app.put(
   permisos.$("empleado:evento:puesto"),
   (req, res) => {
     //Cambio de puesto
-    var datos = {
-      _id: req.body._id,
-      _idPuestoNuevo: req.body._idPuestoNuevo
-    }
+    var datos = req.body
     //Buscar que si exista el puesto.
     //Buscar que si exista el empleado
     modificarPuesto(datos)

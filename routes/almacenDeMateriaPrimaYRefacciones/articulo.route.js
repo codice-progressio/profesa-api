@@ -150,12 +150,19 @@ app.put("/", permisos.$("articulo:modificar"), (req, res) => {
         "presentacion",
         "unidad",
         "kgPorUnidad",
-        "existencia",
         "stockMinimo",
         "stockMaximo",
       ].forEach(x => {
         articulo[x] = req.body[x]
       })
+
+      //Recalculamos la existencia.
+
+      var reduce = (a, b) => (a += b.cantidad)
+      var totalEntradas = articulo.entradas.reduce(reduce, 0)
+      var totalSalidas = articulo.salidas.reduce(reduce, 0)
+
+      articulo.existencia = totalEntradas - totalSalidas
 
       return articulo.save()
     })

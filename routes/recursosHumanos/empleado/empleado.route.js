@@ -435,9 +435,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/incapacidad/enfermedadGeneral",
-  guard.check(
-    permisos.$("empleado:evento:estatusLaboral:incapacidad:enfermedadGeneral")
-  ),
+    permisos.$("empleado:evento:estatusLaboral:incapacidad:enfermedadGeneral"),
   (req, res) => {
     //Debe ser la estructura del estatusLaboral
     var datos = req.body
@@ -462,9 +460,7 @@ app.put(
 )
 app.put(
   "/evento/estatusLaboral/incapacidad/riesgoDeTrabajo",
-  guard.check(
-    permisos.$("empleado:evento:estatusLaboral:incapacidad:riesgoDeTrabajo")
-  ),
+  permisos.$("empleado:evento:estatusLaboral:incapacidad:riesgoDeTrabajo"),
   (req, res) => {
     //Debe ser la estructura del estatusLaboral
     var datos = req.body
@@ -487,11 +483,10 @@ app.put(
       )
   }
 )
+
 app.put(
   "/evento/estatusLaboral/incapacidad/maternidad",
-  guard.check(
-    permisos.$("empleado:evento:estatusLaboral:incapacidad:maternidad")
-  ),
+  permisos.$("empleado:evento:estatusLaboral:incapacidad:maternidad"),
   (req, res) => {
     //Debe ser la estructura del estatusLaboral
     var datos = req.body

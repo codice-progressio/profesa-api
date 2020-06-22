@@ -125,7 +125,7 @@ function crearEventoAltaDeNuevoEmpleado(next) {
 }
 
 function autoPopulate(next) {
-  this.populate("puestoActual")
+  // this.populate("puestoActual")
 
   let less = ""
     .concat(" -motivoDeCambio")
@@ -149,8 +149,8 @@ function autoPopulate(next) {
 
   const e = final => `eventos.evento.${ final }`
   
-  this.populate(e("puesto.anterior"), less)
-  this.populate(e("puesto.nuevo"), less)
+  // this.populate(e("puesto.anterior"), less)
+  // this.populate(e("puesto.nuevo"), less)
   this.populate(e("curso"), ' -asistencias')
   next()
 }

@@ -11,11 +11,11 @@ module.exports = function ( datos ){
 
 function crearEventoDeSueldoConComprobacion(d) {
     //Un sueldo no puede superar el maximo del empleado. \
-    elSueldoSuperaElMaximoDelEmpleado(d.datos.nuevoSueldo, d.puesto.Maximo)
+    // elSueldoSuperaElMaximoDelEmpleado(d.datos.nuevoSueldo, d.puesto.Maximo)
   
     // Un sueldo no puede estar por debajo del salario base de
     // su puesto actual.
-    elSueldoEstaPorDebajoDelSueldoBase(d.datos.nuevoSueldo, d.puesto.sueldoBase)
+    // elSueldoEstaPorDebajoDelSueldoBase(d.datos.nuevoSueldo, d.puesto.sueldoBase)
   
     elSueldoActualEsIgualAlAumento(d.datos.nuevoSueldo, d.empleado.sueldoActual)
   
@@ -51,16 +51,16 @@ function crearEventoDeSueldoConComprobacion(d) {
     })
   }
   
-  function elSueldoSuperaElMaximoDelEmpleado(nuevoSueldo, sueldoMaximo) {
-    if (nuevoSueldo > sueldoMaximo)
-      throw "El sueldo supera el maximo del puesto de este empleado"
-  }
+  // function elSueldoSuperaElMaximoDelEmpleado(nuevoSueldo, sueldoMaximo) {
+  //   if (nuevoSueldo > sueldoMaximo)
+  //     throw "El sueldo supera el maximo del puesto de este empleado"
+  // }
   
   // Un sueldo no puede estar por debajo del salario base de
-  function elSueldoEstaPorDebajoDelSueldoBase(nuevoSueldo, sueldoBase) {
-    if (nuevoSueldo < sueldoBase)
-      throw "El sueldo esta por debajo del sueldo base del empleado"
-  }
+  // function elSueldoEstaPorDebajoDelSueldoBase(nuevoSueldo, sueldoBase) {
+  //   if (nuevoSueldo < sueldoBase)
+  //     throw "El sueldo esta por debajo del sueldo base del empleado"
+  // }
   
   function elSueldoActualEsIgualAlAumento(nuevoSueldo, sueldoActual) {
     if (nuevoSueldo === sueldoActual)

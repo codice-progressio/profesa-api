@@ -19,8 +19,10 @@ var EventosRHSchema = new Schema(
       observacion: String
     },
     puesto: {
-      anterior: { type: Schema.Types.ObjectId, ref: "Puesto" },
-      nuevo: { type: Schema.Types.ObjectId, ref: "Puesto" },
+      // anterior: { type: Schema.Types.ObjectId, ref: "Puesto" },
+      // nuevo: { type: Schema.Types.ObjectId, ref: "Puesto" },
+      anterior: String,
+      nuevo: String,
       observaciones: String
     },
 

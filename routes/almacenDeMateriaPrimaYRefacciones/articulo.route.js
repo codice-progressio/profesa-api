@@ -159,10 +159,10 @@ app.put("/", permisos.$("articulo:modificar"), (req, res) => {
       //Recalculamos la existencia.
 
       var reduce = (a, b) => (a += b.cantidad)
-      var totalEntradas = articulo.entradas.reduce(reduce, 0)
-      var totalSalidas = articulo.salidas.reduce(reduce, 0)
+      var totalEntradas = articulo.entradas.reduce(reduce, 0).toPrecision(3)
+      var totalSalidas = articulo.salidas.reduce(reduce, 0).toPrecision(3)
 
-      articulo.existencia = totalEntradas - totalSalidas
+      articulo.existencia = (totalEntradas - totalSalidas).toPrecision(3)
 
       return articulo.save()
     })

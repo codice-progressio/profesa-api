@@ -39,7 +39,7 @@ const EmpleadoSchema = new Schema(
     parentescoEmergencia: String,
 
     estadoCivil: {
-      type: Boolean,
+      type: String,
       required: [true, "Es necesario el estado civil  "]
     },
     hijos: [Date],

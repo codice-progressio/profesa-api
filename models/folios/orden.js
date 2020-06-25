@@ -36,7 +36,7 @@ const ordenSchema = new Schema({
     ],
   },
 
-  piezasFinales: { type: Number, default:0 },
+  piezasFinales: { type: Number, default: 0 },
   observaciones: { type: String },
 
   // //El trayecto que se define para que siga la orden.
@@ -68,21 +68,7 @@ const ordenSchema = new Schema({
 
     */
 
-  ruta: [
-    {
-      idProceso: String,
-      idDepartamento: String,
-      entrada: Date,
-      salida: Date,
-      recibida: Boolean,
-      recepcion: Date,
-      ubicacionActual: Boolean,
-      consecutivo: Number,
-      trabajando: Boolean,
-      trabajandoDesde: Date,
-      datos: {}, //--> ESte varia entre cada uno
-    },
-  ],
+  ruta: [require("../ruta.model")],
 
   //------------------------------------
 

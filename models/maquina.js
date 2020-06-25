@@ -7,6 +7,7 @@ var NombreAnteriorMaquinaShchema = require("../models/nombreAnteriorMaquina")
 var Schema = mongoose.Schema
 
 var Trayecto = require("../models/folios/trayecto")
+const ordenLigeraModel = require("./ordenLigera.model")
 
 var maquinaSchema = new Schema(
   {
@@ -14,25 +15,26 @@ var maquinaSchema = new Schema(
       type: String,
       required: [
         true,
-        "El nombre de la máquina no puede estar vacio. Define un nombre."
-      ]
+        "El nombre de la máquina no puede estar vacio. Define un nombre.",
+      ],
     },
     clave: {
       type: String,
       required: [
         true,
-        "Es importante definir el nombre en clave. Si no lo tiene repite el nombre por favor."
+        "Es importante definir el nombre en clave. Si no lo tiene repite el nombre por favor.",
       ],
-      unique: [true, "La clave de la maquina no se puede repetir."]
+      unique: [true, "La clave de la maquina no se puede repetir."],
     },
     anio: {
       type: Number,
       min: [1950, "El año de fabricación no puede ser anterior a 1950."],
       max: [
         new Date().getFullYear() + 2,
-        `El año de fabricación no puede ser superior a ${new Date().getFullYear() +
-          2}`
-      ]
+        `El año de fabricación no puede ser superior a ${
+          new Date().getFullYear() + 2
+        }`,
+      ],
     },
 
     nombresAnteriores: { type: [NombreAnteriorMaquinaShchema], default: [] },
@@ -41,135 +43,35 @@ var maquinaSchema = new Schema(
       type: [
         {
           type: Schema.Types.ObjectId,
-          ref: "Departamento"
-        }
+          ref: "Departamento",
+        },
       ],
       validate: [
         a => {
           return a.length >= 1
         },
-        "El campo debe tener por lo menos un departamento definido."
-      ]
+        "El campo debe tener por lo menos un departamento definido.",
+      ],
     },
     numeroDeSerie: { type: String },
     observaciones: { type: String },
 
     //Debemos aplicar el PEPS. Estas ordenes no necesariamente
     //deben estar en transformacion
-    pila: [
-      {
-        cliente: String,
-        idCliente: String,
-        fechaPedidoProduccion: Date,
-        esBaston: Boolean,
-        marcaLaser: String,
-        disponible: Boolean,
-        folio: {
-          type: Schema.Types.ObjectId,
-          required: [true, " Es necesario definir el folio"],
-          ref: "Folio"
-        },
-        pedido: {
-          type: Schema.Types.ObjectId,
-          required: [true, " Es necesario definir el pedido"],
-          ref: "Folio.folioLinea"
-        },
-        orden: {
-          type: Schema.Types.ObjectId,
-          required: [true, " Es necesario definir la orden"],
-          ref: "Folio.folioLinea.ordenes"
-        },
-        ubicacionActual: {
-          recivida: Boolean,
-          _id: String,
-          departamento: String,
-          entrada: Date,
-          orden: Number,
-          transformacion: Schema.Types.Mixed
-        },
+    pila: [require("./ordenLigera.model")],
 
-        trayectos: {
-          recivida: Boolean,
-          _id: String,
-          orden: Number,
-          departamento: String
-        },
-        paso: Number,
-        numerosDeOrden: [Number],
-        pasos: Number,
-        modeloCompleto: String,
-        numeroDeOrden: String,
-        observacionesOrden: String,
-        observacionesPedido: String,
-        observacionesFolio: String
-      }
-    ],
-
-    trabajando: { type: Boolean, default: false },
+    trabajando: require("./ordenLigera.model"),
     trabajo: {
-      folio: {
-        type: Schema.Types.ObjectId,
-        ref: "Folio"
-      },
-      pedido: {
-        type: Schema.Types.ObjectId,
-        ref: "Folio.folioLinea"
-      },
-      orden: {
-        type: Schema.Types.ObjectId,
-        ref: "Folio.folioLinea.ordenes"
-      },
-      inicio: { type: Date, default: Date.now() },
-      modeloCompleto: String,
-      pasos: Number,
-      numeroDeOrden: String,
-      numerosDeOrden: [Number],
-      paso: Number,
-      trayectos: {
-        orden: Number
-      },
-
-      cliente: String,
-      idCliente: String,
-      fechaPedidoProduccion: Date,
-      esBaston: Boolean,
-      marcaLaser: String,
-      disponible: Boolean,
-      observacionesOrden: String,
-      observacionesPedido: String,
-      observacionesFolio: String
+      inicio: Date,
+      datos: require("./ordenLigera.model"),
     },
 
     trabajado: [
       {
-        folio: {
-          type: Schema.Types.ObjectId,
-          ref: "Folio"
-        },
-        pedido: {
-          type: Schema.Types.ObjectId,
-          ref: "Folio.folioLinea"
-        },
-        orden: {
-          type: Schema.Types.ObjectId,
-          ref: "Folio.folioLinea.ordenes"
-        },
         inicio: Date,
-        finalizacion: { type: Date, default: Date.now() },
-        paso: Number,
-        trayectos: {
-          orden: Number
-        },
-        cliente: String,
-        idCliente: String,
-        fechaPedidoProduccion: Date,
-        esBaston: Boolean,
-        marcaLaser: String,
-        disponible: Boolean,
-        observacionesOrden: String,
-        observacionesPedido: String,
-        observacionesFolio: String
-      }
+        finalizacion: { type: Date, default: Date.now },
+        datos: require("./ordenLigera.model"),
+      },
     ],
     parada: { type: Boolean, default: false },
     paro: {
@@ -177,24 +79,24 @@ var maquinaSchema = new Schema(
       observacion: String,
       inicio: {
         type: Date,
-        default: Date.now()
+        default: Date.now(),
       },
-      finalizacion: Date
+      finalizacion: Date,
     },
     paros: [
       {
         tipo: String,
         observacion: String,
         inicio: Date,
-        finalizacion: Date
-      }
-    ]
+        finalizacion: Date,
+      },
+    ],
   },
   { collection: "maquinas" }
 )
 
 maquinaSchema.plugin(uniqueValidator, {
-  message: "El campo '{PATH}' debe ser único."
+  message: "El campo '{PATH}' debe ser único.",
 })
 
 /**
@@ -202,7 +104,7 @@ maquinaSchema.plugin(uniqueValidator, {
  *
  * @param {*} next
  */
-var autoPopulate = function(next) {
+var autoPopulate = function (next) {
   this.populate("departamentos")
   next()
 }
@@ -213,7 +115,7 @@ var autoPopulate = function(next) {
  *
  * @param {*} next
  */
-var almacenarNombreAntiguo = function(next) {
+var almacenarNombreAntiguo = function (next) {
   // ESTE PRE SOLO SE LANZA SI NO ES UN NUEVO DOCUMENTO.
   if (this.isNew) {
     next()
@@ -241,7 +143,7 @@ var almacenarNombreAntiguo = function(next) {
         this.nombresAnteriores.push({
           nombre: maquina.nombre,
           clave: maquina.clave,
-          createAt: new Date()
+          createAt: new Date(),
         })
 
         next()
@@ -259,7 +161,7 @@ var almacenarNombreAntiguo = function(next) {
  *
  * @param {*} next
  */
-var eliminarRelacionados = function(next) {
+var eliminarRelacionados = function (next) {
   // Obtenemos el id.
   let idEliminar = this._id
 
@@ -267,8 +169,8 @@ var eliminarRelacionados = function(next) {
 
   let procesosPull = {
     $pull: {
-      maquinas: idEliminar
-    }
+      maquinas: idEliminar,
+    },
   }
 
   promesas.push(Proceso.update({ maquinas: idEliminar }, procesosPull))

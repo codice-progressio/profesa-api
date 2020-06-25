@@ -830,6 +830,27 @@ app.delete("/evento/:idEmpleado/:idEvento", permisos.$('empleado:evento:eliminar
 // =====================================
 // -->
 
+
+
+app.put("/ingreso-empleado", permisos.$('empleado:ingreso:modificar'),(req, res) => {
+  var datos = {
+    idDelEmpleado: req.body.idEmpleado,
+    nuevaFecha: new Date(req.body.fecha)
+  }
+
+
+  Empleado.findById(datos.idDelEmpleado)
+    .exec()
+    .then((empleado) => {
+      empleado.fechaIngreso = datos.nuevaFecha
+      return empleado.save()
+    })
+    .then(fecha => estatusOk("Fecha reemplazada", "date", fecha, res))
+    .catch(err => error("Hubo un error añadiendo la fecha", res, err))
+})
+
+
+
 const error = (msj, res, err) => {
   return RESP._500(res, {
     msj: msj,

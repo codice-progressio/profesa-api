@@ -8,6 +8,10 @@ const fs = require("fs")
 const EmpleadoSchema = new Schema(
   {
     idChecador: String,
+    fechaIngreso: {
+      type: Date,
+      default: Date.now
+    },
     idNomina: { type: String, unique: true },
     nombres: String,
     apellidos: String,
@@ -39,7 +43,7 @@ const EmpleadoSchema = new Schema(
     parentescoEmergencia: String,
 
     estadoCivil: {
-      type: Boolean,
+      type: String,
       required: [true, "Es necesario el estado civil  "]
     },
     hijos: [Date],

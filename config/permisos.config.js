@@ -243,6 +243,7 @@ const permisos = {
   "parametros:estacionesDeEscaneo": NO_DEFINIDO,
   "parametros:localizacionDeOrdenes": NO_DEFINIDO,
   "parametros:procesosEspeciales": NO_DEFINIDO,
+  "empleado:ingreso:modificar": NO_DEFINIDO
 }
 
 var guard = require("express-jwt-permissions")()

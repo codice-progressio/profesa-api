@@ -22,33 +22,7 @@ app.post(
   "/asignar",
   permisos.$("programacionTransformacion:asignar"),
   (req, res) => {
-    /**
-     * Valores que recibimos
-     *
-     * @param idMaquina: string
-     * @param ordenes: [{
-     *      folio:string,
-     *      pedido:string,
-     *      orden:string,
-     *      modeloCompleto: string, //Solo para facilitarnos la vida
-     *      pasos: Number, //La cantidad de pasos que tiene la orden
-     *      numeroDeOrden: string, //El numero de orden (con respecto a
-     *          los procesos) para facilitarnos la vida.
-     *      numerosDeOrden: [Number], // Los numeros de orden (procesos) pero
-     *           juntos para saber que paso es este dato de orden
-     *      paso: Number //Si es primer paso, 2do paso, etc.
-     *
-     *      cliente:String,
-     *      idCliente:String,
-     *      fechaPedidoProduccion: Date,
-     *      esBaston:Boolean,
-     *      marcaLaser:String,
-     *      disponible:Boolean,
-     * }]
-     *
-     *
-     *
-     */
+    //Recibimos una orden ligera.
     const datos = req.body
 
     Maquina.findById(datos.idMaquina)
@@ -90,7 +64,7 @@ app.get(
         $match: { pila: { $exists: true, $ne: [] } },
       },
       {
-        $unwind: { path: "$pila", preserveNullAndEmptyArrays:true },
+        $unwind: { path: "$pila", preserveNullAndEmptyArrays: true },
       },
 
       {
@@ -111,209 +85,232 @@ app.get(
         return Folio.aggregate([
           [
             {
-              '$match': {
-                'terminado': false
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                'folioLineas.terminado': false, 
-                'folioLineas.ordenesGeneradas': true
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas.ordenes', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                'folioLineas.ordenes.terminada': false, 
-                'folioLineas.ordenes.maquinaActual': {
-                  '$exists': false, 
-                  '$eq': null
-                }
-              }
-            }, {
-              '$addFields': {
-                'folioLineas.ordenes.rutaActual': {
-                  '$filter': {
-                    'input': '$folioLineas.ordenes.ruta', 
-                    'as': 'item', 
-                    'cond': {
-                      '$eq': [
-                        '$$item.ubicacionActual', true
-                      ]
-                    }
-                  }
-                }
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas.ordenes.rutaActual', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas.ordenes.ruta', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                'folioLineas.ordenes.ruta.idDepartamento': idTransformacion
-              }
-            }, {
-              '$group': {
-                '_id': {
-                  'folio': '$_id', 
-                  'pedido': '$folioLineas._id', 
-                  'orden': '$folioLineas.ordenes._id', 
-                  'numeroDeOrden': '$folioLineas.ordenes.orden', 
-                  'modeloCompleto': '$folioLineas.ordenes.modeloCompleto', 
-                  'ubicacionActual': '$folioLineas.ordenes.rutaActual', 
-                  'fechaPedidoProduccion': '$fechaDeEntregaAProduccion', 
-                  'marcaLaser': '$folioLineas.laserCliente.laser', 
-                  'observacionesOrden': '$folioLineas.ordenes.observaciones', 
-                  'observacionesPedido': '$folioLineas.ordenes.observacionesPedido', 
-                  'observacionesFolio': '$folioLineas.ordenes.observacionesFolio', 
-                  'cliente': '$cliente'
-                }, 
-                'ruta': {
-                  '$push': '$folioLineas.ordenes.ruta'
-                }, 
-                'numerosDeOrden': {
-                  '$push': '$folioLineas.ordenes.ruta.consecutivo'
-                }, 
-                'pasos': {
-                  '$sum': 1
-                }
-              }
-            }, {
-              '$unwind': {
-                'path': '$ruta', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                '$expr': {
-                  '$lte': [
-                    '$_id.ubicacionActual.orden', '$trayectos.orden'
-                  ]
-                }
-              }
-            }, {
-              '$project': {
-                'folio': '$_id.folio', 
-                'pedido': '$_id.pedido', 
-                'orden': '$_id.orden', 
-                'modeloCompleto': '$_id.modeloCompleto', 
-                'numeroDeOrden': '$_id.numeroDeOrden', 
-                'ubicacionActual': '$_id.ubicacionActual', 
-                'ruta': '$ruta', 
-                'pasos': '$pasos', 
-                'numerosDeOrden': '$numerosDeOrden', 
-                'fechaPedidoProduccion': '$_id.fechaPedidoProduccion', 
-                'marcaLaser': '$_id.marcaLaser', 
-                'observacionesOrden': '$_id.observacionesOrden', 
-                'observacionesPedido': '$_id.observacionesPedido', 
-                'observacionesFolio': '$_id.observacionesFolio', 
-                'cliente': '$_id.cliente'
-              }
-            }, {
-              '$unset': [
-                '_id'
-              ]
-            }, {
-              '$lookup': {
-                'from': 'modelosCompletos', 
-                'localField': 'modeloCompleto', 
-                'foreignField': '_id', 
-                'as': 'modeloCompleto'
-              }
-            }, {
-              '$unwind': {
-                'path': '$modeloCompleto', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$addFields': {
-                'modeloCompleto': '$modeloCompleto.nombreCompleto', 
-                'laserAlmacen': '$modeloCompleto.laserAlmacen.laser', 
-                'esBaston': '$modeloCompleto.esBaston'
-              }
-            }, {
-              '$lookup': {
-                'from': 'clientes', 
-                'localField': 'cliente', 
-                'foreignField': '_id', 
-                'as': 'cliente'
-              }
-            }, {
-              '$unwind': {
-                'path': '$cliente', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$addFields': {
-                'cliente': '$cliente.nombre', 
-                'idCliente': '$cliente._id'
-              }
-            }, {
-              '$project': {
-                'folio': '$folio', 
-                'pedido': '$pedido', 
-                'orden': '$orden', 
-                'modeloCompleto': '$modeloCompleto', 
-                'numeroDeOrden': '$numeroDeOrden', 
-                'ubicacionActual': '$ubicacionActual', 
-                'ruta': '$ruta', 
-                'pasos': '$pasos', 
-                'numerosDeOrden': '$numerosDeOrden', 
-                'fechaPedidoProduccion': '$fechaPedidoProduccion', 
-                'cliente': '$cliente', 
-                'laserAlmacen': '$laserAlmacen', 
-                'esBaston': '$esBaston', 
-                'idCliente': '$idCliente', 
-                'disponible': {
-                  '$eq': [
+              $match: {
+                terminado: false,
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $match: {
+                "folioLineas.terminado": false,
+                "folioLineas.ordenesGeneradas": true,
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas.ordenes",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $match: {
+                "folioLineas.ordenes.terminada": false,
+                "folioLineas.ordenes.maquinaActual": {
+                  $exists: false,
+                  $eq: null,
+                },
+              },
+            },
+
+            {
+              $addFields: {
+                "folioLineas.ordenes.rutaActual": {
+                  $filter: {
+                    input: "$folioLineas.ordenes.ruta",
+                    as: "item",
+                    cond: {
+                      $eq: ["$$item.ubicacionActual", true],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas.ordenes.rutaActual",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas.ordenes.ruta",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $match: {
+                "folioLineas.ordenes.ruta.idDepartamento": idTransformacion,
+              },
+            },
+            {
+              $group: {
+                _id: {
+                  folio: "$_id",
+                  pedido: "$folioLineas._id",
+                  orden: "$folioLineas.ordenes._id",
+                  numeroDeOrden: "$folioLineas.ordenes.orden",
+                  modeloCompleto: "$folioLineas.ordenes.modeloCompleto",
+                  ubicacionActual: "$folioLineas.ordenes.rutaActual",
+                  fechaPedidoProduccion: "$fechaDeEntregaAProduccion",
+                  marcaLaser: "$folioLineas.laserCliente.laser",
+                  observacionesOrden: "$folioLineas.ordenes.observaciones",
+                  observacionesPedido:
+                    "$folioLineas.ordenes.observacionesPedido",
+                  observacionesFolio: "$folioLineas.ordenes.observacionesFolio",
+                  cliente: "$cliente",
+                },
+                ruta: {
+                  $push: "$folioLineas.ordenes.ruta",
+                },
+                numerosDeOrden: {
+                  $push: "$folioLineas.ordenes.ruta.consecutivo",
+                },
+                pasos: {
+                  $sum: 1,
+                },
+              },
+            },
+            {
+              $unwind: {
+                path: "$ruta",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $match: {
+                $expr: {
+                  $lte: ["$_id.ubicacionActual.orden", "$trayectos.orden"],
+                },
+              },
+            },
+            {
+              $project: {
+                folio: "$_id.folio",
+                pedido: "$_id.pedido",
+                orden: "$_id.orden",
+                modeloCompleto: "$_id.modeloCompleto",
+                numeroDeOrden: "$_id.numeroDeOrden",
+                ubicacionActual: "$_id.ubicacionActual",
+                ruta: "$ruta",
+                pasos: "$pasos",
+                numerosDeOrden: "$numerosDeOrden",
+                fechaPedidoProduccion: "$_id.fechaPedidoProduccion",
+                marcaLaser: "$_id.marcaLaser",
+                observacionesOrden: "$_id.observacionesOrden",
+                observacionesPedido: "$_id.observacionesPedido",
+                observacionesFolio: "$_id.observacionesFolio",
+                cliente: "$_id.cliente",
+              },
+            },
+            {
+              $unset: ["_id"],
+            },
+            {
+              $lookup: {
+                from: "modelosCompletos",
+                localField: "modeloCompleto",
+                foreignField: "_id",
+                as: "modeloCompleto",
+              },
+            },
+            {
+              $unwind: {
+                path: "$modeloCompleto",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                modeloCompleto: "$modeloCompleto.nombreCompleto",
+                laserAlmacen: "$modeloCompleto.laserAlmacen.laser",
+                esBaston: "$modeloCompleto.esBaston",
+              },
+            },
+            {
+              $lookup: {
+                from: "clientes",
+                localField: "cliente",
+                foreignField: "_id",
+                as: "cliente",
+              },
+            },
+            {
+              $unwind: {
+                path: "$cliente",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                cliente: "$cliente.nombre",
+                idCliente: "$cliente._id",
+              },
+            },
+            {
+              $project: {
+                folio: "$folio",
+                pedido: "$pedido",
+                orden: "$orden",
+                modeloCompleto: "$modeloCompleto",
+                numeroDeOrden: "$numeroDeOrden",
+                ubicacionActual: "$ubicacionActual",
+                ruta: "$ruta",
+                pasos: "$pasos",
+                numerosDeOrden: "$numerosDeOrden",
+                fechaPedidoProduccion: "$fechaPedidoProduccion",
+                cliente: "$cliente",
+                laserAlmacen: "$laserAlmacen",
+                esBaston: "$esBaston",
+                idCliente: "$idCliente",
+                disponible: {
+                  $eq: [
                     {
-                      '$cmp': [
-                        '$ubicacionActual.consecutivo', 'ruta.consecutivo'
-                      ]
-                    }, 0
-                  ]
-                }
-              }
-            }, {
-              '$addFields': {
-                'ubicacionActual.idDepartamento': {
-                  '$toObjectId': '$ubicacionActual.idDepartamento'
-                }, 
-                'ubicacionActual.idProceso': {
-                  '$toObjectId': '$ubicacionActual.idProceso'
-                }
-              }
-            }, {
-              '$lookup': {
-                'from': 'departamentos', 
-                'localField': 'ubicacionActual.idDepartamento', 
-                'foreignField': '_id', 
-                'as': 'ubicacionActual.departamento'
-              }
-            }, {
-              '$unwind': {
-                'path': '$ubicacionActual.departamento', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$addFields': {
-                'ubicacionActual.departamento': '$ubicacionActual.departamento.nombre'
-              }
-            }
-          ]
+                      $cmp: [
+                        "$ubicacionActual.consecutivo",
+                        "ruta.consecutivo",
+                      ],
+                    },
+                    0,
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                "ubicacionActual.idDepartamento": {
+                  $toObjectId: "$ubicacionActual.idDepartamento",
+                },
+                "ubicacionActual.idProceso": {
+                  $toObjectId: "$ubicacionActual.idProceso",
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "departamentos",
+                localField: "ubicacionActual.idDepartamento",
+                foreignField: "_id",
+                as: "ubicacionActual.departamento",
+              },
+            },
+            {
+              $unwind: {
+                path: "$ubicacionActual.departamento",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                "ubicacionActual.departamento":
+                  "$ubicacionActual.departamento.nombre",
+              },
+            },
+          ],
         ]).exec()
       })
       .then(ordenes => {

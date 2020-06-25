@@ -60,7 +60,7 @@ var maquinaSchema = new Schema(
     //deben estar en transformacion
     pila: [require("./ordenLigera.model")],
 
-    trabajando: require("./ordenLigera.model"),
+    trabajando: Boolean,
     trabajo: {
       inicio: Date,
       datos: require("./ordenLigera.model"),

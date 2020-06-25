@@ -117,9 +117,10 @@ app.get(
               },
             },
 
+            //Obtenemos la ubicicacion actual
             {
               $addFields: {
-                "folioLineas.ordenes.rutaActual": {
+                "folioLineas.ordenes.ubicacionActual": {
                   $filter: {
                     input: "$folioLineas.ordenes.ruta",
                     as: "item",
@@ -132,7 +133,7 @@ app.get(
             },
             {
               $unwind: {
-                path: "$folioLineas.ordenes.rutaActual",
+                path: "$folioLineas.ordenes.ubicacionActual",
                 preserveNullAndEmptyArrays: true,
               },
             },
@@ -155,7 +156,7 @@ app.get(
                   orden: "$folioLineas.ordenes._id",
                   numeroDeOrden: "$folioLineas.ordenes.orden",
                   modeloCompleto: "$folioLineas.ordenes.modeloCompleto",
-                  ubicacionActual: "$folioLineas.ordenes.rutaActual",
+                  ubicacionActual: "$folioLineas.ordenes.ubicacionActual",
                   fechaPedidoProduccion: "$fechaDeEntregaAProduccion",
                   marcaLaser: "$folioLineas.laserCliente.laser",
                   observacionesOrden: "$folioLineas.ordenes.observaciones",

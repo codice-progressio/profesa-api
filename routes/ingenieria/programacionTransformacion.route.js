@@ -148,6 +148,8 @@ app.get(
                 "folioLineas.ordenes.ruta.idDepartamento": idTransformacion,
               },
             },
+
+            //Agregamos de manera temporal
             {
               $group: {
                 _id: {
@@ -155,7 +157,8 @@ app.get(
                   pedido: "$folioLineas._id",
                   orden: "$folioLineas.ordenes._id",
                   numeroDeOrden: "$folioLineas.ordenes.orden",
-                  modeloCompleto: "$folioLineas.ordenes.modeloCompleto",
+                  sku: "$folioLineas.ordenes.modeloCompleto",
+                  idSKU: "$folioLineas.ordenes.modeloCompleto",
                   ubicacionActual: "$folioLineas.ordenes.ubicacionActual",
                   fechaPedidoProduccion: "$fechaDeEntregaAProduccion",
                   marcaLaser: "$folioLineas.laserCliente.laser",
@@ -165,7 +168,7 @@ app.get(
                   observacionesFolio: "$folioLineas.ordenes.observacionesFolio",
                   cliente: "$cliente",
                 },
-                ruta: {
+                rutaParaConsecutivo: {
                   $push: "$folioLineas.ordenes.ruta",
                 },
                 numerosDeOrden: {
@@ -178,7 +181,7 @@ app.get(
             },
             {
               $unwind: {
-                path: "$ruta",
+                path: "$rutaParaConsecutivo",
                 preserveNullAndEmptyArrays: true,
               },
             },
@@ -194,10 +197,12 @@ app.get(
                 folio: "$_id.folio",
                 pedido: "$_id.pedido",
                 orden: "$_id.orden",
-                modeloCompleto: "$_id.modeloCompleto",
+                sku: "$_id.sku",
+                idSKU: "$_id.idSKU",
                 numeroDeOrden: "$_id.numeroDeOrden",
                 ubicacionActual: "$_id.ubicacionActual",
-                ruta: "$ruta",
+                rutaParaConsecutivo: "$rutaParaConsecutivo",
+                // rutaTemp: "ruta", 
                 pasos: "$pasos",
                 numerosDeOrden: "$numerosDeOrden",
                 fechaPedidoProduccion: "$_id.fechaPedidoProduccion",
@@ -214,22 +219,22 @@ app.get(
             {
               $lookup: {
                 from: "modelosCompletos",
-                localField: "modeloCompleto",
+                localField: "sku",
                 foreignField: "_id",
-                as: "modeloCompleto",
+                as: "sku",
               },
             },
             {
               $unwind: {
-                path: "$modeloCompleto",
+                path: "$sku",
                 preserveNullAndEmptyArrays: true,
               },
             },
             {
               $addFields: {
-                modeloCompleto: "$modeloCompleto.nombreCompleto",
-                laserAlmacen: "$modeloCompleto.laserAlmacen.laser",
-                esBaston: "$modeloCompleto.esBaston",
+                sku: "$sku.nombreCompleto",
+                laserAlmacen: "$sku.laserAlmacen.laser",
+                esBaston: "$sku.esBaston",
               },
             },
             {
@@ -257,10 +262,11 @@ app.get(
                 folio: "$folio",
                 pedido: "$pedido",
                 orden: "$orden",
-                modeloCompleto: "$modeloCompleto",
+                sku: "$sku",
+                idSKU: "$idSKU",
                 numeroDeOrden: "$numeroDeOrden",
                 ubicacionActual: "$ubicacionActual",
-                ruta: "$ruta",
+                rutaParaConsecutivo: "$rutaParaConsecutivo",
                 pasos: "$pasos",
                 numerosDeOrden: "$numerosDeOrden",
                 fechaPedidoProduccion: "$fechaPedidoProduccion",
@@ -273,7 +279,7 @@ app.get(
                     {
                       $cmp: [
                         "$ubicacionActual.consecutivo",
-                        "ruta.consecutivo",
+                        "rutaParaConsecutivo.consecutivo",
                       ],
                     },
                     0,
@@ -375,7 +381,7 @@ app.get(
  *
  */
 function obtenerPaso(orden) {
-  const consecutivo = orden.ruta.consecutivo * 1
+  const consecutivo = orden.rutaParaConsecutivo.consecutivo * 1
 
   const paso = orden.numerosDeOrden.findIndex(x => x * 1 === consecutivo)
 

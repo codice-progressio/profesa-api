@@ -666,7 +666,19 @@ app.put(
           generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos)
         })
 
+        const folioGUI = req.body
+
         folio.ordenesGeneradas = true
+        folio.observaciones = folioGUI.observaciones
+
+        for (let i = 0; i < folioGUI.length; i++) {
+          folio.folioLineas[i].observaciones =
+            folioGUI.folioLineas[i].observaciones
+          for (let a = 0; a < folio.folioLineas[i].ordenes.length; a++) {
+            folio.folioLineas[i].ordenes[a].observaciones =
+              folioGUI[i].folioLineas[i].ordenes[a].observaciones
+          }
+        }
 
         return folio.save()
       })

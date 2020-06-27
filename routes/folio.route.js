@@ -689,8 +689,11 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   // Asignamos generales
   pedidoBD.observaciones = pedidoGUI.observaciones
   pedidoBD.ordenesGeneradas = true
+
+  const procesosExtraordinarios = pedidoGUI.procesosExtraordinarios || []
+
   const procesosAUsar =
-    pedidoBD.almacen || pedidoGUI.procesosExtraordinarios.length > 0
+    pedidoBD.almacen || procesosExtraordinarios.length > 0
       ? pedidoGUI.procesosExtraordinarios
       : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
 

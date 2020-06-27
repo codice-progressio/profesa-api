@@ -157,15 +157,15 @@ app.get(
                   pedido: "$folioLineas._id",
                   orden: "$folioLineas.ordenes._id",
                   numeroDeOrden: "$folioLineas.ordenes.orden",
-                  sku: "$folioLineas.ordenes.modeloCompleto",
-                  idSKU: "$folioLineas.ordenes.modeloCompleto",
+                  sku: "$folioLineas.modeloCompleto",
+                  idSKU: "$folioLineas.modeloCompleto",
                   ubicacionActual: "$folioLineas.ordenes.ubicacionActual",
-                  fechaPedidoProduccion: "$fechaDeEntregaAProduccion",
-                  marcaLaser: "$folioLineas.laserCliente.laser",
+                  fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+                  laser: "$folioLineas.laserCliente.laser",
+                  laserAlmacen: "$folioLineas.modeloCompleto",
                   observacionesOrden: "$folioLineas.ordenes.observaciones",
-                  observacionesPedido:
-                    "$folioLineas.ordenes.observacionesPedido",
-                  observacionesFolio: "$folioLineas.ordenes.observacionesFolio",
+                  observacionesPedido: "$folioLineas.observaciones",
+                  observacionesFolio: "$observaciones",
                   cliente: "$cliente",
                 },
                 rutaParaConsecutivo: {
@@ -202,11 +202,12 @@ app.get(
                 numeroDeOrden: "$_id.numeroDeOrden",
                 ubicacionActual: "$_id.ubicacionActual",
                 rutaParaConsecutivo: "$rutaParaConsecutivo",
-                // rutaTemp: "ruta", 
+                // rutaTemp: "ruta",
                 pasos: "$pasos",
                 numerosDeOrden: "$numerosDeOrden",
-                fechaPedidoProduccion: "$_id.fechaPedidoProduccion",
-                marcaLaser: "$_id.marcaLaser",
+                fechaDeEntregaAProduccion: "$_id.fechaDeEntregaAProduccion",
+                laser: "$_id.laser",
+                laserAlmacen: "$_id.laserAlmacen",
                 observacionesOrden: "$_id.observacionesOrden",
                 observacionesPedido: "$_id.observacionesPedido",
                 observacionesFolio: "$_id.observacionesFolio",
@@ -269,11 +270,15 @@ app.get(
                 rutaParaConsecutivo: "$rutaParaConsecutivo",
                 pasos: "$pasos",
                 numerosDeOrden: "$numerosDeOrden",
-                fechaPedidoProduccion: "$fechaPedidoProduccion",
+                fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
                 cliente: "$cliente",
+                laser: "$laser",
                 laserAlmacen: "$laserAlmacen",
                 esBaston: "$esBaston",
                 idCliente: "$idCliente",
+                observacionesOrden: "$observacionesOrden",
+                observacionesPedido: "$observacionesPedido",
+                observacionesFolio: "$observacionesFolio",
                 disponible: {
                   $eq: [
                     {
@@ -392,7 +397,7 @@ function obtenerPaso(orden) {
 
 var datos = null
 app.put(
-  "/actualizarUbicacion/:idT",
+  "/actualizarUbicacion",
   permisos.$("programacionTransformacion:actualizarUbicacion"),
   (req, res) => {
     Maquina.aggregate([
@@ -557,5 +562,20 @@ app.put(
       )
   }
 )
+
+app.get("/maquinas", (req, res, next) => {
+  Maquina.aggregate([
+    {
+      $match: {
+        departamentos: ObjectId(req.parametros.departamentoTransformacion),
+      },
+    },
+  ])
+    .exec()
+    .then(maquinas =>
+      RESP._200(res, null, [{ tipo: "maquinas", datos: maquinas }])
+    )
+    .catch(_ => next(_))
+})
 
 module.exports = app

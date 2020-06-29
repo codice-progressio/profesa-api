@@ -84,6 +84,7 @@ app.get(
 
         return Folio.aggregate([
           [
+            //Folios sin terminar
             {
               $match: {
                 terminado: false,
@@ -95,6 +96,7 @@ app.get(
                 preserveNullAndEmptyArrays: true,
               },
             },
+            //Pedidos sin terminar con ordenes generadas.
             {
               $match: {
                 "folioLineas.terminado": false,
@@ -107,6 +109,8 @@ app.get(
                 preserveNullAndEmptyArrays: true,
               },
             },
+            //Ordenes que no esten terminadas y que
+            //no esten asignadas a ninguna maquina.
             {
               $match: {
                 "folioLineas.ordenes.terminada": false,
@@ -117,10 +121,14 @@ app.get(
               },
             },
 
-            //Obtenemos la ubicicacion actual
+            //Obtenemos la ubicicacion actual  y lo guardamos
+            // en un campo.
             {
               $addFields: {
+                //Creamos el campo ubicacionActual
                 "folioLineas.ordenes.ubicacionActual": {
+                  //Filtramos el arreglo ruta para obtener
+                  // solo la ruta que tenga el flag ubicacionActual = true
                   $filter: {
                     input: "$folioLineas.ordenes.ruta",
                     as: "item",
@@ -137,21 +145,27 @@ app.get(
                 preserveNullAndEmptyArrays: true,
               },
             },
+
+            //Copiamos la orden, una copia por cada ruta que tiene.
             {
               $unwind: {
                 path: "$folioLineas.ordenes.ruta",
                 preserveNullAndEmptyArrays: true,
               },
             },
+
+            //Quitamos todas las copias que no pertenezcan al departamento
+            // de transformacion.
             {
               $match: {
                 "folioLineas.ordenes.ruta.idDepartamento": idTransformacion,
               },
             },
 
-            //Agregamos de manera temporal
+            //Agrupamos todo de nuevo.
             {
               $group: {
+                //Recuperamos los datos que nos interesan.
                 _id: {
                   folio: "$_id",
                   pedido: "$folioLineas._id",
@@ -168,27 +182,43 @@ app.get(
                   observacionesFolio: "$observaciones",
                   cliente: "$cliente",
                 },
+                //Aqui estamos obteniendo de nuevo toda la ruta.
+                //* */
                 rutaParaConsecutivo: {
                   $push: "$folioLineas.ordenes.ruta",
                 },
+
+                //Aqui obtenemos los numeros de orden del consecutivo de la ruta .
                 numerosDeOrden: {
                   $push: "$folioLineas.ordenes.ruta.consecutivo",
                 },
+                //Aqui sumamos la cantidad de pasos que tiene la orden.
+                // De esta manera sabemos si lleva uno, dos o tres pasos.
                 pasos: {
                   $sum: 1,
                 },
               },
             },
+            //Separamos el arreglo del consecutivo de nuevo para obtener una
+            // orden por ruta, asi, si la orden va a entrar dos veces al mismo
+            // departamento listamos dos documentos.
             {
               $unwind: {
                 path: "$rutaParaConsecutivo",
                 preserveNullAndEmptyArrays: true,
               },
             },
+
+
+            //Filtramos todos los departamentos que esten en su consecutivo de ///ruta por encima de la ruta actual, de manera que solo obtenemos
+            //
             {
               $match: {
                 $expr: {
-                  $lte: ["$_id.ubicacionActual.orden", "$trayectos.orden"],
+                  $lte: [
+                    "$_id.ubicacionActual.consecutivo",
+                    "$rutaParaConsecutivo.consecutivo",
+                  ],
                 },
               },
             },
@@ -326,41 +356,7 @@ app.get(
         ]).exec()
       })
       .then(ordenes => {
-        // return res.send(ordenes)
-        /**
-         * Obtenemos esta estructura:
-         *{
-         * "folio": "5e4f14117536df07860ca3ae",
-         * "pedido": "5e4f14117536df07860ca3af",
-         * "orden": "5e500a3997a86a078c4322bf",
-         * "modeloCompleto": "2505-36-1-GIS-BRILLANTE",
-         * "numeroDeOrden": "105-1-0",
-         * "ubicacionActual": {
-         *     "recivida": false,
-         *     "_id": "5e500a3a97a86a078c432418",
-         *     "departamento": "5c6f07f6a6fd170abc390916",
-         *     "orden": "1"
-         * },
-         * "trayectos": {
-         *     "recivida": false,
-         *     "_id": "5e500a3a97a86a078c432412",
-         *     "orden": "3",
-         *     "departamento": "5c6f07f6a6fd170abc39091b"
-         * },
-         * "pasos": 1,
-         * "numerosDeOrden": [
-         *     "3"
-         * ],
-         * "fechaPedidoProduccion": "2020-02-20T23:20:44.412Z",
-         * "cliente": "ALMACÉN",
-         * "laserAlmacen": "",
-         * "esBaston": false,
-         * "idCliente": "5d091d9182465a06140e9c7b"
-         * }
-         *  Ahora vamos a clasificar cada una de estas ordenes como primero, segundo, ...., pasos.
-         *
-         *
-         */
+
         ordenes.map(orden => (orden["paso"] = obtenerPaso(orden)))
 
         //Quitamos las ordenes que ya estan asignadas.a

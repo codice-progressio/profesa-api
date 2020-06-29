@@ -28,7 +28,7 @@ app.post(
     Maquina.findById(datos.idMaquina)
       .exec()
       .then(maquina => {
-        if (!maquina) throw " No existe  la maquina."
+        if (!maquina) throw "No existe la maquina."
 
         return Maquina.update(
           { _id: maquina.id },

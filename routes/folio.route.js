@@ -12,6 +12,7 @@ const ObjectId = mongoose.Types.ObjectId
 const Proceso = require("../models/procesos/proceso")
 const Departamento = require("../models/departamento")
 const SKU = require("../models/modeloCompleto")
+const Maquina = require("../models/maquina")
 
 var permisos = require("../config/permisos.config")
 
@@ -1071,13 +1072,10 @@ app.put("/recibirOrden", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-app.put("/ponerATrabajarORegistrar", (req, res, next) => {
+app.put("/ponerATrabajar", (req, res, next) => {
   var orden = null
   var msj = null
   var folio = null
-
-  if (!req.body.datos) req.body.datos = {}
-  req.body.datos["user"] = req.user._id
 
   Folio.findOne({ _id: req.body.idFolio })
     .exec()
@@ -1116,66 +1114,242 @@ app.put("/ponerATrabajarORegistrar", (req, res, next) => {
 
         msj = `La orden ${orden.orden} empezo a trabajar. `
       } else {
-        ubicacion.salida = new Date()
-        ubicacion.ubicacionActual = false
-        ubicacion.trabajando = false
-        ubicacion.datos = req.body.datos
-        ubicacion.markModified("datos")
-        //Obtenemos el siguiente departamento en base
-        //  al consecutivo que tenemos + 1
-
-        var siguiente = orden.ruta[ubicacion.consecutivo + 1]
-        if (siguiente) {
-          siguiente.ubicacionActual = true
-          siguiente.entrada = new Date()
-
-          //Si es la penultima ubicacion agregamos la cantidad
-          //desde datos a siguiente definido en los parametros
-          // de localizacion de ordenes, en campoFinal.
-
-          const esPenultimo = orden.ruta.length - 2 === ubicacion.consecutivo
-          const campoFinal = req.parametros.localizacionDeOrdenes.campoFinal
-          if (!campoFinal)
-            throw "No se ha definido el campo final en los parametros de localizacion de ordenes. Para poder continuar el adminitrador del sistema debe definir estos datos. No se puede continuar"
-          if (esPenultimo) {
-            if (!siguiente.hasOwnProperty("datos"))
-              siguiente.datos = { [campoFinal]: 0 }
-
-            if (!req.body.hasOwnProperty("datos"))
-              throw `Es necesario enviar la propiedad datos con la sub propiedad '${campoFinal}' para anexarla al ultimo departamento. Este error debe ser reportado al administrador del sistema.`
-
-            if (!req.body.datos.hasOwnProperty(campoFinal))
-              throw `Es necesario definir en el formulario de esta estacion el campo '${campoFinal}' para definir el valor total de la orden al finalizar en el siguiente departamento. Este error debe ser reportado al administrador. `
-
-            siguiente.datos[campoFinal] = req.body.datos[campoFinal]
-            siguiente.markModified("datos")
-          }
-
-          msj = `La orden ${orden.orden} se registro correctamente.`
-        } else {
-          //Termino el proceso modificando el folio
-          accionesDeOrdenFinalizada(folio, orden, ubicacion, req)
-          msj = `La orden ${orden.orden} esta finalizada.`
-
-          const idSKU = folio.folioLineas.id(req.body.idPedido).modeloCompleto
-            ._id
-
-          const sk = null
-          try {
-            const lote = {
-              cantidadEntrada: orden.piezasFinales,
-              observaciones: `[SISTEMA] Entrada automatica desde produccion orden # ${orden.orden}`,
-              idOrden: orden._id,
-            }
-
-            await SKU.guardarLote(idSKU, lote)
-          } catch (error) {
-            next(err)
-          }
-        }
-        //Actualizamos el porcentaje de avance del folio
-        actualizarPorcentajesDeAvance(folio, orden, ubicacion)
+        //Si ya esta trabajando mandamos un error
+        throw "Esta orden ya esta trabajando."
       }
+
+      return folio.save()
+    })
+    .then(folio => {
+      return RESP._200(res, msj, [
+        {
+          tipo: "orden",
+          datos: folio.folioLineas
+            .id(req.body.idPedido)
+            .ordenes.id(req.body.idOrden),
+        },
+      ])
+    })
+    .catch(_ => next(_))
+})
+
+app.put("/ponerATrabajarEnMaquina", (req, res, next) => {
+  var orden = null
+  var msj = null
+  var folio = null
+
+  if (!req.body.datos) req.body.datos = {}
+  req.body.datos["user"] = req.user._id
+
+  Folio.findOne({ _id: req.body.idFolio })
+    .exec()
+    .then(async f => {
+      folio = f
+      if (!folio) throw "No existe la orden."
+      orden = folio.folioLineas
+        .id(req.body.idPedido)
+        .ordenes.id(req.body.idOrden)
+
+      var ubicacion = orden.ruta.find(x => x.ubicacionActual)
+      //No debe estar terminada
+
+      if (orden.terminada) throw "Esta orden ya fue terminada"
+      //Debe ser el mismo departamento
+      if (req.body.idDepartamento !== ubicacion.idDepartamento) {
+        var deptoActual = await Departamento.findById(
+          ubicacion.idDepartamento
+        ).exec()
+
+        throw `Esta orden no esta ubicada en este departamento. Actualmente se encuentra en el departamento de ${deptoActual.nombre}`
+      }
+      //Debe estar recibida
+
+      if (!ubicacion.recibida) throw "No has recibido la orden"
+      //Extraemos de los parametros los permisos si
+      // esta estacion pone a trabajar o no.
+      const estacion = req.parametros.estacionesDeEscaneo.find(
+        x => x.departamento === req.body.idDepartamento
+      )
+      //Si no esta trabajando la ponemos a trabajar.
+
+      var maquinaSeleccionada = await Maquina.findById(
+        req.body.idMaquina
+      ).exec()
+      if (!maquinaSeleccionada) throw "No existe la maquina"
+
+      //La maquina ya esta trabajando
+      if (maquinaSeleccionada.trabajando)
+        throw "La maquina seleccinada esta trabajando actualmente. Necesitas finalizar su trabajo para empezar a trabajar con esta orden. "
+
+      //La maquina no tiene la orden asignada en su pila de trabajo.
+      var ordenExistePila = maquinaSeleccionada.pila.filter(
+        ordenPila => ordenPila.orden === req.body.idOrden
+      )
+      //Ordenamos los pasos que hay en la pila de la misma orden y obtenemos siempre el menor para descontar.
+
+      var ordenExiste = ordenExistePila
+        .sort((a, b) => (a.paso > b.paso ? -1 : 1))
+        .pop()
+      if (!ordenExiste)
+        throw "Esta orden no esta asignada a la pila de trabajo de esta maquina "
+
+      if (estacion.ponerATrabajarConMaquina && !ubicacion.trabajando) {
+        ubicacion.trabajando = true
+        ubicacion.trabajandoDesde = new Date()
+        ubicacion.maquina = maquinaSeleccionada._id.toString()
+
+        maquinaSeleccionada.trabajando = true
+        maquinaSeleccionada.trabajo.inicio = new Date()
+        maquinaSeleccionada.trabajo.datos = ordenExiste
+
+        //Eliminamos de la pila la orden que acabamos de poner a trabajar
+        // La operacion pull es de mongoose
+        maquinaSeleccionada.pila.pull({ _id: ordenExiste._id })
+
+        msj = `La orden ${orden.orden} empezo a trabajar en la maquina ${maquinaSeleccionada.clave} `
+      } else {
+        //Si ya esta trabajando mandamos un error
+        throw "Esta orden ya esta trabajando."
+      }
+
+      await maquinaSeleccionada.save()
+
+      return folio.save()
+    })
+    .then(folio => {
+      return RESP._200(res, msj, [
+        {
+          tipo: "orden",
+          datos: folio.folioLineas
+            .id(req.body.idPedido)
+            .ordenes.id(req.body.idOrden),
+        },
+      ])
+    })
+    .catch(_ => next(_))
+})
+
+app.put("/registrar", (req, res, next) => {
+  var orden = null
+  var msj = null
+  var folio = null
+
+  if (!req.body.datos) req.body.datos = {}
+  req.body.datos["user"] = req.user._id
+
+  Folio.findOne({ _id: req.body.idFolio })
+    .exec()
+    .then(async f => {
+      folio = f
+      if (!folio) throw "No existe la orden."
+      orden = folio.folioLineas
+        .id(req.body.idPedido)
+        .ordenes.id(req.body.idOrden)
+
+      var ubicacion = orden.ruta.find(x => x.ubicacionActual)
+      //No debe estar terminada
+
+      if (orden.terminada) throw "Esta orden ya fue terminada"
+      //Debe ser el mismo departamento
+      if (req.body.idDepartamento !== ubicacion.idDepartamento) {
+        var deptoActual = await Departamento.findById(
+          ubicacion.idDepartamento
+        ).exec()
+
+        throw `Esta orden no esta ubicada en este departamento. Actualmente se encuentra en el departamento de ${deptoActual.nombre}`
+      }
+      //Debe estar recibida
+
+      if (!ubicacion.recibida) throw "No has recibido la orden"
+      //Extraemos de los parametros los permisos si
+      // esta estacion pone a trabajar o no.
+      const estacion = req.parametros.estacionesDeEscaneo.find(
+        x => x.departamento === req.body.idDepartamento
+      )
+
+      if (estacion.ponerATrabajar && !ubicacion.trabajando)
+        throw "La orden no se ha puesto a trabajar"
+
+      if (estacion.ponerATrabajarConMaquina && !ubicacion.trabajando)
+        throw "La orden no se ha puesto a trabajar en ninguna maquina"
+
+      ubicacion.salida = new Date()
+      ubicacion.ubicacionActual = false
+      ubicacion.trabajando = false
+      ubicacion.datos = req.body.datos
+      ubicacion.markModified("datos")
+      //Obtenemos el siguiente departamento en base
+      //  al consecutivo que tenemos + 1
+
+      var maquina = null
+
+      if (estacion.ponerATrabajarConMaquina) {
+        maquina = await Maquina.findById(ubicacion.idMaquina)
+          .select("trabajado")
+          .exec()
+
+        if (!maquina) throw "La maquina no existe"
+
+        maquina.trabajado.push({
+          datos: orden,
+        })
+        maquina.trabajando = false
+        maquina.trabajo = null
+        orden.asignada = false
+      }
+
+      var siguiente = orden.ruta[ubicacion.consecutivo + 1]
+      if (siguiente) {
+        siguiente.ubicacionActual = true
+        siguiente.entrada = new Date()
+
+        //Si es la penultima ubicacion agregamos la cantidad
+        //desde datos a siguiente definido en los parametros
+        // de localizacion de ordenes, en campoFinal.
+
+        const esPenultimo = orden.ruta.length - 2 === ubicacion.consecutivo
+        const campoFinal = req.parametros.localizacionDeOrdenes.campoFinal
+        if (!campoFinal)
+          throw "No se ha definido el campo final en los parametros de localizacion de ordenes. Para poder continuar el adminitrador del sistema debe definir estos datos. No se puede continuar"
+        if (esPenultimo) {
+          if (!siguiente.hasOwnProperty("datos"))
+            siguiente.datos = { [campoFinal]: 0 }
+
+          if (!req.body.hasOwnProperty("datos"))
+            throw `Es necesario enviar la propiedad datos con la sub propiedad '${campoFinal}' para anexarla al ultimo departamento. Este error debe ser reportado al administrador del sistema.`
+
+          if (!req.body.datos.hasOwnProperty(campoFinal))
+            throw `Es necesario definir en el formulario de esta estacion el campo '${campoFinal}' para definir el valor total de la orden al finalizar en el siguiente departamento. Este error debe ser reportado al administrador. `
+
+          siguiente.datos[campoFinal] = req.body.datos[campoFinal]
+          siguiente.markModified("datos")
+        }
+
+        msj = `La orden ${orden.orden} se registro correctamente.`
+      } else {
+        //Termino el proceso modificando el folio
+        accionesDeOrdenFinalizada(folio, orden, ubicacion, req)
+        msj = `La orden ${orden.orden} esta finalizada.`
+
+        const idSKU = folio.folioLineas.id(req.body.idPedido).modeloCompleto._id
+
+        const sk = null
+        try {
+          const lote = {
+            cantidadEntrada: orden.piezasFinales,
+            observaciones: `[SISTEMA] Entrada automatica desde produccion orden # ${orden.orden}`,
+            idOrden: orden._id,
+          }
+
+          await SKU.guardarLote(idSKU, lote)
+        } catch (error) {
+          next(err)
+        }
+      }
+      //Actualizamos el porcentaje de avance del folio
+      actualizarPorcentajesDeAvance(folio, orden, ubicacion)
+
+      if (maquina) await maquina.save()
 
       return folio.save()
     })

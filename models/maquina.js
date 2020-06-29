@@ -68,6 +68,7 @@ var maquinaSchema = new Schema(
 
     trabajado: [
       {
+        select: false,
         inicio: Date,
         finalizacion: { type: Date, default: Date.now },
         datos: require("./ordenLigera.model"),

@@ -9,6 +9,7 @@ module.exports = {
   ubicacionActual: Boolean,
   consecutivo: Number,
   trabajando: Boolean,
+  idMaquina: String,
   trabajandoDesde: Date,
   datos: {}, //--> ESte varia entre cada uno
 }

@@ -1196,7 +1196,7 @@ app.put("/ponerATrabajarEnMaquina", (req, res, next) => {
       if (estacion.ponerATrabajarConMaquina && !ubicacion.trabajando) {
         ubicacion.trabajando = true
         ubicacion.trabajandoDesde = new Date()
-        ubicacion.maquina = maquinaSeleccionada._id.toString()
+        ubicacion.idMaquina = maquinaSeleccionada._id.toString()
 
         maquinaSeleccionada.trabajando = true
         maquinaSeleccionada.trabajo.inicio = new Date()

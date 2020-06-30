@@ -209,7 +209,6 @@ app.get(
               },
             },
 
-
             //Filtramos todos los departamentos que esten en su consecutivo de ///ruta por encima de la ruta actual, de manera que solo obtenemos
             //
             {
@@ -356,7 +355,6 @@ app.get(
         ]).exec()
       })
       .then(ordenes => {
-
         ordenes.map(orden => (orden["paso"] = obtenerPaso(orden)))
 
         //Quitamos las ordenes que ya estan asignadas.a
@@ -391,22 +389,26 @@ function obtenerPaso(orden) {
   return paso + 1
 }
 
-var datos = null
 app.put(
   "/actualizarUbicacion",
   permisos.$("programacionTransformacion:actualizarUbicacion"),
   (req, res) => {
+    var datos = null
     Maquina.aggregate([
       {
+        //Las maquinas que son de este departamento
         $match: {
           departamentos: {
             $elemMatch: {
               $eq: ObjectId(req.parametros.departamentoTransformacion),
             },
           },
+          //Que tenga por lo menos una orden en la pila
           "pila.0": { $exists: true },
         },
       },
+      //Solo nos interesa el id de la maquina
+      // y su pila de trabajo.
       {
         $project: {
           idMaquina: "$_id",
@@ -415,8 +417,15 @@ app.put(
       },
 
       {
-        $unwind: "$pila",
+        $unwind: {
+          path: "$pila",
+          preserveNullAndEmptyArrays: true,
+        },
       },
+
+      { $addFields: { "pila.folio": { $toObjectId: "$pila.folio" } } },
+
+      // //Populamos los datos
       {
         $lookup: {
           from: "folios",
@@ -425,7 +434,12 @@ app.put(
           as: "pila.folio",
         },
       },
-      { $unwind: "$pila.folio" },
+      {
+        $unwind: {
+          path: "$pila.folio",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       {
         $project: {
@@ -438,7 +452,12 @@ app.put(
         },
       },
 
-      { $unwind: "$pila.folio.folioLineas" },
+      {
+        $unwind: {
+          path: "$pila.folio.folioLineas",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       {
         $project: {
@@ -452,11 +471,16 @@ app.put(
           orden: "$orden",
         },
       },
-      { $unwind: "$pila.folio.folioLineas.ordenes" },
-
+      {
+        $unwind: {
+          path: "$pila.folio.folioLineas.ordenes",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $project: {
           idMaquina: "$idMaquina",
+          ordenTemp: "$pila.folio.folioLineas.ordenes",
           idPila: "$idPila",
           "pila.folio._id": "$pila.folio._id",
           "pila.folio.folioLineas._id": "$pila.folio.folioLineas._id",
@@ -464,13 +488,14 @@ app.put(
             "$pila.folio.folioLineas.ordenes._id",
           "pila.folio.folioLineas.ordenes.ubicacionActual":
             "$pila.folio.folioLineas.ordenes.ubicacionActual",
-          folio: "$folio",
-          pedido: "$pedido",
-          orden: "$orden",
+          folio: { $toObjectId: "$folio" },
+          pedido: { $toObjectId: "$pedido" },
+          orden: { $toObjectId: "$orden" },
         },
       },
       {
         $project: {
+          ordenTemp: 1,
           idMaquina: 1,
           idPila: 1,
           pila: 1,
@@ -495,24 +520,47 @@ app.put(
       },
       {
         $project: {
+          ordenTemp: 1,
           idMaquina: 1,
           idPila: 1,
           folio: 1,
           pedido: 1,
           orden: 1,
-          ubicacionActual: "$pila.folio.folioLineas.ordenes.ubicacionActual",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$ordenTemp.ruta",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $match: { "ordenTemp.ruta.ubicacionActual": true },
+      },
+
+      { $addFields: { ubicacionActual: "$ordenTemp.ruta" } },
+      {
+        $addFields: {
+          "ubicacionActual.idDepartamento": {
+            $toObjectId: "$ubicacionActual.idDepartamento",
+          },
         },
       },
       {
         $lookup: {
           from: "departamentos",
-          localField: "ubicacionActual.departamento",
+          localField: "ubicacionActual.idDepartamento",
           foreignField: "_id",
           as: "ubicacionActual.departamento",
         },
       },
       {
         $unwind: "$ubicacionActual.departamento",
+      },
+      {
+        $unset: "ordenTemp",
       },
       {
         $addFields: {
@@ -523,29 +571,30 @@ app.put(
     ])
       .exec()
       .then(dat => {
-        return res.send(req.parametros)
+        // return res.send(dat)
         datos = dat
         return Maquina.find({
           _id: { $in: datos.map(d => d.idMaquina) },
         }).exec()
       })
-      // .then(maquinas => {
-      //   const promesas = []
-      //   maquinas.forEach(maquina => {
-      //     datos.forEach(d => {
-      //       const pila = maquina.pila.id(d.idPila)
-      //       if (pila) {
-      //         pila.ubicacionActual = d.ubicacionActual
-      //         pila.disponible =
-      //           pila.ubicacionActual.orden === pila.trayectos.orden
-      //       }
-      //     })
+      .then(maquinas => {
+        const promesas = []
+        maquinas.forEach(maquina => {
+          datos.forEach(d => {
+            const ordenLigera = maquina.pila.id(d.idPila)
+            if (ordenLigera) {
+              ordenLigera.ubicacionActual = d.ubicacionActual
+              ordenLigera.disponible =
+                d.ubicacionActual.consecutivo ===
+                ordenLigera.numerosDeOrden[ordenLigera.paso - 1]
+            }
+          })
 
-      //     promesas.push(maquina.save())
-      //   })
+          promesas.push(maquina.save())
+        })
 
-      //   return Promise.all(promesas)
-      // })
+        return Promise.all(promesas)
+      })
       .then(maquinas => {
         return RESP._200(res, "Se actualizo la ubicacion de las ordenes", [])
       })

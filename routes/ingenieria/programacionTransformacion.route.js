@@ -22,39 +22,13 @@ app.post(
   "/asignar",
   permisos.$("programacionTransformacion:asignar"),
   (req, res) => {
-    /**
-     * Valores que recibimos
-     *
-     * @param idMaquina: string
-     * @param ordenes: [{
-     *      folio:string,
-     *      pedido:string,
-     *      orden:string,
-     *      modeloCompleto: string, //Solo para facilitarnos la vida
-     *      pasos: Number, //La cantidad de pasos que tiene la orden
-     *      numeroDeOrden: string, //El numero de orden (con respecto a
-     *          los procesos) para facilitarnos la vida.
-     *      numerosDeOrden: [Number], // Los numeros de orden (procesos) pero
-     *           juntos para saber que paso es este dato de orden
-     *      paso: Number //Si es primer paso, 2do paso, etc.
-     *
-     *      cliente:String,
-     *      idCliente:String,
-     *      fechaPedidoProduccion: Date,
-     *      esBaston:Boolean,
-     *      marcaLaser:String,
-     *      disponible:Boolean,
-     * }]
-     *
-     *
-     *
-     */
+    //Recibimos una orden ligera.
     const datos = req.body
 
     Maquina.findById(datos.idMaquina)
       .exec()
       .then(maquina => {
-        if (!maquina) throw " No existe  la maquina."
+        if (!maquina) throw "No existe la maquina."
 
         return Maquina.update(
           { _id: maquina.id },
@@ -90,7 +64,7 @@ app.get(
         $match: { pila: { $exists: true, $ne: [] } },
       },
       {
-        $unwind: { path: "$pila", preserveNullAndEmptyArrays:true },
+        $unwind: { path: "$pila", preserveNullAndEmptyArrays: true },
       },
 
       {
@@ -109,457 +83,278 @@ app.get(
         //  De esta manera vamos a guardar en la maquina el tipo de paso que la orden va a estar haciendo comparandolo contra la ubicacion actual que tenemos.
 
         return Folio.aggregate([
-          // {
-          //   $match: {
-          //     // Folios sin terminar
-          //     terminado: false,
-          //   },
-          // },
-          // {
-          //   $unwind: {
-          //     path: "$folioLineas", preserveNullAndEmptyArrays:true
-          //   },
-          // },
-
-          // {
-          //   $match: {
-          //     // Pedidos sin terminar y con
-          //     // ordenes generadas
-          //     "folioLineas.terminado": false,
-          //     "folioLineas.ordenesGeneradas": true,
-          //   },
-          // },
-          // {
-          //   $unwind: {
-          //     path: "$folioLineas.ordenes", preserveNullAndEmptyArrays:true
-          //   },
-          // },
-          // {
-          //   $match: {
-          //     "folioLineas.ordenes.terminada": false,
-          //     //El campo no debe de existir para
-          //     //saber que no esta asignada.
-          //     "folioLineas.ordenes.maquinaActual": {
-          //       $exists: false,
-          //       $eq: null,
-          //     },
-          //   },
-          // },
-          // {
-          //   $unwind: {
-          //     path: "$folioLineas.ordenes.ruta" , preserveNullAndEmptyArrays:true
-          //   },
-          // },
-
-          // //El id de trasnformacion . De esta manera obtener solo las ordenes
-          // // que tienen que pasar por transformacion.
-          // {
-          //   $match: {
-          //     "folioLineas.ordenes.ruta.idProceso": ObjectId(idTransformacion),
-          //   },
-          // },
-          // {
-          //   // Agrupamos por que solo nos interesan los id del folio, pedido y orden.
-          //   $group: {
-          //     _id: {
-          //       folio: "$_id",
-          //       pedido: "$folioLineas._id",
-          //       orden: "$folioLineas.ordenes._id",
-          //       numeroDeOrden: "$folioLineas.ordenes.orden",
-          //       modeloCompleto: "$folioLineas.ordenes.modeloCompleto", //solo para referencia
-          //       ubicacionActual: "$folioLineas.ordenes.ubicacionActual",
-          //       fechaPedidoProduccion: "$fechaDeEntregaAProduccion",
-          //       fechaPedidoProducci: { $sum: [2, 3] },
-
-          //       marcaLaser: "$folioLineas.laserCliente.laser",
-          //       observacionesOrden: "$folioLineas.ordenes.observaciones",
-          //       observacionesPedido: "$folioLineas.ordenes.observacionesPedido",
-          //       observacionesFolio: "$folioLineas.ordenes.observacionesFolio",
-          //       cliente: "$cliente",
-          //     },
-          //     //Los trayectos que coinciden con el id que le pasamos.
-          //     //De esta manera sabemos si esta por encima de la ubicacion
-          //     // actual y quitamos el trayecto (Por ejemplo, ya paso por segundo paso, entonces no hay que mostrar el segundo paso.)
-
-          //     trayectos: { $push: "$folioLineas.ordenes.trayectoNormal" },
-          //     //Este nos sirve para referenciar
-          //     numerosDeOrden: {
-          //       $push: "$folioLineas.ordenes.trayectoNormal.orden",
-          //     },
-          //     pasos: { $sum: 1 },
-          //   },
-          // },
-
-          // //Ahora separamos de nuevo el arreglo de trayectos para hacer un match
-          // // contra el numero de 'orden' que tiene la ubicacion actual. Si es menor
-          // // no debe de aparecer. Si es igual, quiere decir que esta trabajando o
-          // // pendiente de trabajar. (disponible?) y si es mayor todavia no llega.
-
-          // {
-          //   $unwind: {
-          //     path: "$trayectos",
-          //   },
-          // },
-
-          // {
-          //   $match: {
-          //     $expr: {
-          //       $lte: ["$_id.ubicacionActual.orden", "$trayectos.orden"],
-          //     },
-          //   },
-          // },
-          // {
-          //   $project: {
-          //     folio: "$_id.folio",
-          //     pedido: "$_id.pedido",
-          //     orden: "$_id.orden",
-          //     modeloCompleto: "$_id.modeloCompleto",
-          //     numeroDeOrden: "$_id.numeroDeOrden",
-          //     ubicacionActual: "$_id.ubicacionActual",
-          //     trayectos: "$trayectos",
-          //     pasos: "$pasos",
-          //     numerosDeOrden: "$numerosDeOrden",
-          //     fechaPedidoProduccion: "$_id.fechaPedidoProduccion",
-          //     marcaLaser: "$_id.marcaLaser",
-          //     observacionesOrden: "$_id.observacionesOrden",
-          //     observacionesPedido: "$_id.observacionesPedido",
-          //     observacionesFolio: "$_id.observacionesFolio",
-          //     cliente: "$_id.cliente",
-          //   },
-          // },
-          // { $unset: ["_id"] },
-          // {
-          //   $lookup: {
-          //     from: "modelosCompletos",
-          //     localField: "modeloCompleto",
-          //     foreignField: "_id",
-          //     as: "modeloCompleto",
-          //   },
-          // },
-          // { $unwind: "$modeloCompleto" },
-          // {
-          //   $addFields: {
-          //     modeloCompleto: "$modeloCompleto.nombreCompleto",
-          //     laserAlmacen: "$modeloCompleto.laserAlmacen.laser",
-          //     esBaston: "$modeloCompleto.esBaston",
-          //   },
-          // },
-          // {
-          //   $lookup: {
-          //     from: "clientes",
-          //     localField: "cliente",
-          //     foreignField: "_id",
-          //     as: "cliente",
-          //   },
-          // },
-          // { $unwind: "$cliente" },
-          // {
-          //   $addFields: {
-          //     cliente: "$cliente.nombre",
-          //     idCliente: "$cliente._id",
-          //   },
-          // },
-          // {
-          //   $project: {
-          //     folio: "$folio",
-          //     pedido: "$pedido",
-          //     orden: "$orden",
-          //     modeloCompleto: "$modeloCompleto",
-          //     numeroDeOrden: "$numeroDeOrden",
-          //     ubicacionActual: "$ubicacionActual",
-          //     trayectos: "$trayectos",
-          //     pasos: "$pasos",
-          //     numerosDeOrden: "$numerosDeOrden",
-          //     fechaPedidoProduccion: "$fechaPedidoProduccion",
-          //     cliente: "$cliente",
-          //     laserAlmacen: "$laserAlmacen",
-          //     esBaston: "$esBaston",
-          //     idCliente: "$idCliente",
-          //     paso: "$paso",
-
-          //     disponible: {
-          //       $eq: [
-          //         { $cmp: ["$ubicacionActual.orden", "$trayectos.orden"] },
-          //         0,
-          //       ],
-          //     },
-          //   },
-          // },
-
-          // {
-          //   $match: {
-          //     $or: [
-          //       {
-          //         "ubicacionActual.transformacion.trabajando": false,
-          //       },
-          //       {
-          //         "ubicacionActual.transformacion.trabajando": {
-          //           $exists: false,
-          //         },
-          //       },
-          //     ],
-          //   },
-          // },
-          // {
-          //   $lookup: {
-          //     from: "departamentos",
-          //     localField: "ubicacionActual.departamento",
-          //     foreignField: "_id",
-          //     as: "ubicacionActual.departamento",
-          //   },
-          // },
-          // {
-          //   $unwind: "$ubicacionActual.departamento",
-          // },
-          // {
-          //   $addFields: {
-          //     "ubicacionActual.departamento":
-          //       "$ubicacionActual.departamento.nombre",
-          //   },
-          // },
           [
+            //Folios sin terminar
             {
-              '$match': {
-                'terminado': false
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                'folioLineas.terminado': false, 
-                'folioLineas.ordenesGeneradas': true
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas.ordenes', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                'folioLineas.ordenes.terminada': false, 
-                'folioLineas.ordenes.maquinaActual': {
-                  '$exists': false, 
-                  '$eq': null
-                }
-              }
-            }, {
-              '$addFields': {
-                'folioLineas.ordenes.rutaActual': {
-                  '$filter': {
-                    'input': '$folioLineas.ordenes.ruta', 
-                    'as': 'item', 
-                    'cond': {
-                      '$eq': [
-                        '$$item.ubicacionActual', true
-                      ]
-                    }
-                  }
-                }
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas.ordenes.rutaActual', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$unwind': {
-                'path': '$folioLineas.ordenes.ruta', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                'folioLineas.ordenes.ruta.idDepartamento': idTransformacion
-              }
-            }, {
-              '$group': {
-                '_id': {
-                  'folio': '$_id', 
-                  'pedido': '$folioLineas._id', 
-                  'orden': '$folioLineas.ordenes._id', 
-                  'numeroDeOrden': '$folioLineas.ordenes.orden', 
-                  'modeloCompleto': '$folioLineas.ordenes.modeloCompleto', 
-                  'ubicacionActual': '$folioLineas.ordenes.rutaActual', 
-                  'fechaPedidoProduccion': '$fechaDeEntregaAProduccion', 
-                  'marcaLaser': '$folioLineas.laserCliente.laser', 
-                  'observacionesOrden': '$folioLineas.ordenes.observaciones', 
-                  'observacionesPedido': '$folioLineas.ordenes.observacionesPedido', 
-                  'observacionesFolio': '$folioLineas.ordenes.observacionesFolio', 
-                  'cliente': '$cliente'
-                }, 
-                'ruta': {
-                  '$push': '$folioLineas.ordenes.ruta'
-                }, 
-                'numerosDeOrden': {
-                  '$push': '$folioLineas.ordenes.ruta.consecutivo'
-                }, 
-                'pasos': {
-                  '$sum': 1
-                }
-              }
-            }, {
-              '$unwind': {
-                'path': '$ruta', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$match': {
-                '$expr': {
-                  '$lte': [
-                    '$_id.ubicacionActual.orden', '$trayectos.orden'
-                  ]
-                }
-              }
-            }, {
-              '$project': {
-                'folio': '$_id.folio', 
-                'pedido': '$_id.pedido', 
-                'orden': '$_id.orden', 
-                'modeloCompleto': '$_id.modeloCompleto', 
-                'numeroDeOrden': '$_id.numeroDeOrden', 
-                'ubicacionActual': '$_id.ubicacionActual', 
-                'ruta': '$ruta', 
-                'pasos': '$pasos', 
-                'numerosDeOrden': '$numerosDeOrden', 
-                'fechaPedidoProduccion': '$_id.fechaPedidoProduccion', 
-                'marcaLaser': '$_id.marcaLaser', 
-                'observacionesOrden': '$_id.observacionesOrden', 
-                'observacionesPedido': '$_id.observacionesPedido', 
-                'observacionesFolio': '$_id.observacionesFolio', 
-                'cliente': '$_id.cliente'
-              }
-            }, {
-              '$unset': [
-                '_id'
-              ]
-            }, {
-              '$lookup': {
-                'from': 'modelosCompletos', 
-                'localField': 'modeloCompleto', 
-                'foreignField': '_id', 
-                'as': 'modeloCompleto'
-              }
-            }, {
-              '$unwind': {
-                'path': '$modeloCompleto', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$addFields': {
-                'modeloCompleto': '$modeloCompleto.nombreCompleto', 
-                'laserAlmacen': '$modeloCompleto.laserAlmacen.laser', 
-                'esBaston': '$modeloCompleto.esBaston'
-              }
-            }, {
-              '$lookup': {
-                'from': 'clientes', 
-                'localField': 'cliente', 
-                'foreignField': '_id', 
-                'as': 'cliente'
-              }
-            }, {
-              '$unwind': {
-                'path': '$cliente', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$addFields': {
-                'cliente': '$cliente.nombre', 
-                'idCliente': '$cliente._id'
-              }
-            }, {
-              '$project': {
-                'folio': '$folio', 
-                'pedido': '$pedido', 
-                'orden': '$orden', 
-                'modeloCompleto': '$modeloCompleto', 
-                'numeroDeOrden': '$numeroDeOrden', 
-                'ubicacionActual': '$ubicacionActual', 
-                'ruta': '$ruta', 
-                'pasos': '$pasos', 
-                'numerosDeOrden': '$numerosDeOrden', 
-                'fechaPedidoProduccion': '$fechaPedidoProduccion', 
-                'cliente': '$cliente', 
-                'laserAlmacen': '$laserAlmacen', 
-                'esBaston': '$esBaston', 
-                'idCliente': '$idCliente', 
-                'disponible': {
-                  '$eq': [
+              $match: {
+                terminado: false,
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            //Pedidos sin terminar con ordenes generadas.
+            {
+              $match: {
+                "folioLineas.terminado": false,
+                "folioLineas.ordenesGeneradas": true,
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas.ordenes",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            //Ordenes que no esten terminadas y que
+            //no esten asignadas a ninguna maquina.
+            {
+              $match: {
+                "folioLineas.ordenes.terminada": false,
+                "folioLineas.ordenes.maquinaActual": {
+                  $exists: false,
+                  $eq: null,
+                },
+              },
+            },
+
+            //Obtenemos la ubicicacion actual  y lo guardamos
+            // en un campo.
+            {
+              $addFields: {
+                //Creamos el campo ubicacionActual
+                "folioLineas.ordenes.ubicacionActual": {
+                  //Filtramos el arreglo ruta para obtener
+                  // solo la ruta que tenga el flag ubicacionActual = true
+                  $filter: {
+                    input: "$folioLineas.ordenes.ruta",
+                    as: "item",
+                    cond: {
+                      $eq: ["$$item.ubicacionActual", true],
+                    },
+                  },
+                },
+              },
+            },
+            {
+              $unwind: {
+                path: "$folioLineas.ordenes.ubicacionActual",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            //Copiamos la orden, una copia por cada ruta que tiene.
+            {
+              $unwind: {
+                path: "$folioLineas.ordenes.ruta",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            //Quitamos todas las copias que no pertenezcan al departamento
+            // de transformacion.
+            {
+              $match: {
+                "folioLineas.ordenes.ruta.idDepartamento": idTransformacion,
+              },
+            },
+
+            //Agrupamos todo de nuevo.
+            {
+              $group: {
+                //Recuperamos los datos que nos interesan.
+                _id: {
+                  folio: "$_id",
+                  pedido: "$folioLineas._id",
+                  orden: "$folioLineas.ordenes._id",
+                  numeroDeOrden: "$folioLineas.ordenes.orden",
+                  sku: "$folioLineas.modeloCompleto",
+                  idSKU: "$folioLineas.modeloCompleto",
+                  ubicacionActual: "$folioLineas.ordenes.ubicacionActual",
+                  fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+                  laser: "$folioLineas.laserCliente.laser",
+                  laserAlmacen: "$folioLineas.modeloCompleto",
+                  observacionesOrden: "$folioLineas.ordenes.observaciones",
+                  observacionesPedido: "$folioLineas.observaciones",
+                  observacionesFolio: "$observaciones",
+                  cliente: "$cliente",
+                },
+                //Aqui estamos obteniendo de nuevo toda la ruta.
+                //* */
+                rutaParaConsecutivo: {
+                  $push: "$folioLineas.ordenes.ruta",
+                },
+
+                //Aqui obtenemos los numeros de orden del consecutivo de la ruta .
+                numerosDeOrden: {
+                  $push: "$folioLineas.ordenes.ruta.consecutivo",
+                },
+                //Aqui sumamos la cantidad de pasos que tiene la orden.
+                // De esta manera sabemos si lleva uno, dos o tres pasos.
+                pasos: {
+                  $sum: 1,
+                },
+              },
+            },
+            //Separamos el arreglo del consecutivo de nuevo para obtener una
+            // orden por ruta, asi, si la orden va a entrar dos veces al mismo
+            // departamento listamos dos documentos.
+            {
+              $unwind: {
+                path: "$rutaParaConsecutivo",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+
+            //Filtramos todos los departamentos que esten en su consecutivo de ///ruta por encima de la ruta actual, de manera que solo obtenemos
+            //
+            {
+              $match: {
+                $expr: {
+                  $lte: [
+                    "$_id.ubicacionActual.consecutivo",
+                    "$rutaParaConsecutivo.consecutivo",
+                  ],
+                },
+              },
+            },
+            {
+              $project: {
+                folio: "$_id.folio",
+                pedido: "$_id.pedido",
+                orden: "$_id.orden",
+                sku: "$_id.sku",
+                idSKU: "$_id.idSKU",
+                numeroDeOrden: "$_id.numeroDeOrden",
+                ubicacionActual: "$_id.ubicacionActual",
+                rutaParaConsecutivo: "$rutaParaConsecutivo",
+                // rutaTemp: "ruta",
+                pasos: "$pasos",
+                numerosDeOrden: "$numerosDeOrden",
+                fechaDeEntregaAProduccion: "$_id.fechaDeEntregaAProduccion",
+                laser: "$_id.laser",
+                laserAlmacen: "$_id.laserAlmacen",
+                observacionesOrden: "$_id.observacionesOrden",
+                observacionesPedido: "$_id.observacionesPedido",
+                observacionesFolio: "$_id.observacionesFolio",
+                cliente: "$_id.cliente",
+              },
+            },
+            {
+              $unset: ["_id"],
+            },
+            {
+              $lookup: {
+                from: "modelosCompletos",
+                localField: "sku",
+                foreignField: "_id",
+                as: "sku",
+              },
+            },
+            {
+              $unwind: {
+                path: "$sku",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                sku: "$sku.nombreCompleto",
+                laserAlmacen: "$sku.laserAlmacen.laser",
+                esBaston: "$sku.esBaston",
+              },
+            },
+            {
+              $lookup: {
+                from: "clientes",
+                localField: "cliente",
+                foreignField: "_id",
+                as: "cliente",
+              },
+            },
+            {
+              $unwind: {
+                path: "$cliente",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                cliente: "$cliente.nombre",
+                idCliente: "$cliente._id",
+              },
+            },
+            {
+              $project: {
+                folio: "$folio",
+                pedido: "$pedido",
+                orden: "$orden",
+                sku: "$sku",
+                idSKU: "$idSKU",
+                numeroDeOrden: "$numeroDeOrden",
+                ubicacionActual: "$ubicacionActual",
+                rutaParaConsecutivo: "$rutaParaConsecutivo",
+                pasos: "$pasos",
+                numerosDeOrden: "$numerosDeOrden",
+                fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+                cliente: "$cliente",
+                laser: "$laser",
+                laserAlmacen: "$laserAlmacen",
+                esBaston: "$esBaston",
+                idCliente: "$idCliente",
+                observacionesOrden: "$observacionesOrden",
+                observacionesPedido: "$observacionesPedido",
+                observacionesFolio: "$observacionesFolio",
+                disponible: {
+                  $eq: [
                     {
-                      '$cmp': [
-                        '$ubicacionActual.consecutivo', 'ruta.consecutivo'
-                      ]
-                    }, 0
-                  ]
-                }
-              }
-            }, {
-              '$addFields': {
-                'ubicacionActual.idDepartamento': {
-                  '$toObjectId': '$ubicacionActual.idDepartamento'
-                }, 
-                'ubicacionActual.idProceso': {
-                  '$toObjectId': '$ubicacionActual.idProceso'
-                }
-              }
-            }, {
-              '$lookup': {
-                'from': 'departamentos', 
-                'localField': 'ubicacionActual.idDepartamento', 
-                'foreignField': '_id', 
-                'as': 'ubicacionActual.departamento'
-              }
-            }, {
-              '$unwind': {
-                'path': '$ubicacionActual.departamento', 
-                'preserveNullAndEmptyArrays': true
-              }
-            }, {
-              '$addFields': {
-                'ubicacionActual.departamento': '$ubicacionActual.departamento.nombre'
-              }
-            }
-          ]
+                      $cmp: [
+                        "$ubicacionActual.consecutivo",
+                        "rutaParaConsecutivo.consecutivo",
+                      ],
+                    },
+                    0,
+                  ],
+                },
+              },
+            },
+            {
+              $addFields: {
+                "ubicacionActual.idDepartamento": {
+                  $toObjectId: "$ubicacionActual.idDepartamento",
+                },
+                "ubicacionActual.idProceso": {
+                  $toObjectId: "$ubicacionActual.idProceso",
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "departamentos",
+                localField: "ubicacionActual.idDepartamento",
+                foreignField: "_id",
+                as: "ubicacionActual.departamento",
+              },
+            },
+            {
+              $unwind: {
+                path: "$ubicacionActual.departamento",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+            {
+              $addFields: {
+                "ubicacionActual.departamento":
+                  "$ubicacionActual.departamento.nombre",
+              },
+            },
+          ],
         ]).exec()
       })
       .then(ordenes => {
-        // return res.send(ordenes)
-        /**
-         * Obtenemos esta estructura:
-         *{
-         * "folio": "5e4f14117536df07860ca3ae",
-         * "pedido": "5e4f14117536df07860ca3af",
-         * "orden": "5e500a3997a86a078c4322bf",
-         * "modeloCompleto": "2505-36-1-GIS-BRILLANTE",
-         * "numeroDeOrden": "105-1-0",
-         * "ubicacionActual": {
-         *     "recivida": false,
-         *     "_id": "5e500a3a97a86a078c432418",
-         *     "departamento": "5c6f07f6a6fd170abc390916",
-         *     "orden": "1"
-         * },
-         * "trayectos": {
-         *     "recivida": false,
-         *     "_id": "5e500a3a97a86a078c432412",
-         *     "orden": "3",
-         *     "departamento": "5c6f07f6a6fd170abc39091b"
-         * },
-         * "pasos": 1,
-         * "numerosDeOrden": [
-         *     "3"
-         * ],
-         * "fechaPedidoProduccion": "2020-02-20T23:20:44.412Z",
-         * "cliente": "ALMACÉN",
-         * "laserAlmacen": "",
-         * "esBaston": false,
-         * "idCliente": "5d091d9182465a06140e9c7b"
-         * }
-         *  Ahora vamos a clasificar cada una de estas ordenes como primero, segundo, ...., pasos.
-         *
-         *
-         */
         ordenes.map(orden => (orden["paso"] = obtenerPaso(orden)))
 
         //Quitamos las ordenes que ya estan asignadas.a
@@ -585,7 +380,7 @@ app.get(
  *
  */
 function obtenerPaso(orden) {
-  const consecutivo = orden.ruta.consecutivo * 1
+  const consecutivo = orden.rutaParaConsecutivo.consecutivo * 1
 
   const paso = orden.numerosDeOrden.findIndex(x => x * 1 === consecutivo)
 
@@ -594,22 +389,26 @@ function obtenerPaso(orden) {
   return paso + 1
 }
 
-var datos = null
 app.put(
-  "/actualizarUbicacion/:idT",
+  "/actualizarUbicacion",
   permisos.$("programacionTransformacion:actualizarUbicacion"),
   (req, res) => {
+    var datos = null
     Maquina.aggregate([
       {
+        //Las maquinas que son de este departamento
         $match: {
           departamentos: {
             $elemMatch: {
               $eq: ObjectId(req.parametros.departamentoTransformacion),
             },
           },
+          //Que tenga por lo menos una orden en la pila
           "pila.0": { $exists: true },
         },
       },
+      //Solo nos interesa el id de la maquina
+      // y su pila de trabajo.
       {
         $project: {
           idMaquina: "$_id",
@@ -618,8 +417,15 @@ app.put(
       },
 
       {
-        $unwind: "$pila",
+        $unwind: {
+          path: "$pila",
+          preserveNullAndEmptyArrays: true,
+        },
       },
+
+      { $addFields: { "pila.folio": { $toObjectId: "$pila.folio" } } },
+
+      // //Populamos los datos
       {
         $lookup: {
           from: "folios",
@@ -628,7 +434,12 @@ app.put(
           as: "pila.folio",
         },
       },
-      { $unwind: "$pila.folio" },
+      {
+        $unwind: {
+          path: "$pila.folio",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       {
         $project: {
@@ -641,7 +452,12 @@ app.put(
         },
       },
 
-      { $unwind: "$pila.folio.folioLineas" },
+      {
+        $unwind: {
+          path: "$pila.folio.folioLineas",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
 
       {
         $project: {
@@ -655,11 +471,16 @@ app.put(
           orden: "$orden",
         },
       },
-      { $unwind: "$pila.folio.folioLineas.ordenes" },
-
+      {
+        $unwind: {
+          path: "$pila.folio.folioLineas.ordenes",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
       {
         $project: {
           idMaquina: "$idMaquina",
+          ordenTemp: "$pila.folio.folioLineas.ordenes",
           idPila: "$idPila",
           "pila.folio._id": "$pila.folio._id",
           "pila.folio.folioLineas._id": "$pila.folio.folioLineas._id",
@@ -667,13 +488,14 @@ app.put(
             "$pila.folio.folioLineas.ordenes._id",
           "pila.folio.folioLineas.ordenes.ubicacionActual":
             "$pila.folio.folioLineas.ordenes.ubicacionActual",
-          folio: "$folio",
-          pedido: "$pedido",
-          orden: "$orden",
+          folio: { $toObjectId: "$folio" },
+          pedido: { $toObjectId: "$pedido" },
+          orden: { $toObjectId: "$orden" },
         },
       },
       {
         $project: {
+          ordenTemp: 1,
           idMaquina: 1,
           idPila: 1,
           pila: 1,
@@ -698,24 +520,47 @@ app.put(
       },
       {
         $project: {
+          ordenTemp: 1,
           idMaquina: 1,
           idPila: 1,
           folio: 1,
           pedido: 1,
           orden: 1,
-          ubicacionActual: "$pila.folio.folioLineas.ordenes.ubicacionActual",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$ordenTemp.ruta",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $match: { "ordenTemp.ruta.ubicacionActual": true },
+      },
+
+      { $addFields: { ubicacionActual: "$ordenTemp.ruta" } },
+      {
+        $addFields: {
+          "ubicacionActual.idDepartamento": {
+            $toObjectId: "$ubicacionActual.idDepartamento",
+          },
         },
       },
       {
         $lookup: {
           from: "departamentos",
-          localField: "ubicacionActual.departamento",
+          localField: "ubicacionActual.idDepartamento",
           foreignField: "_id",
           as: "ubicacionActual.departamento",
         },
       },
       {
         $unwind: "$ubicacionActual.departamento",
+      },
+      {
+        $unset: "ordenTemp",
       },
       {
         $addFields: {
@@ -726,29 +571,30 @@ app.put(
     ])
       .exec()
       .then(dat => {
-        return res.send(req.parametros)
+        // return res.send(dat)
         datos = dat
         return Maquina.find({
           _id: { $in: datos.map(d => d.idMaquina) },
         }).exec()
       })
-      // .then(maquinas => {
-      //   const promesas = []
-      //   maquinas.forEach(maquina => {
-      //     datos.forEach(d => {
-      //       const pila = maquina.pila.id(d.idPila)
-      //       if (pila) {
-      //         pila.ubicacionActual = d.ubicacionActual
-      //         pila.disponible =
-      //           pila.ubicacionActual.orden === pila.trayectos.orden
-      //       }
-      //     })
+      .then(maquinas => {
+        const promesas = []
+        maquinas.forEach(maquina => {
+          datos.forEach(d => {
+            const ordenLigera = maquina.pila.id(d.idPila)
+            if (ordenLigera) {
+              ordenLigera.ubicacionActual = d.ubicacionActual
+              ordenLigera.disponible =
+                d.ubicacionActual.consecutivo ===
+                ordenLigera.numerosDeOrden[ordenLigera.paso - 1]
+            }
+          })
 
-      //     promesas.push(maquina.save())
-      //   })
+          promesas.push(maquina.save())
+        })
 
-      //   return Promise.all(promesas)
-      // })
+        return Promise.all(promesas)
+      })
       .then(maquinas => {
         return RESP._200(res, "Se actualizo la ubicacion de las ordenes", [])
       })
@@ -761,5 +607,20 @@ app.put(
       )
   }
 )
+
+app.get("/maquinas", (req, res, next) => {
+  Maquina.aggregate([
+    {
+      $match: {
+        departamentos: ObjectId(req.parametros.departamentoTransformacion),
+      },
+    },
+  ])
+    .exec()
+    .then(maquinas =>
+      RESP._200(res, null, [{ tipo: "maquinas", datos: maquinas }])
+    )
+    .catch(_ => next(_))
+})
 
 module.exports = app

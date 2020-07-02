@@ -13,6 +13,7 @@ const Proceso = require("../models/procesos/proceso")
 const Departamento = require("../models/departamento")
 const SKU = require("../models/modeloCompleto")
 const Maquina = require("../models/maquina")
+const Parametros = require("../models/defautls/parametros.model")
 
 var permisos = require("../config/permisos.config")
 
@@ -627,24 +628,23 @@ app.put(
       procesosFinales: [],
     }
 
-    Promise.all([
-      Proceso.find({
-        _id: { $in: req.parametros.localizacionDeOrdenes.procesosIniciales },
-      }).exec(),
-      Proceso.find({
-        _id: {
-          $in: req.parametros.localizacionDeOrdenes.procesosInicialesAlmacen,
-        },
-      }).exec(),
-      Proceso.find({
-        _id: { $in: req.parametros.localizacionDeOrdenes.procesosFinales },
-      }).exec(),
-    ])
-      .then(respuesta => {
+    Parametros.findOne({})
+      .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
+      .populate(
+        "localizacionDeOrdenes.procesosInicialesAlmacen",
+        null,
+        "Proceso"
+      )
+      .populate("localizacionDeOrdenes.procesosFinales", null, "Proceso")
+      .exec()
+      .then(parametros => {
         //Asignamos los procesos
-        procesosFijos.procesosIniciales = respuesta[0]
-        procesosFijos.procesosInicialesAlmacen = respuesta[1]
-        procesosFijos.procesosFinales = respuesta[2]
+        procesosFijos.procesosIniciales =
+          parametros.localizacionDeOrdenes.procesosIniciales
+        procesosFijos.procesosInicialesAlmacen =
+          parametros.localizacionDeOrdenes.procesosInicialesAlmacen
+        procesosFijos.procesosFinales =
+          parametros.localizacionDeOrdenes.procesosFinales
 
         return Folio.findById(req.body._id).exec()
       })
@@ -717,7 +717,6 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   }
 
   procesosAUsar.push(...procesosFijos.procesosFinales)
-
   //Copiamos las ordenes
   var contador = 0
   pedidoGUI.ordenes.forEach(ordenGUI => {

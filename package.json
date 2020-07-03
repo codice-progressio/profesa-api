@@ -1,6 +1,6 @@
 {
     "name": "carrduci-sys-api",
-    "version": "2.1.1",
+    "version": "2.1.3",
     "description": "API server CARRDUCIsys",
     "main": "index.js",
     "scripts": {

@@ -115,7 +115,7 @@ module.exports.ROUTES = function (app) {
   })
 
   app.use(
-    jwt({ secret: seed, algorithms: ["RS256"] }).unless({
+    jwt({ secret: seed, algorithms: ["HS256"] }).unless({
       path: [
         "/parametros",
         "/parametros/super-admin/crear",

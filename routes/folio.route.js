@@ -1384,7 +1384,7 @@ function actualizarPorcentajesDeAvance(folio, orden, ubicacionActual) {
     sumaPedidos += promedio
   })
 
-  folio.porcentajeAvance = sumaPedidos / folio.folioLineas.length + 1
+  folio.porcentajeAvance = sumaPedidos / folio.folioLineas.length
 }
 
 function accionesDeOrdenFinalizada(folio, orden, ubicacion, req) {

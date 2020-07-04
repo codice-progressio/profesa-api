@@ -84,8 +84,7 @@ module.exports.ROUTES = function (app) {
                 productoTerm.entrada = new Date()
               }
 
-              if (productoTerm.ubicacionActual)
-              {
+              if (productoTerm.ubicacionActual) {
                 empaque.recibida = false
                 empaque.ubicacionActual = true
                 productoTerm.recibida = false
@@ -116,7 +115,7 @@ module.exports.ROUTES = function (app) {
   })
 
   app.use(
-    jwt({ secret: seed }).unless({
+    jwt({ secret: seed, algorithms: ["HS256"] }).unless({
       path: [
         "/parametros",
         "/parametros/super-admin/crear",

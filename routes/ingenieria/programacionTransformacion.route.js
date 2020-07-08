@@ -77,8 +77,27 @@ app.get(
       },
     ])
       .exec()
-      .then(ordAs => {
+      .then(async ordAs => {
         ordenesAsignadas = ordAs
+        let maquinasTrabajando = await Maquina.aggregate([
+          {
+            //Solo las maquinas que tengan trabajo
+            $match: { trabajando: { $ne: null, $ne: undefined } },
+          },
+          //Los datos de la orden en el mismo formato que la pila
+          // para filtrarlos de la lista.
+          {
+            $project: {
+              folio: "$trabajo.datos.folio",
+              pedido: "$trabajo.datos.pedido",
+              orden: "$trabajo.datos.orden",
+              paso: "$trabajo.datos.paso",
+            },
+          },
+        ]).exec()
+
+        ordenesAsignadas.push(...maquinasTrabajando)
+
         // Si son dos pasos obtenemos dos ordenes, si son tres, 3 ordenes, etc.
         //  De esta manera vamos a guardar en la maquina el tipo de paso que la orden va a estar haciendo comparandolo contra la ubicacion actual que tenemos.
 
@@ -356,13 +375,12 @@ app.get(
       })
       .then(ordenes => {
         ordenes.map(orden => (orden["paso"] = obtenerPaso(orden)))
-
         //Quitamos las ordenes que ya estan asignadas.a
         ordenes = ordenes.filter(x => {
           return !(
             ordenesAsignadas.filter(
               oa =>
-                oa.orden.toString() == x.orden.toString() && oa.paso == x.paso
+                oa.orden?.toString() == x.orden.toString() && oa.paso == x.paso
             ).length > 0
           )
         })

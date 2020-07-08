@@ -375,13 +375,12 @@ app.get(
       })
       .then(ordenes => {
         ordenes.map(orden => (orden["paso"] = obtenerPaso(orden)))
-
         //Quitamos las ordenes que ya estan asignadas.a
         ordenes = ordenes.filter(x => {
           return !(
             ordenesAsignadas.filter(
               oa =>
-                oa.orden.toString() == x.orden.toString() && oa.paso == x.paso
+                oa.orden?.toString() == x.orden.toString() && oa.paso == x.paso
             ).length > 0
           )
         })

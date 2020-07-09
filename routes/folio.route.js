@@ -97,29 +97,29 @@ app.put("/", permisos.$("folio:modificar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error modificando el folio"))
 })
 
-app.get(
-  "/folioImpreso/:id",
-  permisos.$("folio:marcarComoImpreso"),
-  (req, res) => {
-    Folio.findById(req.params.id)
-      .then(folio => {
-        if (!folio) throw "No existe el folio."
-        folio.impreso = true
-        return folio.save()
-      })
-      .then(() => {
-        return RESP._200(res, null, [
-          //  { tipo: 'folio', datos: folio },
-        ])
-      })
-      .catch(err => {
-        return RESP._500(res, {
-          msj: "Hubo un error marcando el folio como impreso. ",
-          err: err,
-        })
-      })
-  }
-)
+app.put("/marcarPEdidosComoImpresos", (req, res, next) => {
+  let promesas = req.body.map(objeto => {
+    {
+      return Folio.updateMany(
+        { _id: ObjectId(objeto.folio) },
+        {
+          $set: {
+            "folioLineas.$[i].impreso": true,
+          },
+        },
+        {
+          multi: true,
+          arrayFilters: [
+            { "i._id": { $in: objeto.pedidos.map(x => ObjectId(x)) } },
+          ],
+        }
+      ).exec()
+    }
+  })
+  Promise.all(promesas)
+    .then(_ => RESP._200(res, null, []))
+    .catch(_ => next(_))
+})
 
 /**
  * Senala el folio con ordenes impresas.
@@ -415,6 +415,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         cantidadProducidaPedido: "$folioLineas.cantidadProducida",
 
         cantidadSolicitadaPedido: "$folioLineas.cantidad",
+        impreso:"$folioLineas.impreso"
       },
     },
     { $unset: "_id" },

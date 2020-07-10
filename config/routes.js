@@ -57,8 +57,65 @@ module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
   app.use("/img", imagenesRoutes)
+
+  app.get("/fix2Departamentos", (req, res, next) => {
+    let folios = Array.from(Array(154 + 1 - 141), (_, i) => i + 141)
+    require("../models/folios/folio")
+      .find({ numeroDeFolio: { $in: folios } })
+      .exec()
+      .then(fols => {
+        let promesas = fols.map(folio => {
+          folio.folioLineas.forEach(pedido => {
+            pedido.ordenes.forEach(orden => {
+              let empaque = orden.ruta.pop()
+              let productoTerm = orden.ruta.pop()
+              orden.ruta.push(empaque)
+              orden.ruta.push(productoTerm)
+
+              empaque.ubicacionActual =
+                productoTerm.ubicacionActual || empaque.ubicacionActual
+
+              if (empaque.ubicacionActual) {
+                productoTerm.recibida = false
+                empaque.recibida = false
+                empaque.entrada = new Date()
+                productoTerm.recibida = false
+                productoTerm.ubicacionActual = false
+                productoTerm.entrada = new Date()
+              }
+
+              if (productoTerm.ubicacionActual) {
+                empaque.recibida = false
+                empaque.ubicacionActual = true
+                productoTerm.recibida = false
+                productoTerm.ubicacionActual = false
+                productoTerm.entrada = new Date()
+              }
+
+              contador = 0
+
+              orden.ruta.forEach(r => {
+                r.consecutivo = contador
+                contador++
+              })
+
+              console.log(orden.ruta)
+            })
+          })
+
+          return folio.save()
+        })
+
+        return Promise.all(promesas)
+      })
+      .then(folios => {
+        return res.json({ ok: "todo bien" })
+      })
+      .catch(_ => next(_))
+  })
+
   app.use(
-    jwt({ secret: seed }).unless({
+    jwt({ secret: seed, algorithms: ["HS256"] }).unless({
       path: [
         "/parametros",
         "/parametros/super-admin/crear",

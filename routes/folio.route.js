@@ -13,6 +13,7 @@ const Proceso = require("../models/procesos/proceso")
 const Departamento = require("../models/departamento")
 const SKU = require("../models/modeloCompleto")
 const Maquina = require("../models/maquina")
+const Parametros = require("../models/defautls/parametros.model")
 
 var permisos = require("../config/permisos.config")
 
@@ -96,29 +97,29 @@ app.put("/", permisos.$("folio:modificar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error modificando el folio"))
 })
 
-app.get(
-  "/folioImpreso/:id",
-  permisos.$("folio:marcarComoImpreso"),
-  (req, res) => {
-    Folio.findById(req.params.id)
-      .then(folio => {
-        if (!folio) throw "No existe el folio."
-        folio.impreso = true
-        return folio.save()
-      })
-      .then(() => {
-        return RESP._200(res, null, [
-          //  { tipo: 'folio', datos: folio },
-        ])
-      })
-      .catch(err => {
-        return RESP._500(res, {
-          msj: "Hubo un error marcando el folio como impreso. ",
-          err: err,
-        })
-      })
-  }
-)
+app.put("/marcarPEdidosComoImpresos", (req, res, next) => {
+  let promesas = req.body.map(objeto => {
+    {
+      return Folio.updateMany(
+        { _id: ObjectId(objeto.folio) },
+        {
+          $set: {
+            "folioLineas.$[i].impreso": true,
+          },
+        },
+        {
+          multi: true,
+          arrayFilters: [
+            { "i._id": { $in: objeto.pedidos.map(x => ObjectId(x)) } },
+          ],
+        }
+      ).exec()
+    }
+  })
+  Promise.all(promesas)
+    .then(_ => RESP._200(res, null, []))
+    .catch(_ => next(_))
+})
 
 /**
  * Senala el folio con ordenes impresas.
@@ -414,6 +415,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         cantidadProducidaPedido: "$folioLineas.cantidadProducida",
 
         cantidadSolicitadaPedido: "$folioLineas.cantidad",
+        impreso:"$folioLineas.impreso"
       },
     },
     { $unset: "_id" },
@@ -627,24 +629,23 @@ app.put(
       procesosFinales: [],
     }
 
-    Promise.all([
-      Proceso.find({
-        _id: { $in: req.parametros.localizacionDeOrdenes.procesosIniciales },
-      }).exec(),
-      Proceso.find({
-        _id: {
-          $in: req.parametros.localizacionDeOrdenes.procesosInicialesAlmacen,
-        },
-      }).exec(),
-      Proceso.find({
-        _id: { $in: req.parametros.localizacionDeOrdenes.procesosFinales },
-      }).exec(),
-    ])
-      .then(respuesta => {
+    Parametros.findOne({})
+      .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
+      .populate(
+        "localizacionDeOrdenes.procesosInicialesAlmacen",
+        null,
+        "Proceso"
+      )
+      .populate("localizacionDeOrdenes.procesosFinales", null, "Proceso")
+      .exec()
+      .then(parametros => {
         //Asignamos los procesos
-        procesosFijos.procesosIniciales = respuesta[0]
-        procesosFijos.procesosInicialesAlmacen = respuesta[1]
-        procesosFijos.procesosFinales = respuesta[2]
+        procesosFijos.procesosIniciales =
+          parametros.localizacionDeOrdenes.procesosIniciales
+        procesosFijos.procesosInicialesAlmacen =
+          parametros.localizacionDeOrdenes.procesosInicialesAlmacen
+        procesosFijos.procesosFinales =
+          parametros.localizacionDeOrdenes.procesosFinales
 
         return Folio.findById(req.body._id).exec()
       })
@@ -717,7 +718,6 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   }
 
   procesosAUsar.push(...procesosFijos.procesosFinales)
-
   //Copiamos las ordenes
   var contador = 0
   pedidoGUI.ordenes.forEach(ordenGUI => {
@@ -1385,7 +1385,7 @@ function actualizarPorcentajesDeAvance(folio, orden, ubicacionActual) {
     sumaPedidos += promedio
   })
 
-  folio.porcentajeAvance = sumaPedidos / folio.folioLineas.length + 1
+  folio.porcentajeAvance = sumaPedidos / folio.folioLineas.length
 }
 
 function accionesDeOrdenFinalizada(folio, orden, ubicacion, req) {

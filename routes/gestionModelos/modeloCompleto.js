@@ -29,84 +29,76 @@ app.post("/", permisos.$("modeloCompleto:crear"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardo el sku"))
 })
 
-app.get(
-  "/",
-  permisos.$("modeloCompleto:leer:todo"),
-  async (req, res) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "nombreCompleto")
+app.get("/", permisos.$("modeloCompleto:leer:todo"), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "nombreCompleto")
 
-    const total = await ModeloCompleto.countDocuments()
+  const total = await ModeloCompleto.countDocuments()
 
-    ModeloCompleto.aggregate([
-      { $match: { noExiste: { $exists: false } } },
+  ModeloCompleto.aggregate([
+    { $match: { noExiste: { $exists: false } } },
 
-      {
-        $lookup: {
-          from: "familiadeprocesos",
-          foreignField: "_id",
-          localField: "familiaDeProcesos",
-          as: "familiaDeProcesos",
-        },
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familiaDeProcesos",
+        as: "familiaDeProcesos",
       },
+    },
 
-      {
-        $unwind: {
-          path: "$familiaDeProcesos",
-          preserveNullAndEmptyArrays: true,
-        },
+    {
+      $unwind: {
+        path: "$familiaDeProcesos",
+        preserveNullAndEmptyArrays: true,
       },
-      //Fin de populacion
+    },
+    //Fin de populacion
 
-      { $sort: { [campo]: sort } },
-      //Desde aqui limitamos unicamente lo que queremos ver
-      { $limit: desde + limite },
-      { $skip: desde },
-      { $sort: { [campo]: sort } },
-      {
-        $project: {
-          nombreCompleto: "$nombreCompleto",
-          existencia: "$existencia",
-          stockMaximo: "$stockMaximo",
-          stockMinimo: "$stockMinimo",
-          medias: "$medias",
-          familiaDeProcesos: "$familiaDeProcesos.nombre",
-          familiaDeProcesosId: "$familiaDeProcesos._id",
-        },
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } },
+    {
+      $project: {
+        nombreCompleto: "$nombreCompleto",
+        existencia: "$existencia",
+        stockMaximo: "$stockMaximo",
+        stockMinimo: "$stockMinimo",
+        medias: "$medias",
+        familiaDeProcesos: "$familiaDeProcesos.nombre",
+        familiaDeProcesosId: "$familiaDeProcesos._id",
       },
-    ])
-      .exec()
-      .then(modelosCompletos => {
-        //Si no hay resultados no se crea la propiedad
-        // y mas adelante nos da error.
+    },
+  ])
+    .exec()
+    .then(modelosCompletos => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error.
 
-        return RESP._200(res, null, [
-          { tipo: "modelosCompletos", datos: modelosCompletos },
-          { tipo: "total", datos: total },
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error buscando los sku"))
-  }
-)
+      return RESP._200(res, null, [
+        { tipo: "modelosCompletos", datos: modelosCompletos },
+        { tipo: "total", datos: total },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los sku"))
+})
 
-app.get(
-  "/buscar/id/:id",
-  permisos.$("modeloCompleto:leer:id"),
-  (req, res) => {
-    ModeloCompleto.findById(req.params.id)
-      .exec()
-      .then(modeloCompleto => {
-        if (!modeloCompleto) throw "No existe el id"
+app.get("/buscar/id/:id", permisos.$("modeloCompleto:leer:id"), (req, res) => {
+  ModeloCompleto.findById(req.params.id)
+    .exec()
+    .then(modeloCompleto => {
+      if (!modeloCompleto) throw "No existe el id"
 
-        return RESP._200(res, null, [
-          { tipo: "modeloCompleto", datos: modeloCompleto },
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error buscando el sku por su id"))
-  }
-)
+      return RESP._200(res, null, [
+        { tipo: "modeloCompleto", datos: modeloCompleto },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando el sku por su id"))
+})
 
 app.get(
   "/buscar/termino/:termino",
@@ -191,55 +183,93 @@ app.get(
   }
 )
 
-app.delete(
-  "/:id",
-  permisos.$("modeloCompleto:eliminar"),
-  (req, res) => {
-    ModeloCompleto.findById(req.params.id)
-      .exec()
-      .then(modeloCompleto => {
-        if (!modeloCompleto) throw "No existe el sku"
+app.get("/todoParaExcel", (req, res, next) => {
+  ModeloCompleto.aggregate([
+    { $match: { hola: { $exists: false } } },
+    {
+      $project: {
+        familiaDeProcesos: "$familiaDeProcesos",
+        nombreCompleto: "$nombreCompleto",
+        existencia: "$existencia",
+        esBaston: "$esBaston",
+        stockMinimo: "$stockMinimo",
+        stockMaximo: "$stockMaximo",
+      },
+    },
+    {
+      $unset: "_id",
+    },
 
-        return modeloCompleto.remove()
-      })
-      .then(modeloCompleto => {
-        return RESP._200(res, "Se elimino de manera correcta", [
-          { tipo: "modeloCompleto", datos: modeloCompleto },
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
-  }
-)
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familiaDeProcesos",
+        as: "familiaDeProcesos",
+      },
+    },
+    {
+      $unwind: {
+        preserveNullAndEmptyArrays: true,
+        path: "$familiaDeProcesos",
+      },
+    },
 
-app.put(
-  "/",
-  permisos.$("modeloCompleto:modificar"),
-  (req, res) => {
-    ModeloCompleto.findById(req.body._id)
-      .exec()
-      .then(modeloCompleto => {
-        if (!modeloCompleto) throw "No existe el sku"
-        ;[
-          "medias",
-          "laserAlmacen",
-          "versionModelo",
-          "familiaDeProcesos",
-          "procesosEspeciales",
-          "nombreCompleto",
-          "porcentajeDeMerma",
-          "espesor",
-        ].forEach(x => (modeloCompleto[x] = req.body[x]))
+    {
+      $addFields: {
+        familiaDeProcesos: "$familiaDeProcesos.nombre",
+        familiaDeProcesosObservaciones: "$familiaDeProcesos.observaciones",
+      },
+    },
+  ])
+    .exec()
+    .then(datos => {
+      return res.json(datos)
+    })
+    .catch(_ => next(_))
+})
 
-        return modeloCompleto.save()
-      })
-      .then(sku => {
-        return RESP._200(res, "Se modifico correctamente", [
-          { tipo: "modeloCompleto", datos: sku },
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
-  }
-)
+app.delete("/:id", permisos.$("modeloCompleto:eliminar"), (req, res) => {
+  ModeloCompleto.findById(req.params.id)
+    .exec()
+    .then(modeloCompleto => {
+      if (!modeloCompleto) throw "No existe el sku"
+
+      return modeloCompleto.remove()
+    })
+    .then(modeloCompleto => {
+      return RESP._200(res, "Se elimino de manera correcta", [
+        { tipo: "modeloCompleto", datos: modeloCompleto },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
+})
+
+app.put("/", permisos.$("modeloCompleto:modificar"), (req, res) => {
+  ModeloCompleto.findById(req.body._id)
+    .exec()
+    .then(modeloCompleto => {
+      if (!modeloCompleto) throw "No existe el sku"
+      ;[
+        "medias",
+        "laserAlmacen",
+        "versionModelo",
+        "familiaDeProcesos",
+        "procesosEspeciales",
+        "nombreCompleto",
+        "porcentajeDeMerma",
+        "espesor",
+      ].forEach(x => (modeloCompleto[x] = req.body[x]))
+
+      return modeloCompleto.save()
+    })
+    .then(sku => {
+      return RESP._200(res, "Se modifico correctamente", [
+        { tipo: "modeloCompleto", datos: sku },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
+})
 
 app.get(
   "/transito/:id",
@@ -313,19 +343,15 @@ app.get(
 // =====================================
 // -->
 
-app.post(
-  "/stock",
-  permisos.$("modeloCompleto:stock:modificar"),
-  (req, res) => {
-    let datos = req.body
+app.post("/stock", permisos.$("modeloCompleto:stock:modificar"), (req, res) => {
+  let datos = req.body
 
-    ModeloCompleto.findById(datos._id)
-      .exec()
-      .then(mc => modificarStock(datos, mc))
-      .then(mcModificado => _200_ModificarStock(res, mcModificado))
-      .catch(err => error(res, "Hubo un error modificando el stock", err))
-  }
-)
+  ModeloCompleto.findById(datos._id)
+    .exec()
+    .then(mc => modificarStock(datos, mc))
+    .then(mcModificado => _200_ModificarStock(res, mcModificado))
+    .catch(err => error(res, "Hubo un error modificando el stock", err))
+})
 
 function modificarStock(datos, mc) {
   if (!mc) throw "El id que ingresaste no existe."

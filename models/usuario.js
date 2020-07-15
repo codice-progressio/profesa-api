@@ -11,7 +11,7 @@ var rolesValidos = {
 }
 
 var usuarioSchema = new Schema({
-  nombre: { type: String, required: [true, "El nombre es necesario."] },
+  nombre: { type: String },
   email: {
     type: String,
     unique: true,
@@ -24,7 +24,7 @@ var usuarioSchema = new Schema({
     type: [String],
     default: [permisos.$("login")]
   },
-  idTrabajador: { type: Number }
+  empleado: String
 })
 
 usuarioSchema.plugin(uniqueValidator, { message: " '{PATH}' debe ser único." })

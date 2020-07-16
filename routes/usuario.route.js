@@ -27,7 +27,7 @@ app.get(
 
     Usuario.find()
       //Se salta los primeros "desde" registros y carga los siguientes.
-      .populate("empleado", "nombres apellidos", "Empleado")
+      .populate("empleado", "nombres apellidos fotografia", "Empleado")
       .skip(desde)
       // Liminta la cantidad de registros que se van a mostrar.
       .limit(limite)
@@ -39,6 +39,7 @@ app.get(
           if (x.empleado) {
             let em = x.empleado
             x.nombre = em.nombres + " " + em.apellidos
+            x.img = em.fotografia
           }
           return x
         })
@@ -175,7 +176,7 @@ app.get(
       { $match },
 
       //Fin de populacion
-      {$addFields: {'empleado':{ $toObjectId: "$empleado" }}},
+      { $addFields: { empleado: { $toObjectId: "$empleado" } } },
 
       {
         $lookup: {
@@ -199,6 +200,7 @@ app.get(
           email: 1,
           "empleado.nombres": 1,
           "empleado.apellidos": 1,
+          "empleado.fotografia": 1,
         },
       },
 
@@ -210,11 +212,10 @@ app.get(
     ])
       .exec()
       .then(usuarios => {
-        usuarios = usuarios.map(x =>
-        {
-          console.log(`x`,x)
+        usuarios = usuarios.map(x => {
           if (x.empleado) {
             x.nombre = x.empleado.nombres + " " + x.empleado.apellidos
+            x.img = x.empleado.fotografia
           }
           return x
         })
@@ -236,7 +237,7 @@ app.get(
   permisos.$("administrador:usuario:leer:id"),
   (req, res) => {
     Usuario.findById(req.params.id)
-      .populate("empleado", "nombres apellidos", "Empleado")
+      .populate("empleado", "nombres apellidos fotografia", "Empleado")
       .lean()
       .exec()
       .then(usuario => {
@@ -245,6 +246,7 @@ app.get(
         if (usuario.empleado) {
           usuario.nombre =
             usuario.empleado.nombres + " " + usuario.empleado.apellidos
+          usuario.img = usuario.empleado.fotografia
         }
 
         return RESP._200(res, null, [{ tipo: "usuario", datos: usuario }])
@@ -278,6 +280,7 @@ app.get("/buscar/todo/light", (req, res, next) => {
         nombre: 1,
         "empleado.nombres": 1,
         "empleado.apellidos": 1,
+        "empleado.fotografia": 1,
       },
     },
   ])
@@ -286,6 +289,7 @@ app.get("/buscar/todo/light", (req, res, next) => {
       usuarios = usuarios.map(x => {
         if (x.empleado) {
           x.nombre = x.empleado.nombres + " " + x.empleado.apellidos
+          x.img = x.empleado.fotografia
         }
 
         return x

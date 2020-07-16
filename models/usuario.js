@@ -7,7 +7,7 @@ var Schema = mongoose.Schema
 var rolesValidos = {
   // TODO: Estos valores tienen que ir en el archivo config.js
   values: permisos.lista,
-  message: "{VALUE} no es un rol permitido."
+  message: "{VALUE} no es un rol permitido.",
 }
 
 var usuarioSchema = new Schema({
@@ -15,16 +15,23 @@ var usuarioSchema = new Schema({
   email: {
     type: String,
     unique: true,
-    required: [true, "El correo es necesario."]
+    required: [true, "El correo es necesario."],
   },
-  password: { type: String, required: [true, "La contraseña es necesaria."], select: false },
+  password: {
+    type: String,
+    required: [true, "La contraseña es necesaria."],
+    select: false,
+  },
   img: { type: String, required: false },
   // TODO: Un usuario debe poder tener varios roles.
   permissions: {
     type: [String],
-    default: [permisos.$("login")]
+    default: [permisos.$("login")],
   },
-  empleado: String
+  empleado: {
+    type: mongoose.Schema.ObjectId,
+    ref: "Empleado",
+  },
 })
 
 usuarioSchema.plugin(uniqueValidator, { message: " '{PATH}' debe ser único." })

@@ -68,7 +68,7 @@ app.put("/", permisos.$("administrador:usuario:modificar"), (req, res) => {
 
       u.nombre = body.nombre
       u.email = body.email
-      u.empleado = body.empleado
+      u.empleado = body.empleado ? body.empleado : null
 
       while (u.permissions.length > 0) {
         u.permissions.pop()

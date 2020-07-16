@@ -52,7 +52,7 @@ app.post("/", (req, res) => {
   var datos = []
   var usuarioLogueado = null
   Usuario.findOne({ email: body.email })
-    .populate("empleado", "nombres apellidos fotografia", "Empleado")
+    .populate("empleado", "nombres apellidos fotografia")
     .select("+password")
     .lean()
     .exec()

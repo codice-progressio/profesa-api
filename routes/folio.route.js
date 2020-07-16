@@ -1473,4 +1473,55 @@ app.get(
   }
 )
 
+app.put("/ponerOrdenATrabajarEnMaquina", (req, res, next) => {
+  Folio.findById(req.body.idFolio)
+    .exec()
+    .then(async folio => {
+      if (!folio) throw "No existe el folio"
+
+      const orden = folio.folioLineas
+        .id(req.body.idPedido)
+        .ordenes.id(req.body.idOrden)
+
+      if (!orden) throw "No existe la orden"
+      if (orden.terminada) throw "Esta orden ya esta terminada"
+
+      const depaActual = await Departamento.findById(
+        req.body.idDepartamento
+      ).exec()
+
+      if (!depaActual) throw "No existe el departamento"
+
+      const ubicacion = orden.ruta.find(x => x.ubicacionActual)
+
+      if (ubicacion.idDepartamento !== req.body.idDepartamento)
+        throw `Esta orden no se ecuentra en este departamento. Actualmente esta en '${depActual.nombre}'`
+
+      if (!ubicacion.recibida) throw "Esta orden no ha sido recibida"
+
+      let maquina = Maquina.findById(req.body.idMaquina).exec()
+
+      if (!maquina) throw "No existe la maquina"
+
+      //Debe estar en la pila de trabajo de la maquina.
+
+      const ordenEnPila = maquina.pila
+        .filter(x => x.orden.toString() === req.body.idOrden)
+        .find(x => x.numeroDeOrden)
+
+      if (!ordenEnPila)
+        throw "Esta orden no se encuentra en esta maquina. Es necesario que el supervisor la asigne a la pila."
+      
+      
+      maquina.trabajando = true
+      maquina.trabajo = ordenEnPila
+      orden.maquinaActual = maquina
+
+      
+      
+      
+    })
+    .catch(_ => next(_))
+})
+
 module.exports = app

@@ -5,6 +5,7 @@ var bcrypt = require("bcryptjs")
 var Usuario = require("../models/usuario")
 var CONST = require("../utils/constantes")
 var RESP = require("../utils/respStatus")
+const Empleado = require("../models/recursosHumanos/empleados/empleado.model")
 
 var app = express()
 
@@ -63,7 +64,7 @@ app.put("/", permisos.$("administrador:usuario:modificar"), (req, res) => {
   )
   Usuario.findById(id)
     .exec()
-    .then(u => {
+    .then(async u => {
       if (!u) throw "No exise el id"
 
       u.nombre = body.nombre
@@ -75,6 +76,7 @@ app.put("/", permisos.$("administrador:usuario:modificar"), (req, res) => {
       }
 
       req.body.permissions.forEach(x => u.permissions.push(x))
+      await comprobarEmpleadoActivo(u.empleado, u.permissions)
       if (body.password) {
         // Si se agrega un password si se modifica MIENTRAS NO SEA SUPER ADMIN.
         u.password = bcrypt.hashSync(body.password, 10)
@@ -110,7 +112,9 @@ app.put("/", permisos.$("administrador:usuario:modificar"), (req, res) => {
 // ============================================
 // Crear un nuevo usuario.
 // ============================================
-app.post("/", permisos.$("administrador:usuario:crear"), (req, res) => {
+app.post("/", permisos.$("administrador:usuario:crear"), async (req, res) => {
+  comprobarEmpleadoActivo(req.body.empleado, req.body.permissions)
+
   var usuario = new Usuario(req.body)
   usuario
     .save()
@@ -125,6 +129,19 @@ app.post("/", permisos.$("administrador:usuario:crear"), (req, res) => {
 // ============================================
 // Borrar un usuario por el ID
 // ============================================
+
+async function comprobarEmpleadoActivo(idEmpleado, permissions) {
+  let empleado = await Empleado.findById(idEmpleado).exec()
+
+  if (empleado && permissions.includes("login")) {
+    //No se puede asignar un empleado
+
+    if (!empleado.activo)
+      throw "No se puede asignar un empleado en baja administrativa a un usuario activo"
+  } else if (empleado) {
+    throw "No se puede asignar un empleado a un usuario inactivo. Active al usuario para poder relacionarlo con un empleado. "
+  }
+}
 
 app.delete("/:id", permisos.$("administrador:usuario:eliminar"), (req, res) => {
   Usuario.findById(req.params.id)

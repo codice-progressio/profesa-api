@@ -17,6 +17,7 @@ const obtenerMenu = require("./login.menus")
 
 var guard = require("express-jwt-permissions")()
 var permisos = require("../../config/permisos.config")
+const { populate } = require("../../models/usuario")
 
 function crearToken(usuario) {
   return jwt.sign({ ...usuario }, SEED, {
@@ -51,6 +52,7 @@ app.post("/", (req, res) => {
   var datos = []
   var usuarioLogueado = null
   Usuario.findOne({ email: body.email })
+    .populate("empleado", "nombres apellidos fotografia")
     .select("+password")
     .lean()
     .exec()
@@ -67,7 +69,13 @@ app.post("/", (req, res) => {
       var token = crearToken(usuarioDB)
       usuarioLogueado = usuarioDB
 
-      if(!usuarioDB.permissions) usuarioDB.permissions = []
+      let e = usuarioDB.empleado
+      if (e) {
+        usuarioDB.nombre = e.nombres + " " + e.apellidos
+        usuarioDB.img = e.fotografia
+      }
+
+      if (!usuarioDB.permissions) usuarioDB.permissions = []
       datos = [
         { tipo: "usuario", datos: usuarioDB },
         { tipo: "token", datos: token },

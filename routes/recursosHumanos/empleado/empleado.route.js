@@ -224,7 +224,7 @@ function crear(res, empleado, foto) {
     })
     .then(emp => {
       return RESP._200(res, "Se guardo el empleado de manera correcta", [
-        { tipo: "emp", datos: emp }
+        { tipo: "empleado", datos: emp }
       ])
     })
     .catch(err => {

@@ -1526,6 +1526,7 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
   Folio.aggregate([
     { $match: { _id: { $in: folios } } },
     { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
+
     { $match: { "folioLineas._id": { $in: pedidos } } },
     {
       $unwind: {
@@ -1548,6 +1549,10 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
         observacionesPedido: "$folioLineas.observaciones",
         observacionesFolio: "$folioLineas.ordenes.observaciones",
         laser: "$folioLineas.laserCliente.laser",
+        idFolio: "$_id",
+        idPedido: "$folioLineas._id",
+        idOrden: "$folioLineas.ordenes._id",
+        cliente: "$cliente",
       },
     },
     {
@@ -1561,6 +1566,20 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
     {
       $unwind: {
         path: "$sku",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "clientes",
+        foreignField: "_id",
+        localField: "cliente",
+        as: "cliente",
+      },
+    },
+    {
+      $unwind: {
+        path: "$cliente",
         preserveNullAndEmptyArrays: true,
       },
     },
@@ -1590,6 +1609,7 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
         laserAlmacen: "$sku.laserAlmacen.laser",
         sku: "$sku.nombreCompleto",
         ruta: "$ruta.idDepartamento.nombre",
+        cliente: "$cliente.nombre",
       },
     },
     {
@@ -1614,6 +1634,10 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
           sku: "$sku",
           laser: "$laser",
           laserAlmacen: "$laserAlmacen",
+          idFolio: "$idFolio",
+          idPedido: "$idPedido",
+          idOrden: "$idOrden",
+          cliente: "$cliente",
         },
         ruta: { $push: "$ruta" },
       },
@@ -1638,6 +1662,19 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
         let numerosB = b.orden.split("-").join("") * 1
         return numerosA < numerosB ? -1 : 1
       })
+
+      let suma = {}
+
+      ordenes.forEach(x => {
+        if (!suma.hasOwnProperty(x.idPedido)) suma[x.idPedido] = 0
+        suma[x.idPedido]++
+      })
+
+      ordenes.map(x => {
+        x["totalOrdenes"] = suma[x.idPedido]
+        return x
+      })
+
       return res.send(ordenes)
     })
 

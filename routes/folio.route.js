@@ -415,7 +415,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         cantidadProducidaPedido: "$folioLineas.cantidadProducida",
 
         cantidadSolicitadaPedido: "$folioLineas.cantidad",
-        impreso:"$folioLineas.impreso"
+        impreso: "$folioLineas.impreso",
       },
     },
     { $unset: "_id" },
@@ -1511,16 +1511,136 @@ app.put("/ponerOrdenATrabajarEnMaquina", (req, res, next) => {
 
       if (!ordenEnPila)
         throw "Esta orden no se encuentra en esta maquina. Es necesario que el supervisor la asigne a la pila."
-      
-      
+
       maquina.trabajando = true
       maquina.trabajo = ordenEnPila
       orden.maquinaActual = maquina
-
-      
-      
-      
     })
+    .catch(_ => next(_))
+})
+
+app.post("/ordenesParaImpresion", (req, res, next) => {
+  let folios = req.body.map(x => ObjectId(x.folio))
+  let pedidos = req.body.map(x => ObjectId(x.pedido))
+
+  Folio.aggregate([
+    { $match: { _id: { $in: folios } } },
+    { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
+    { $match: { "folioLineas._id": { $in: pedidos } } },
+    {
+      $unwind: {
+        path: "$folioLineas.ordenes",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        nivelDeUrgencia: "$folioLineas.ordenes.nivelDeUrgencia",
+        fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+        numeroDeOrden: "$folioLineas.ordenes.numeroDeOrden",
+        piezasTeoricas: "$folioLineas.ordenes.piezasTeoricas",
+        unidad: "$folioLineas.ordenes.unidad",
+        orden: "$folioLineas.ordenes.orden",
+        sku: "$folioLineas.modeloCompleto",
+        ruta: "$folioLineas.ordenes.ruta",
+        observacionesOrden: "$observaciones",
+        observacionesPedido: "$folioLineas.observaciones",
+        observacionesFolio: "$folioLineas.ordenes.observaciones",
+        laser: "$folioLineas.laserCliente.laser",
+      },
+    },
+    {
+      $lookup: {
+        from: "modelosCompletos",
+        foreignField: "_id",
+        localField: "sku",
+        as: "sku",
+      },
+    },
+    {
+      $unwind: {
+        path: "$sku",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$ruta",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        "ruta.idDepartamento": { $toObjectId: "$ruta.idDepartamento" },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "departamentos",
+        foreignField: "_id",
+        localField: "ruta.idDepartamento",
+        as: "ruta.idDepartamento",
+      },
+    },
+    {
+      $addFields: {
+        laserAlmacen: "$sku.laserAlmacen.laser",
+        sku: "$sku.nombreCompleto",
+        ruta: "$ruta.idDepartamento.nombre",
+      },
+    },
+    {
+      $unwind: {
+        path: "$ruta",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $group: {
+        _id: {
+          nivelDeUrgencia: "$nivelDeUrgencia",
+          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+          numeroDeOrden: "$numeroDeOrden",
+          piezasTeoricas: "$piezasTeoricas",
+          unidad: "$unidad",
+          orden: "$orden",
+          observacionesOrden: "$observacionesOrden",
+          observacionesPedido: "$observacionesPedido",
+          observacionesFolio: "$observacionesFolio",
+          sku: "$sku",
+          laser: "$laser",
+          laserAlmacen: "$laserAlmacen",
+        },
+        ruta: { $push: "$ruta" },
+      },
+    },
+
+    {
+      $addFields: {
+        _id: { ruta: "$ruta" },
+      },
+    },
+
+    {
+      $replaceRoot: {
+        newRoot: "$_id",
+      },
+    },
+  ])
+    .exec()
+    .then(ordenes => {
+      ordenes = ordenes.sort((a, b) => {
+        let numerosA = a.orden.split("-").join("") * 1
+        let numerosB = b.orden.split("-").join("") * 1
+        return numerosA < numerosB ? -1 : 1
+      })
+      return res.send(ordenes)
+    })
+
     .catch(_ => next(_))
 })
 

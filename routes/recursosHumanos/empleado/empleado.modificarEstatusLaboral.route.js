@@ -87,6 +87,8 @@ module.exports.enfermedadGeneral = function (datos) {
           //Relacionado con activo del empleado
           incapacidadEnfermedadGeneral: true,
           observaciones: datos.observaciones,
+          fechaInicioIncapacidad: datos.fechaInicioIncapacidad,
+          fechaFinalizacionIncapacidad: datos.fechaFinalizacionIncapacidad,
         },
       }
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
@@ -108,6 +110,8 @@ module.exports.riesgoDeTrabajo = function (datos) {
           //Relacionado con activo del empleado
           incapacidadRiesgoDeTrabajo: true,
           observaciones: datos.observaciones,
+          fechaInicioIncapacidad: datos.fechaInicioIncapacidad,
+          fechaFinalizacionIncapacidad: datos.fechaFinalizacionIncapacidad,
         },
       }
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
@@ -129,6 +133,8 @@ module.exports.maternidad = function (datos) {
           //Relacionado con activo del empleado
           incapacidadMaternidad: true,
           observaciones: datos.observaciones,
+          fechaInicioIncapacidad: datos.fechaInicioIncapacidad,
+          fechaFinalizacionIncapacidad: datos.fechaFinalizacionIncapacidad,
         },
       }
       empleado.eventos.unshift(crearHistorialDeEventos(evento))

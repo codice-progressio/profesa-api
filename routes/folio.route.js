@@ -1520,8 +1520,9 @@ app.put("/ponerOrdenATrabajarEnMaquina", (req, res, next) => {
 })
 
 app.post("/ordenesParaImpresion", (req, res, next) => {
-  let folios = req.body.map(x => ObjectId(x.folio))
-  let pedidos = req.body.map(x => ObjectId(x.pedido))
+  let folios = req.body.datos.map(x => ObjectId(x.folio))
+  let pedidos = req.body.datos.map(x => ObjectId(x.pedido))
+  let ordenesAFiltrar = req.body.ordenesAFiltrar
 
   Folio.aggregate([
     { $match: { _id: { $in: folios } } },
@@ -1674,6 +1675,12 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
         x["totalOrdenes"] = suma[x.idPedido]
         return x
       })
+
+      //Solo retornamos las ordenes que se nos estan pidiendo
+      if (ordenesAFiltrar)
+        ordenes = ordenes.filter(ord =>
+          ordenesAFiltrar.includes(ord.idOrden.toString())
+        )
 
       return res.send(ordenes)
     })

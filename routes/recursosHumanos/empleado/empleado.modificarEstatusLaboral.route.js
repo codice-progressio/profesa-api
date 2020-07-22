@@ -73,7 +73,6 @@ module.exports.reingreso = function (datos) {
     })
 }
 module.exports.enfermedadGeneral = function (datos) {
-  console.log(datos)
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {
@@ -96,7 +95,6 @@ module.exports.enfermedadGeneral = function (datos) {
     })
 }
 module.exports.riesgoDeTrabajo = function (datos) {
-  console.log(datos)
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {
@@ -119,7 +117,6 @@ module.exports.riesgoDeTrabajo = function (datos) {
     })
 }
 module.exports.maternidad = function (datos) {
-  console.log(datos)
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {

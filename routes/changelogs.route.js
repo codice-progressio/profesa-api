@@ -9,6 +9,10 @@ app.put("/", permisos.$("SUPER_ADMIN"), (req, res, next) => {
   Changelog.findOne()
     .exec()
     .then(x => {
+      if (!x) {
+        return new Changelog(req.body).save()
+      }
+
       x.changelog = req.body.changelog
       return x.save()
     })

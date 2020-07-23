@@ -1,28 +1,58 @@
 const Empleado = require("../../../models/recursosHumanos/empleados/empleado.model")
+const Usuario = require("../../../models/usuario")
 
-module.exports.baja = function(datos) {
+module.exports.baja = function (datos) {
   console.log(datos)
+  let guardarEmpleado = null
   return Empleado.findById(datos._id)
     .exec()
-    .then(empleado => {
+    .then(async empleado => {
       if (!empleado) throw "El empleado no existe"
 
-      if (!empleado.activo) throw "El usuario ya esta inactivo"
+      let usuariosRegistrados = await Usuario.find({
+        empleado: empleado._id,
+      }).exec()
+
+      let observacionesBajaUsuario = ""
+
+      let contador = 0
+      let promesas = []
+      //Deslogueamos
+      usuariosRegistrados.forEach(u => {
+        u.permissions.pull("login")
+
+        observacionesBajaUsuario += contador == 0 ? " " : ", "
+
+        observacionesBajaUsuario += u.nombre
+
+        promesas.push(u.save())
+        contador++
+      })
+
+      if (!empleado.activo) throw "El empleado ya esta inactivo"
+
+      if (contador > 0)
+        datos.observaciones = `${datos.observaciones} [ SISTEMA ] Se deshabilitaron los accesos para los siguientes usuarios:  ${observacionesBajaUsuario}`
 
       const evento = {
         estatusLaboral: {
           //Relacionado con activo del empleado
           baja: true,
-          observaciones: datos.observaciones
-        }
+          observaciones: datos.observaciones,
+        },
       }
       empleado.activo = false
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
-      return empleado.save()
+
+      guardarEmpleado = empleado
+
+      return Promise.all(promesas)
+    })
+    .then(respuestas => {
+      return guardarEmpleado.save()
     })
 }
-module.exports.reingreso = function(datos) {
-  console.log(datos)
+module.exports.reingreso = function (datos) {
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {
@@ -34,17 +64,15 @@ module.exports.reingreso = function(datos) {
         estatusLaboral: {
           //Relacionado con activo del empleado
           reingreso: true,
-          observaciones: datos.observaciones
-        }
+          observaciones: datos.observaciones,
+        },
       }
       empleado.activo = true
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
       return empleado.save()
-    
     })
 }
-module.exports.enfermedadGeneral = function(datos) {
-  console.log(datos)
+module.exports.enfermedadGeneral = function (datos) {
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {
@@ -57,15 +85,16 @@ module.exports.enfermedadGeneral = function(datos) {
         estatusLaboral: {
           //Relacionado con activo del empleado
           incapacidadEnfermedadGeneral: true,
-          observaciones: datos.observaciones
-        }
+          observaciones: datos.observaciones,
+          fechaInicioIncapacidad: datos.fechaInicioIncapacidad,
+          fechaFinalizacionIncapacidad: datos.fechaFinalizacionIncapacidad,
+        },
       }
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
       return empleado.save()
     })
 }
-module.exports.riesgoDeTrabajo = function(datos) {
-  console.log(datos)
+module.exports.riesgoDeTrabajo = function (datos) {
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {
@@ -78,15 +107,16 @@ module.exports.riesgoDeTrabajo = function(datos) {
         estatusLaboral: {
           //Relacionado con activo del empleado
           incapacidadRiesgoDeTrabajo: true,
-          observaciones: datos.observaciones
-        }
+          observaciones: datos.observaciones,
+          fechaInicioIncapacidad: datos.fechaInicioIncapacidad,
+          fechaFinalizacionIncapacidad: datos.fechaFinalizacionIncapacidad,
+        },
       }
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
       return empleado.save()
     })
 }
-module.exports.maternidad = function(datos) {
-  console.log(datos)
+module.exports.maternidad = function (datos) {
   return Empleado.findById(datos._id)
     .exec()
     .then(empleado => {
@@ -99,8 +129,10 @@ module.exports.maternidad = function(datos) {
         estatusLaboral: {
           //Relacionado con activo del empleado
           incapacidadMaternidad: true,
-          observaciones: datos.observaciones
-        }
+          observaciones: datos.observaciones,
+          fechaInicioIncapacidad: datos.fechaInicioIncapacidad,
+          fechaFinalizacionIncapacidad: datos.fechaFinalizacionIncapacidad,
+        },
       }
       empleado.eventos.unshift(crearHistorialDeEventos(evento))
       return empleado.save()
@@ -110,6 +142,6 @@ module.exports.maternidad = function(datos) {
 function crearHistorialDeEventos(evento) {
   return {
     fechaDeRegistroDeEvento: new Date(),
-    evento: evento
+    evento: evento,
   }
 }

@@ -415,7 +415,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         cantidadProducidaPedido: "$folioLineas.cantidadProducida",
 
         cantidadSolicitadaPedido: "$folioLineas.cantidad",
-        impreso:"$folioLineas.impreso"
+        impreso: "$folioLineas.impreso",
       },
     },
     { $unset: "_id" },
@@ -1472,5 +1472,220 @@ app.get(
       .catch(_ => next(_))
   }
 )
+
+app.put("/ponerOrdenATrabajarEnMaquina", (req, res, next) => {
+  Folio.findById(req.body.idFolio)
+    .exec()
+    .then(async folio => {
+      if (!folio) throw "No existe el folio"
+
+      const orden = folio.folioLineas
+        .id(req.body.idPedido)
+        .ordenes.id(req.body.idOrden)
+
+      if (!orden) throw "No existe la orden"
+      if (orden.terminada) throw "Esta orden ya esta terminada"
+
+      const depaActual = await Departamento.findById(
+        req.body.idDepartamento
+      ).exec()
+
+      if (!depaActual) throw "No existe el departamento"
+
+      const ubicacion = orden.ruta.find(x => x.ubicacionActual)
+
+      if (ubicacion.idDepartamento !== req.body.idDepartamento)
+        throw `Esta orden no se ecuentra en este departamento. Actualmente esta en '${depActual.nombre}'`
+
+      if (!ubicacion.recibida) throw "Esta orden no ha sido recibida"
+
+      let maquina = Maquina.findById(req.body.idMaquina).exec()
+
+      if (!maquina) throw "No existe la maquina"
+
+      //Debe estar en la pila de trabajo de la maquina.
+
+      const ordenEnPila = maquina.pila
+        .filter(x => x.orden.toString() === req.body.idOrden)
+        .find(x => x.numeroDeOrden)
+
+      if (!ordenEnPila)
+        throw "Esta orden no se encuentra en esta maquina. Es necesario que el supervisor la asigne a la pila."
+
+      maquina.trabajando = true
+      maquina.trabajo = ordenEnPila
+      orden.maquinaActual = maquina
+    })
+    .catch(_ => next(_))
+})
+
+app.post("/ordenesParaImpresion", (req, res, next) => {
+  let folios = req.body.datos.map(x => ObjectId(x.folio))
+  let pedidos = req.body.datos.map(x => ObjectId(x.pedido))
+  let ordenesAFiltrar = req.body.ordenesAFiltrar
+
+  Folio.aggregate([
+    { $match: { _id: { $in: folios } } },
+    { $unwind: { path: "$folioLineas", preserveNullAndEmptyArrays: true } },
+
+    { $match: { "folioLineas._id": { $in: pedidos } } },
+    {
+      $unwind: {
+        path: "$folioLineas.ordenes",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        nivelDeUrgencia: "$folioLineas.ordenes.nivelDeUrgencia",
+        fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+        numeroDeOrden: "$folioLineas.ordenes.numeroDeOrden",
+        piezasTeoricas: "$folioLineas.ordenes.piezasTeoricas",
+        unidad: "$folioLineas.ordenes.unidad",
+        orden: "$folioLineas.ordenes.orden",
+        sku: "$folioLineas.modeloCompleto",
+        ruta: "$folioLineas.ordenes.ruta",
+        observacionesOrden: "$observaciones",
+        observacionesPedido: "$folioLineas.observaciones",
+        observacionesFolio: "$folioLineas.ordenes.observaciones",
+        laser: "$folioLineas.laserCliente.laser",
+        idFolio: "$_id",
+        idPedido: "$folioLineas._id",
+        idOrden: "$folioLineas.ordenes._id",
+        cliente: "$cliente",
+      },
+    },
+    {
+      $lookup: {
+        from: "modelosCompletos",
+        foreignField: "_id",
+        localField: "sku",
+        as: "sku",
+      },
+    },
+    {
+      $unwind: {
+        path: "$sku",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "clientes",
+        foreignField: "_id",
+        localField: "cliente",
+        as: "cliente",
+      },
+    },
+    {
+      $unwind: {
+        path: "$cliente",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$ruta",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        "ruta.idDepartamento": { $toObjectId: "$ruta.idDepartamento" },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "departamentos",
+        foreignField: "_id",
+        localField: "ruta.idDepartamento",
+        as: "ruta.idDepartamento",
+      },
+    },
+    {
+      $addFields: {
+        laserAlmacen: "$sku.laserAlmacen.laser",
+        sku: "$sku.nombreCompleto",
+        ruta: "$ruta.idDepartamento.nombre",
+        cliente: "$cliente.nombre",
+      },
+    },
+    {
+      $unwind: {
+        path: "$ruta",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $group: {
+        _id: {
+          nivelDeUrgencia: "$nivelDeUrgencia",
+          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+          numeroDeOrden: "$numeroDeOrden",
+          piezasTeoricas: "$piezasTeoricas",
+          unidad: "$unidad",
+          orden: "$orden",
+          observacionesOrden: "$observacionesOrden",
+          observacionesPedido: "$observacionesPedido",
+          observacionesFolio: "$observacionesFolio",
+          sku: "$sku",
+          laser: "$laser",
+          laserAlmacen: "$laserAlmacen",
+          idFolio: "$idFolio",
+          idPedido: "$idPedido",
+          idOrden: "$idOrden",
+          cliente: "$cliente",
+        },
+        ruta: { $push: "$ruta" },
+      },
+    },
+
+    {
+      $addFields: {
+        _id: { ruta: "$ruta" },
+      },
+    },
+
+    {
+      $replaceRoot: {
+        newRoot: "$_id",
+      },
+    },
+  ])
+    .exec()
+    .then(ordenes => {
+      ordenes = ordenes.sort((a, b) => {
+        let numerosA = a.orden.split("-").join("") * 1
+        let numerosB = b.orden.split("-").join("") * 1
+        return numerosA < numerosB ? -1 : 1
+      })
+
+      let suma = {}
+
+      ordenes.forEach(x => {
+        if (!suma.hasOwnProperty(x.idPedido)) suma[x.idPedido] = 0
+        suma[x.idPedido]++
+      })
+
+      ordenes.map(x => {
+        x["totalOrdenes"] = suma[x.idPedido]
+        return x
+      })
+
+      //Solo retornamos las ordenes que se nos estan pidiendo
+      if (ordenesAFiltrar)
+        ordenes = ordenes.filter(ord =>
+          ordenesAFiltrar.includes(ord.idOrden.toString())
+        )
+
+      return res.send(ordenes)
+    })
+
+    .catch(_ => next(_))
+})
 
 module.exports = app

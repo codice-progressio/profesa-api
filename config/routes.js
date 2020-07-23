@@ -43,6 +43,7 @@ const PuestoRoute = require("../routes/recursosHumanos/puestos/puesto.route")
 const EmpleadoRoute = require("../routes/recursosHumanos/empleado/empleado.route")
 
 const Parametros = require("../routes/parametros/parametros.route")
+const Changelogs = require("../routes/changelogs.route")
 
 var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
 
@@ -128,6 +129,7 @@ module.exports.ROUTES = function (app) {
   //Este va primero por que se usan permisos especiales internamente
   app.use("/parametros", Parametros)
 
+
   //Cargamos todos los parametros en cada peticion para tener disponible
   //la informacion en req.parametros
   const ParametrosModel = require("../models/defautls/parametros.model")
@@ -148,6 +150,7 @@ module.exports.ROUTES = function (app) {
 
   //Para usar esta parte debe tener permisos de login
   app.use(permisos.$("login"))
+  app.use("/changelogs", Changelogs )
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(

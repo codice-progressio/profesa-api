@@ -138,8 +138,7 @@ app.put("/", permisos.$("tamano:modificar"), (req, res) => {
     .exec()
     .then((tamano) => {
       if (!tamano) throw "No existe el tamano"
-        ;["tamano", "estandar", "grTuboBaston"]
-          .forEach((x) => (tamano[x] = req.body[x]))
+      ;["tamano", "estandar"].forEach((x) => (tamano[x] = req.body[x]))
 
       return tamano.save()
     })

@@ -22,15 +22,6 @@ var tamanoSchema = new Schema({
             message: '{VALUE} no es un numero entero valido.'
         }
     },
-    grTuboBaston: {
-        type: Number,
-        min: [1, 'El valor mínimo permitido es 1.'],
-        max: [999999, 'El valor máximo permitido es 999999.'],
-        validate: {
-            validator: Number.isInteger,
-            message: '{VALUE} no es un numero entero valido.'
-        }
-    },
 
     // Esto de aqui es para que mongose no escriba hospitals en vez de tamanos
 }, { collection: 'tamanos' });

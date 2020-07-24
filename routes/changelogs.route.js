@@ -9,6 +9,10 @@ app.put("/", permisos.$("SUPER_ADMIN"), (req, res, next) => {
   Changelog.findOne()
     .exec()
     .then(x => {
+      if (!x) {
+        return new Changelog(req.body).save()
+      }
+
       x.changelog = req.body.changelog
       return x.save()
     })
@@ -19,7 +23,7 @@ app.put("/", permisos.$("SUPER_ADMIN"), (req, res, next) => {
 app.get("/", (req, res, next) => {
   Changelog.findOne({})
     .exec()
-    .then(c => res.send({ changelog: c.changelog, apiVersion: pjson.version }))
+    .then(c => res.send({ changelog: c?.changelog, apiVersion: pjson.version }))
     .catch(_ => next(_))
 })
 

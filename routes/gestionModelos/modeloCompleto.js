@@ -11,6 +11,8 @@ const ObjectId = mongoose.Types.ObjectId
 var guard = require("express-jwt-permissions")()
 var permisos = require("../../config/permisos.config")
 
+const Parametros = require("../../models/defautls/parametros.model")
+
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
@@ -71,6 +73,7 @@ app.get("/", permisos.$("modeloCompleto:leer:todo"), async (req, res) => {
         medias: "$medias",
         familiaDeProcesos: "$familiaDeProcesos.nombre",
         familiaDeProcesosId: "$familiaDeProcesos._id",
+        parte: "$parte",
       },
     },
   ])
@@ -159,6 +162,7 @@ app.get(
           stockMinimo: "$stockMinimo",
           familiaDeProcesos: "$familiaDeProcesos.nombre",
           familiaDeProcesosId: "$familiaDeProcesos._id",
+          parte: "$parte",
         },
       },
     ])
@@ -194,6 +198,7 @@ app.get("/todoParaExcel", (req, res, next) => {
         esBaston: "$esBaston",
         stockMinimo: "$stockMinimo",
         stockMaximo: "$stockMaximo",
+        parte: "$parte",
       },
     },
     {
@@ -270,6 +275,39 @@ app.put("/", permisos.$("modeloCompleto:modificar"), (req, res) => {
     })
     .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
 })
+
+app.put(
+  "/setearParte",
+  permisos.$("modeloCompleto:modificar:parte"),
+  async (req, res, next) => {
+    if (!req.parametros?.actualizaciones?.partes) {
+      try {
+        await ModeloCompleto.updateMany({}, { parte: "C" }).exec()
+        await Parametros.updateOne(
+          {},
+          { "actualizaciones.partes": true }
+        ).exec()
+      } catch (error) {
+        return next(error)
+      }
+    }
+    ModeloCompleto.findById(req.body._id)
+      .exec()
+      .then(modeloCompleto => {
+        if (!modeloCompleto) throw "No existe el sku"
+        modeloCompleto.parte = req.body.parte
+        return modeloCompleto.save()
+      })
+      .then(sku => {
+        return RESP._200(
+          res,
+          `Se agrego ${sku.nombreCompleto} a las partes ${sku.parte}`,
+          [{ tipo: "modeloCompleto", datos: sku }]
+        )
+      })
+      .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
+  }
+)
 
 app.get(
   "/transito/:id",

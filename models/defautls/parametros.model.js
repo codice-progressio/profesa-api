@@ -47,6 +47,10 @@ const parametrosDeTrabajoSchema = new Schema(
         ],
       },
     ],
+
+    actualizaciones: {
+      partes: { $type: Boolean, default: false },
+    },
   },
   { collection: "parametrosDeTrabajo", typeKey: "$type" }
 )

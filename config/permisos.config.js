@@ -136,6 +136,7 @@ const permisos = {
   "modeloCompleto:leer:todo": NO_DEFINIDO,
   "modeloCompleto:leer:transito": NO_DEFINIDO,
   "modeloCompleto:modificar": NO_DEFINIDO,
+  "modeloCompleto:modificar:parte": NO_DEFINIDO,
   "modeloCompleto:stock:modificar": NO_DEFINIDO,
   "proceso:crear": NO_DEFINIDO,
   "proceso:eliminar": NO_DEFINIDO,

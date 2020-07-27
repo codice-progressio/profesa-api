@@ -132,7 +132,8 @@ var modeloCompletoSchema = new Schema({
             },
             msg: "El valor maximo de stock no puede ser menor que el valor minimo de stock"
         }]
-    }
+    },
+    parte: { type: String, default: "C", enum: ["A", "B", "C", "DES"] },
 }, { collection: "modelosCompletos" })
 /**
  *

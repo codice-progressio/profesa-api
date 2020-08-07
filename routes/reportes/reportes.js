@@ -9,6 +9,9 @@ var RepoPers = require("../../models/almacenRefaccionesYMateriaPrima/reportePers
 
 var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.model")
 
+const Folio = require("../../models/folios/folio")
+const Proceso = require("../../models/procesos/proceso")
+
 const mongoose = require("mongoose")
 
 var guard = require("express-jwt-permissions")()
@@ -24,7 +27,7 @@ var permisos = require("../../config/permisos.config")
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
-    err: err
+    err: err,
   })
 }
 
@@ -66,7 +69,7 @@ app.get(
         })
 
         return RESP._200(res, "datos hasta el momento", [
-          { tipo: "reporte", datos: datosReporte }
+          { tipo: "reporte", datos: datosReporte },
         ])
       })
       .catch(err =>
@@ -93,7 +96,7 @@ app.get(
         const dias = {
           _7: new Date(new Date().getTime() - calculoDeDias(7)),
           _30: new Date(new Date().getTime() - calculoDeDias(30)),
-          _365: new Date(new Date().getTime() - calculoDeDias(365))
+          _365: new Date(new Date().getTime() - calculoDeDias(365)),
         }
 
         for (const key in dias) {
@@ -128,7 +131,7 @@ app.get(
 
         return RESP._200(res, "datos hasta el momento", [
           // { tipo: "reporte", datos: datos }
-          { tipo: "reporte", datos: datosReporte }
+          { tipo: "reporte", datos: datosReporte },
         ])
       })
       .catch(err =>
@@ -171,7 +174,7 @@ app.get(
         articulosRepo = agregarCalculoDeDias(articulosRepo)
 
         return RESP._200(res, "Se genero el reporte", [
-          { tipo: "reportes", datos: articulosRepo }
+          { tipo: "reportes", datos: articulosRepo },
         ])
       })
       .catch(err =>
@@ -185,7 +188,7 @@ function agregarCalculoDeDias(datos) {
   const dias = {
     _7: new Date(new Date().getTime() - calculoDeDias(7)),
     _30: new Date(new Date().getTime() - calculoDeDias(30)),
-    _365: new Date(new Date().getTime() - calculoDeDias(365))
+    _365: new Date(new Date().getTime() - calculoDeDias(365)),
   }
 
   for (const key in dias) {
@@ -197,5 +200,373 @@ function agregarCalculoDeDias(datos) {
 
   return datos
 }
+
+app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
+  let desde = req.query.inferior
+  let hasta = req.query.superior
+
+  if (!desde)
+    return next(
+      new Error("Falta definir el limite inferior del rango de la fecha")
+    )
+  if (!hasta)
+    return next(
+      new Error("Falta definir el limite superior del rango de la fecha")
+    )
+
+  let ordenesEncontradas = null
+  Folio.aggregate([
+    {
+      $match: {
+        fechaDeEntregaAProduccion: { $gte: desde },
+      },
+    },
+
+    {
+      $project: {
+        folio: "$numeroDeFolio",
+        cliente: "$cliente",
+        fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+        folioLineas: "$folioLineas",
+        vendedor: "$vendedor",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$folioLineas",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        cliente: 1,
+        fechaDeEntregaAProduccion: 1,
+        folio: 1,
+        vendedor: 1,
+        "folioLineas.modeloCompleto": "$folioLineas.modeloCompleto",
+        "folioLineas.laserCliente": "$folioLineas.laserCliente",
+        "folioLineas.almacen": "$folioLineas.almacen",
+        "folioLineas.ordenes": "$folioLineas.ordenes",
+      },
+    },
+    {
+      $unwind: {
+        path: "$folioLineas.ordenes",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $project: {
+        idFolio: "$_id",
+        cliente: 1,
+        fechaDeEntregaAProduccion: 1,
+        numeroDeFolio: 1,
+        vendedor: 1,
+        modeloCompleto: "$folioLineas.modeloCompleto",
+        laserCliente: "$folioLineas.laserCliente",
+        almacen: "$folioLineas.almacen",
+        orden: "$folioLineas.ordenes.orden",
+        unidad: "$folioLineas.ordenes.unidad",
+        piezasTeoricas: "$folioLineas.ordenes.piezasTeoricas",
+        piezasFinales: "$folioLineas.ordenes.piezasFinales",
+        ruta: "$folioLineas.ordenes.ruta",
+        terminada: "$folioLineas.ordenes.terminada",
+        fechaFinalizacion: { $last: "$folioLineas.ordenes.ruta.salida" },
+      },
+    },
+    {
+      $unset: [
+        "_id",
+        "ruta._id",
+        "ruta.recibida",
+        // "ruta.datos",
+        "ruta.ubicacionActual",
+      ],
+    },
+    {
+      $match: {
+        terminada: true,
+      },
+    },
+
+    {
+      $addFields: {
+        diasDeProceso: {
+          $divide: [
+            { $subtract: ["$fechaFinalizacion", "$fechaDeEntregaAProduccion"] },
+
+            { $multiply: [1000, 60, 60, 24] },
+          ],
+        },
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$ruta",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $addFields: {
+        "ruta.idDepartamento": { $toObjectId: "$ruta.idDepartamento" },
+        "ruta.idProceso": { $toObjectId: "$ruta.idProceso" },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "departamentos",
+        foreignField: "_id",
+        localField: "ruta.idDepartamento",
+        as: "ruta.departamento",
+      },
+    },
+    {
+      $lookup: {
+        from: "procesos",
+        foreignField: "_id",
+        localField: "ruta.idProceso",
+        as: "ruta.proceso",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$ruta.departamento",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$ruta.proceso",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $addFields: {
+        "ruta.proceso": "$ruta.proceso.nombre",
+        "ruta.departamento": "$ruta.departamento.nombre",
+      },
+    },
+
+    {
+      $addFields: {
+        "ruta.diasDeProceso": {
+          $divide: [
+            { $subtract: ["$ruta.salida", "$ruta.recepcion"] },
+            { $multiply: [1000, 60, 60, 24] },
+          ],
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: {
+          vendedor: "$vendedor",
+          numeroDeFolio: "$numeroDeFolio",
+          idCliente: { $toObjectId: "$cliente" },
+          fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
+          idFolio: "$idFolio",
+          sku: { $toObjectId: "$modeloCompleto" },
+          laserCliente: "$laserCliente.laser",
+          almacen: "$almacen",
+          orden: "$orden",
+          unidad: "$unidad",
+          piezasTeoricas: "$piezasTeoricas",
+          piezasFinales: "$piezasFinales",
+          terminada: "$terminada",
+          fechaFinalizacion: "$fechaFinalizacion",
+          diasDeProceso: "$diasDeProceso",
+        },
+
+        ruta: { $push: "$ruta" },
+      },
+    },
+
+    {
+      $addFields: {
+        "_id.ruta": "$ruta",
+      },
+    },
+
+    {
+      $replaceRoot: { newRoot: "$_id" },
+    },
+    {
+      $lookup: {
+        from: "clientes",
+        foreignField: "_id",
+        localField: "idCliente",
+        as: "cliente",
+      },
+    },
+
+    {
+      $addFields: {
+        cliente: "$cliente.nombre",
+      },
+    },
+    {
+      $lookup: {
+        from: "usuarios",
+        foreignField: "_id",
+        localField: "vendedor",
+        as: "vendedor",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$vendedor",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    {
+      $addFields: {
+        vendedor: "$vendedor.nombre",
+        idVendedor: "$vendedor._id",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$cliente",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "modelosCompletos",
+        foreignField: "_id",
+        localField: "sku",
+        as: "sku",
+      },
+    },
+
+    {
+      $addFields: {
+        sku: "$sku.nombreCompleto",
+        familia: "$sku.familiaDeProcesos",
+        laserAlmacen: "$sku.laserAlmacen.laser",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$sku",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$familia",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$laserAlmacen",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familia",
+        as: "familia",
+      },
+    },
+
+    {
+      $addFields: {
+        familia: "$familia.nombre",
+        familiaObservaciones: "$familia.observaciones",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$familia",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$familiaObservaciones",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+  ])
+    .exec()
+    .then(ordenes => {
+      ordenesEncontradas = ordenes
+
+      return Proceso.find().lean().exec()
+    })
+    .then(procesos => {
+      ordenesEncontradas = ordenesEncontradas.map(orden => {
+        procesos.forEach(pro => {
+          let ruta = orden.ruta.find(ruta => {
+            return ruta?.idProceso?.toString() === pro._id.toString()
+          })
+
+          let proLimpio = pro.nombre.split(" ").join("_")
+          orden[`dp_${proLimpio}`] = ruta ? ruta.diasDeProceso : 0
+          orden[`dp_relativo_${proLimpio}`] = 0
+
+          //Contiene los datos para defectos
+
+          if (ruta?.datos?.hasOwnProperty("quebrados")) {
+            ;[
+              "quebrados",
+              "reves",
+              "despostillado",
+              "sinLaser",
+              "sinHoyos",
+              "efectoMalo",
+              "otros",
+            ].forEach(x => {
+              orden["defecto_" + x] = ruta.datos[x] ? ruta.datos[x] : 0
+            })
+          }
+        })
+
+        let fechaAnterior = null
+        for (let i = 0; i < orden.ruta.length; i++) {
+          const ruta = orden.ruta[i]
+
+          if (!fechaAnterior) {
+            fechaAnterior = ruta.salida
+            continue
+          }
+
+          let diferencia = new Date(ruta.salida) - new Date(fechaAnterior)
+          console.log(`diferencia`, diferencia)
+
+          let diferenciaDias = diferencia / 1000 / 60 / 60 / 24
+          let proLimpio = ruta.proceso.split(" ").join("_")
+          let propiedad = "dp_relativo_" + proLimpio
+
+          orden[propiedad] = diferenciaDias
+
+          fechaAnterior = ruta.salida
+        }
+
+        return orden
+      })
+
+      res.send(ordenesEncontradas)
+    })
+    .catch(err => next(err))
+})
 
 module.exports = app

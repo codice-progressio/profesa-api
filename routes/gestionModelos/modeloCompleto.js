@@ -264,6 +264,7 @@ app.put("/", permisos.$("modeloCompleto:modificar"), (req, res) => {
         "nombreCompleto",
         "porcentajeDeMerma",
         "espesor",
+        "terminado",
       ].forEach(x => (modeloCompleto[x] = req.body[x]))
 
       return modeloCompleto.save()

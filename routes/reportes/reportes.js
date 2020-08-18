@@ -652,7 +652,6 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
           }
 
           let diferencia = new Date(ruta.salida) - new Date(fechaAnterior)
-          console.log(`diferencia`, diferencia)
 
           let diferenciaDias = diferencia / 1000 / 60 / 60 / 24
           let proLimpio = ruta.proceso.split(" ").join("_")
@@ -662,6 +661,41 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
 
           fechaAnterior = ruta.salida
         }
+        orden.ruta.forEach(ruta => {
+          if (ruta.departamento) {
+            let depaLimpio = ruta.departamento.replace(/\s/g, "_")
+            let proLimpio = ruta.proceso.replace(/\s/g, "_")
+            let nombreVariable = `DATOPRO`
+
+            if (ruta.datos) {
+              Object.keys(ruta.datos).forEach(keyDatos => {
+                if (keyDatos === "_id") return
+
+                // Pastilla puede tener cantidades que corresponden a la version anterior. Si es asi hacemos esto.
+                if (keyDatos === "cantidades") {
+                  let contador = 1
+
+                  ruta.datos[keyDatos].forEach(cantidadObject => {
+                    Object.keys(cantidadObject).forEach(keyCantidad => {
+                      if (keyCantidad === "_id") return
+                      orden[
+                        `${nombreVariable}_${depaLimpio}_${proLimpio}_${keyCantidad}${contador}`
+                      ] = cantidadObject[keyCantidad]
+                    })
+
+                    contador++
+                  })
+                } else {
+                  orden[
+                    `${nombreVariable}_${depaLimpio}_${proLimpio}_${keyDatos}`
+                  ] = ruta.datos[keyDatos]
+                }
+              })
+            }
+          }
+        })
+
+        delete orden.ruta
 
         return orden
       })

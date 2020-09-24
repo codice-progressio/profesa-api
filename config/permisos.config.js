@@ -39,6 +39,7 @@ const permisos = {
   "articulo:leer:termino": NO_DEFINIDO,
   "articulo:leer:todo": NO_DEFINIDO,
   "articulo:modificar": NO_DEFINIDO,
+  "articulo:reportes:existencias": NO_DEFINIDO,
   "cliente:crear": NO_DEFINIDO,
   "cliente:eliminar": NO_DEFINIDO,
   "cliente:leer:id": NO_DEFINIDO,

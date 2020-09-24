@@ -132,6 +132,18 @@ app.get(
   }
 )
 
+app.get(
+  "/reporte/existencias",
+  permisos.$("articulo:reportes:existencias"),
+  (req, res, next) => {
+    Articulo.find()
+      .select("-salidas -entradas -__v -_id ")
+      .exec()
+      .then(datos => res.send(datos))
+      .catch(_ => next(_))
+  }
+)
+
 app.put("/", permisos.$("articulo:modificar"), (req, res) => {
   Articulo.findById(req.body._id)
     .exec()

@@ -184,6 +184,89 @@ app.get("/productoTerminado/salidas", (req, res, next) => {
     .catch(_ => next(_))
 })
 
+
+app.get("/productoTerminado/entradas", (req, res, next) => {
+  SKU.aggregate([
+    { $match: { "lotes.1": { $exists: true } } },
+    {
+      $project: {
+        familia: "$familiaDeProcesos",
+        esBaston: 1,
+        lotes: 1,
+        sku: "$nombreCompleto",
+        parte: 1,
+      },
+    },
+
+    { $unwind: { path: "$lotes", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        familia: 1,
+        esBaston: 1,
+        sku: 1,
+        parte: 1,
+        "lotes.entradas": 1,
+      },
+    },
+    { $unwind: { path: "$lotes.entradas", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        familia: 1,
+        esBaston: 1,
+        sku: 1,
+        parte: 1,
+        // cliente: "$lotes.entradas.cliente",
+        cantidad: "$lotes.entradas.cantidad",
+        observaciones: "$lotes.entradas.observaciones",
+        fechaEntrada: "$lotes.entradas.createAt",
+      },
+    },
+
+    {
+      $match: {
+        fechaEntrada: {
+          $gte: req.query.inferior,
+          $lte: req.query.superior,
+        },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familia",
+        as: "familia",
+      },
+    },
+
+    {
+      $addFields: {
+        familia: "$familia.nombre",
+        familiaObservaciones: "$familia.observaciones",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$familia",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$familiaObservaciones",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    { $unset: ["_id"]}
+  ])
+    .exec()
+    .then(x => res.send(x))
+    .catch(_ => next(_))
+})
+
 app.get(
   "/almacenDeProduccion/faltantes",
   permisos.$("reportes:almacenDeProduccion:faltantes"),

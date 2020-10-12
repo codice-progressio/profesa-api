@@ -12,10 +12,13 @@ var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.mo
 const Folio = require("../../models/folios/folio")
 const Proceso = require("../../models/procesos/proceso")
 const SKU = require("../../models/modeloCompleto")
+const Empleado = require("../../models/recursosHumanos/empleados/empleado.model")
+
 const mongoose = require("mongoose")
 
 var guard = require("express-jwt-permissions")()
 var permisos = require("../../config/permisos.config")
+const { exists } = require("../../models/procesos/proceso")
 
 // <!--
 // =====================================
@@ -184,7 +187,6 @@ app.get("/productoTerminado/salidas", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-
 app.get("/productoTerminado/entradas", (req, res, next) => {
   SKU.aggregate([
     { $match: { "lotes.1": { $exists: true } } },
@@ -260,7 +262,7 @@ app.get("/productoTerminado/entradas", (req, res, next) => {
       },
     },
 
-    { $unset: ["_id"]}
+    { $unset: ["_id"] },
   ])
     .exec()
     .then(x => res.send(x))
@@ -386,10 +388,7 @@ function agregarCalculoDeDias(datos) {
   return datos
 }
 
-app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
-  let desde = req.query.inferior
-  let hasta = req.query.superior
-
+function validarFechas(desde, hasta) {
   if (!desde)
     return next(
       new Error("Falta definir el limite inferior del rango de la fecha")
@@ -398,6 +397,13 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
     return next(
       new Error("Falta definir el limite superior del rango de la fecha")
     )
+}
+
+app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
+  let desde = req.query.inferior
+  let hasta = req.query.superior
+
+  validarFechas(desde, hasta)
 
   let ordenesEncontradas = null
   Folio.aggregate([
@@ -788,4 +794,10 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
     .catch(err => next(err))
 })
 
+app.get("/rh/empleados", (req, res, next) => {
+  Empleado.find()
+    .select("-_id -eventos -__v -asistencia -hijos")
+    .then(empleados => res.send(empleados))
+    .catch(err => next(err))
+})
 module.exports = app

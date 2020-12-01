@@ -17,8 +17,6 @@ const _ROUTES = require("./config/routes").ROUTES
 
 const cors = require("cors")
 
-
-
 /**
  * Este codigo nos permite agregar datos al htttp
  * para tenerlos donde sea?
@@ -184,7 +182,7 @@ if (ENVIROMENT.esModoProduccion) {
   app.listen(enviroment.PORT, () => {
     console.log(`Servidor iniciado en el puerto: ${enviroment.PORT}`)
     console.log(ENVIROMENT.msj_mongoose_ok)
-  })GIT
+  })
 } else {
   https
     .createServer(

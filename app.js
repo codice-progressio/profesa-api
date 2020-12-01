@@ -87,7 +87,7 @@ app.use(require("express-query-auto-parse")())
 mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
 mongoose.set("useCreateIndex", true)
-// mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
+mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   // Mensaje de conexion a la base de datos.
   console.log(ENVIROMENT.msj_bienvenida)
   if (err) {

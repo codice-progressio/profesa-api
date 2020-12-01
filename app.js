@@ -1,19 +1,23 @@
-var compression = require("compression")
+const compression = require("compression")
 // Requires
-var express = require("express")
+const express = require("express")
 
-var https = require("https")
-var fs = require("fs")
+const https = require("https")
+const fs = require("fs")
 
-var mongoose = require("mongoose")
+const mongoose = require("mongoose")
 mongoose.Promise = global.Promise
-var colores = require("./utils/colors")
-var bodyParser = require("body-parser")
-var db = require("./config/db")
+const colores = require("./utils/colors")
+const bodyParser = require("body-parser")
+const db = require("./config/db")
 
-var RESP = require("./utils/respStatus")
+const RESP = require("./utils/respStatus")
 
-var _ROUTES = require("./config/routes").ROUTES
+const _ROUTES = require("./config/routes").ROUTES
+
+const cors = require("cors")
+
+
 
 /**
  * Este codigo nos permite agregar datos al htttp
@@ -33,7 +37,7 @@ var ENVIROMENT = db.enviroment(process.env.NODE_ENV === "production")
 // Inicializar variables.
 var app = express()
 
-app.disable('x-powered-by');
+app.disable("x-powered-by")
 
 // Esta función nos ayuda a quitar duplicados dentro
 //  del array.
@@ -50,25 +54,26 @@ Array.prototype.greaterThan0 = function (a) {
 }
 
 app.use(compression())
+app.use(cors())
 
-app.use(function (req, res, next) {
-  res.header(
-    "Access-Control-Allow-Origin",
-    ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
-  )
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-  )
-  res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
-  res.header("Access-Control-Allow-Credentials", "true")
+// app.use(function (req, res, next) {
+//   res.header(
+//     "Access-Control-Allow-Origin",
+//     ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
+//   )
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+//   )
+//   res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
+//   res.header("Access-Control-Allow-Credentials", "true")
 
-  if (req.method == "OPTIONS") {
-    res.StatusCode = 200
-    return res.status(200).send()
-  }
-  next()
-})
+//   if (req.method == "OPTIONS") {
+//     res.StatusCode = 200
+//     return res.status(200).send()
+//   }
+//   next()
+// })
 
 //  Body parser
 // parse application/x-www-form-urlencoded
@@ -82,7 +87,7 @@ app.use(require("express-query-auto-parse")())
 mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
 mongoose.set("useCreateIndex", true)
-mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
+// mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   // Mensaje de conexion a la base de datos.
   console.log(ENVIROMENT.msj_bienvenida)
   if (err) {
@@ -176,27 +181,22 @@ app.use(function (err, req, res, next) {
 // app.use(requireHTTPS);
 
 if (ENVIROMENT.esModoProduccion) {
-  https
-    .createServer(
-      {
-        key: fs.readFileSync("certificado/api.192.168.1.149.key"),
-        cert: fs.readFileSync("certificado/api.192.168.1.149.crt"),
-      },
-      app
-    )
-    .listen(ENVIROMENT.port, () => {
-      console.log(ENVIROMENT.msj_mongoose_ok)
-    })
+  app.listen(enviroment.PORT, () => {
+    console.log(`Servidor iniciado en el puerto: ${enviroment.PORT}`)
+    console.log(ENVIROMENT.msj_mongoose_ok)
+  })GIT
 } else {
   https
     .createServer(
       {
-        key: fs.readFileSync("certificado/desarrollo.key"),
-        cert: fs.readFileSync("certificado/desarrollo.crt"),
+        key: fs.readFileSync("../geracion-de-certificados/cert/desarrollo.key"),
+        cert: fs.readFileSync(
+          "../geracion-de-certificados/cert/desarrollo.crt"
+        ),
       },
       app
     )
-    .listen(ENVIROMENT.port, () => {
+    .listen(ENVIROMENT.PORT, () => {
       console.log(ENVIROMENT.msj_mongoose_ok)
     })
 }

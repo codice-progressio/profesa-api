@@ -1,10 +1,9 @@
 var col = require('../utils/colors');
 
 const PORT_DEVELOPMENT = 2999;
-const PORT_PRODUCTION = 3000;
+const PORT_PRODUCTION = process.env.PORT;
 
-const URI_PRODUCTION = 'mongodb://localhost:27017/carrduci';
-const URI_DEVELOPMENT = 'mongodb://localhost:27017/carrduci';
+const URI_DEVELOPMENT = 'mongodb://localhost:27017/control-producion';
 
 const ACCESS_CONTROL_ALLOW_ORIGIN = {
     PRODUCTION: 'https://192.168.1.149',
@@ -14,7 +13,7 @@ const ACCESS_CONTROL_ALLOW_ORIGIN = {
 
 
 module.exports.enviroment = (env) => {
-    const uri = env ? URI_PRODUCTION : URI_DEVELOPMENT;
+    const uri = env ? process.env.URI : URI_DEVELOPMENT;
     const port = env ? PORT_PRODUCTION : PORT_DEVELOPMENT;
     const ACAO = env ? ACCESS_CONTROL_ALLOW_ORIGIN.PRODUCTION : ACCESS_CONTROL_ALLOW_ORIGIN.DEVELOPMENT;
 

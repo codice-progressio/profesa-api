@@ -6,7 +6,7 @@ const PORT_PRODUCTION = process.env.PORT;
 const URI_DEVELOPMENT = 'mongodb://localhost:27017/control-producion';
 
 const ACCESS_CONTROL_ALLOW_ORIGIN = {
-    PRODUCTION: 'https://192.168.1.149',
+    PRODUCTION: '',
     DEVELOPMENT: 'https://127.0.0.1:4200'
 };
 

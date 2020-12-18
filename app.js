@@ -54,25 +54,6 @@ Array.prototype.greaterThan0 = function (a) {
 app.use(compression())
 app.use(cors())
 
-// app.use(function (req, res, next) {
-//   res.header(
-//     "Access-Control-Allow-Origin",
-//     ENVIROMENT.ACCESS_CONTROL_ALLOW_ORIGIN
-//   )
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Origin, X-Requested-With, Content-Type, Accept, Authorization"
-//   )
-//   res.header("Access-Control-Allow-Methods", "POST, GET, PUT, DELETE, OPTIONS")
-//   res.header("Access-Control-Allow-Credentials", "true")
-
-//   if (req.method == "OPTIONS") {
-//     res.StatusCode = 200
-//     return res.status(200).send()
-//   }
-//   next()
-// })
-
 //  Body parser
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.json({ limit: "50mb" }))
@@ -86,15 +67,13 @@ mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
 mongoose.set("useCreateIndex", true)
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
-  // Mensaje de conexion a la base de datos.
-  console.log(ENVIROMENT.msj_bienvenida)
   if (err) {
     // Mensaje de error en la base de datos.
-    console.log(ENVIROMENT.msj_bd_err)
+    console.err(err)
     throw err
   }
   // Mensaje de conexion exitosa a la BD
-  console.log(ENVIROMENT.msj_bd_ok)
+  console.log("Conectado a la BD")
 })
 
 app.use((req, res, next) => {
@@ -106,22 +85,10 @@ app.use((req, res, next) => {
         colores.info(req.originalUrl)
     )
   }
-
   next()
 })
 
 _ROUTES(app)
-
-//Especial para un solo uso
-app.put("/eliminar-minimos-y-maximos", (req, res) => {
-  require("./models/modeloCompleto")
-    .updateMany({}, { $set: { stockMinimo: 0, stockMaximo: 0 } })
-    .exec()
-    .then(dato => {
-      res.send(dato)
-    })
-    .catch(err => res.send(err))
-})
 
 // Llamamos a los errores.
 app.use(function (req, res) {
@@ -163,38 +130,24 @@ app.use(function (err, req, res, next) {
   })
 })
 
-// ============================================
-// NO BORRAR POR QUE PUEDE QUE NOS SIRVA MAS ADELANTE.
-// ============================================
-
-// function requireHTTPS(req, res, next) {
-
-//         // The 'x-forwarded-proto' check is for Heroku
-// //     if (!req.secure && req.get('x-forwarded-proto') !== 'https') {
-// //         return res.redirect('https://' + req.get('host') + req.url);
-// //     }
-// //     next();
-// // }
-
-// app.use(requireHTTPS);
+const msjServidor = () => {
+  console.log(`Servidor iniciado en el puerto: ${ENVIROMENT.port}`)
+}
 
 if (ENVIROMENT.esModoProduccion) {
-  app.listen(enviroment.PORT, () => {
-    console.log(`Servidor iniciado en el puerto: ${enviroment.PORT}`)
-    console.log(ENVIROMENT.msj_mongoose_ok)
-  })
+  app.listen(ENVIROMENT.port, msjServidor)
 } else {
   https
     .createServer(
       {
-        key: fs.readFileSync("../geracion-de-certificados/cert/desarrollo.key"),
+        key: fs.readFileSync(
+          "f:/proyectos/geracion-de-certificados/cert/desarrollo.key"
+        ),
         cert: fs.readFileSync(
-          "../geracion-de-certificados/cert/desarrollo.crt"
+          "f:/proyectos/geracion-de-certificados/cert/desarrollo.crt"
         ),
       },
       app
     )
-    .listen(ENVIROMENT.PORT, () => {
-      console.log(ENVIROMENT.msj_mongoose_ok)
-    })
+    .listen(ENVIROMENT.port, msjServidor)
 }

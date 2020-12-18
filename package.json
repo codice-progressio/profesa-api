@@ -1,7 +1,7 @@
 {
-  "name": "carrduci-sys-api",
+  "name": "imperium-sic-api",
   "version": "3.10.0",
-  "description": "API server CARRDUCIsys",
+  "description": "API server IMPERIUMsic",
   "main": "index.js",
   "scripts": {
     "start": "node app.js",

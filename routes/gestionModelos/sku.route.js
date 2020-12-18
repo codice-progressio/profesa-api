@@ -1,6 +1,6 @@
 //Esto es necesario
 var express = require("express")
-var ModeloCompleto = require("../../models/modeloCompleto")
+var SKU = require("../../models/sku.model")
 var Folio = require("../../models/folios/folio")
 var RESP = require("../../utils/respStatus")
 var app = express()
@@ -8,7 +8,6 @@ var app = express()
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
-var guard = require("express-jwt-permissions")()
 var permisos = require("../../config/permisos.config")
 
 const Parametros = require("../../models/defautls/parametros.model")
@@ -20,26 +19,24 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$("modeloCompleto:crear"), (req, res) => {
-  new ModeloCompleto(req.body)
+app.post("/", permisos.$("sku:crear"), (req, res) => {
+  new SKU(req.body)
     .save()
-    .then(modeloCompleto => {
-      return RESP._200(res, "Se guardo el sku", [
-        { tipo: "modeloCompleto", datos: modeloCompleto },
-      ])
+    .then(sku => {
+      return RESP._200(res, "Se guardo el sku", [{ tipo: "sku", datos: sku }])
     })
     .catch(err => erro(res, err, "Hubo un error guardo el sku"))
 })
 
-app.get("/", permisos.$("modeloCompleto:leer:todo"), async (req, res) => {
+app.get("/", permisos.$("sku:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
   const campo = String(req.query.campo || "nombreCompleto")
 
-  const total = await ModeloCompleto.countDocuments()
+  const total = await SKU.countDocuments()
 
-  ModeloCompleto.aggregate([
+  SKU.aggregate([
     { $match: { noExiste: { $exists: false } } },
 
     {
@@ -90,22 +87,20 @@ app.get("/", permisos.$("modeloCompleto:leer:todo"), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los sku"))
 })
 
-app.get("/buscar/id/:id", permisos.$("modeloCompleto:leer:id"), (req, res) => {
-  ModeloCompleto.findById(req.params.id)
+app.get("/buscar/id/:id", permisos.$("sku:leer:id"), (req, res) => {
+  SKU.findById(req.params.id)
     .exec()
-    .then(modeloCompleto => {
-      if (!modeloCompleto) throw "No existe el id"
+    .then(sku => {
+      if (!sku) throw "No existe el id"
 
-      return RESP._200(res, null, [
-        { tipo: "modeloCompleto", datos: modeloCompleto },
-      ])
+      return RESP._200(res, null, [{ tipo: "sku", datos: sku }])
     })
     .catch(err => erro(res, err, "Hubo un error buscando el sku por su id"))
 })
 
 app.get(
   "/buscar/termino/:termino",
-  permisos.$("modeloCompleto:leer:termino"),
+  permisos.$("sku:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -124,12 +119,9 @@ app.get(
 
     ;["nombreCompleto"].forEach(x => $match.$or.push(b(x)))
 
-    const total = await ModeloCompleto.aggregate([
-      { $match },
-      { $count: "total" },
-    ]).exec()
+    const total = await SKU.aggregate([{ $match }, { $count: "total" }]).exec()
 
-    ModeloCompleto.aggregate([
+    SKU.aggregate([
       { $match },
 
       {
@@ -188,7 +180,7 @@ app.get(
 )
 
 app.get("/todoParaExcel", (req, res, next) => {
-  ModeloCompleto.aggregate([
+  SKU.aggregate([
     { $match: { hola: { $exists: false } } },
     {
       $project: {
@@ -234,27 +226,27 @@ app.get("/todoParaExcel", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-app.delete("/:id", permisos.$("modeloCompleto:eliminar"), (req, res) => {
-  ModeloCompleto.findById(req.params.id)
+app.delete("/:id", permisos.$("sku:eliminar"), (req, res) => {
+  SKU.findById(req.params.id)
     .exec()
-    .then(modeloCompleto => {
-      if (!modeloCompleto) throw "No existe el sku"
+    .then(sku => {
+      if (!sku) throw "No existe el sku"
 
-      return modeloCompleto.remove()
+      return sku.remove()
     })
-    .then(modeloCompleto => {
+    .then(sku => {
       return RESP._200(res, "Se elimino de manera correcta", [
-        { tipo: "modeloCompleto", datos: modeloCompleto },
+        { tipo: "sku", datos: sku },
       ])
     })
     .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
 })
 
-app.put("/", permisos.$("modeloCompleto:modificar"), (req, res) => {
-  ModeloCompleto.findById(req.body._id)
+app.put("/", permisos.$("sku:modificar"), (req, res) => {
+  SKU.findById(req.body._id)
     .exec()
-    .then(modeloCompleto => {
-      if (!modeloCompleto) throw "No existe el sku"
+    .then(sku => {
+      if (!sku) throw "No existe el sku"
       ;[
         "medias",
         "laserAlmacen",
@@ -265,13 +257,13 @@ app.put("/", permisos.$("modeloCompleto:modificar"), (req, res) => {
         "porcentajeDeMerma",
         "espesor",
         "terminado",
-      ].forEach(x => (modeloCompleto[x] = req.body[x]))
+      ].forEach(x => (sku[x] = req.body[x]))
 
-      return modeloCompleto.save()
+      return sku.save()
     })
     .then(sku => {
       return RESP._200(res, "Se modifico correctamente", [
-        { tipo: "modeloCompleto", datos: sku },
+        { tipo: "sku", datos: sku },
       ])
     })
     .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
@@ -279,11 +271,11 @@ app.put("/", permisos.$("modeloCompleto:modificar"), (req, res) => {
 
 app.put(
   "/setearParte",
-  permisos.$("modeloCompleto:modificar:parte"),
+  permisos.$("sku:modificar:parte"),
   async (req, res, next) => {
     if (!req.parametros.actualizaciones.partes) {
       try {
-        await ModeloCompleto.updateMany({}, { parte: "C" }).exec()
+        await SKU.updateMany({}, { parte: "C" }).exec()
         await Parametros.updateOne(
           {},
           { "actualizaciones.partes": true }
@@ -292,89 +284,85 @@ app.put(
         return next(error)
       }
     }
-    ModeloCompleto.findById(req.body._id)
+    SKU.findById(req.body._id)
       .exec()
-      .then(modeloCompleto => {
-        if (!modeloCompleto) throw "No existe el sku"
-        modeloCompleto.parte = req.body.parte
-        return modeloCompleto.save()
+      .then(sku => {
+        if (!sku) throw "No existe el sku"
+        sku.parte = req.body.parte
+        return sku.save()
       })
       .then(sku => {
         return RESP._200(
           res,
           `Se agrego ${sku.nombreCompleto} a las partes ${sku.parte}`,
-          [{ tipo: "modeloCompleto", datos: sku }]
+          [{ tipo: "sku", datos: sku }]
         )
       })
       .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
   }
 )
 
-app.get(
-  "/transito/:id",
-  permisos.$("modeloCompleto:leer:transito"),
-  (req, res) => {
-    let id = req.params.id
+app.get("/transito/:id", permisos.$("sku:leer:transito"), (req, res) => {
+  let id = req.params.id
 
-    if (!id) {
-      return RESP._500(res, {
-        msj: "No definiste el id del modelo",
-        err: "Es necesario que definas el id. ",
-      })
-    }
-
-    let arregloRedact = []
-
-    // Solo nos interesan folios que no esten terminados
-    // y que ya se hayan entregado a produccion.
-    arregloRedact.push(
-      {
-        $match: {
-          terminado: false,
-          entregarAProduccion: true,
-          ordenesGeneradas: true,
-        },
-      },
-
-      { $unwind: { path: "$folioLineas" } },
-
-      // Obtenemos los pedidos que coincidan contra el modelo. (Es con el id)
-      {
-        $match: {
-          "folioLineas.modeloCompleto": ObjectId(id),
-          "folioLineas.terminado": false,
-        },
-      },
-
-      { $unwind: { path: "$folioLineas.ordenes" } },
-
-      { $match: { "folioLineas.ordenes.terminada": false } },
-
-      {
-        $group: {
-          _id: null,
-          total: { $sum: "$folioLineas.ordenes.piezasTeoricas" },
-        },
-      },
-      { $replaceRoot: { newRoot: { total: "$total" } } }
-    )
-
-    // Hacemos un match de los
-
-    Folio.aggregate(arregloRedact)
-      .then(resp => {
-        return RESP._200(res, null, [
-          { tipo: "total", datos: resp[0] ? resp[0].total : 0 },
-        ])
-      })
-      .catch(err => {
-        return RESP._500(res, {
-          msj: "Hubo un error al obtener la produccion en transito",
-          err: err,
-        })
-      })
+  if (!id) {
+    return RESP._500(res, {
+      msj: "No definiste el id del modelo",
+      err: "Es necesario que definas el id. ",
+    })
   }
-)
+
+  let arregloRedact = []
+
+  // Solo nos interesan folios que no esten terminados
+  // y que ya se hayan entregado a produccion.
+  arregloRedact.push(
+    {
+      $match: {
+        terminado: false,
+        entregarAProduccion: true,
+        ordenesGeneradas: true,
+      },
+    },
+
+    { $unwind: { path: "$folioLineas" } },
+
+    // Obtenemos los pedidos que coincidan contra el modelo. (Es con el id)
+    {
+      $match: {
+        "folioLineas.sku": ObjectId(id),
+        "folioLineas.terminado": false,
+      },
+    },
+
+    { $unwind: { path: "$folioLineas.ordenes" } },
+
+    { $match: { "folioLineas.ordenes.terminada": false } },
+
+    {
+      $group: {
+        _id: null,
+        total: { $sum: "$folioLineas.ordenes.piezasTeoricas" },
+      },
+    },
+    { $replaceRoot: { newRoot: { total: "$total" } } }
+  )
+
+  // Hacemos un match de los
+
+  Folio.aggregate(arregloRedact)
+    .then(resp => {
+      return RESP._200(res, null, [
+        { tipo: "total", datos: resp[0] ? resp[0].total : 0 },
+      ])
+    })
+    .catch(err => {
+      return RESP._500(res, {
+        msj: "Hubo un error al obtener la produccion en transito",
+        err: err,
+      })
+    })
+})
 
 // <!--
 // =====================================
@@ -382,10 +370,10 @@ app.get(
 // =====================================
 // -->
 
-app.post("/stock", permisos.$("modeloCompleto:stock:modificar"), (req, res) => {
+app.post("/stock", permisos.$("sku:stock:modificar"), (req, res) => {
   let datos = req.body
 
-  ModeloCompleto.findById(datos._id)
+  SKU.findById(datos._id)
     .exec()
     .then(mc => modificarStock(datos, mc))
     .then(mcModificado => _200_ModificarStock(res, mcModificado))
@@ -401,7 +389,7 @@ function modificarStock(datos, mc) {
 
 function _200_ModificarStock(res, mcModificado) {
   return RESP._200(res, "Se modifico el stock exitosamente", [
-    { tipo: "modeloCompleto", datos: mcModificado },
+    { tipo: "sku", datos: mcModificado },
   ])
 }
 

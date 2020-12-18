@@ -1,10 +1,10 @@
-var ModeloCompleto = require("../../models/modeloCompleto")
+var SKU = require("../../models/sku.model")
 var Folio = require("../../models/folios/folio")
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
 module.exports.aggregate = function() {
-  return ModeloCompleto.aggregate([
+  return SKU.aggregate([
     {
       $match: {
         $and: [
@@ -47,7 +47,7 @@ module.exports.materialEnProceso = function(modelosArray) {
     },
     {
       $match: {
-        "folioLineas.modeloCompleto": {
+        "folioLineas.sku": {
           $in: modelosArray.map(x => ObjectId(x))
         }
       }
@@ -78,7 +78,7 @@ module.exports.materialEnProceso = function(modelosArray) {
         cantidad: "$folioLineas.ordenes.piezasTeoricas",
         observacionesPedido: "$folioLineas.observaciones",
         observacionesVendedorPedido: "$folioLineas.observacionesVendedor",
-        modeloCompleto: "$folioLineas.modeloCompleto"
+        sku: "$folioLineas.sku"
       }
     },
     {

@@ -9,9 +9,8 @@ var RESP = require("../utils/respStatus")
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
-const Proceso = require("../models/procesos/proceso")
 const Departamento = require("../models/departamento")
-const SKU = require("../models/modeloCompleto")
+const SKU = require("../models/sku.model")
 const Maquina = require("../models/maquina")
 const Parametros = require("../models/defautls/parametros.model")
 
@@ -117,7 +116,7 @@ app.put("/marcarPEdidosComoImpresos", (req, res, next) => {
     }
   })
   Promise.all(promesas)
-    .then(_ => RESP._200(res, null, []))
+    .then(() => RESP._200(res, null, []))
     .catch(_ => next(_))
 })
 
@@ -329,9 +328,9 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
   if (req.query["cliente"]) req.query.cliente = ObjectId(req.query.cliente)
   if (req.query["vendedor"]) req.query.vendedor = ObjectId(req.query.vendedor)
 
-  if (req.query["folioLineas.modeloCompleto"]) {
-    req.query["folioLineas.modeloCompleto"] = ObjectId(
-      req.query["folioLineas.modeloCompleto"]
+  if (req.query["folioLineas.sku"]) {
+    req.query["folioLineas.sku"] = ObjectId(
+      req.query["folioLineas.sku"]
     )
   }
   if (req.query.hasOwnProperty("folioLineas.laserado")) {
@@ -401,7 +400,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
         folio: "$numeroDeFolio",
         idCliente: "$cliente",
         idVendedor: "$vendedor",
-        idSKU: "$folioLineas.modeloCompleto",
+        idSKU: "$folioLineas.sku",
         fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
         fechaTerminadoFolio: "$fechaTerminado",
         fechaTerminadoPedido: "$folioLineas.fechaTerminado",
@@ -709,7 +708,7 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
   const procesosAUsar =
     pedidoBD.almacen || procesosExtraordinarios.length > 0
       ? pedidoGUI.procesosExtraordinarios
-      : pedidoGUI.modeloCompleto.familiaDeProcesos.procesos.map(x => x.proceso)
+      : pedidoGUI.sku.familiaDeProcesos.procesos.map(x => x.proceso)
 
   if (pedidoGUI.almacen) {
     procesosAUsar.unshift(...procesosFijos.procesosInicialesAlmacen)
@@ -724,7 +723,7 @@ function generarOrdenesDePedido(pedidoBD, pedidoGUI, procesosFijos) {
     //Inicializamos la ruta para que no nos marque undefined
     ordenGUI.ruta = []
 
-    ordenGUI.modeloCompleto = pedidoBD.modeloCompleto
+    ordenGUI.sku = pedidoBD.sku
     ordenGUI.pedido = pedidoBD.pedido
     ordenGUI.orden = pedidoBD.pedido + "-" + contador
     ordenGUI.numeroDeOrden = contador
@@ -771,9 +770,9 @@ app.put("/aplicarActualizacionDeOrdenes", (req, res, next) => {
 
 function generarCambios(folio) {
   folio.folioLineas.forEach(pedido => {
-    if (!pedido.modeloCompleto) return
+    if (!pedido.sku) return
 
-    const procesosAUsar = pedido.modeloCompleto.familiaDeProcesos.procesos.map(
+    const procesosAUsar = pedido.sku.familiaDeProcesos.procesos.map(
       x => x.proceso
     )
     pedido.ordenes.forEach(orden => {
@@ -952,8 +951,8 @@ app.get("/ordenes/:idDepartamento", async (req, res, next) => {
               idProcesoActual: "$folioLineas.ordenes.ruta.idProceso", //
               numeroDeOrden: "$folioLineas.ordenes.orden", //
               fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion", //
-              sku: { $toObjectId: "$folioLineas.ordenes.modeloCompleto" }, //
-              idSKU: "$folioLineas.ordenes.modeloCompleto", //
+              sku: { $toObjectId: "$folioLineas.ordenes.sku" }, //
+              idSKU: "$folioLineas.ordenes.sku", //
               laser: "$folioLineas.laserCliente.laser", //
               laserAlmacen: null, //
               unidad: "$folioLineas.ordenes.unidad", //
@@ -1331,9 +1330,8 @@ app.put("/registrar", (req, res, next) => {
         accionesDeOrdenFinalizada(folio, orden, ubicacion, req)
         msj = `La orden ${orden.orden} esta finalizada.`
 
-        const idSKU = folio.folioLineas.id(req.body.idPedido).modeloCompleto._id
+        const idSKU = folio.folioLineas.id(req.body.idPedido).sku._id
 
-        const sk = null
         try {
           const lote = {
             cantidadEntrada: orden.piezasFinales,
@@ -1343,7 +1341,7 @@ app.put("/registrar", (req, res, next) => {
 
           await SKU.guardarLote(idSKU, lote)
         } catch (error) {
-          next(err)
+          next(error)
         }
       }
       //Actualizamos el porcentaje de avance del folio
@@ -1495,7 +1493,7 @@ app.put("/ponerOrdenATrabajarEnMaquina", (req, res, next) => {
       const ubicacion = orden.ruta.find(x => x.ubicacionActual)
 
       if (ubicacion.idDepartamento !== req.body.idDepartamento)
-        throw `Esta orden no se ecuentra en este departamento. Actualmente esta en '${depActual.nombre}'`
+        throw `Esta orden no se ecuentra en este departamento. Actualmente esta en '${depaActual.nombre}'`
 
       if (!ubicacion.recibida) throw "Esta orden no ha sido recibida"
 
@@ -1544,7 +1542,7 @@ app.post("/ordenesParaImpresion", (req, res, next) => {
         piezasTeoricas: "$folioLineas.ordenes.piezasTeoricas",
         unidad: "$folioLineas.ordenes.unidad",
         orden: "$folioLineas.ordenes.orden",
-        sku: "$folioLineas.modeloCompleto",
+        sku: "$folioLineas.sku",
         ruta: "$folioLineas.ordenes.ruta",
         observacionesOrden: "$observaciones",
         observacionesPedido: "$folioLineas.observaciones",

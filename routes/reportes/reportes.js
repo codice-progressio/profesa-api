@@ -11,7 +11,7 @@ var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.mo
 
 const Folio = require("../../models/folios/folio")
 const Proceso = require("../../models/procesos/proceso")
-const SKU = require("../../models/modeloCompleto")
+const SKU = require("../../models/sku.model")
 const Empleado = require("../../models/recursosHumanos/empleados/empleado.model")
 
 const mongoose = require("mongoose")
@@ -52,7 +52,7 @@ app.get(
         const clasPed = {}
         datosReporte.forEach(x => (clasPed[x._id] = []))
         enProceso.forEach(x => {
-          var arreglo = clasPed[x.modeloCompleto]
+          var arreglo = clasPed[x.sku]
 
           arreglo.push(x)
         })
@@ -436,7 +436,7 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
         fechaDeEntregaAProduccion: 1,
         folio: 1,
         vendedor: 1,
-        "folioLineas.modeloCompleto": "$folioLineas.modeloCompleto",
+        "folioLineas.sku": "$folioLineas.sku",
         "folioLineas.laserCliente": "$folioLineas.laserCliente",
         "folioLineas.almacen": "$folioLineas.almacen",
         "folioLineas.ordenes": "$folioLineas.ordenes",
@@ -456,7 +456,7 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
         fechaDeEntregaAProduccion: 1,
         numeroDeFolio: 1,
         vendedor: 1,
-        modeloCompleto: "$folioLineas.modeloCompleto",
+        sku: "$folioLineas.sku",
         laserCliente: "$folioLineas.laserCliente",
         almacen: "$folioLineas.almacen",
         orden: "$folioLineas.ordenes.orden",
@@ -565,7 +565,7 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
           idCliente: { $toObjectId: "$cliente" },
           fechaDeEntregaAProduccion: "$fechaDeEntregaAProduccion",
           idFolio: "$idFolio",
-          sku: { $toObjectId: "$modeloCompleto" },
+          sku: { $toObjectId: "$sku" },
           laserCliente: "$laserCliente.laser",
           almacen: "$almacen",
           orden: "$orden",

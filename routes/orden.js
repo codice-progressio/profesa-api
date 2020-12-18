@@ -9,8 +9,7 @@ const RESP = require("../utils/respStatus")
 const CONST = require("../utils/constantes")
 const Default = require("../models/configModels/default")
 
-var ModeloCompleto = require("../models/modeloCompleto")
-var Lote = require("../models/almacenProductoTerminado/entradaLote.model")
+var SKU = require("../models/sku.model")
 
 const Maquina = require("../models/maquina")
 
@@ -240,7 +239,7 @@ app.get("/:idOrden/:departamento", (req, res) => {
         })
       }
 
-      const modeloCompleto = respuestas[0][1]
+      const sku = respuestas[0][1]
       const depto = respuestas[1]
 
       const esDeptoActual =
@@ -274,7 +273,7 @@ app.get("/:idOrden/:departamento", (req, res) => {
 
       return RESP._200(res, null, [
         { tipo: "orden", datos: orden },
-        { tipo: "modeloCompleto", datos: modeloCompleto }
+        { tipo: "sku", datos: sku }
       ])
     })
     .catch(err => {
@@ -303,7 +302,7 @@ function orden(idOrden) {
       })
       .populate("folioLineas.ordenes.trayectoNormal.departamento")
       .populate({
-        path: "folioLineas.modeloCompleto",
+        path: "folioLineas.sku",
         populate: {
           path: "modelo tamano color terminado"
         }
@@ -327,7 +326,7 @@ function orden(idOrden) {
           })
           const orden = linea.ordenes.id(idOrden)
 
-          resolve([orden, linea.modeloCompleto])
+          resolve([orden, linea.sku])
         }
       })
       .catch(err => {
@@ -432,7 +431,7 @@ app.get("/:depto", (req, res) => {
                 var ordenO = orden.toObject()
                 ordenO.fechaFolio = folio.fechaFolio
 
-                ordenO.modeloCompleto = linea.modeloCompleto
+                ordenO.sku = linea.sku
                 ordenO.totalOrdenes = linea.ordenes.length
                 ordenO.laserCliente = linea.laserCliente
                 ordenO.observacionesFolio = folio.observaciones
@@ -682,8 +681,8 @@ app.put("/:idOrden", (req, res) => {
           }, | ${new Date()} |`
         }
 
-        return ModeloCompleto.guardarLote(
-          ordenModificada.modeloCompleto._id,
+        return SKU.guardarLote(
+          ordenModificada.sku._id,
           lote
         )
       }

@@ -21,19 +21,13 @@ const folioLineaSchema = new Schema(
 
     // La suma de todos los factores de modelo que se ocupan
 
-    modeloCompleto: { type: Schema.Types.ObjectId, ref: "ModeloCompleto" },
+    idSKU: { type: Schema.Types.ObjectId, ref: "sku" },
     cantidad: {
       type: Schema.Types.Number,
       required: [true, "La cantidad es necesaria"],
     },
 
-    // Esta marca laser se tiene que duplicar por que modeloCompleto
-    // tambien lleva marcaLaser, pero no son iguales. La de
-    // modeloCompleto es una marca que hace para almacen
-    // mientras que esta marca es la que es solicitada por el cliente.
-    laserCliente: LaserCliente,
-
-    // Si se selecciona esta opción quiere decir que el botón
+    // Si se selecciona esta opción quiere decir que el sku
     // se tiene que surtir de almacen.
     almacen: {
       type: Boolean,
@@ -45,17 +39,12 @@ const folioLineaSchema = new Schema(
     trayectoGenerado: { type: Boolean, default: false },
     porcentajeAvance: { type: Number, min: 0, max: 100 },
 
-    // Este proceso debe afectar al órden en que se estable las órdenes.
-    procesos: [procesosSchema],
     observaciones: { type: String },
     observacionesVendedor: { type: String },
     terminado: { type: Boolean, default: false },
     fechaTerminado: Date,
     cantidadProducida: { type: Number, default: 0 },
     impreso: { type: Boolean, default: false },
-
-    // Esto de aqui es para que mongose no escriba
-    //  folioLineas en vez de folioLineaes
   },
   { timestamps: true }
 )

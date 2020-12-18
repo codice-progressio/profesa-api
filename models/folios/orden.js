@@ -6,9 +6,9 @@ var NVU = require("../../config/nivelesDeUrgencia")
 
 const ordenSchema = new Schema({
   // Para facilitarnos la información.
-  modeloCompleto: {
+  sku: {
     type: Schema.Types.ObjectId,
-    ref: "ModeloCompleto",
+    ref: "sku",
   },
 
   // Pedido. Lo creamos con la suma del folio y el órden del peddio ( FOL1-1 )

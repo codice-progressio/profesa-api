@@ -5,10 +5,10 @@ let uploadRoutes = require("../routes/upload")
 let imagenesRoutes = require("../routes/imagenes")
 
 // ============================================
-// IMPORTAR RUTAS PARA SISTEMA CARRDUCI
+// IMPORTAR RUTAS PARA SISTEMA
 // ============================================
 
-let modeloCompletoRoutes = require("../routes/gestionModelos/modeloCompleto")
+let skuRoutes = require("../routes/gestionModelos/sku.route")
 let clienteRoutes = require("../routes/cliente")
 let departamentoRoutes = require("../routes/departamento")
 let procesoRoutes = require("../routes/proceso")
@@ -16,11 +16,6 @@ let familiaDeProcesosRoutes = require("../routes/familiaDeProcesos")
 let ordenRoutes = require("../routes/orden")
 let maquinaRoutes = require("../routes/maquina")
 
-let modeloRoutes = require("../routes/gestionModelos/modelo")
-let tamanoRoutes = require("../routes/gestionModelos/tamano")
-let colorRoutes = require("../routes/gestionModelos/color")
-let terminadoRoutes = require("../routes/gestionModelos/terminado")
-let defaultsRoute = require("../routes/configCruds/defaults.crud")
 
 let reportesRoute = require("../routes/reportes/reportes")
 let almacenDeProductoTerminadoRoute = require("../routes/almacenDeProductoTerminado/almacenDeProductoTerminado")
@@ -49,7 +44,6 @@ var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaP
 
 var ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
 
-var guard = require("express-jwt-permissions")()
 var jwt = require("express-jwt")
 var seed = require("../config/config").SEED
 var permisos = require("../config/permisos.config")
@@ -58,62 +52,6 @@ module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
   app.use("/img", imagenesRoutes)
-
-  app.get("/fix2Departamentos", (req, res, next) => {
-    let folios = Array.from(Array(154 + 1 - 141), (_, i) => i + 141)
-    require("../models/folios/folio")
-      .find({ numeroDeFolio: { $in: folios } })
-      .exec()
-      .then(fols => {
-        let promesas = fols.map(folio => {
-          folio.folioLineas.forEach(pedido => {
-            pedido.ordenes.forEach(orden => {
-              let empaque = orden.ruta.pop()
-              let productoTerm = orden.ruta.pop()
-              orden.ruta.push(empaque)
-              orden.ruta.push(productoTerm)
-
-              empaque.ubicacionActual =
-                productoTerm.ubicacionActual || empaque.ubicacionActual
-
-              if (empaque.ubicacionActual) {
-                productoTerm.recibida = false
-                empaque.recibida = false
-                empaque.entrada = new Date()
-                productoTerm.recibida = false
-                productoTerm.ubicacionActual = false
-                productoTerm.entrada = new Date()
-              }
-
-              if (productoTerm.ubicacionActual) {
-                empaque.recibida = false
-                empaque.ubicacionActual = true
-                productoTerm.recibida = false
-                productoTerm.ubicacionActual = false
-                productoTerm.entrada = new Date()
-              }
-
-              contador = 0
-
-              orden.ruta.forEach(r => {
-                r.consecutivo = contador
-                contador++
-              })
-
-              console.log(orden.ruta)
-            })
-          })
-
-          return folio.save()
-        })
-
-        return Promise.all(promesas)
-      })
-      .then(folios => {
-        return res.json({ ok: "todo bien" })
-      })
-      .catch(_ => next(_))
-  })
 
   app.use(
     jwt({ secret: seed, algorithms: ["HS256"] }).unless({
@@ -128,7 +66,6 @@ module.exports.ROUTES = function (app) {
 
   //Este va primero por que se usan permisos especiales internamente
   app.use("/parametros", Parametros)
-
 
   //Cargamos todos los parametros en cada peticion para tener disponible
   //la informacion en req.parametros
@@ -150,7 +87,7 @@ module.exports.ROUTES = function (app) {
 
   //Para usar esta parte debe tener permisos de login
   app.use(permisos.$("login"))
-  app.use("/changelogs", Changelogs )
+  app.use("/changelogs", Changelogs)
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)
   app.use(
@@ -180,14 +117,11 @@ module.exports.ROUTES = function (app) {
   app.use("/usuario", usuarioRoutes)
   app.use("/upload", uploadRoutes)
 
-  app.use("/modeloCompleto", modeloCompletoRoutes)
+  app.use("/sku", skuRoutes)
   app.use("/cliente", clienteRoutes)
   app.use("/departamento", departamentoRoutes)
   app.use("/proceso", procesoRoutes)
   app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
   app.use("/maquina", maquinaRoutes)
-  app.use("/modelo", modeloRoutes)
-  app.use("/tamano", tamanoRoutes)
-  app.use("/color", colorRoutes)
-  app.use("/terminado", terminadoRoutes)
+
 }

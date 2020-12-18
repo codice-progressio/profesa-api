@@ -1,12 +1,7 @@
 let express = require("express")
 let app = express()
 let FamiliaDeProcesos = require("../models/procesos/familiaDeProcesos")
-let ModeloCompleto = require("../models/modeloCompleto")
-let Proceso = require("../models/procesos/proceso")
 let RESP = require("../utils/respStatus")
-let PROC = require("../config/procesosDefault")
-
-var guard = require("express-jwt-permissions")()
 var permisos = require("../config/permisos.config")
 
 const erro = (res, err, msj) => {
@@ -194,46 +189,5 @@ app.put(
   }
 )
 
-// ============================================
-// Guardamos una familia existente a un modelo.
-// ============================================
-
-// app.put("/:idModeloCompleto/:idFamilia",  (req, res) => {
-//   //Obtenemos los id.
-//   var idFamilia = req.params.idFamilia
-//   var idModeloCompleto = req.params.idModeloCompleto
-
-//   //Comprobamos que el modelo exista.
-//   var busqueda = {
-//     _id: idModeloCompleto,
-//   }
-
-//   var set = {
-//     $set: {
-//       familiaDeProcesos: idFamilia,
-//     },
-//   }
-
-//   ModeloCompleto.findByIdAndUpdate(busqueda, set, (err, doc) => {
-//     if (err) {
-//       return res.status(500).json({
-//         ok: false,
-//         mensaje: "Hubo un error.",
-//         error: { message: err },
-//       })
-//     }
-//     if (!doc) {
-//       return res.status(400).json({
-//         ok: false,
-//         mensaje: "El modelo no existe.",
-//         doc: doc,
-//         error: { message: err },
-//       })
-//     }
-//     return res.status(200).json({
-//       ok: true,
-//     })
-//   })
-// })
 
 module.exports = app

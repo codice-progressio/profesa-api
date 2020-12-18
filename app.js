@@ -69,7 +69,7 @@ mongoose.set("useCreateIndex", true)
 mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
   if (err) {
     // Mensaje de error en la base de datos.
-    console.err(err)
+    console.log(err)
     throw err
   }
   // Mensaje de conexion exitosa a la BD

@@ -281,7 +281,7 @@ app.put(
   "/setearParte",
   permisos.$("modeloCompleto:modificar:parte"),
   async (req, res, next) => {
-    if (!req.parametros?.actualizaciones?.partes) {
+    if (!req.parametros.actualizaciones.partes) {
       try {
         await ModeloCompleto.updateMany({}, { parte: "C" }).exec()
         await Parametros.updateOne(

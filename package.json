@@ -1,37 +1,41 @@
 {
-    "name": "carrduci-sys-api",
-    "version": "3.10.0",
-    "description": "API server CARRDUCIsys",
-    "main": "index.js",
-    "scripts": {
-        "start": "node app.js",
-        "start-local": "nodemon app.js",
-        "test": "echo \"Error: no test specified\" && exit 1"
-    },
-    "author": "Rafael Ramirez",
-    "license": "ISC",
-    "dependencies": {
-        "@types/moment-duration-format": "^2.2.2",
-        "bcryptjs": "^2.4.3",
-        "body-parser": "^1.19.0",
-        "compression": "^1.7.4",
-        "cors": "^2.8.5",
-        "express": "^4.17.1",
-        "express-fileupload": "^1.1.6",
-        "express-jwt": "^6.0.0",
-        "express-jwt-permissions": "^1.3.3",
-        "express-query-auto-parse": "^3.0.1",
-        "fs": "0.0.1-security",
-        "google-auth-library": "^1.6.1",
-        "https": "^1.0.0",
-        "jsonwebtoken": "^8.5.1",
-        "moment-duration-format": "^2.3.2",
-        "mongoose": "^5.9.21",
-        "mongoose-sequence": "^5.2.2",
-        "mongoose-unique-validator": "^2.0.3",
-        "nodemon": "^2.0.4"
-    },
-    "devDependencies": {
-        "eslint": "^5.16.0"
-    }
+  "name": "carrduci-sys-api",
+  "version": "3.10.0",
+  "description": "API server CARRDUCIsys",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "start-local": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rafael Ramirez",
+  "license": "ISC",
+  "dependencies": {
+    "@types/moment-duration-format": "^2.2.2",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
+    "express-jwt": "^6.0.0",
+    "express-jwt-permissions": "^1.3.3",
+    "express-query-auto-parse": "^3.0.1",
+    "fs": "0.0.1-security",
+    "google-auth-library": "^1.6.1",
+    "https": "^1.0.0",
+    "jsonwebtoken": "^8.5.1",
+    "moment-duration-format": "^2.3.2",
+    "mongoose": "^5.9.21",
+    "mongoose-sequence": "^5.2.2",
+    "mongoose-unique-validator": "^2.0.3",
+    "nodemon": "^2.0.4"
+  },
+  "devDependencies": {
+    "eslint": "^5.16.0"
+  },
+  "engines": {
+    "node": "14.x",
+    "npm": "6.x"
+  }
 }

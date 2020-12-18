@@ -12,10 +12,13 @@ var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.mo
 const Folio = require("../../models/folios/folio")
 const Proceso = require("../../models/procesos/proceso")
 const SKU = require("../../models/modeloCompleto")
+const Empleado = require("../../models/recursosHumanos/empleados/empleado.model")
+
 const mongoose = require("mongoose")
 
 var guard = require("express-jwt-permissions")()
 var permisos = require("../../config/permisos.config")
+const { exists } = require("../../models/procesos/proceso")
 
 // <!--
 // =====================================
@@ -184,6 +187,88 @@ app.get("/productoTerminado/salidas", (req, res, next) => {
     .catch(_ => next(_))
 })
 
+app.get("/productoTerminado/entradas", (req, res, next) => {
+  SKU.aggregate([
+    { $match: { "lotes.1": { $exists: true } } },
+    {
+      $project: {
+        familia: "$familiaDeProcesos",
+        esBaston: 1,
+        lotes: 1,
+        sku: "$nombreCompleto",
+        parte: 1,
+      },
+    },
+
+    { $unwind: { path: "$lotes", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        familia: 1,
+        esBaston: 1,
+        sku: 1,
+        parte: 1,
+        "lotes.entradas": 1,
+      },
+    },
+    { $unwind: { path: "$lotes.entradas", preserveNullAndEmptyArrays: true } },
+    {
+      $project: {
+        familia: 1,
+        esBaston: 1,
+        sku: 1,
+        parte: 1,
+        // cliente: "$lotes.entradas.cliente",
+        cantidad: "$lotes.entradas.cantidad",
+        observaciones: "$lotes.entradas.observaciones",
+        fechaEntrada: "$lotes.entradas.createAt",
+      },
+    },
+
+    {
+      $match: {
+        fechaEntrada: {
+          $gte: req.query.inferior,
+          $lte: req.query.superior,
+        },
+      },
+    },
+
+    {
+      $lookup: {
+        from: "familiadeprocesos",
+        foreignField: "_id",
+        localField: "familia",
+        as: "familia",
+      },
+    },
+
+    {
+      $addFields: {
+        familia: "$familia.nombre",
+        familiaObservaciones: "$familia.observaciones",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$familia",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $unwind: {
+        path: "$familiaObservaciones",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+
+    { $unset: ["_id"] },
+  ])
+    .exec()
+    .then(x => res.send(x))
+    .catch(_ => next(_))
+})
+
 app.get(
   "/almacenDeProduccion/faltantes",
   permisos.$("reportes:almacenDeProduccion:faltantes"),
@@ -303,10 +388,7 @@ function agregarCalculoDeDias(datos) {
   return datos
 }
 
-app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
-  let desde = req.query.inferior
-  let hasta = req.query.superior
-
+function validarFechas(desde, hasta) {
   if (!desde)
     return next(
       new Error("Falta definir el limite inferior del rango de la fecha")
@@ -315,6 +397,13 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
     return next(
       new Error("Falta definir el limite superior del rango de la fecha")
     )
+}
+
+app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
+  let desde = req.query.inferior
+  let hasta = req.query.superior
+
+  validarFechas(desde, hasta)
 
   let ordenesEncontradas = null
   Folio.aggregate([
@@ -652,7 +741,6 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
           }
 
           let diferencia = new Date(ruta.salida) - new Date(fechaAnterior)
-          console.log(`diferencia`, diferencia)
 
           let diferenciaDias = diferencia / 1000 / 60 / 60 / 24
           let proLimpio = ruta.proceso.split(" ").join("_")
@@ -662,6 +750,41 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
 
           fechaAnterior = ruta.salida
         }
+        orden.ruta.forEach(ruta => {
+          if (ruta.departamento) {
+            let depaLimpio = ruta.departamento.replace(/\s/g, "_")
+            let proLimpio = ruta.proceso.replace(/\s/g, "_")
+            let nombreVariable = `DATOPRO`
+
+            if (ruta.datos) {
+              Object.keys(ruta.datos).forEach(keyDatos => {
+                if (keyDatos === "_id") return
+
+                // Pastilla puede tener cantidades que corresponden a la version anterior. Si es asi hacemos esto.
+                if (keyDatos === "cantidades") {
+                  let contador = 1
+
+                  ruta.datos[keyDatos].forEach(cantidadObject => {
+                    Object.keys(cantidadObject).forEach(keyCantidad => {
+                      if (keyCantidad === "_id") return
+                      orden[
+                        `${nombreVariable}_${depaLimpio}_${proLimpio}_${keyCantidad}${contador}`
+                      ] = cantidadObject[keyCantidad]
+                    })
+
+                    contador++
+                  })
+                } else {
+                  orden[
+                    `${nombreVariable}_${depaLimpio}_${proLimpio}_${keyDatos}`
+                  ] = ruta.datos[keyDatos]
+                }
+              })
+            }
+          }
+        })
+
+        delete orden.ruta
 
         return orden
       })
@@ -671,4 +794,10 @@ app.get("/controlDeProduccion/tiempoDeProcesosPorOrden", (req, res, next) => {
     .catch(err => next(err))
 })
 
+app.get("/rh/empleados", (req, res, next) => {
+  Empleado.find()
+    .select("-_id -eventos -__v -asistencia -hijos")
+    .then(empleados => res.send(empleados))
+    .catch(err => next(err))
+})
 module.exports = app

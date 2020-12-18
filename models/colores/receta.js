@@ -11,6 +11,9 @@ var receta = new Schema({
     // Si es de centrifuga es true, si no es de bastón.
     centrifuga: [CapaCentrigufaSchema],
     baston: [BastonSchema],
+    esBaston: Boolean,
+    esCentrifuga: Boolean,
+    observaciones: String
 
 }, { timestamp: true });
 

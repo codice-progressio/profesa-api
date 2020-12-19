@@ -42,3 +42,5 @@ Thumbs.db
 # Personales
 /uploads
 config/permisos.config.txt
+
+.env

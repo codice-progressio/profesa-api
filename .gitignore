@@ -44,3 +44,5 @@ Thumbs.db
 config/permisos.config.txt
 
 .env
+
+credentials.json

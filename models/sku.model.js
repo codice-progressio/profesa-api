@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
-const loteSchema = require("./almacenProductoTerminado/lote")
+const loteSchema = require("./almacenProductoTerminado/lote.model")
 
 const sku = new Schema({
   puedoProducirlo: { type: Boolean, default: false },
@@ -8,9 +8,6 @@ const sku = new Schema({
   puedoVenderlo: { type: Boolean, default: false },
 
   produccion: {
-    // True cuando se desea generar medias órdenes
-    // por defecto.
-    medias: { type: Boolean, default: false },
     //La familia de procesos es una agrupación de todos los procesos que conlleva este sku cuando se produce. .
     familiaDeProcesos: {
       type: Schema.Types.ObjectId,
@@ -25,31 +22,18 @@ const sku = new Schema({
     ],
   },
 
-  detalles: {
     unidad: String,
     descripcion: String,
     imagenes: [String],
-  },
 
   nombreCompleto: { type: String },
-  porcentajeDeMerma: {
-    type: Number,
-    default: 2,
-    min: [0, "Tiene que ser 0 o mayor que 0."],
-    max: [100, "El valor máximo permitido es 100."],
-  },
-  // Para calcular la materia prima.
-  espesor: {
-    type: Number,
-    min: [0.01, "El espesor mínimo debe ser 0.01"],
-  },
 
   /**
    * La existencia de sku en el almacen.
    * Esta se actualiza automaticamente cuando se
    * se guarda la salida de sku o entra un nuevo lote.
    */
-  existencia: { type: Number },
+  existencia: { type: Number, default: 0 },
 
   /**
    * Los lotes de este sku. Ver schema para mas info.
@@ -65,6 +49,7 @@ const sku = new Schema({
       {
         validator: function (v) {
           return new Promise(resolve => {
+            // Puede definirse como maximo 0 para que no se gestione
             resolve(this.stockMinimo >= v)
           })
         },
@@ -73,13 +58,7 @@ const sku = new Schema({
       },
     ],
   },
-  // Define la clasificación en importancia para los procesos que son
-  // productivos.
-  // A: Son aquellos que tienen mayor movimiento.
-  // B: Movimento lento, pero constante.
-  // C: Sin movimento
-  // D: Descontinuados
-  parte: { type: String, default: "C", enum: ["A", "B", "C", "D"] },
+  etiquetas: [String],
 })
 
 module.exports = mongoose.model("sku", sku)

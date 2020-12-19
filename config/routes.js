@@ -16,12 +16,8 @@ let familiaDeProcesosRoutes = require("../routes/familiaDeProcesos")
 let ordenRoutes = require("../routes/orden")
 let maquinaRoutes = require("../routes/maquina")
 
-
 let reportesRoute = require("../routes/reportes/reportes")
 let almacenDeProductoTerminadoRoute = require("../routes/almacenDeProductoTerminado/almacenDeProductoTerminado")
-let loteRoute = require("../routes/almacenDeProductoTerminado/lote")
-let devolucionRoute = require("../routes/almacenDeProductoTerminado/devolucion")
-let salidaRoute = require("../routes/almacenDeProductoTerminado/salida")
 
 let folioNewRoutes = require("../routes/folio.route")
 
@@ -82,7 +78,6 @@ module.exports.ROUTES = function (app) {
       })
       .catch(err => next(err))
   })
-
   app.use("/login", loginRoutes)
 
   //Para usar esta parte debe tener permisos de login
@@ -105,9 +100,6 @@ module.exports.ROUTES = function (app) {
   app.use("/articulo", articuloRoute)
   app.use("/almacenDescripcion", almacenDescripcionRoute)
   app.use("/almacenDeProductoTerminado", almacenDeProductoTerminadoRoute)
-  app.use("/almacenDeProductoTerminado/lote", loteRoute)
-  app.use("/almacenDeProductoTerminado/salida", salidaRoute)
-  app.use("/almacenDeProductoTerminado/devolucion", devolucionRoute)
   app.use("/reportes", reportesRoute)
 
   //Gestion de folios
@@ -123,5 +115,5 @@ module.exports.ROUTES = function (app) {
   app.use("/proceso", procesoRoutes)
   app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
   app.use("/maquina", maquinaRoutes)
-
 }
+//

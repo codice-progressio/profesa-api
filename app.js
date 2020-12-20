@@ -1,3 +1,4 @@
+require("dotenv").config()
 const compression = require("compression")
 // Requires
 const express = require("express")
@@ -9,28 +10,9 @@ const mongoose = require("mongoose")
 mongoose.Promise = global.Promise
 const colores = require("./utils/colors")
 const bodyParser = require("body-parser")
-const db = require("./config/db")
-
 const RESP = require("./utils/respStatus")
-
 const _ROUTES = require("./config/routes").ROUTES
-
 const cors = require("cors")
-
-/**
- * Este codigo nos permite agregar datos al htttp
- * para tenerlos donde sea?
- *
- */
-
-// ============================================
-// ENVIROMENT
-// ============================================
-//  true = Producción
-//  false = Development
-
-var ENVIROMENT = db.enviroment(process.env.NODE_ENV === "production")
-// ============================================
 
 // Inicializar variables.
 var app = express()
@@ -66,7 +48,7 @@ app.use(require("express-query-auto-parse")())
 mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
 mongoose.set("useCreateIndex", true)
-mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
+mongoose.connection.openUri(process.env.URI, (err, res) => {
   if (err) {
     // Mensaje de error en la base de datos.
     console.log(err)
@@ -77,7 +59,7 @@ mongoose.connection.openUri(ENVIROMENT.uri, (err, res) => {
 })
 
 app.use((req, res, next) => {
-  if (!ENVIROMENT.esModoProduccion) {
+  if (!process.env.PROUDCCION) {
     console.log(
       `${new Date()}|` +
         colores.success("PETICION RECIBIDA") +
@@ -131,11 +113,12 @@ app.use(function (err, req, res, next) {
 })
 
 const msjServidor = () => {
-  console.log(`Servidor iniciado en el puerto: ${ENVIROMENT.port}`)
+  console.log(`Servidor iniciado en el puerto: ${process.env.PORT}`)
 }
 
-if (ENVIROMENT.esModoProduccion) {
-  app.listen(ENVIROMENT.port, msjServidor)
+if (process.env.PRODUCCION == true) {
+  console.log("Modo produccion")
+  app.listen(process.env.PORT, msjServidor)
 } else {
   https
     .createServer(
@@ -149,5 +132,5 @@ if (ENVIROMENT.esModoProduccion) {
       },
       app
     )
-    .listen(ENVIROMENT.port, msjServidor)
+    .listen(process.env.PORT, msjServidor)
 }

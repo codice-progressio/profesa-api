@@ -1,16 +1,47 @@
 //Esto es necesario
-var express = require("express")
-var SKU = require("../../models/sku.model")
-var Folio = require("../../models/folios/folio")
-var RESP = require("../../utils/respStatus")
-var app = express()
+const express = require("express")
 
+const SKU = require("../../models/sku.model")
+const RESP = require("../../utils/respStatus")
+const app = express()
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
+const $ = require("../../config/permisos.config").$
+// const fs = require("fs")
+const { Storage } = require("@google-cloud/storage")
 
-var permisos = require("../../config/permisos.config")
+const fileFilter = (req, file, cb) => {
+  if (
+    file.mimetype === "image/jpg" ||
+    file.mimetype === "image/jpeg" ||
+    file.mimetype === "image/png"
+  ) {
+    cb(null, true)
+  } else {
+    cb(
+      new Error(`La imagen ${file.originalname} no es de tipo jpg/jpeg or png`),
+      false
+    )
+  }
+}
 
-const Parametros = require("../../models/defautls/parametros.model")
+// const upload = require("multer")({ dest: "uploads/sku/", fileFilter })
+
+const multer = require("multer")
+const upload = multer({
+  fileFilter,
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, //tamaño < 5 MB
+  },
+})
+
+const storage = new Storage({
+  projectId: process.env.GCLOUD_PROJECT_ID,
+  keyFilename: process.env.GCLOUD_APPLICATION_CREDENTIALS,
+})
+
+const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET_URL)
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -19,89 +50,150 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$("sku:crear"), (req, res) => {
-  new SKU(req.body)
-    .save()
-    .then(sku => {
-      return RESP._200(res, "Se guardo el sku", [{ tipo: "sku", datos: sku }])
-    })
-    .catch(err => erro(res, err, "Hubo un error guardo el sku"))
-})
+app.post(
+  "/",
+  $("sku:crear", undefined, "Crea un nuevo SKU"),
+  (req, res, next) => {
+    new SKU(req.body)
+      .save()
+      .then(sku => {
+        return res.send(sku)
+      })
+      .catch(err => next(err))
+  }
+)
 
-app.get("/", permisos.$("sku:leer:todo"), async (req, res) => {
-  const desde = Number(req.query.desde || 0)
-  const limite = Number(req.query.limite || 30)
-  const sort = Number(req.query.sort || 1)
-  const campo = String(req.query.campo || "nombreCompleto")
+//Agregamos una imagen al sku
+app.put(
+  "/imagen",
+  $("sku:imagen:agregar", undefined, "Agregar una imagen al SKU"),
+  upload.single("img"),
+  (req, res, next) => {
+    SKU.findById(req.body._id)
+      .exec()
+      .then(sku => {
+        if (!sku) throw new Error("No existe el id")
+        const nuevoNombre = ObjectId() + ""
+        const blob = bucket.file(nuevoNombre)
+        const blobStream = blob.createWriteStream({
+          metadata: {
+            // Important: You need to pass the file mimetype as metadata to createWriteStream() otherwise your file won’t be stored in the proper format and won’t be readable.
+            contentType: req.file.mimetype,
+          },
+        })
 
-  const total = await SKU.countDocuments()
+        // If there's an error
+        blobStream.on("error", err => next(err))
 
-  SKU.aggregate([
-    { $match: { noExiste: { $exists: false } } },
+        // If all is good and done
+        blobStream.on("finish", () => {
+          // Assemble the file public URL
+          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${
+            bucket.name
+          }/o/${encodeURI(blob.name)}?alt=media`
+          // Return the file name and its public URL
+          // for you to store in your own database
 
-    {
-      $lookup: {
-        from: "familiadeprocesos",
-        foreignField: "_id",
-        localField: "familiaDeProcesos",
-        as: "familiaDeProcesos",
-      },
-    },
+          sku.imagenes.push({
+            nombreOriginal: req.file.originalname,
+            nombreBD: nuevoNombre,
+            path: publicUrl,
+          })
+          return sku
+            .save()
+            .then(sku => {
+              res.send(sku)
+            })
+            .catch(err => next(err))
+        })
+        blobStream.end(req.file.buffer)
+      })
+      .catch(_ => {
+        // //Si hay un error eliminanos la imagen
+        // // que subio multer
+        // fs.unlinkSync(req.file.path)
+        next(_)
+      })
+  }
+)
 
-    {
-      $unwind: {
-        path: "$familiaDeProcesos",
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    //Fin de populacion
+//Eliminamos una imagen
+app.delete(
+  "/imagen/:id/:idImg",
+  $("sku:imagen:eliminar", undefined, "Eliminar una imagen del sku"),
+  async (req, res, next) => {
+    // El id del sku
+    let id = req.params.id
+    // El id del arreglo donde esta la imagen.
+    let idImg = req.params.idImg
 
-    { $sort: { [campo]: sort } },
-    //Desde aqui limitamos unicamente lo que queremos ver
-    { $limit: desde + limite },
-    { $skip: desde },
-    { $sort: { [campo]: sort } },
-    {
-      $project: {
-        nombreCompleto: "$nombreCompleto",
-        existencia: "$existencia",
-        stockMaximo: "$stockMaximo",
-        stockMinimo: "$stockMinimo",
-        medias: "$medias",
-        familiaDeProcesos: "$familiaDeProcesos.nombre",
-        familiaDeProcesosId: "$familiaDeProcesos._id",
-        parte: "$parte",
-      },
-    },
-  ])
-    .exec()
-    .then(modelosCompletos => {
-      //Si no hay resultados no se crea la propiedad
-      // y mas adelante nos da error.
+    // Buscamos por id
+    SKU.findById(id)
+      .exec()
+      .then(async sku => {
+        if (!sku) throw new Error("No existe el id")
 
-      return RESP._200(res, null, [
-        { tipo: "modelosCompletos", datos: modelosCompletos },
-        { tipo: "total", datos: total },
-      ])
-    })
-    .catch(err => erro(res, err, "Hubo un error buscando los sku"))
-})
+        // Obtenemos la img guardada.
+        let imgDB = sku.imagenes.id(idImg)
+        if (!imgDB) throw new Error("No existe la imagen")
 
-app.get("/buscar/id/:id", permisos.$("sku:leer:id"), (req, res) => {
-  SKU.findById(req.params.id)
-    .exec()
-    .then(sku => {
-      if (!sku) throw "No existe el id"
+        const file = bucket.file(imgDB.nombreBD)
 
-      return RESP._200(res, null, [{ tipo: "sku", datos: sku }])
-    })
-    .catch(err => erro(res, err, "Hubo un error buscando el sku por su id"))
-})
+        try {
+          await file.delete()
+        } catch (error) {
+          throw next(error)
+        }
+        // // Si la imagen no existe, debemos continuar con la iliminacion
+        // // del registro. Por eso comprobamos que existan ambos.
+        // if (fs.existsSync(imgDB.path)) fs.unlinkSync(imgDB.path)
+
+        // Pull elimina del arreglo el id que le pasemos relacionado al objeto.
+        sku.imagenes.pull(idImg)
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(_ => next(_))
+  }
+)
+
+app.get(
+  "/",
+  $("sku:leer:todo", undefined, "Muestra los datos generales de los sku"),
+  async (req, res, next) => {
+    const desde = Number(req.query.desde || 0)
+    const limite = Number(req.query.limite || 30)
+    const sort = Number(req.query.sort || 1)
+    const campo = String(req.query.campo || "nombreCompleto")
+
+    SKU.find()
+      .limit(limite)
+      .skip(desde)
+      .sort({ [campo]: sort })
+      .exec()
+      .then(sku => res.send(sku))
+      .catch(_ => next(_))
+  }
+)
+
+app.get(
+  "/buscar/id/:id",
+  $("sku:leer:id", undefined, "Obtiene un sku por su id"),
+  (req, res, next) => {
+    SKU.findById(req.params.id)
+      .exec()
+      .then(sku => {
+        if (!sku) throw "No existe el id"
+        return res.send(sku)
+      })
+      .catch(_ => next(_))
+  }
+)
 
 app.get(
   "/buscar/termino/:termino",
-  permisos.$("sku:leer:termino"),
-  async (req, res) => {
+  $("sku:leer:termino"),
+  async (req, res, next) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
     const sort = Number(req.query.sort || 1)
@@ -117,30 +209,10 @@ app.get(
       $or: [],
     }
 
-    ;["nombreCompleto"].forEach(x => $match.$or.push(b(x)))
-
-    const total = await SKU.aggregate([{ $match }, { $count: "total" }]).exec()
+    ;["nombreCompleto", "descripcion"].forEach(x => $match.$or.push(b(x)))
 
     SKU.aggregate([
       { $match },
-
-      {
-        $lookup: {
-          from: "familiadeprocesos",
-          foreignField: "_id",
-          localField: "familiaDeProcesos",
-          as: "familiaDeProcesos",
-        },
-      },
-
-      {
-        $unwind: {
-          path: "$familiaDeProcesos",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
-      //Fin de populacion
-
       { $sort: { [campo]: sort } },
       //Desde aqui limitamos unicamente lo que queremos ver
       { $limit: desde + limite },
@@ -149,261 +221,67 @@ app.get(
       {
         $project: {
           nombreCompleto: "$nombreCompleto",
+          descripcion: "$descripcion",
+          unidad: "$unidad",
           existencia: "$existencia",
           stockMaximo: "$stockMaximo",
           stockMinimo: "$stockMinimo",
-          familiaDeProcesos: "$familiaDeProcesos.nombre",
-          familiaDeProcesosId: "$familiaDeProcesos._id",
-          parte: "$parte",
+          etiquetas: "$etiquetas",
         },
       },
     ])
       .exec()
-      .then(modelosCompletos => {
-        //Si no hay resultados no se crea la propiedad
-        // y mas adelante nos da error.
-        if (!total.length) total.push({ total: 0 })
-
-        return RESP._200(res, null, [
-          { tipo: "modelosCompletos", datos: modelosCompletos },
-          { tipo: "total", datos: total.pop().total },
-        ])
-      })
-      .catch(err =>
-        erro(
-          res,
-          err,
-          "Hubo un error buscando los sku por el termino " + termino
-        )
-      )
+      .then(sku => res.send(sku))
+      .catch(err => next(err))
   }
 )
 
-app.get("/todoParaExcel", (req, res, next) => {
-  SKU.aggregate([
-    { $match: { hola: { $exists: false } } },
-    {
-      $project: {
-        familiaDeProcesos: "$familiaDeProcesos",
-        nombreCompleto: "$nombreCompleto",
-        existencia: "$existencia",
-        esBaston: "$esBaston",
-        stockMinimo: "$stockMinimo",
-        stockMaximo: "$stockMaximo",
-        parte: "$parte",
-      },
-    },
-    {
-      $unset: "_id",
-    },
+app.get("/buscar/etiquetas", (req, res, next) => {
+  let etiquetas = req.query.etiquetas.split(",")
 
-    {
-      $lookup: {
-        from: "familiadeprocesos",
-        foreignField: "_id",
-        localField: "familiaDeProcesos",
-        as: "familiaDeProcesos",
-      },
-    },
-    {
-      $unwind: {
-        preserveNullAndEmptyArrays: true,
-        path: "$familiaDeProcesos",
-      },
-    },
-
-    {
-      $addFields: {
-        familiaDeProcesos: "$familiaDeProcesos.nombre",
-        familiaDeProcesosObservaciones: "$familiaDeProcesos.observaciones",
-      },
-    },
-  ])
+  SKU.find({ etiquetas: { $in: etiquetas } })
     .exec()
-    .then(datos => {
-      return res.json(datos)
-    })
+    .then(skus => res.send(skus))
     .catch(_ => next(_))
 })
 
-app.delete("/:id", permisos.$("sku:eliminar"), (req, res) => {
+app.put("/", $("sku:modificar"), (req, res, next) => {
+  SKU.findById(req.body._id)
+    .exec()
+    .then(sku => {
+      if (!sku)
+        throw "No existe el sku"
+        // Campos modificables.
+      ;[
+        "nombreCompleto",
+        "unidad",
+        "descripcion",
+        "puedoProducirlo",
+        "puedoComprarlo",
+        "puedoVenderlo",
+        "stockMinimo",
+        "stockMaximo",
+        "etiqueta",
+      ].forEach(x => (sku[x] = req.body[x]))
+
+      return sku.save()
+    })
+    .then(sku => res.send(sku))
+    .catch(err => next(err))
+})
+
+app.delete("/:id", $("sku:eliminar"), (req, res) => {
   SKU.findById(req.params.id)
     .exec()
     .then(sku => {
       if (!sku) throw "No existe el sku"
 
+      //Es necesario que eliminimos todas las imagenes.
+
       return sku.remove()
     })
-    .then(sku => {
-      return RESP._200(res, "Se elimino de manera correcta", [
-        { tipo: "sku", datos: sku },
-      ])
-    })
+    .then(sku => res.send(sku))
     .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
 })
-
-app.put("/", permisos.$("sku:modificar"), (req, res) => {
-  SKU.findById(req.body._id)
-    .exec()
-    .then(sku => {
-      if (!sku) throw "No existe el sku"
-      ;[
-        "medias",
-        "laserAlmacen",
-        "versionModelo",
-        "familiaDeProcesos",
-        "procesosEspeciales",
-        "nombreCompleto",
-        "porcentajeDeMerma",
-        "espesor",
-        "terminado",
-      ].forEach(x => (sku[x] = req.body[x]))
-
-      return sku.save()
-    })
-    .then(sku => {
-      return RESP._200(res, "Se modifico correctamente", [
-        { tipo: "sku", datos: sku },
-      ])
-    })
-    .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
-})
-
-app.put(
-  "/setearParte",
-  permisos.$("sku:modificar:parte"),
-  async (req, res, next) => {
-    if (!req.parametros.actualizaciones.partes) {
-      try {
-        await SKU.updateMany({}, { parte: "C" }).exec()
-        await Parametros.updateOne(
-          {},
-          { "actualizaciones.partes": true }
-        ).exec()
-      } catch (error) {
-        return next(error)
-      }
-    }
-    SKU.findById(req.body._id)
-      .exec()
-      .then(sku => {
-        if (!sku) throw "No existe el sku"
-        sku.parte = req.body.parte
-        return sku.save()
-      })
-      .then(sku => {
-        return RESP._200(
-          res,
-          `Se agrego ${sku.nombreCompleto} a las partes ${sku.parte}`,
-          [{ tipo: "sku", datos: sku }]
-        )
-      })
-      .catch(err => erro(res, err, "Hubo un error actualizando el sku"))
-  }
-)
-
-app.get("/transito/:id", permisos.$("sku:leer:transito"), (req, res) => {
-  let id = req.params.id
-
-  if (!id) {
-    return RESP._500(res, {
-      msj: "No definiste el id del modelo",
-      err: "Es necesario que definas el id. ",
-    })
-  }
-
-  let arregloRedact = []
-
-  // Solo nos interesan folios que no esten terminados
-  // y que ya se hayan entregado a produccion.
-  arregloRedact.push(
-    {
-      $match: {
-        terminado: false,
-        entregarAProduccion: true,
-        ordenesGeneradas: true,
-      },
-    },
-
-    { $unwind: { path: "$folioLineas" } },
-
-    // Obtenemos los pedidos que coincidan contra el modelo. (Es con el id)
-    {
-      $match: {
-        "folioLineas.sku": ObjectId(id),
-        "folioLineas.terminado": false,
-      },
-    },
-
-    { $unwind: { path: "$folioLineas.ordenes" } },
-
-    { $match: { "folioLineas.ordenes.terminada": false } },
-
-    {
-      $group: {
-        _id: null,
-        total: { $sum: "$folioLineas.ordenes.piezasTeoricas" },
-      },
-    },
-    { $replaceRoot: { newRoot: { total: "$total" } } }
-  )
-
-  // Hacemos un match de los
-
-  Folio.aggregate(arregloRedact)
-    .then(resp => {
-      return RESP._200(res, null, [
-        { tipo: "total", datos: resp[0] ? resp[0].total : 0 },
-      ])
-    })
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error al obtener la produccion en transito",
-        err: err,
-      })
-    })
-})
-
-// <!--
-// =====================================
-//  Modificar Stock
-// =====================================
-// -->
-
-app.post("/stock", permisos.$("sku:stock:modificar"), (req, res) => {
-  let datos = req.body
-
-  SKU.findById(datos._id)
-    .exec()
-    .then(mc => modificarStock(datos, mc))
-    .then(mcModificado => _200_ModificarStock(res, mcModificado))
-    .catch(err => error(res, "Hubo un error modificando el stock", err))
-})
-
-function modificarStock(datos, mc) {
-  if (!mc) throw "El id que ingresaste no existe."
-  mc.stockMinimo = datos.stockMinimo
-  mc.stockMaximo = datos.stockMaximo
-  return mc.save()
-}
-
-function _200_ModificarStock(res, mcModificado) {
-  return RESP._200(res, "Se modifico el stock exitosamente", [
-    { tipo: "sku", datos: mcModificado },
-  ])
-}
-
-function error(res, msj, err) {
-  return RESP._500(res, {
-    msj: msj,
-    err: err,
-  })
-}
-
-// <!--
-// =====================================
-//  END Modificar Stock
-// =====================================
-// -->
 
 module.exports = app

@@ -22,9 +22,15 @@ const sku = new Schema({
     ],
   },
 
-    unidad: String,
-    descripcion: String,
-    imagenes: [String],
+  unidad: String,
+  descripcion: String,
+  imagenes: [
+    {
+      nombreOriginal: String,
+      nombreBD:String,
+      path: String,
+    },
+  ],
 
   nombreCompleto: { type: String },
 
@@ -38,7 +44,10 @@ const sku = new Schema({
   /**
    * Los lotes de este sku. Ver schema para mas info.
    */
-  lotes: [loteSchema],
+  lotes: {
+    type: [loteSchema],
+    select: false,
+  },
 
   // Valores para las existencias.
   stockMinimo: { type: Number, default: 0, min: 0 },

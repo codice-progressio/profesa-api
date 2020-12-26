@@ -41,6 +41,11 @@ const sku = new Schema({
    */
   existencia: { type: Number, default: 0 },
 
+  // La suma de la existencia de los almacenes 
+  // tomando en cuenta los que esten divididos entre
+  // lotes diferentes. 
+  existenciaAlmacenes: {},
+
   /**
    * Los lotes de este sku. Ver schema para mas info.
    */

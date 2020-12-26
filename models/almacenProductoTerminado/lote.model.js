@@ -9,19 +9,30 @@ const Schema = mongoose.Schema
  *
  */
 const LoteSchema = new Schema({
-  existencia: { type: Number, default: 0 },
-  /**
-   * La cantidad del lote que entro.
-   */
+  existecia: {
+    type: Number,
+    min: [0, "{PATH} de lote no puede ser menor que 0"],
+  },
+  // La existencia de cada almacen que se vaya creando. 
+  // Este valor es dinamico pues permite que el usuario 
+  // cree diferentes almacenes segun sus necesidades. 
+  // Se espera que la clave de este objecto sea el id 
+  // del almacen y solo contenga la cantidad. 
+  existenciaAlmacenes: {},
+  observaciones: "",
   movimientos: [
     {
       cantidad: Number,
       // true entrada, false salida.
       esEntrada: { type: Boolean, default: false },
       observaciones: String,
+      createdAt: { type: Date, default: Date.now },
+      usuario: String, 
+      almacen: String
     },
   ],
-  createAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now },
+  caducidad: Date,
 })
 
 module.exports = LoteSchema

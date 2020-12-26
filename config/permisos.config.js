@@ -1,4 +1,10 @@
 const permisos = {
+  "sku:lote:movimiento:transferir-entre-almacenes":"Hacer transfericias entre dos almacenes.",
+  "sku:lote:eliminar":"Eliminar lotes completamente",
+  "sku:lote:movimiento:modificar":"Modificar un movimento existente",
+  "sku:lote:movimiento:Eliminar":"Eliminar movimentos de un lote",
+  "sku:lote:movimiento:Agregar":"Agregar movimentos a los lotes.",
+  "sku:lote:crear":"Crear lotes nuevos",
   "menu:parametros:procesosEspeciales":"",
   "menu:parametros:localizacionDeOrdenes":"",
   "menu:parametros":"",

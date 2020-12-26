@@ -284,4 +284,278 @@ app.delete("/:id", $("sku:eliminar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
 })
 
+function recalcularExistencia(sku) {
+  // Recalculamos la existencia.
+  let existenciaActual = 0
+  // Recorremos cada entrada de cada lote para saber
+  // Que tipo de movimento es.
+  sku.lotes.forEach(lote => {
+    lote.existencia = lote.movimientos.reduce(
+      (pre, cur) =>
+        cur.esEntrada ? (pre += cur.cantidad) : (pre -= cur.cantidad),
+      0
+    )
+
+    existenciaActual += lote.existencia
+  })
+
+  return existenciaActual
+}
+
+function recalcularExistenciaPorAlmacenes(sku) {
+  // Creamos un nuevo objeto para guardar el calculo de los diferentes
+  // almacenes. La clave debe ser el id del almacen seguido de
+  // la cantidad.
+  // { idAlmacen: 120 }
+  sku.lotes.forEach(lote => {
+    lote.existenciaAlmacenes = lote.movimientos.reduce((pre, cur) => {
+      // Si no existe el id del almacen, lo creamos
+      if (!pre.hasOwnProperty(cur.almacen)) pre[cur.almacen] = 0
+
+      // Acumulados directamente al id.
+      pre[cur.almacen] = cur.esEntrada
+        ? (pre[cur.almacen] += cur.cantidad)
+        : (pre[cur.almacen] -= cur.cantidad)
+
+      return pre
+    }, {})
+  })
+
+  // Sumamos todas las existencias de cada lote por almacen.
+  let almacenesSuma = {}
+  sku.lotes.forEach(lote => {
+    Object.keys(lote.existenciaAlmacenes).forEach(keyIdAlmacen => {
+      // Debe de existir el id
+      if (!almacenesSuma.hasOwnProperty(keyIdAlmacen))
+        almacenesSuma[keyIdAlmacen] = 0
+      // Solo necesitamos sumar por que aqui todo deberia ser positivo.
+      almacenesSuma[keyIdAlmacen] += lote.existenciaAlmacenes[keyIdAlmacen]
+    })
+  })
+
+  sku.existenciaAlmacenes = almacenesSuma
+}
+
+// Crea un nuevo lote en el sku
+app.post(
+  "/lote/crear/:id",
+  $("sku:lote:crear", undefined, "Crear lotes nuevos"),
+  (req, res, next) => {
+    SKU.findById(req.params.id)
+      .select("lotes")
+      .exec()
+      .then(sku => {
+        if (!sku) throw next("No existe el id")
+
+        //Agregamos el usuario actual
+
+        req.body.movimientos.forEach(x => (x.usuario = req.user._id))
+        sku.lotes.push(req.body)
+        sku.existencia = recalcularExistencia(sku)
+        recalcularExistenciaPorAlmacenes(sku)
+
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(_ => next(_))
+  }
+)
+
+// Crea un movimento  lote seleccionado
+app.put(
+  "/lote/movimento/agregar/:id/:idLote/",
+  $(
+    "sku:lote:movimiento:Agregar",
+    undefined,
+    "Agregar entradas o salidas a un lote."
+  ),
+  (req, res, next) => {
+    let id = req.params.id
+    let idLote = req.params.idLote
+
+    SKU.findById(id)
+      .select("lotes")
+      .exec()
+      .then(sku => {
+        if (!sku) throw new Error("No existe el id")
+        let lote = sku.lotes.id(idLote)
+        if (!lote) throw new Error("No existe el lote")
+
+        req.body.usuario = req.user._id
+        lote.movimientos.push(req.body)
+
+        sku.existencia = recalcularExistencia(sku)
+        recalcularExistenciaPorAlmacenes(sku)
+        return sku.save()
+      })
+      .then(x => res.send(x))
+      .catch(_ => next(_))
+  }
+)
+// Elimina un movimento y recalcula el valor de las existencias.
+app.delete(
+  "/lote/movimiento/eliminar/:id/:idLote/:idMovimiento",
+  $(
+    "sku:lote:movimiento:Eliminar",
+    undefined,
+    "Eliminar movimentos de un lote"
+  ),
+  (req, res, next) => {
+    let id = req.params.id
+    let idLote = req.params.idLote
+    let idMovimiento = req.params.idMovimiento
+
+    SKU.findById(id)
+      .select("lotes")
+      .exec()
+      .then(sku => {
+        if (!sku) throw new Error("No existe el id")
+        let lote = sku.lotes.id(idLote)
+        if (!lote) throw new Error("No existe el lote")
+        let movimiento = lote.movimientos.id(idMovimiento)
+        if (!movimiento) throw new Error("No existe el movimiento")
+
+        sku.lotes.id(idLote).movimientos.pull(idMovimiento)
+
+        sku.existencia = recalcularExistencia(sku)
+        recalcularExistenciaPorAlmacenes(sku)
+        return sku.save()
+      })
+      .then(x => res.send(x))
+      .catch(_ => next(_))
+  }
+)
+
+app.put(
+  "/lote/movimiento/transferir-entre-almacenes/:id/:lote",
+  $(
+    "sku:lote:movimiento:transferir-entre-almacenes",
+    undefined,
+    "Hacer transfericias entre dos almacenes."
+  ),
+  (req, res, next) => {
+    let id = req.params.id
+    let lote = req.params.lote
+
+    SKU.findById(id)
+      .select("lotes")
+      .exec()
+      .then(sku => {
+        if (!sku) throw new Error("No existe el id")
+        if (!sku.lotes.id(lote)) throw new Error("No existe el lote")
+
+        // Resibimos un movimiento marcado como salida.
+
+        let salidaAlmacen = req.body.salida
+        salidaAlmacen.usuario = req.user._id
+        // Siempre debe ser una salida.
+        salidaAlmacen.esEntrada = false
+        let almacenObjetivo = req.body.almacenObjetivo
+
+        // Creamos el nuevo moviento de entrada al almacen almacenObjetivo
+
+        let entradaAlmacen = {
+          cantidad: salidaAlmacen.cantidad,
+          // salidaDeAlmacenActual.//,
+          esEntrada: true,
+          observaciones: "[ TRANSFERENCIA ]" + req.body.observaciones,
+          usuario: req.user._id,
+          almacen: almacenObjetivo,
+        }
+        sku.lotes.id(lote).movimientos.push(salidaAlmacen)
+        sku.lotes.id(lote).movimientos.push(entradaAlmacen)
+
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(_ => next(_))
+  }
+)
+// Modifica el movimeinto seleccinado y recalcula el valor de las existencias.
+app.put(
+  "/lote/movimiento/modificar/:id/:idLote/:idMovimiento",
+  $(
+    "sku:lote:movimiento:modificar",
+    undefined,
+    "Modificar un movimento existente"
+  ),
+  (req, res, next) => {
+    let id = req.params.id
+    let idLote = req.params.idLote
+    let idMovimiento = req.params.idMovimiento
+
+    SKU.findById(id)
+      .select("lotes")
+      .exec()
+      .then(sku => {
+        if (!sku) throw new Error("No existe el id")
+        let lote = sku.lotes.id(idLote)
+        if (!lote) throw new Error("No existe el lote")
+        let movimiento = lote.movimientos.id(idMovimiento)
+        if (!movimiento) throw new Error("No existe el movimiento")
+
+        movimiento.cantidad = req.body.cantidad
+        movimiento.esEntrada = req.body.esEntrada
+        movimiento.observaciones = req.body.observaciones
+        movimiento.usuario = req.user._id
+
+        sku.existencia = recalcularExistencia(sku)
+        recalcularExistenciaPorAlmacenes(sku)
+        return sku.save()
+      })
+      .then(x => res.send(x))
+      .catch(_ => next(_))
+  }
+)
+// Elimina el lote seleccionado y afecta la cantidad total del sku
+app.delete(
+  "/lote/eliminar/:id/:idLote",
+  $("sku:lote:eliminar", undefined, "Eliminar lotes completamente"),
+  (req, res, next) => {
+    let id = req.params.id
+    let idLote = req.params.idLote
+
+    SKU.findById(id)
+      .select("lotes")
+      .exec()
+      .then(sku => {
+        if (!sku) throw new Error("No existe el id")
+        let lote = sku.lotes.id(idLote)
+        if (!lote) throw new Error("No existe el lote")
+
+        sku.lotes.pull(idLote)
+
+        sku.existencia = recalcularExistencia(sku)
+        recalcularExistenciaPorAlmacenes(sku)
+        return sku.save()
+      })
+      .then(x => res.send(x))
+      .catch(_ => next(_))
+  }
+)
+// Modifica los datos del lote. Ejecuta un recalculo de las existencias
+// del sku.
+app.put("/lote/modificar/:id/:idLote/", (req, res, next) => {
+  let id = req.params.id
+  let idLote = req.params.idLote
+
+  SKU.findById(id)
+    .select("lotes")
+    .exec()
+    .then(sku => {
+      if (!sku) throw new Error("No existe el id")
+      let lote = sku.lotes.id(idLote)
+      if (!lote) throw new Error("No existe el lote")
+
+      lote.observaciones = req.body.observaciones
+      lote.caducidad = req.body.caducidad
+
+      sku.existencia = recalcularExistencia(sku)
+      recalcularExistenciaPorAlmacenes(sku)
+      return sku.save()
+    })
+    .then(x => res.send(x))
+    .catch(_ => next(_))
+})
+
 module.exports = app

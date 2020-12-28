@@ -137,10 +137,8 @@ app.delete(
         let imgDB = sku.imagenes.id(idImg)
         if (!imgDB) throw new Error("No existe la imagen")
 
-        const file = bucket.file(imgDB.nombreBD)
-
         try {
-          await file.delete()
+          await eliminarImagenDeBucket(imgDB.nombreBD)
         } catch (error) {
           throw next(error)
         }
@@ -156,6 +154,11 @@ app.delete(
       .catch(_ => next(_))
   }
 )
+
+function eliminarImagenDeBucket(nombre) {
+  const file = bucket.file(nombre)
+  return file.delete()
+}
 
 app.get(
   "/",
@@ -245,40 +248,95 @@ app.get("/buscar/etiquetas", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-app.put("/", $("sku:modificar"), (req, res, next) => {
-  SKU.findById(req.body._id)
-    .exec()
-    .then(sku => {
-      if (!sku)
-        throw "No existe el sku"
+app.put(
+  "/",
+  $("sku:modificar", undefined, "Modificar sku"),
+  (req, res, next) => {
+    SKU.findById(req.body._id)
+      .exec()
+      .then(sku => {
+        if (!sku)
+          throw "No existe el sku"
+          // Campos modificables.
+        ;[
+          "nombreCompleto",
+          "unidad",
+          "descripcion",
+          "puedoProducirlo",
+          "puedoComprarlo",
+          "puedoVenderlo",
+        ].forEach(x => (sku[x] = req.body[x]))
+
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(err => next(err))
+  }
+)
+
+app.put(
+  "/minimo-maximo",
+  $(
+    "sku:modificar:stock-mimimo-maximo",
+    undefined,
+    "Modificar el stock minimo y maximo"
+  ),
+  (req, res, next) => {
+    SKU.findById(req.body._id)
+      .exec()
+      .then(sku => {
+        if (!sku)
+          throw "No existe el sku"
+          // Campos modificables.
+        ;["stockMinimo", "stockMaximo"].forEach(x => (sku[x] = req.body[x]))
+
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(err => next(err))
+  }
+)
+app.put(
+  "/agregar-etiqueta",
+  $("sku:modificar:agregar-etiqueta"),
+  (req, res, next) => {
+    SKU.findById(req.body._id)
+      .exec()
+      .then(sku => {
+        if (!sku) throw "No existe el sku"
         // Campos modificables.
-      ;[
-        "nombreCompleto",
-        "unidad",
-        "descripcion",
-        "puedoProducirlo",
-        "puedoComprarlo",
-        "puedoVenderlo",
-        "stockMinimo",
-        "stockMaximo",
-        "etiqueta",
-      ].forEach(x => (sku[x] = req.body[x]))
 
-      return sku.save()
-    })
-    .then(sku => res.send(sku))
-    .catch(err => next(err))
-})
+        sku.etiquetas.push(req.body.etiqueta)
 
-app.delete("/:id", $("sku:eliminar"), (req, res) => {
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(err => next(err))
+  }
+)
+
+app.delete("/:id", $("sku:eliminar"), async (req, res, next) => {
   SKU.findById(req.params.id)
     .exec()
     .then(sku => {
       if (!sku) throw "No existe el sku"
 
-      //Es necesario que eliminimos todas las imagenes.
+      // Elimimanos todas las imagenes.
+      let promesas = sku.imagenes.map(x => eliminarImagenDeBucket(x.nombreBD))
 
-      return sku.remove()
+      return Promise.all(promesas).then(() => sku.remove())
+    })
+    .then(sku => res.send(sku))
+    .catch(err => next(err))
+})
+
+app.delete("/:id/etiqueta/:etiqueta", $("sku:eliminar"), (req, res) => {
+  SKU.findById(req.params.id)
+    .exec()
+    .then(sku => {
+      if (!sku) throw "No existe el sku"
+      sku.etiquetas.pull(req.params.etiqueta)
+      return sku.save()
     })
     .then(sku => res.send(sku))
     .catch(err => erro(res, err, "Hubo un error eliminando el sku"))

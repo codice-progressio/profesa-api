@@ -102,34 +102,18 @@ function reportes() {
 
 function almacenes() {
   const menu = {
-    permiso: $("menu:almacen", false),
+    permiso: $("menu:almacen", false, "Mostrar el menu de almacen"),
     titulo: " Almacen",
     icono: "fas fa-warehouse",
     submenu: [
       {
-        titulo: "Producto terminado",
-        url: "/almacen/productoTerminado",
-        permiso: $("menu:almacen:productoTerminado", false),
-      },
-      {
-        titulo: "Produccion",
-        url: "/almacen/produccion",
-        permiso: $("menu:almacen:produccion", false),
-      },
-      {
-        titulo: "Produccion - ES",
-        url: "/almacen/produccion/entradasYSalidas",
-        permiso: $("menu:almacen:produccion:entradasYSalidas", false),
-      },
-      {
-        titulo: "Requisiciones",
-        url: "/almacen/requisiciones",
-        permiso: $("menu:almacen:requisiciones", false),
-      },
-      {
-        titulo: "Reportes personalizados",
-        url: "/almacen/reportesPersonalizados",
-        permiso: $("menu:almacen:reportesPersonalizados", false),
+        titulo: "Almacen",
+        url: "/almacen",
+        permiso: $(
+          "menu:almacen:sku",
+          false,
+          "Menu de gestion general del almacen"
+        ),
       },
     ],
   }

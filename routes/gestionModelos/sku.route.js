@@ -9,6 +9,7 @@ const ObjectId = mongoose.Types.ObjectId
 const $ = require("../../config/permisos.config").$
 // const fs = require("fs")
 const { Storage } = require("@google-cloud/storage")
+const Sharp = require("sharp")
 
 const fileFilter = (req, file, cb) => {
   if (
@@ -68,6 +69,20 @@ app.put(
   "/imagen",
   $("sku:imagen:agregar", undefined, "Agregar una imagen al SKU"),
   upload.single("img"),
+  (req, params, next) => {
+    // Con este middleware redimiensionamos el tamaño de 
+    // imagen para que no mida mas de 1000
+    Sharp(req.file.buffer)
+      // El maximo tamaño horizontal de las imagenes debe ser 1200
+      .resize(1200, 1200, { withoutEnlargement: true, fit: Sharp.fit.inside })
+      .jpeg({ quality: 80 })
+      .toBuffer()
+      .then(data => {
+        req.file.buffer = data
+        return next()
+      })
+      .catch(err => next(err))
+  },
   (req, res, next) => {
     SKU.findById(req.body._id)
       .exec()
@@ -529,7 +544,7 @@ app.put(
       .catch(_ => next(_))
   }
 )
-// Modifica el movimeinto seleccinado y recalcula el valor de las existencias.
+// Modifica el movimiento seleccinado y recalcula el valor de las existencias.
 app.put(
   "/lote/movimiento/modificar/:id/:idLote/:idMovimiento",
   $(

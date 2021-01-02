@@ -27,12 +27,16 @@ const sku = new Schema({
   imagenes: [
     {
       nombreOriginal: String,
-      nombreBD:String,
+      nombreBD: String,
       path: String,
     },
   ],
 
-  nombreCompleto: { type: String },
+  nombreCompleto: {
+    type: String,
+    unique: [true, "{{PATH}} Debe ser único"],
+    minlength: 4,
+  },
 
   /**
    * La existencia de sku en el almacen.
@@ -41,9 +45,9 @@ const sku = new Schema({
    */
   existencia: { type: Number, default: 0 },
 
-  // La suma de la existencia de los almacenes 
+  // La suma de la existencia de los almacenes
   // tomando en cuenta los que esten divididos entre
-  // lotes diferentes. 
+  // lotes diferentes.
   existenciaAlmacenes: {},
 
   /**

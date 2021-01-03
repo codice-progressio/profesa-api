@@ -70,7 +70,7 @@ app.put(
   $("sku:imagen:agregar", undefined, "Agregar una imagen al SKU"),
   upload.single("img"),
   (req, params, next) => {
-    // Con este middleware redimiensionamos el tamaño de 
+    // Con este middleware redimiensionamos el tamaño de
     // imagen para que no mida mas de 1000
     Sharp(req.file.buffer)
       // El maximo tamaño horizontal de las imagenes debe ser 1200
@@ -84,6 +84,7 @@ app.put(
       .catch(err => next(err))
   },
   (req, res, next) => {
+    let publicUrl = ""
     SKU.findById(req.body._id)
       .exec()
       .then(sku => {
@@ -103,7 +104,7 @@ app.put(
         // If all is good and done
         blobStream.on("finish", () => {
           // Assemble the file public URL
-          const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${
+          publicUrl = `https://firebasestorage.googleapis.com/v0/b/${
             bucket.name
           }/o/${encodeURI(blob.name)}?alt=media`
           // Return the file name and its public URL
@@ -117,7 +118,7 @@ app.put(
           return sku
             .save()
             .then(sku => {
-              res.send(sku)
+              res.send(sku.imagenes.find(x => x.path === publicUrl))
             })
             .catch(err => next(err))
         })

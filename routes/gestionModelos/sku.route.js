@@ -246,6 +246,7 @@ app.get(
           stockMaximo: "$stockMaximo",
           stockMinimo: "$stockMinimo",
           etiquetas: "$etiquetas",
+          imagenes: "$imagenes",
         },
       },
     ])

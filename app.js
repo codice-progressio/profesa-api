@@ -116,7 +116,8 @@ const msjServidor = () => {
   console.log(`Servidor iniciado en el puerto: ${process.env.PORT}`)
 }
 
-if (process.env.PRODUCCION == true) {
+console.log("process.env.PRODUCCION", process.env.PRODUCCION )
+if (process.env.PRODUCCION === 'true') {
   console.log("Modo produccion")
   app.listen(process.env.PORT, msjServidor)
 } else {

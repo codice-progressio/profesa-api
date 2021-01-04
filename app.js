@@ -49,8 +49,6 @@ mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
 mongoose.set("useCreateIndex", true)
 mongoose.connection.openUri(process.env.URI, (err, res) => {
-  console.log(process.env.URI)
-
   if (err) {
     // Mensaje de error en la base de datos.
     console.log(err)

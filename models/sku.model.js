@@ -76,7 +76,12 @@ const sku = new Schema({
       },
     ],
   },
-  etiquetas: [String],
+  etiquetas: [
+    {
+      type: String,
+      minlength: [4, "La etiqueta debe contener por lo menos 4 caracteres"],
+    },
+  ],
 })
 
 module.exports = mongoose.model("sku", sku)

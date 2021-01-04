@@ -39,7 +39,9 @@ const upload = multer({
 
 const storage = new Storage({
   projectId: process.env.GCLOUD_PROJECT_ID,
-  keyFilename: process.env.GCLOUD_APPLICATION_CREDENTIALS,
+  keyFilename: process.env.PRODUCCION
+    ? JSON.parse(process.env.GCLOUD_APPLICATION_CREDENTIALS)
+    : process.env.GCLOUD_APPLICATION_CREDENTIALS,
 })
 
 const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET_URL)

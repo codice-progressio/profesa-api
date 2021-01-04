@@ -49,6 +49,8 @@ mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
 mongoose.set("useCreateIndex", true)
 mongoose.connection.openUri(process.env.URI, (err, res) => {
+  console.log(process.env.URI)
+
   if (err) {
     // Mensaje de error en la base de datos.
     console.log(err)
@@ -59,7 +61,7 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
 })
 
 app.use((req, res, next) => {
-  if (!process.env.PROUDCCION) {
+  if (process.env.PROUDCCION === "true") {
     console.log(
       `${new Date()}|` +
         colores.success("PETICION RECIBIDA") +
@@ -116,8 +118,8 @@ const msjServidor = () => {
   console.log(`Servidor iniciado en el puerto: ${process.env.PORT}`)
 }
 
-console.log("process.env.PRODUCCION", process.env.PRODUCCION )
-if (process.env.PRODUCCION === 'true') {
+console.log("process.env.PRODUCCION", process.env.PRODUCCION)
+if (process.env.PRODUCCION === "true") {
   console.log("Modo produccion")
   app.listen(process.env.PORT, msjServidor)
 } else {

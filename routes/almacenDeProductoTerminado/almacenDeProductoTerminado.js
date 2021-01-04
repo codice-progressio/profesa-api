@@ -1,12 +1,10 @@
 let express = require("express")
 let app = express()
 
-var ModeloCompleto = require("../../models/modeloCompleto")
+var SKU = require("../../models/sku.model")
 
 const RESP = require("../../utils/respStatus")
-var guard =  require('express-jwt-permissions')()
-var permisos = require('../../config/permisos.config')
-
+var permisos = require("../../config/permisos.config")
 
 app.get(
   "/",
@@ -17,9 +15,9 @@ app.get(
     const sort = Number(req.query.sort || 1)
     const campo = String(req.query.campo || "nombreCompleto")
 
-    const total = await ModeloCompleto.countDocuments().exec()
+    const total = await SKU.countDocuments().exec()
 
-    ModeloCompleto.aggregate([
+    SKU.aggregate([
       { $match: {} },
       {
         $project: {
@@ -28,14 +26,14 @@ app.get(
           lotes: "$lotes",
           esBaston: "$esBaston",
           stockMinimo: "$stockMinimo",
-          stockMaximo: "$stockMaximo"
-        }
+          stockMaximo: "$stockMaximo",
+        },
       },
       { $sort: { [campo]: sort } },
       //Desde aqui limitamos unicamente lo que queremos ver
       { $limit: desde + limite },
       { $skip: desde },
-      { $sort: { [campo]: sort } }
+      { $sort: { [campo]: sort } },
     ])
       .exec()
       .then(modelosCompletos => {
@@ -45,7 +43,7 @@ app.get(
 
         return RESP._200(res, null, [
           { tipo: "modelosCompletos", datos: modelosCompletos },
-          { tipo: "total", datos: total.pop().total }
+          { tipo: "total", datos: total.pop().total },
         ])
       })
       .catch(err =>
@@ -66,21 +64,18 @@ app.get(
       req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     )
     const b = campo => ({
-      [campo]: { $regex: termino, $options: "i" }
+      [campo]: { $regex: termino, $options: "i" },
     })
 
     const $match = {
-      $or: []
+      $or: [],
     }
 
     ;["nombreCompleto"].forEach(x => $match.$or.push(b(x)))
 
-    const total = await ModeloCompleto.aggregate([
-      { $match },
-      { $count: "total" }
-    ]).exec()
+    const total = await SKU.aggregate([{ $match }, { $count: "total" }]).exec()
 
-    ModeloCompleto.aggregate([
+    SKU.aggregate([
       { $match },
 
       {
@@ -90,15 +85,15 @@ app.get(
           lotes: "$lotes",
           esBaston: "$esBaston",
           stockMinimo: "$stockMinimo",
-          stockMaximo: "$stockMaximo"
-        }
+          stockMaximo: "$stockMaximo",
+        },
       },
 
       { $sort: { [campo]: sort } },
       //Desde aqui limitamos unicamente lo que queremos ver
       { $limit: desde + limite },
       { $skip: desde },
-      { $sort: { [campo]: sort } }
+      { $sort: { [campo]: sort } },
     ])
       .exec()
       .then(modeloscompletos => {
@@ -108,7 +103,7 @@ app.get(
 
         return RESP._200(res, null, [
           { tipo: "modeloscompletos", datos: modeloscompletos },
-          { tipo: "total", datos: total.pop().total }
+          { tipo: "total", datos: total.pop().total },
         ])
       })
       .catch(err =>
@@ -125,7 +120,7 @@ app.get(
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
-    err: err
+    err: err,
   })
 }
 
@@ -144,14 +139,14 @@ app.get(
   permisos.$("almacenDeProductoTerminado:consolidar:modelo"),
   (req, res) => {
     const idModelo = req.params.idModelo
-    ModeloCompleto.findById(idModelo)
+    SKU.findById(idModelo)
       .exec()
-      .then(mod => {
-        if (!mod) throw "No existe el modelo"
+      .then(sku => {
+        if (!sku) throw "No existe el modelo"
         //Organizamos todo en base a una llave
         const lotesOrganizados = {}
 
-        mod.lotes.forEach(lote => {
+        sku.lotes.forEach(lote => {
           const fl = lote.createAt
           // la estructura de la llave se obtiene de la fecha de creacion
           // del lote y tiene la siguientee estructura 2020@01 que representa
@@ -183,7 +178,7 @@ app.get(
               devoluciones: [],
               validandoDevolucion: false,
               observaciones: "",
-              createAt: null
+              createAt: null,
             }
 
             lotes.forEach(lote => {
@@ -215,16 +210,16 @@ app.get(
           }
         }
         //Asignamos los lotes.
-        mod.lotes = lotesFinales
+        sku.lotes = lotesFinales
         //Sumanos la existencia de cada lote nuevo.
-        mod.existencia = mod.lotes.reduce((a, b) => +a + +b.existencia, 0)
-        return mod.save()
+        sku.existencia = sku.lotes.reduce((a, b) => +a + +b.existencia, 0)
+        return sku.save()
       })
-      .then(mod => {
+      .then(sku => {
         return RESP._200(
           res,
           "Se consolidaron los lotes del modelo de manera correcta",
-          [{ tipo: "modeloCompleto", datos: mod }]
+          [{ tipo: "sku", datos: sku }]
         )
       })
       .catch(err => erro(res, err, "Error consolidando"))

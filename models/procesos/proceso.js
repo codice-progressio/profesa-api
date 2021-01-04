@@ -1,9 +1,8 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var uniqueValidator = require('mongoose-unique-validator');
-var gastoConsumoSchema = require('../costos/gastoConsumo');
 var FamiliaDeProcesos = require('../../models/procesos/familiaDeProcesos');
-var ModeloCompleto = require('../../models/modeloCompleto');
+var SKU = require('../../models/sku.model');
 var colores = require('../../utils/colors');
 
 var procesoSchema = new Schema({
@@ -63,7 +62,7 @@ let eliminarRelacionados = function(next) {
     let mcPull = { $pull: { procesosEspeciales: idProceso } };
 
     promesas.push(FamiliaDeProcesos.update({ 'procesos.proceso': idProceso }, familiaPull));
-    promesas.push(ModeloCompleto.update({ 'procesos': idProceso }, mcPull));
+    promesas.push(SKU.update({ 'procesos': idProceso }, mcPull));
 
     Promise.all(promesas).
     then(resp => {

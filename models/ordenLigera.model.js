@@ -7,7 +7,7 @@ module.exports = {
     idProcesoActual: String,
   
     numeroDeOrden: String,
-    sku: String, //era modeloCompleto,
+    sku: String,
     idSKU: String,
     fechaDeEntregaAProduccion: Date, //era fechaPedidoProduccion,
   

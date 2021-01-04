@@ -57,7 +57,7 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
     throw err
   }
   // Mensaje de conexion exitosa a la BD
-  console.log("Conectado a la BD")
+  console.log("[ INFO ] Conectado a la BD")
 })
 
 app.use((req, res, next) => {
@@ -118,9 +118,8 @@ const msjServidor = () => {
   console.log(`Servidor iniciado en el puerto: ${process.env.PORT}`)
 }
 
-console.log("process.env.PRODUCCION", process.env.PRODUCCION)
 if (process.env.PRODUCCION === "true") {
-  console.log("Modo produccion")
+  console.log("[ INFO ] Modo produccion")
   app.listen(process.env.PORT, msjServidor)
 } else {
   https

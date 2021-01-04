@@ -41,7 +41,7 @@ const storage = new Storage({
   projectId: process.env.GCLOUD_PROJECT_ID,
   ...(process.env.PRODUCCION === "false"
     ? { keyFilename: process.env.GCLOUD_APPLICATION_CREDENTIALS }
-    : JSON.parse(process.env.GCLOUD_APPLICATION_CREDENTIALS)),
+    : { credentials: JSON.parse(process.env.GCLOUD_APPLICATION_CREDENTIALS) }),
 })
 
 const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET_URL)

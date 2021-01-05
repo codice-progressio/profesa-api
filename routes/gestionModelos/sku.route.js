@@ -261,7 +261,7 @@ app.get(
 app.get("/buscar/etiquetas", (req, res, next) => {
   let etiquetas = req.query.etiquetas.split(",")
 
-  SKU.find({ etiquetas: { $in: etiquetas } })
+  SKU.find({ etiquetas: { $all: etiquetas } })
     .exec()
     .then(skus => res.send(skus))
     .catch(_ => next(_))

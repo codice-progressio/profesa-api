@@ -106,10 +106,7 @@ app.use(function (err, req, res, next) {
     return res.status(401).send("Es necesario loguearte")
   }
 
-  return RESP._500(res, {
-    msj: "Hubo un error.",
-    err: err,
-  })
+  return res.status(500).send(err)
 })
 
 const msjServidor = () => {

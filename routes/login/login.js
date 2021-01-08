@@ -26,7 +26,7 @@ function crearToken(usuario) {
   })
 }
 
-app.post("/renuevatoken", (req, res) => {
+app.post("/renuevatoken", (req, res, next) => {
   Usuario.findById(req.user._id)
     .select("+passsword")
     .lean()
@@ -40,14 +40,11 @@ app.post("/renuevatoken", (req, res) => {
       ])
     })
     .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error en el login.",
-        err: err,
-      })
+      next(err)
     })
 })
 
-app.post("/", (req, res) => {
+app.post("/", (req, res, next) => {
   var body = req.body
   var datos = []
   var usuarioLogueado = null
@@ -114,12 +111,7 @@ app.post("/", (req, res) => {
 
       return RESP._200(res, `Bienvenido ${usuarioLogueado.nombre}`, datos)
     })
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error en el login.",
-        err: err,
-      })
-    })
+    .catch(err => next(err))
 })
 
 // Retorna todos los roles que hay en la api.

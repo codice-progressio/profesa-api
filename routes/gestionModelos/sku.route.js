@@ -19,10 +19,7 @@ const fileFilter = (req, file, cb) => {
   ) {
     cb(null, true)
   } else {
-    cb(
-      new Error(`La imagen ${file.originalname} no es de tipo jpg/jpeg or png`),
-      false
-    )
+    cb(`La imagen ${file.originalname} no es de tipo jpg/jpeg or png`, false)
   }
 }
 
@@ -90,7 +87,7 @@ app.put(
     SKU.findById(req.body._id)
       .exec()
       .then(sku => {
-        if (!sku) throw new Error("No existe el id")
+        if (!sku) throw "No existe el id"
         const nuevoNombre = ObjectId() + ""
         const blob = bucket.file(nuevoNombre)
         const blobStream = blob.createWriteStream({
@@ -149,11 +146,11 @@ app.delete(
     SKU.findById(id)
       .exec()
       .then(async sku => {
-        if (!sku) throw new Error("No existe el id")
+        if (!sku) throw "No existe el id"
 
         // Obtenemos la img guardada.
         let imgDB = sku.imagenes.id(idImg)
-        if (!imgDB) throw new Error("No existe la imagen")
+        if (!imgDB) throw "No existe la imagen"
 
         try {
           await eliminarImagenDeBucket(imgDB.nombreBD)
@@ -311,7 +308,12 @@ app.put(
 
         return sku.save()
       })
-      .then(sku => res.send(sku))
+      .then(sku =>
+        res.send({
+          stockMaximo: sku.stockMaximo,
+          stockMinimo: sku.stockMinimo,
+        })
+      )
       .catch(err => next(err))
   }
 )
@@ -424,23 +426,64 @@ app.post(
       .then(sku => {
         if (!sku) throw next("No existe el id")
 
-        //Agregamos el usuario actual
+        // Para hacernos la vida mas facil podemos crear
+        // lotes sin una existencia dada. Aqui capturamos eso
+        // creando un nuevo movimiento en 0 que represente
+        // la primera entrada del lote.Si definimos el movimiento
+        // si lo registramos de todas maneras.
 
-        req.body.movimientos.forEach(x => (x.usuario = req.user._id))
-        sku.lotes.push(req.body)
+        //Agregamos el usuario actual
+        if (!req.body.movimientos) {
+          req.body["movimientos"] = [
+            {
+              cantidad: 0,
+              esEntrada: true,
+              observaciones: "[SISTEMA] Lote creado sin existencias",
+              usuario: req.user._id,
+            },
+          ]
+        } else {
+          req.body.movimientos.forEach(x => (x.usuario = req.user._id))
+        }
+        // Las entradas las acomodamos al principio para que se vea mas nice.
+        sku.lotes.unshift(req.body)
         sku.existencia = recalcularExistencia(sku)
         recalcularExistenciaPorAlmacenes(sku)
 
         return sku.save()
       })
-      .then(sku => res.send(sku))
+      .then(sku =>
+        // Solo retornamos el nuevo cambio para
+        // hacer la modificacion
+        res.send({
+          _id: sku._id,
+          lotes: [sku.lotes.shift()],
+        })
+      )
       .catch(_ => next(_))
   }
 )
 
+app.get("/lote/:id", (req, res, next) => {
+  SKU.findById(req.params.id)
+    .select("lotes")
+    .lean()
+    .exec()
+    .then(sku => {
+      if (!sku) throw "No existe el id"
+      
+      // Por defecto no vemos los lotes con existencia. 
+      if (req.query.sinExistencia)
+        sku.lotes = sku.lotes.filter(x => x.existencia > 0)
+      // Solo contiene id y lotes
+      return res.send(sku)
+    })
+    .catch(_ => next(_))
+})
+
 // Crea un movimento  lote seleccionado
 app.put(
-  "/lote/movimento/agregar/:id/:idLote/",
+  "/lote/movimiento/agregar/:id/:idLote/",
   $(
     "sku:lote:movimiento:Agregar",
     undefined,
@@ -454,9 +497,9 @@ app.put(
       .select("lotes")
       .exec()
       .then(sku => {
-        if (!sku) throw new Error("No existe el id")
+        if (!sku) throw "No existe el id"
         let lote = sku.lotes.id(idLote)
-        if (!lote) throw new Error("No existe el lote")
+        if (!lote) throw "No existe el lote"
 
         req.body.usuario = req.user._id
         lote.movimientos.push(req.body)
@@ -486,11 +529,11 @@ app.delete(
       .select("lotes")
       .exec()
       .then(sku => {
-        if (!sku) throw new Error("No existe el id")
+        if (!sku) throw "No existe el id"
         let lote = sku.lotes.id(idLote)
-        if (!lote) throw new Error("No existe el lote")
+        if (!lote) throw "No existe el lote"
         let movimiento = lote.movimientos.id(idMovimiento)
-        if (!movimiento) throw new Error("No existe el movimiento")
+        if (!movimiento) throw "No existe el movimiento"
 
         sku.lotes.id(idLote).movimientos.pull(idMovimiento)
 
@@ -518,8 +561,8 @@ app.put(
       .select("lotes")
       .exec()
       .then(sku => {
-        if (!sku) throw new Error("No existe el id")
-        if (!sku.lotes.id(lote)) throw new Error("No existe el lote")
+        if (!sku) throw "No existe el id"
+        if (!sku.lotes.id(lote)) throw "No existe el lote"
 
         // Resibimos un movimiento marcado como salida.
 
@@ -565,11 +608,11 @@ app.put(
       .select("lotes")
       .exec()
       .then(sku => {
-        if (!sku) throw new Error("No existe el id")
+        if (!sku) throw "No existe el id"
         let lote = sku.lotes.id(idLote)
-        if (!lote) throw new Error("No existe el lote")
+        if (!lote) throw "No existe el lote"
         let movimiento = lote.movimientos.id(idMovimiento)
-        if (!movimiento) throw new Error("No existe el movimiento")
+        if (!movimiento) throw "No existe el movimiento"
 
         movimiento.cantidad = req.body.cantidad
         movimiento.esEntrada = req.body.esEntrada
@@ -596,9 +639,9 @@ app.delete(
       .select("lotes")
       .exec()
       .then(sku => {
-        if (!sku) throw new Error("No existe el id")
+        if (!sku) throw "No existe el id"
         let lote = sku.lotes.id(idLote)
-        if (!lote) throw new Error("No existe el lote")
+        if (!lote) throw "No existe el lote"
 
         sku.lotes.pull(idLote)
 
@@ -620,9 +663,9 @@ app.put("/lote/modificar/:id/:idLote/", (req, res, next) => {
     .select("lotes")
     .exec()
     .then(sku => {
-      if (!sku) throw new Error("No existe el id")
+      if (!sku) throw "No existe el id"
       let lote = sku.lotes.id(idLote)
-      if (!lote) throw new Error("No existe el lote")
+      if (!lote) throw "No existe el lote"
 
       lote.observaciones = req.body.observaciones
       lote.caducidad = req.body.caducidad

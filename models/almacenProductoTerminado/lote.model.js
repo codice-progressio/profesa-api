@@ -9,7 +9,7 @@ const Schema = mongoose.Schema
  *
  */
 const LoteSchema = new Schema({
-  existecia: {
+  existencia: {
     type: Number,
     min: [0, "{PATH} de lote no puede ser menor que 0"],
   },

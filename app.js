@@ -74,10 +74,7 @@ _ROUTES(app)
 
 // Llamamos a los errores.
 app.use(function (req, res) {
-  return RESP._404(res, {
-    msj: "La pagina solicitada no existe.",
-    err: "La pagina que solicitaste no existe.",
-  })
+  return res.status(404).send("No existe la pagina")
 })
 
 app.use(function (err, req, res, next) {

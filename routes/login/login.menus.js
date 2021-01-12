@@ -39,15 +39,15 @@ function generarMenuSegunPermisos(permisos, OBJETO_MENUS) {
 
 function generarMenus() {
   return {
-    REPORTES: reportes(),
+    // REPORTES: reportes(),
     ALMACENES: almacenes(),
-    CONTROL_DE_PRODUCCION: controlDeProduccion(),
-    INGENIERIA: ingenieria(),
-    VENTAS: ventas(),
-    COMPRAS: compras(),
-    ADMINISTRADOR: administrador(),
-    RH: rh(),
-    parametros: parametros(),
+    // CONTROL_DE_PRODUCCION: controlDeProduccion(),
+    // INGENIERIA: ingenieria(),
+    // VENTAS: ventas(),
+    // COMPRAS: compras(),
+    // ADMINISTRADOR: administrador(),
+    // RH: rh(),
+    // parametros: parametros(),
   }
 }
 

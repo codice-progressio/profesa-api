@@ -103,8 +103,7 @@ app.use(function (err, req, res, next) {
     return res.status(401).send("Es necesario loguearte")
   }
 
-  if (err.errors)
-  {
+  if (err.errors) {
     return res.status(500).send(err.message)
   }
 

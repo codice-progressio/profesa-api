@@ -58,6 +58,16 @@ const sku = new Schema({
     select: false,
   },
 
+  proveedores: {
+    select: false,
+    type: [
+      {
+        idProveedor: String,
+        costo: { type: Number, min: 0 },
+      },
+    ],
+  },
+
   // Valores para las existencias.
   stockMinimo: { type: Number, default: 0, min: 0 },
   stockMaximo: {

@@ -90,30 +90,30 @@ module.exports.ROUTES = function (app) {
     ReportePersonalizadoAlmacenProduccion
   )
 
-  app.use("/empleado", EmpleadoRoute)
-  app.use("/puesto", PuestoRoute)
-  app.use("/area", AreaRoute)
-  app.use("/curso", CursoRoute)
-  app.use("/requisicion", RequisicionRoute)
-  app.use("/divisa", DivisaRoute)
+  // app.use("/empleado", EmpleadoRoute)
+  // app.use("/puesto", PuestoRoute)
+  // app.use("/area", AreaRoute)
+  // app.use("/curso", CursoRoute)
+  // app.use("/requisicion", RequisicionRoute)
+  // app.use("/divisa", DivisaRoute)
   app.use("/proveedor", proveedorRoute)
-  app.use("/articulo", articuloRoute)
-  app.use("/almacenDescripcion", almacenDescripcionRoute)
-  app.use("/almacenDeProductoTerminado", almacenDeProductoTerminadoRoute)
-  app.use("/reportes", reportesRoute)
+  // app.use("/articulo", articuloRoute)
+  // app.use("/almacenDescripcion", almacenDescripcionRoute)
+  // app.use("/almacenDeProductoTerminado", almacenDeProductoTerminadoRoute)
+  // app.use("/reportes", reportesRoute)
 
-  //Gestion de folios
-  app.use("/folios", folioNewRoutes)
-  app.use("/orden", ordenRoutes)
-  //----------------------------
-  app.use("/usuario", usuarioRoutes)
-  app.use("/upload", uploadRoutes)
+  // //Gestion de folios
+  // app.use("/folios", folioNewRoutes)
+  // app.use("/orden", ordenRoutes)
+  // //----------------------------
+  // app.use("/usuario", usuarioRoutes)
+  // app.use("/upload", uploadRoutes)
 
-  app.use("/sku", skuRoutes)
-  app.use("/cliente", clienteRoutes)
-  app.use("/departamento", departamentoRoutes)
-  app.use("/proceso", procesoRoutes)
-  app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
-  app.use("/maquina", maquinaRoutes)
+  // app.use("/sku", skuRoutes)
+  // app.use("/cliente", clienteRoutes)
+  // app.use("/departamento", departamentoRoutes)
+  // app.use("/proceso", procesoRoutes)
+  // app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
+  // app.use("/maquina", maquinaRoutes)
 }
 //

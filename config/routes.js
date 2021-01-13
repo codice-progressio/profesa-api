@@ -109,7 +109,7 @@ module.exports.ROUTES = function (app) {
   // app.use("/usuario", usuarioRoutes)
   // app.use("/upload", uploadRoutes)
 
-  // app.use("/sku", skuRoutes)
+  app.use("/sku", skuRoutes)
   // app.use("/cliente", clienteRoutes)
   // app.use("/departamento", departamentoRoutes)
   // app.use("/proceso", procesoRoutes)

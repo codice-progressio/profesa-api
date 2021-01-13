@@ -44,7 +44,7 @@ function generarMenus() {
     // CONTROL_DE_PRODUCCION: controlDeProduccion(),
     // INGENIERIA: ingenieria(),
     // VENTAS: ventas(),
-    // COMPRAS: compras(),
+    COMPRAS: compras(),
     // ADMINISTRADOR: administrador(),
     // RH: rh(),
     // parametros: parametros(),
@@ -264,11 +264,11 @@ function compras() {
         url: "/proveedores",
         permiso: $("menu:compras:proveedores", false),
       },
-      {
-        titulo: "Divisas",
-        url: "/divisas",
-        permiso: $("menu:compras:divisas", false),
-      },
+      // {
+      //   titulo: "Divisas",
+      //   url: "/divisas",
+      //   permiso: $("menu:compras:divisas", false),
+      // },
     ],
   }
   return menu

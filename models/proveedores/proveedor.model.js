@@ -26,6 +26,11 @@ const ProveedorSchema = new Schema(
         banco: String,
       },
     ],
+    // Establece como eliminado el proveedor. Esto sirve
+    // para que las referencias como las compras
+    // por precio de proveedor no se vean afectadas
+    // al eliminar todos los datos relacionados con el proveedor.
+    eliminado: { type: Boolean, default: false, select: false },
   },
   { collection: "proveedores" }
 )

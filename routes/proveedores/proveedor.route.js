@@ -17,7 +17,8 @@ app.get("/", $("proveedor:leer:todo"), async (req, res) => {
   const sort = Number(req.query.sort ?? 1)
   const campo = String(req.query.campo ?? "nombre")
 
-  Proveedor.find()
+  //No listamos los proveedores eliminados
+  Proveedor.find({ eliminado: false })
     .sort({ [campo]: sort })
     .limit(limite)
     .skip(desde)
@@ -26,51 +27,59 @@ app.get("/", $("proveedor:leer:todo"), async (req, res) => {
     .catch(err => next(err))
 })
 
-app.get("/:id", $("proveedor:leer:id"), (req, res) => {
-  Proveedor.findById(req.params.id)
+app.get("/:id", $("proveedor:leer:id"), (req, res) =>
+{
+  // Los eliminados no deben aparecer.
+  Proveedor.findOne({ _id: req.params.id, eliminado: false })
     .exec()
     .then(proveedor => {
-      if (!proveedor) throw "No existe el id"
+      if (!proveedor) throw "No existe el id o ha sido eliminado"
       return res.send(proveedor)
     })
     .catch(err => next(err))
 })
 
-app.get("/buscar/:termino", $("proveedor:leer:termino"), async (req, res) => {
-  const desde = Number(req.query.desde || 0)
-  const limite = Number(req.query.limite || 30)
-  const sort = Number(req.query.sort || 1)
-  const campo = String(req.query.campo || "nombre")
-  const termino = String(
-    req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  )
-  const b = campo => ({
-    [campo]: { $regex: termino, $options: "i" },
-  })
+app.get(
+  "/buscar/termino/:termino",
+  $("proveedor:leer:termino"),
+  async (req, res) => {
+    const desde = Number(req.query.desde || 0)
+    const limite = Number(req.query.limite || 30)
+    const sort = Number(req.query.sort || 1)
+    const campo = String(req.query.campo || "nombre")
+    const termino = String(
+      req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    )
+    const b = campo => ({
+      [campo]: { $regex: termino, $options: "i" },
+    })
 
-  const $match = {
-    $or: [],
+    const $match = {
+      // No listmos los eliminados
+      eliminado:false,
+      $or: [],
+    }
+
+    ;["nombre", "rfc", "razonSocial"].forEach(x => $match.$or.push(b(x)))
+
+    Proveedor.aggregate([
+      { $match },
+
+      //Fin de populacion
+
+      { $sort: { [campo]: sort } },
+      //Desde aqui limitamos unicamente lo que queremos ver
+      { $limit: desde + limite },
+      { $skip: desde },
+      { $sort: { [campo]: sort } },
+    ])
+      .exec()
+      .then(proveedores => res.send(proveedores))
+      .catch(err => next(err))
   }
+)
 
-  ;["nombre", "rfc", "razonSocial"].forEach(x => $match.$or.push(b(x)))
-
-  Proveedor.aggregate([
-    { $match },
-
-    //Fin de populacion
-
-    { $sort: { [campo]: sort } },
-    //Desde aqui limitamos unicamente lo que queremos ver
-    { $limit: desde + limite },
-    { $skip: desde },
-    { $sort: { [campo]: sort } },
-  ])
-    .exec()
-    .then(proveedores => res.send(proveedores))
-    .catch(err => next(err))
-})
-
-app.put("/", $("proveedor:modificar"), (req, res) => {
+app.put("/", $("proveedor:modificar"), (req, res, next) => {
   Proveedor.findById(req.body._id)
     .exec()
     .then(proveedor => {
@@ -97,11 +106,13 @@ app.put("/", $("proveedor:modificar"), (req, res) => {
 
 app.delete("/:id", $("proveedor:eliminar"), (req, res) => {
   Proveedor.findById(req.params.id)
+    .select("+eliminado")
     .exec()
     .then(proveedor => {
       if (!proveedor) throw "No existe el proveedor"
-
-      return proveedor.remove()
+      // Solo cambiamos la bandera.
+      proveedor.eliminado = true
+      return proveedor.save()
     })
     .then(proveedor => res.send(proveedor))
     .catch(err => next(err))
@@ -113,12 +124,14 @@ app.delete("/:id", $("proveedor:eliminar"), (req, res) => {
 // =====================================
 // -->
 
-app.get("/relacionadosAlArticulo/:id", (req, res) => {
+app.get("/relacionados/:id", (req, res) =>
+{
   const desde = Number(req.query.desde ?? 0)
   const limite = Number(req.query.limite ?? 30)
   const sort = Number(req.query.sort ?? 1)
   const campo = String(req.query.campo ?? "nombre")
-  sku
+ 
+ sku
     .find({ "proveedores.idProveedor": req.params.id })
     .sort({ [campo]: sort })
     .limit(limite)

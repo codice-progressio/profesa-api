@@ -12,7 +12,7 @@ const ProveedorSchema = new Schema(
 
     contactos: [
       {
-        nombre: [String],
+        nombre: String,
         telefono: [String],
         correo: [String],
         puesto: [String],

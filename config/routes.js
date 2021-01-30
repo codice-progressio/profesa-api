@@ -21,12 +21,12 @@ let almacenDeProductoTerminadoRoute = require("../routes/almacenDeProductoTermin
 
 let folioNewRoutes = require("../routes/folio.route")
 
-var almacenDescripcionRoute = require("../routes/almacenDeMateriaPrimaYRefacciones/almacenDescripcion.route")
-var articuloRoute = require("../routes/almacenDeMateriaPrimaYRefacciones/articulo.route")
+const almacenDescripcionRoute = require("../routes/almacenDeMateriaPrimaYRefacciones/almacenDescripcion.route")
+const articuloRoute = require("../routes/almacenDeMateriaPrimaYRefacciones/articulo.route")
 
-var proveedorRoute = require("../routes/proveedores/proveedor.route")
-var DivisaRoute = require("../routes/divisa/divisa.route")
-var RequisicionRoute = require("../routes/requisiciones/requisicion.route")
+const proveedorRoute = require("../routes/proveedores/proveedor.route")
+const DivisaRoute = require("../routes/divisa/divisa.route")
+const RequisicionRoute = require("../routes/requisiciones/requisicion.route")
 
 const CursoRoute = require("../routes/recursosHumanos/cursos/curso.route")
 const AreaRoute = require("../routes/recursosHumanos/areas/area.route")
@@ -36,30 +36,37 @@ const EmpleadoRoute = require("../routes/recursosHumanos/empleado/empleado.route
 const Parametros = require("../routes/parametros/parametros.route")
 const Changelogs = require("../routes/changelogs.route")
 
-var ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
+const ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
 
-var ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
+const ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
 
-var jwt = require("express-jwt")
-var seed = require("../config/config").SEED
-const $ =  require("@codice-progressio/easy-permissions").$
+const jwt = require("express-jwt")
+const guard = require("express-jwt-permissions")()
+const $ = require("@codice-progressio/easy-permissions").$
 
 module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
   // se asegura. Tambien crea el req.user
-  app.use("/img", imagenesRoutes)
-
+  const rutasAExcluir = [
+    "/parametros",
+    "/parametros/super-admin/crear",
+    "/login",
+    "/img/usuarios/xxx",
+  ]
   app.use(
-    jwt({ secret: seed, algorithms: ["HS256"] }).unless({
-      path: [
-        "/parametros",
-        "/parametros/super-admin/crear",
-        "/login",
-        "/img/usuarios/xxx",
-      ],
+    jwt({ secret: process.env.SEED, algorithms: ["HS256"] }).unless({
+      path: rutasAExcluir,
+    })
+  )
+  
+  //Excluimos rutas
+  app.use(
+    guard.check("login").unless({
+      path: rutasAExcluir,
     })
   )
 
+  app.use("/img", imagenesRoutes)
   //Este va primero por que se usan permisos especiales internamente
   app.use("/parametros", Parametros)
 
@@ -81,7 +88,7 @@ module.exports.ROUTES = function (app) {
   app.use("/login", loginRoutes)
 
   //Para usar esta parte debe tener permisos de login
-  app.use($("login"))
+
   app.use("/changelogs", Changelogs)
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)

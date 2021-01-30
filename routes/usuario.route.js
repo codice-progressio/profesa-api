@@ -93,8 +93,7 @@ app.put("/", $("administrador:usuario:modificar"), (req, res) => {
 app.post("/", $("administrador:usuario:crear"), (req, res, next) => {
   //   comprobarEmpleadoActivo(req.body.empleado, req.body.permissions)
 
-  var usuario = new Usuario(req.body)
-  usuario
+  new Usuario(req.body)
     .save()
     .then(u => res.send(u))
     .catch(_ => next(_))

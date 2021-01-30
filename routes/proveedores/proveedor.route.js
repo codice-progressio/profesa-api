@@ -27,7 +27,7 @@ app.get("/", $("proveedor:leer:todo"), async (req, res) => {
     .catch(err => next(err))
 })
 
-app.get("/:id", $("proveedor:leer:id"), (req, res) =>
+app.get("/buscar/:id", $("proveedor:leer:id"), (req, res) =>
 {
   // Los eliminados no deben aparecer.
   Proveedor.findOne({ _id: req.params.id, eliminado: false })

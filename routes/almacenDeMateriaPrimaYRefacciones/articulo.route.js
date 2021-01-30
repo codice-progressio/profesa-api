@@ -5,7 +5,7 @@ var Articulo = require("../../models/almacenRefaccionesYMateriaPrima/articulo.mo
 var RESP = require("../../utils/respStatus")
 
 var guard = require("express-jwt-permissions")()
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$("articulo:crear"), (req, res) => {
+app.post("/", $("articulo:crear"), (req, res) => {
   return new Articulo(req.body)
     .save()
     .then(articulo => {
@@ -25,7 +25,7 @@ app.post("/", permisos.$("articulo:crear"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando el articulo"))
 })
 
-app.get("/", permisos.$("articulo:leer:todo"), async (req, res) => {
+app.get("/", $("articulo:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -47,7 +47,7 @@ app.get("/", permisos.$("articulo:leer:todo"), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los articulos"))
 })
 
-app.get("/buscar/id/:id", permisos.$("articulo:leer:id"), (req, res) => {
+app.get("/buscar/id/:id", $("articulo:leer:id"), (req, res) => {
   Articulo.findById(req.params.id)
     .populate("almacen")
     .exec()
@@ -63,7 +63,7 @@ app.get("/buscar/id/:id", permisos.$("articulo:leer:id"), (req, res) => {
 
 app.get(
   "/buscar/termino/:termino",
-  permisos.$("articulo:leer:termino"),
+  $("articulo:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -134,7 +134,7 @@ app.get(
 
 app.get(
   "/reporte/existencias",
-  permisos.$("articulo:reportes:existencias"),
+  $("articulo:reportes:existencias"),
   (req, res, next) => {
     Articulo.find()
       .select("-salidas -entradas -__v -_id ")
@@ -144,7 +144,7 @@ app.get(
   }
 )
 
-app.put("/", permisos.$("articulo:modificar"), (req, res) => {
+app.put("/", $("articulo:modificar"), (req, res) => {
   Articulo.findById(req.body._id)
     .exec()
     .then(articulo => {
@@ -186,7 +186,7 @@ app.put("/", permisos.$("articulo:modificar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando el articulo"))
 })
 
-app.delete("/:id", permisos.$("articulo:eliminar"), (req, res) => {
+app.delete("/:id", $("articulo:eliminar"), (req, res) => {
   Articulo.findById(req.params.id)
     .exec()
     .then(articulo => {

@@ -22,13 +22,12 @@ const estatusLaboral = require("./empleado.modificarEstatusLaboral.route")
 
 const pathFolderEmpleados = `./uploads/empleados`
 
-var guard =  require('express-jwt-permissions')()
-var permisos = require('../../../config/permisos.config')
+const $ = require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
-    err: err
+    err: err,
   })
 }
 
@@ -37,31 +36,27 @@ const erro = (res, err, msj) => {
 //  Todo
 // =====================================
 // -->
-app.get(
-  "/",
-  permisos.$("empleado:leer:todo"),
-  async (req, res) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "empleado")
+app.get("/", $("empleado:leer:todo"), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "empleado")
 
-    const total = await Empleado.countDocuments().exec()
+  const total = await Empleado.countDocuments().exec()
 
-    Empleado.find()
-      .sort({ [campo]: sort })
-      .limit(limite)
-      .skip(desde)
-      .exec()
-      .then(empleados => {
-        return RESP._200(res, null, [
-          { tipo: "empleados", datos: empleados },
-          { tipo: "total", datos: total }
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
-  }
-)
+  Empleado.find()
+    .sort({ [campo]: sort })
+    .limit(limite)
+    .skip(desde)
+    .exec()
+    .then(empleados => {
+      return RESP._200(res, null, [
+        { tipo: "empleados", datos: empleados },
+        { tipo: "total", datos: total },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
+})
 
 // <!--
 // =====================================
@@ -74,7 +69,7 @@ app.get(
 //  Id
 // =====================================
 // -->
-app.get("/:id", permisos.$("empleado:leer:id"), (req, res) => {
+app.get("/:id", $("empleado:leer:id"), (req, res) => {
   Empleado.findById(req.params.id)
     .exec()
     .then(empleado => {
@@ -96,69 +91,65 @@ app.get("/:id", permisos.$("empleado:leer:id"), (req, res) => {
 //  termino
 // =====================================
 // -->
-app.get(
-  "/buscar/:termino",
-  permisos.$("empleado:leer:termino"),
-  async (req, res) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "idNomina")
-    const termino = String(
-      req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    )
-    const b = campo => ({
-      [campo]: { $regex: termino, $options: "i" }
-    })
+app.get("/buscar/:termino", $("empleado:leer:termino"), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "idNomina")
+  const termino = String(
+    req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  )
+  const b = campo => ({
+    [campo]: { $regex: termino, $options: "i" },
+  })
 
-    const $match = {
-      $or: []
-    }
-
-    ;[
-      "idChecador",
-      "idNomina",
-      "nombres",
-      "apellidos",
-      "curp",
-      "rfc",
-      "numeroDeCuenta",
-      "númeroDeSeguridadSocial",
-      "email",
-      "celular",
-      "telCasa",
-      "telEmergencia",
-      "nivelDeEstudios",
-      "domicilio"
-    ].forEach(x => $match.$or.push(b(x)))
-
-    const total = await Empleado.aggregate([
-      { $match },
-      { $count: "total" }
-    ]).exec()
-
-    Empleado.aggregate([
-      { $match },
-      { $sort: { [campo]: sort } },
-      //Desde aqui limitamos unicamente lo que queremos ver
-      { $limit: desde + limite },
-      { $skip: desde },
-      { $sort: { [campo]: sort } }
-    ])
-      .exec()
-      .then(empleados => {
-        //Si no hay resultados no se crea la propiedad
-        // y mas adelante nos da error.
-        if (!total.length) total.push({ total: 0 })
-
-        return RESP._200(res, null, [
-          { tipo: "empleados", datos: empleados },
-          { tipo: "total", datos: total.pop().total }
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error buscando los empleados"))
+  const $match = {
+    $or: [],
   }
-)
+
+  ;[
+    "idChecador",
+    "idNomina",
+    "nombres",
+    "apellidos",
+    "curp",
+    "rfc",
+    "numeroDeCuenta",
+    "númeroDeSeguridadSocial",
+    "email",
+    "celular",
+    "telCasa",
+    "telEmergencia",
+    "nivelDeEstudios",
+    "domicilio",
+  ].forEach(x => $match.$or.push(b(x)))
+
+  const total = await Empleado.aggregate([
+    { $match },
+    { $count: "total" },
+  ]).exec()
+
+  Empleado.aggregate([
+    { $match },
+    { $sort: { [campo]: sort } },
+    //Desde aqui limitamos unicamente lo que queremos ver
+    { $limit: desde + limite },
+    { $skip: desde },
+    { $sort: { [campo]: sort } },
+  ])
+    .exec()
+    .then(empleados => {
+      //Si no hay resultados no se crea la propiedad
+      // y mas adelante nos da error.
+      if (!total.length) total.push({ total: 0 })
+
+      return RESP._200(res, null, [
+        { tipo: "empleados", datos: empleados },
+        { tipo: "total", datos: total.pop().total },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los empleados"))
+})
 
 // <!--
 // =====================================
@@ -179,37 +170,33 @@ app.get(
 // -->
 
 app.use(fileUpload())
-app.post(
-  "/", permisos.$("empleado:crear"),
-  (req, res) => {
-    var empleado = parsearBody(req.body)
-    var foto = req.files ? req.files.fotografia : null
+app.post("/", $("empleado:crear"), (req, res) => {
+  var empleado = parsearBody(req.body)
+  var foto = req.files ? req.files.fotografia : null
 
-    if (foto) {
-      //Validacion de la imagen.
-      var validar = require("../../../utils/extencionesFicherosValidas.utils")
-      if (!validar.extencionPermitida(foto) || !validar.esImagen(foto)) {
-        return RESP._500(res, {
-          msj: "Formato de imagen no valido",
-          err: "Extencion invalida"
-        })
-      }
-    }
-
-    if (empleado.hasOwnProperty("_id")){
-      return modificar(res, empleado, foto)
-    }
-    else {
-      return crear(res, empleado, foto)
+  if (foto) {
+    //Validacion de la imagen.
+    var validar = require("../../../utils/extencionesFicherosValidas.utils")
+    if (!validar.extencionPermitida(foto) || !validar.esImagen(foto)) {
+      return RESP._500(res, {
+        msj: "Formato de imagen no valido",
+        err: "Extencion invalida",
+      })
     }
   }
-)
+
+  if (empleado.hasOwnProperty("_id")) {
+    return modificar(res, empleado, foto)
+  } else {
+    return crear(res, empleado, foto)
+  }
+})
 
 function crear(res, empleado, foto) {
   if (!foto) {
     return RESP._500(res, {
       msj: "La fotografia es obligatoria",
-      err: "Es necesario subir una imagen del empleado."
+      err: "Es necesario subir una imagen del empleado.",
     })
   }
 
@@ -224,13 +211,13 @@ function crear(res, empleado, foto) {
     })
     .then(emp => {
       return RESP._200(res, "Se guardo el empleado de manera correcta", [
-        { tipo: "empleado", datos: emp }
+        { tipo: "empleado", datos: emp },
       ])
     })
     .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error guardando al empleado",
-        err: err
+        err: err,
       })
     })
 }
@@ -264,7 +251,7 @@ function modificar(res, empModificaciones, foto) {
         "domicilio",
         "nivelDeEstudios",
         "hijos",
-        "parentescoEmergencia"
+        "parentescoEmergencia",
       ].forEach(x => {
         empleado[x] = empModificaciones[x]
       })
@@ -282,13 +269,13 @@ function modificar(res, empModificaciones, foto) {
     })
     .then(empleado => {
       return RESP._200(res, "Se modifico correctamente el empleado", [
-        { tipo: "empleado", datos: empleado }
+        { tipo: "empleado", datos: empleado },
       ])
     })
     .catch(err => {
       return RESP._500(res, {
         msj: "Hubo un error actualizando al empleado",
-        err: err
+        err: err,
       })
     })
 }
@@ -323,7 +310,7 @@ function guardarImagen(foto, id, nombreAnterior = "XXXXXXXXXX") {
 // =====================================
 // -->
 
-app.delete("/:id", permisos.$("empleado:eliminar"), (req, res) => {
+app.delete("/:id", $("empleado:eliminar"), (req, res) => {
   Empleado.findById(req.params.id)
     .exec()
     .then(empleado => {
@@ -342,21 +329,17 @@ app.delete("/:id", permisos.$("empleado:eliminar"), (req, res) => {
 // =====================================
 // -->
 
-app.put(
-  "/evento/puesto",
-  permisos.$("empleado:evento:puesto"),
-  (req, res) => {
-    //Cambio de puesto
-    var datos = req.body
-    //Buscar que si exista el puesto.
-    //Buscar que si exista el empleado
-    modificarPuesto(datos)
-      .then(empleado =>
-        estatusOk("Se creo el evento correctamente", "empleado", empleado, res)
-      )
-      .catch(err => error("Hubo un error modificando el puesto", res, err))
-  }
-)
+app.put("/evento/puesto", $("empleado:evento:puesto"), (req, res) => {
+  //Cambio de puesto
+  var datos = req.body
+  //Buscar que si exista el puesto.
+  //Buscar que si exista el empleado
+  modificarPuesto(datos)
+    .then(empleado =>
+      estatusOk("Se creo el evento correctamente", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error modificando el puesto", res, err))
+})
 
 // <!--
 // =====================================
@@ -370,26 +353,20 @@ app.put(
 // =====================================
 // -->
 
-app.put(
-  "/evento/sueldo",
-  permisos.$("empleado:evento:sueldo"),
-  (req, res) => {
-    // Con un aumento de sueldo necesitamos
-    // comprobar que no supere el maximo.
+app.put("/evento/sueldo", $("empleado:evento:sueldo"), (req, res) => {
+  // Con un aumento de sueldo necesitamos
+  // comprobar que no supere el maximo.
 
-    var datos = {
-      _id: req.body._id,
-      nuevoSueldo: req.body.nuevoSueldo,
-      observacion: req.body.observacion
-    }
-
-    modificarSueldo(datos)
-      .then(empleado =>
-        estatusOk("Sueldo modificado", "empleado", empleado, res)
-      )
-      .catch(err => error("Hubo un error modificando el puesto", res, err))
+  var datos = {
+    _id: req.body._id,
+    nuevoSueldo: req.body.nuevoSueldo,
+    observacion: req.body.observacion,
   }
-)
+
+  modificarSueldo(datos)
+    .then(empleado => estatusOk("Sueldo modificado", "empleado", empleado, res))
+    .catch(err => error("Hubo un error modificando el puesto", res, err))
+})
 
 // <!--
 // =====================================
@@ -405,7 +382,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/baja",
-  permisos.$("empleado:evento:estatusLaboral:baja"),
+  $("empleado:evento:estatusLaboral:baja"),
   (req, res) => {
     var datos = req.body
 
@@ -420,7 +397,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/reingreso",
-  permisos.$("empleado:evento:estatusLaboral:reingreso"),
+  $("empleado:evento:estatusLaboral:reingreso"),
   (req, res) => {
     var datos = req.body
 
@@ -435,7 +412,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/incapacidad/enfermedadGeneral",
-    permisos.$("empleado:evento:estatusLaboral:incapacidad:enfermedadGeneral"),
+  $("empleado:evento:estatusLaboral:incapacidad:enfermedadGeneral"),
   (req, res) => {
     //Debe ser la estructura del estatusLaboral
     var datos = req.body
@@ -460,7 +437,7 @@ app.put(
 )
 app.put(
   "/evento/estatusLaboral/incapacidad/riesgoDeTrabajo",
-  permisos.$("empleado:evento:estatusLaboral:incapacidad:riesgoDeTrabajo"),
+  $("empleado:evento:estatusLaboral:incapacidad:riesgoDeTrabajo"),
   (req, res) => {
     //Debe ser la estructura del estatusLaboral
     var datos = req.body
@@ -486,7 +463,7 @@ app.put(
 
 app.put(
   "/evento/estatusLaboral/incapacidad/maternidad",
-  permisos.$("empleado:evento:estatusLaboral:incapacidad:maternidad"),
+  $("empleado:evento:estatusLaboral:incapacidad:maternidad"),
   (req, res) => {
     //Debe ser la estructura del estatusLaboral
     var datos = req.body
@@ -522,38 +499,34 @@ app.put(
 // =====================================
 // -->
 
-app.put(
-  "/evento/permiso",
-  permisos.$("empleado:evento:permiso"),
-  (req, res) => {
-    var datos = {
-      _id: req.body._id,
-      eventoPendienteDeDefinir: req.body.eventoPendienteDeDefinir,
-      conGoceDeSueldo: req.body.conGoceDeSueldo,
-      sinGoceDeSueldo: req.body.sinGoceDeSueldo,
-      motivo: req.body.motivo,
-      fechaDeInicio: req.body.fechaDeInicio,
-      fechaDeFinalizacion: req.body.fechaDeFinalizacion,
-      autorizacionSupervisor: req.body.autorizacionSupervisor,
-      autorizacionRH: req.body.autorizacionRH,
-      comentario: req.body.comentario
-    }
-    registrarPermiso
-      .nuevoPermiso(datos)
-      .then(empleado =>
-        estatusOk("Permiso actualizado", "empleado", empleado, res)
-      )
-      .catch(err => error("Hubo un error con el permiso", res, err))
+app.put("/evento/permiso", $("empleado:evento:permiso"), (req, res) => {
+  var datos = {
+    _id: req.body._id,
+    eventoPendienteDeDefinir: req.body.eventoPendienteDeDefinir,
+    conGoceDeSueldo: req.body.conGoceDeSueldo,
+    sinGoceDeSueldo: req.body.sinGoceDeSueldo,
+    motivo: req.body.motivo,
+    fechaDeInicio: req.body.fechaDeInicio,
+    fechaDeFinalizacion: req.body.fechaDeFinalizacion,
+    autorizacionSupervisor: req.body.autorizacionSupervisor,
+    autorizacionRH: req.body.autorizacionRH,
+    comentario: req.body.comentario,
   }
-)
+  registrarPermiso
+    .nuevoPermiso(datos)
+    .then(empleado =>
+      estatusOk("Permiso actualizado", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error con el permiso", res, err))
+})
 
 app.put(
   "/evento/permiso/autorizar",
-  permisos.$("empleado:evento:permiso:autorizar"),
+  $("empleado:evento:permiso:autorizar"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
-      idHisto: req.body.idHisto
+      idHisto: req.body.idHisto,
     }
     registrarPermiso
       .autorizar(datos)
@@ -565,12 +538,12 @@ app.put(
 )
 app.put(
   "/evento/permiso/rechazar",
-  permisos.$("empleado:evento:permiso:rechazar"),
+  $("empleado:evento:permiso:rechazar"),
   (req, res) => {
     var datos = {
       _id: req.body._id,
       idHisto: req.body.idHisto,
-      motivoRechazado: req.body.motivo
+      motivoRechazado: req.body.motivo,
     }
     registrarPermiso
       .rechazar(datos)
@@ -592,23 +565,19 @@ app.put(
 //  Vacaciones
 // =====================================
 // -->
-app.put(
-  "/evento/vacaciones",
-  permisos.$("empleado:evento:vacaciones"),
-  (req, res) => {
-    var datos = {
-      _id: req.body._id,
-      desde: req.body.desde,
-      hasta: req.body.hasta
-    }
-
-    registrarVacaciones(datos)
-      .then(empleado =>
-        estatusOk("Vacaciones registradas", "empleado", empleado, res)
-      )
-      .catch(err => error("Hubo un error registrando las vacaciones", res, err))
+app.put("/evento/vacaciones", $("empleado:evento:vacaciones"), (req, res) => {
+  var datos = {
+    _id: req.body._id,
+    desde: req.body.desde,
+    hasta: req.body.hasta,
   }
-)
+
+  registrarVacaciones(datos)
+    .then(empleado =>
+      estatusOk("Vacaciones registradas", "empleado", empleado, res)
+    )
+    .catch(err => error("Hubo un error registrando las vacaciones", res, err))
+})
 
 // <!--
 // =====================================
@@ -622,23 +591,17 @@ app.put(
 // =====================================
 // -->
 
-app.put(
-  "/evento/curso",
-  permisos.$("empleado:evento:curso"),
-  (req, res) => {
-    var datos = {
-      _id: req.body._id,
-      idCurso: req.body.idCurso,
-      fecha: req.body.fecha
-    }
-
-    registrarCurso(datos)
-      .then(empleado =>
-        estatusOk("Curso registrado", "empleado", empleado, res)
-      )
-      .catch(err => error("Hubo un error registrando el curso", res, err))
+app.put("/evento/curso", $("empleado:evento:curso"), (req, res) => {
+  var datos = {
+    _id: req.body._id,
+    idCurso: req.body.idCurso,
+    fecha: req.body.fecha,
   }
-)
+
+  registrarCurso(datos)
+    .then(empleado => estatusOk("Curso registrado", "empleado", empleado, res))
+    .catch(err => error("Hubo un error registrando el curso", res, err))
+})
 
 // <!--
 // =====================================
@@ -651,23 +614,19 @@ app.put(
 //  Registrar Acta
 // =====================================
 // -->
-app.put(
-  "/evento/castigo",
-  permisos.$("empleado:evento:castigo"),
-  (req, res) => {
-    var datos = {
-      _id: JSON.parse(req.body._id),
-      acta: req.files.acta,
-      fecha: JSON.parse(req.body.fecha)
-    }
-
-    datos.acta = moverDocumentoDeEmpleado(datos.acta, datos._id, "ACTA")
-
-    registrarActa(datos)
-      .then(empleado => estatusOk("Acta registrada", "empleado", empleado, res))
-      .catch(err => error("Hubo un error registrando el acta", res, err))
+app.put("/evento/castigo", $("empleado:evento:castigo"), (req, res) => {
+  var datos = {
+    _id: JSON.parse(req.body._id),
+    acta: req.files.acta,
+    fecha: JSON.parse(req.body.fecha),
   }
-)
+
+  datos.acta = moverDocumentoDeEmpleado(datos.acta, datos._id, "ACTA")
+
+  registrarActa(datos)
+    .then(empleado => estatusOk("Acta registrada", "empleado", empleado, res))
+    .catch(err => error("Hubo un error registrando el acta", res, err))
+})
 
 // <!--
 // =====================================
@@ -680,7 +639,7 @@ function moverDocumentoDeEmpleado(foto, id, tipoEvento) {
   if (!validar.extencionPermitida(foto) || !validar.esImagen(foto)) {
     return RESP._500(res, {
       msj: "Formato de imagen no valido",
-      err: "Extencion invalida"
+      err: "Extencion invalida",
     })
   }
 
@@ -711,12 +670,12 @@ function moverDocumentoDeEmpleado(foto, id, tipoEvento) {
 
 app.put(
   "/evento/felicitacion",
-  permisos.$("empleado:evento:felicitacion"),
+  $("empleado:evento:felicitacion"),
   (req, res) => {
     const datos = {
       _id: JSON.parse(req.body._id),
       documento: req.files.documento,
-      fecha: JSON.parse(req.body.fecha)
+      fecha: JSON.parse(req.body.fecha),
     }
 
     datos.documento = moverDocumentoDeEmpleado(
@@ -749,12 +708,12 @@ app.put(
 
 app.put(
   "/evento/amonestacion",
-  permisos.$("empleado:evento:amonestacion"),
+  $("empleado:evento:amonestacion"),
   (req, res) => {
     var datos = {
       _id: JSON.parse(req.body._id),
       documento: req.files.documento,
-      fecha: JSON.parse(req.body.fecha)
+      fecha: JSON.parse(req.body.fecha),
     }
 
     datos.documento = moverDocumentoDeEmpleado(
@@ -785,7 +744,7 @@ app.put(
 // =====================================
 // -->
 
-app.put("/evento/bono", permisos.$('empleado:evento:bono'), (req, res) => {
+app.put("/evento/bono", $("empleado:evento:bono"), (req, res) => {
   var datos = {
     _id: req.body._id,
     porAsistencia: req.body.porAsistencia,
@@ -793,7 +752,7 @@ app.put("/evento/bono", permisos.$('empleado:evento:bono'), (req, res) => {
     porProductividad: req.body.porProductividad,
     porResultados: req.body.porResultados,
     ayudaEscolarEventual: req.body.ayudaEscolarEventual,
-    otros: req.body.otros
+    otros: req.body.otros,
   }
 
   registrarBono(datos)
@@ -813,16 +772,22 @@ app.put("/evento/bono", permisos.$('empleado:evento:bono'), (req, res) => {
 // =====================================
 // -->
 
-app.delete("/evento/:idEmpleado/:idEvento", permisos.$('empleado:evento:eliminar'), (req, res) => {
-  var datos = {
-    _id: req.params.idEmpleado,
-    _idEvento: req.params.idEvento
-  }
+app.delete(
+  "/evento/:idEmpleado/:idEvento",
+  $("empleado:evento:eliminar"),
+  (req, res) => {
+    var datos = {
+      _id: req.params.idEmpleado,
+      _idEvento: req.params.idEvento,
+    }
 
-  eliminarEvento(datos)
-    .then(empleado => estatusOk("Evento eliminado", "empleado", empleado, res))
-    .catch(err => error("Hubo un error eliminando el evento", res, err))
-})
+    eliminarEvento(datos)
+      .then(empleado =>
+        estatusOk("Evento eliminado", "empleado", empleado, res)
+      )
+      .catch(err => error("Hubo un error eliminando el evento", res, err))
+  }
+)
 
 // <!--
 // =====================================
@@ -830,18 +795,15 @@ app.delete("/evento/:idEmpleado/:idEvento", permisos.$('empleado:evento:eliminar
 // =====================================
 // -->
 
-
-
-app.put("/ingreso-empleado", permisos.$('empleado:ingreso:modificar'),(req, res) => {
+app.put("/ingreso-empleado", $("empleado:ingreso:modificar"), (req, res) => {
   var datos = {
     idDelEmpleado: req.body.idEmpleado,
-    nuevaFecha: new Date(req.body.fecha)
+    nuevaFecha: new Date(req.body.fecha),
   }
-
 
   Empleado.findById(datos.idDelEmpleado)
     .exec()
-    .then((empleado) => {
+    .then(empleado => {
       empleado.fechaIngreso = datos.nuevaFecha
       return empleado.save()
     })
@@ -849,12 +811,10 @@ app.put("/ingreso-empleado", permisos.$('empleado:ingreso:modificar'),(req, res)
     .catch(err => error("Hubo un error añadiendo la fecha", res, err))
 })
 
-
-
 const error = (msj, res, err) => {
   return RESP._500(res, {
     msj: msj,
-    err: err
+    err: err,
   })
 }
 

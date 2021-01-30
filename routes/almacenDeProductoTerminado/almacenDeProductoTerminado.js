@@ -4,11 +4,11 @@ let app = express()
 var SKU = require("../../models/sku.model")
 
 const RESP = require("../../utils/respStatus")
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 app.get(
   "/",
-  permisos.$("almacenDeProductoTerminado:leer:todo"),
+  $("almacenDeProductoTerminado:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -54,7 +54,7 @@ app.get(
 
 app.get(
   "/buscar/:termino",
-  permisos.$("almacenProductoTerminado:leer:termino"),
+  $("almacenProductoTerminado:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -136,7 +136,7 @@ const erro = (res, err, msj) => {
  */
 app.get(
   "/consolidar/:idModelo",
-  permisos.$("almacenDeProductoTerminado:consolidar:modelo"),
+  $("almacenDeProductoTerminado:consolidar:modelo"),
   (req, res) => {
     const idModelo = req.params.idModelo
     SKU.findById(idModelo)

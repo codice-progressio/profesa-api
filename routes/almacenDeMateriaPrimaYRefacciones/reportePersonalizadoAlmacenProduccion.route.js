@@ -5,7 +5,7 @@ const RESP = require("../../utils/respStatus")
 var RepoPer = require("../../models/almacenRefaccionesYMateriaPrima/reportePersonalizadoAlmacenProduccion.model")
 
 var guard = require("express-jwt-permissions")()
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -16,7 +16,7 @@ const erro = (res, err, msj) => {
 
 app.post(
   "/",
-  permisos.$("reportePersonalizadoAlmacenDeProduccion:crear"),
+  $("reportePersonalizadoAlmacenDeProduccion:crear"),
   (req, res) => {
     const newRepo = new RepoPer(req.body)
     newRepo
@@ -34,7 +34,7 @@ app.post(
 
 app.get(
   "/",
-  permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:todo"),
+  $("reportePersonalizadoAlmacenDeProduccion:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -67,7 +67,7 @@ app.get(
 // -->
 app.get(
   "/:id",
-  permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:id"),
+  $("reportePersonalizadoAlmacenDeProduccion:leer:id"),
   (req, res) => {
     RepoPer.findById(req.params.id)
       .exec()
@@ -96,7 +96,7 @@ app.get(
 app.get(
   "/buscar/:termino",
   guard.check(
-    permisos.$("reportePersonalizadoAlmacenDeProduccion:leer:todo:termino")
+    $("reportePersonalizadoAlmacenDeProduccion:leer:todo:termino")
   ),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
@@ -201,7 +201,7 @@ app.get(
 //   -->
 app.put(
   "/",
-  permisos.$("reportePersonalizadoAlmacenDeProduccion:modificar"),
+  $("reportePersonalizadoAlmacenDeProduccion:modificar"),
   (req, res) => {
     RepoPer.findById(req.body._id)
       .exec()
@@ -237,7 +237,7 @@ app.put(
 
 app.delete(
   "/:id",
-  permisos.$("reportePersonalizadoAlmacenDeProduccion:eliminar"),
+  $("reportePersonalizadoAlmacenDeProduccion:eliminar"),
   (req, res) => {
     RepoPer.findById(req.params.id)
       .exec()

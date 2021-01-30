@@ -1,10 +1,8 @@
 var express = require("express")
 var app = express()
-var colores = require("../utils/colors")
 var Departamento = require("../models/departamento")
 
-var guard = require("express-jwt-permissions")()
-var permisos = require("../config/permisos.config")
+const $ = require("@codice-progressio/easy-permissions").$
 
 var RESP = require("../utils/respStatus")
 
@@ -15,63 +13,57 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$("departamento:crear"), (req, res) => {
+app.post("/", $("departamento:crear"), (req, res) => {
   return new Departamento(req.body)
     .save()
-    .then((departamento) => {
+    .then(departamento => {
       return RESP._200(res, "Se guardo el departamento", [
         { tipo: "departamento", datos: departamento },
       ])
     })
-    .catch((err) => erro(res, err, "Hubo un error guardando el departamento"))
+    .catch(err => erro(res, err, "Hubo un error guardando el departamento"))
 })
 
-app.get(
-  "/",
-  permisos.$("departamento:leer:todo"),
-  async (req, res) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "nombre")
+app.get("/", $("departamento:leer:todo"), async (req, res) => {
+  const desde = Number(req.query.desde || 0)
+  const limite = Number(req.query.limite || 30)
+  const sort = Number(req.query.sort || 1)
+  const campo = String(req.query.campo || "nombre")
 
-    const total = await Departamento.countDocuments().exec()
+  const total = await Departamento.countDocuments().exec()
 
-    Departamento.find()
-      .sort({ [campo]: sort })
-      .limit(limite)
-      .skip(desde)
-      .exec()
-      .then((departamentos) => {
-        return RESP._200(res, null, [
-          { tipo: "departamentos", datos: departamentos },
-          { tipo: "total", datos: total },
-        ])
-      })
-      .catch((err) =>
-        erro(res, err, "Hubo un error buscando los departamentos")
-      )
-  }
-)
+  Departamento.find()
+    .sort({ [campo]: sort })
+    .limit(limite)
+    .skip(desde)
+    .exec()
+    .then(departamentos => {
+      return RESP._200(res, null, [
+        { tipo: "departamentos", datos: departamentos },
+        { tipo: "total", datos: total },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los departamentos"))
+})
 
-app.get("/:id", permisos.$("departamento:leer:id"), (req, res) => {
+app.get("/:id", $("departamento:leer:id"), (req, res) => {
   Departamento.findById(req.params.id)
     .exec()
-    .then((departamento) => {
+    .then(departamento => {
       if (!departamento) throw "No existe el id"
 
       return RESP._200(res, null, [
         { tipo: "departamento", datos: departamento },
       ])
     })
-    .catch((err) =>
+    .catch(err =>
       erro(res, err, "Hubo un error buscando el departamento por su id")
     )
 })
 
 app.get(
   "/buscar/:termino",
-  permisos.$("departamento:leer:termino"),
+  $("departamento:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -80,7 +72,7 @@ app.get(
     const termino = String(
       req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     )
-    const b = (campo) => ({
+    const b = campo => ({
       [campo]: { $regex: termino, $options: "i" },
     })
 
@@ -88,7 +80,7 @@ app.get(
       $or: [],
     }
 
-    ;["nombre"].forEach((x) => $match.$or.push(b(x)))
+    ;["nombre"].forEach(x => $match.$or.push(b(x)))
 
     const total = await Departamento.aggregate([
       { $match },
@@ -107,7 +99,7 @@ app.get(
       { $sort: { [campo]: sort } },
     ])
       .exec()
-      .then((departamentos) => {
+      .then(departamentos => {
         //Si no hay resultados no se crea la propiedad
         // y mas adelante nos da error.
         if (!total.length) total.push({ total: 0 })
@@ -117,7 +109,7 @@ app.get(
           { tipo: "total", datos: total.pop().total },
         ])
       })
-      .catch((err) =>
+      .catch(err =>
         erro(
           res,
           err,
@@ -127,68 +119,54 @@ app.get(
   }
 )
 
-app.put("/", permisos.$("departamento:modificar"), (req, res) => {
+app.put("/", $("departamento:modificar"), (req, res) => {
   Departamento.findById(req.body._id)
     .exec()
-    .then((departamento) => {
+    .then(departamento => {
       if (!departamento) {
         throw "No existe el departamento"
       }
 
-      let a = ["nombre", "area"].forEach((x) => {
+      let a = ["nombre", "area"].forEach(x => {
         departamento[x] = req.body[x]
       })
 
       return departamento.save()
     })
-    .then((departamento) => {
+    .then(departamento => {
       return RESP._200(res, "Se modifico correctamente", [
         { tipo: "departamento", datos: departamento },
       ])
     })
-    .catch((err) =>
-      erro(res, err, "Hubo un error actualizando el departamento")
-    )
+    .catch(err => erro(res, err, "Hubo un error actualizando el departamento"))
 })
 
-app.delete(
-  "/:id",
-  permisos.$("departamento:eliminar"),
-  (req, res) => {
-    Departamento.findById(req.params.id)
-      .exec()
-      .then((departamento) => {
-        if (!departamento) throw "No existe el departamento"
+app.delete("/:id", $("departamento:eliminar"), (req, res) => {
+  Departamento.findById(req.params.id)
+    .exec()
+    .then(departamento => {
+      if (!departamento) throw "No existe el departamento"
 
-        return departamento.remove()
-      })
-      .then((departamento) => {
-        return RESP._200(res, "Se elimino de manera correcta", [
-          { tipo: "departamento", datos: departamento },
-        ])
-      })
-      .catch((err) =>
-        erro(res, err, "Hubo un error eliminando el departamento")
-      )
-  }
-)
+      return departamento.remove()
+    })
+    .then(departamento => {
+      return RESP._200(res, "Se elimino de manera correcta", [
+        { tipo: "departamento", datos: departamento },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error eliminando el departamento"))
+})
 
-app.post(
-  "/buscar_multiple",
-  permisos.$("departamento:leer:multiple"),
-  (req, res) => {
-    Departamento.find({ _id: { $in: req.body.busqueda } })
-      .exec()
-      .then((departamentos) => {
-        return RESP._200(res, null, [
-          { tipo: "departamentos", datos: departamentos },
-        ])
-      })
-      .catch((err) =>
-        erro(res, err, "Hubo un error buscando los departamentos")
-      )
-  }
-)
+app.post("/buscar_multiple", $("departamento:leer:multiple"), (req, res) => {
+  Departamento.find({ _id: { $in: req.body.busqueda } })
+    .exec()
+    .then(departamentos => {
+      return RESP._200(res, null, [
+        { tipo: "departamentos", datos: departamentos },
+      ])
+    })
+    .catch(err => erro(res, err, "Hubo un error buscando los departamentos"))
+})
 
 // Esto exporta el modulo para poderlo utilizarlo fuera de este archivo.
 module.exports = app

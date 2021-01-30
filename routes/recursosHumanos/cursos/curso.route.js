@@ -5,7 +5,7 @@ var Curso = require("../../../models/recursosHumanos/cursos/curso.model")
 const RESP = require("../../../utils/respStatus")
 
 var guard =  require('express-jwt-permissions')()
-var permisos = require('../../../config/permisos.config')
+const $ = require('@codice-progressio/easy-permissions').$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$('curso:crear'), (req, res) => {
+app.post("/", $('curso:crear'), (req, res) => {
   return new Curso(req.body)
     .save()
     .then(curso => {
@@ -25,7 +25,7 @@ app.post("/", permisos.$('curso:crear'), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardo el curso"))
 })
 
-app.get("/", permisos.$('curso:leer:todo'), async (req, res) => {
+app.get("/", $('curso:leer:todo'), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -47,7 +47,7 @@ app.get("/", permisos.$('curso:leer:todo'), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando las cursos"))
 })
 
-app.get("/:id", permisos.$('curso:leer:id'), (req, res) => {
+app.get("/:id", $('curso:leer:id'), (req, res) => {
   Curso.findById(req.params.id)
     .exec()
     .then(curso => {
@@ -58,7 +58,7 @@ app.get("/:id", permisos.$('curso:leer:id'), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el curso por su id"))
 })
 
-app.get("/buscar/:termino", permisos.$('curso:leer:termino'), async (req, res) => {
+app.get("/buscar/:termino", $('curso:leer:termino'), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -111,7 +111,7 @@ app.get("/buscar/:termino", permisos.$('curso:leer:termino'), async (req, res) =
     )
 })
 
-app.put("/", permisos.$('curso:modificar'), (req, res) => {
+app.put("/", $('curso:modificar'), (req, res) => {
   Curso.findById(req.body._id)
     .exec()
     .then(curso => {
@@ -142,7 +142,7 @@ app.put("/", permisos.$('curso:modificar'), (req, res) => {
 })
 
 
-app.delete("/:id", permisos.$('curso:eliminar'),(req, res) => {
+app.delete("/:id", $('curso:eliminar'),(req, res) => {
   Curso.findById(req.params.id)
     .exec()
     .then(curso => {
@@ -158,7 +158,7 @@ app.delete("/:id", permisos.$('curso:eliminar'),(req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el curso"))
 })
 
-app.get("/tipoDeCurso/troncoComun", permisos.$('curso:leer:tipoDeCurso:troncoComun'), (req, res) => {
+app.get("/tipoDeCurso/troncoComun", $('curso:leer:tipoDeCurso:troncoComun'), (req, res) => {
   Curso.find({ esCursoDeTroncoComun: true })
     .exec()
     .then(cursos => {

@@ -1,6 +1,6 @@
 //importar rutas.
 let usuarioRoutes = require("../routes/usuario.route")
-let loginRoutes = require("../routes/login/login")
+let loginRoutes = require("../routes/login/login.route")
 let uploadRoutes = require("../routes/upload")
 let imagenesRoutes = require("../routes/imagenes")
 
@@ -42,7 +42,7 @@ var ProgramacionTransformacion = require("../routes/ingenieria/programacionTrans
 
 var jwt = require("express-jwt")
 var seed = require("../config/config").SEED
-var permisos = require("../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 module.exports.ROUTES = function (app) {
   //Aseguramos todo menos el login y paremetros. Internamente paraemtros
@@ -81,7 +81,7 @@ module.exports.ROUTES = function (app) {
   app.use("/login", loginRoutes)
 
   //Para usar esta parte debe tener permisos de login
-  app.use(permisos.$("login"))
+  app.use($("login"))
   app.use("/changelogs", Changelogs)
 
   app.use("/programacionTransformacion", ProgramacionTransformacion)

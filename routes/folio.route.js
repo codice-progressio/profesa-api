@@ -14,7 +14,7 @@ const SKU = require("../models/sku.model")
 const Maquina = require("../models/maquina")
 const Parametros = require("../models/defautls/parametros.model")
 
-var permisos = require("../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -23,7 +23,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.delete("/:id", permisos.$("folio:eliminar"), (req, res) => {
+app.delete("/:id", $("folio:eliminar"), (req, res) => {
   const id = req.params.id
 
   if (!id) {
@@ -48,7 +48,7 @@ app.delete("/:id", permisos.$("folio:eliminar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el folio"))
 })
 
-app.post("/", permisos.$("folio:crear"), (req, res) => {
+app.post("/", $("folio:crear"), (req, res) => {
   new Folio(req.body)
     .save()
     .then(folio => {
@@ -59,7 +59,7 @@ app.post("/", permisos.$("folio:crear"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando el folio"))
 })
 
-app.get("/buscar/id/:id", permisos.$("folio:leer:id"), (req, res) => {
+app.get("/buscar/id/:id", $("folio:leer:id"), (req, res) => {
   Folio.findById(req.params.id)
     .exec()
     .then(folio => {
@@ -70,7 +70,7 @@ app.get("/buscar/id/:id", permisos.$("folio:leer:id"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error obteniendo el folio por su id"))
 })
 
-app.put("/", permisos.$("folio:modificar"), (req, res) => {
+app.put("/", $("folio:modificar"), (req, res) => {
   Folio.findById(req.body._id)
     .exec()
     .then(folio => {
@@ -125,7 +125,7 @@ app.put("/marcarPEdidosComoImpresos", (req, res, next) => {
  */
 app.post(
   "/ordenesImpresas",
-  permisos.$("folio:modificar:senalarOrdenesImpresas"),
+  $("folio:modificar:senalarOrdenesImpresas"),
   (req, res) => {
     Folio.findById(req.body._id)
       .then(folioEncontrado => {
@@ -152,7 +152,7 @@ app.post(
 
 app.get(
   "/detalle/orden/:folio/:pedido/:orden",
-  permisos.$("folio:detalle:orden"),
+  $("folio:detalle:orden"),
   (req, res) => {
     Folio.findById(req.params.folio)
       .exec()
@@ -175,7 +175,7 @@ app.get(
 )
 app.get(
   "/detalle/pedido/:folio/:pedido",
-  permisos.$("folio:detalle:pedido"),
+  $("folio:detalle:pedido"),
   (req, res) => {
     Folio.findById(req.params.folio)
       .exec()
@@ -196,7 +196,7 @@ app.get(
 )
 app.get(
   "/detalle/folio/:folio",
-  permisos.$("folio:detalle:folio"),
+  $("folio:detalle:folio"),
   (req, res) => {
     Folio.findById(req.params.folio)
       .exec()
@@ -214,7 +214,7 @@ app.get(
 
 app.get(
   "/reporte/paraRevision",
-  permisos.$("folio:reporte:paraRevision"),
+  $("folio:reporte:paraRevision"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 300)
@@ -311,7 +311,7 @@ app.get(
   }
 )
 
-app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
+app.get("/filtrar", $("folio:filtrar"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -516,7 +516,7 @@ app.get("/filtrar", permisos.$("folio:filtrar"), async (req, res) => {
 
 app.get(
   "/porEntregarAProduccion/:vendedor",
-  permisos.$("folio:porEntregarAProduccion:vendedor"),
+  $("folio:porEntregarAProduccion:vendedor"),
   (req, res) => {
     Folio.aggregate([
       {
@@ -560,7 +560,7 @@ app.get(
 
 app.put(
   "/retornarAlVendedor",
-  permisos.$("folio:retornarAlVendedor"),
+  $("folio:retornarAlVendedor"),
   (req, res) => {
     const id = req.body.id
 
@@ -596,7 +596,7 @@ app.put(
  */
 app.put(
   "/entregarARevision",
-  permisos.$("folio:entregarARevision"),
+  $("folio:entregarARevision"),
   (req, res) => {
     Folio.updateOne(
       { _id: ObjectId(req.body._id) },
@@ -620,7 +620,7 @@ app.put(
 
 app.put(
   "/liberarParaProduccion",
-  permisos.$("folio:liberarParaProduccion"),
+  $("folio:liberarParaProduccion"),
   (req, res) => {
     const procesosFijos = {
       procesosIniciales: [],

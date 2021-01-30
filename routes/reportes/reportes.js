@@ -17,7 +17,7 @@ const Empleado = require("../../models/recursosHumanos/empleados/empleado.model"
 const mongoose = require("mongoose")
 
 var guard = require("express-jwt-permissions")()
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 const { exists } = require("../../models/procesos/proceso")
 
 // <!--
@@ -36,7 +36,7 @@ const erro = (res, err, msj) => {
 
 app.get(
   "/productoTerminado/faltantes",
-  permisos.$("reportes:productoTerminado:faltes"),
+  $("reportes:productoTerminado:faltes"),
   (req, res) => {
     // Genera los reportes faltanes.
 
@@ -271,7 +271,7 @@ app.get("/productoTerminado/entradas", (req, res, next) => {
 
 app.get(
   "/almacenDeProduccion/faltantes",
-  permisos.$("reportes:almacenDeProduccion:faltantes"),
+  $("reportes:almacenDeProduccion:faltantes"),
   (req, res) => {
     var datosReporte = null
     // Genera los reportes faltanes.
@@ -333,7 +333,7 @@ app.get(
 
 app.get(
   "/almacenDeProduccion/personalizado/:id",
-  permisos.$("reportes:almacenDeProduccion:personalizado:id"),
+  $("reportes:almacenDeProduccion:personalizado:id"),
   (req, res) => {
     var articulosRepo = null
 

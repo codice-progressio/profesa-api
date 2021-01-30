@@ -1,5 +1,5 @@
 const Empleado = require("../../../models/recursosHumanos/empleados/empleado.model")
-const Usuario = require("../../../models/usuario")
+const Usuario = require("../../../models/usuario.model")
 
 module.exports.baja = function (datos) {
   console.log(datos)

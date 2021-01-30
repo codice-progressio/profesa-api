@@ -2,11 +2,10 @@
 const express = require("express")
 
 const SKU = require("../../models/sku.model")
-const RESP = require("../../utils/respStatus")
 const app = express()
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
-const $ = require("../../config/permisos.config").$
+const $ = require("@codice-progressio/easy-permissions").$
 // const fs = require("fs")
 const { Storage } = require("@google-cloud/storage")
 const Sharp = require("sharp")
@@ -50,23 +49,19 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post(
-  "/",
-  $("sku:crear", undefined, "Crea un nuevo SKU"),
-  (req, res, next) => {
-    new SKU(req.body)
-      .save()
-      .then(sku => {
-        return res.send(sku)
-      })
-      .catch(err => next(err))
-  }
-)
+app.post("/", $("sku:crear", "Crea un nuevo SKU"), (req, res, next) => {
+  new SKU(req.body)
+    .save()
+    .then(sku => {
+      return res.send(sku)
+    })
+    .catch(err => next(err))
+})
 
 //Agregamos una imagen al sku
 app.put(
   "/imagen",
-  $("sku:imagen:agregar", undefined, "Agregar una imagen al SKU"),
+  $("sku:imagen:agregar", "Agregar una imagen al SKU"),
   upload.single("img"),
   (req, params, next) => {
     // Con este middleware redimiensionamos el tamaño de
@@ -135,7 +130,7 @@ app.put(
 //Eliminamos una imagen
 app.delete(
   "/imagen/:id/:idImg",
-  $("sku:imagen:eliminar", undefined, "Eliminar una imagen del sku"),
+  $("sku:imagen:eliminar", "Eliminar una imagen del sku"),
   async (req, res, next) => {
     // El id del sku
     let id = req.params.id
@@ -177,7 +172,7 @@ function eliminarImagenDeBucket(nombre) {
 
 app.get(
   "/",
-  $("sku:leer:todo", undefined, "Muestra los datos generales de los sku"),
+  $("sku:leer:todo", "Muestra los datos generales de los sku"),
   async (req, res, next) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -196,7 +191,7 @@ app.get(
 
 app.get(
   "/buscar/id/:id",
-  $("sku:leer:id", undefined, "Obtiene un sku por su id"),
+  $("sku:leer:id", "Obtiene un sku por su id"),
   (req, res, next) => {
     SKU.findById(req.params.id)
       .exec()
@@ -264,39 +259,31 @@ app.get("/buscar/etiquetas", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-app.put(
-  "/",
-  $("sku:modificar", undefined, "Modificar sku"),
-  (req, res, next) => {
-    SKU.findById(req.body._id)
-      .exec()
-      .then(sku => {
-        if (!sku)
-          throw "No existe el sku"
-          // Campos modificables.
-        ;[
-          "nombreCompleto",
-          "unidad",
-          "descripcion",
-          "puedoProducirlo",
-          "puedoComprarlo",
-          "puedoVenderlo",
-        ].forEach(x => (sku[x] = req.body[x]))
+app.put("/", $("sku:modificar", "Modificar sku"), (req, res, next) => {
+  SKU.findById(req.body._id)
+    .exec()
+    .then(sku => {
+      if (!sku)
+        throw "No existe el sku"
+        // Campos modificables.
+      ;[
+        "nombreCompleto",
+        "unidad",
+        "descripcion",
+        "puedoProducirlo",
+        "puedoComprarlo",
+        "puedoVenderlo",
+      ].forEach(x => (sku[x] = req.body[x]))
 
-        return sku.save()
-      })
-      .then(sku => res.send(sku))
-      .catch(err => next(err))
-  }
-)
+      return sku.save()
+    })
+    .then(sku => res.send(sku))
+    .catch(err => next(err))
+})
 
 app.put(
   "/minimo-maximo",
-  $(
-    "sku:modificar:stock-mimimo-maximo",
-    undefined,
-    "Modificar el stock minimo y maximo"
-  ),
+  $("sku:modificar:stock-mimimo-maximo", "Modificar el stock minimo y maximo"),
   (req, res, next) => {
     SKU.findById(req.body._id)
       .exec()
@@ -351,17 +338,21 @@ app.delete("/:id", $("sku:eliminar"), async (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.delete("/:id/etiqueta/:etiqueta", $("sku:eliminar"), (req, res) => {
-  SKU.findById(req.params.id)
-    .exec()
-    .then(sku => {
-      if (!sku) throw "No existe el sku"
-      sku.etiquetas.pull(req.params.etiqueta)
-      return sku.save()
-    })
-    .then(sku => res.send(sku))
-    .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
-})
+app.delete(
+  "/:id/etiqueta/:etiqueta",
+  $("sku:eliminar:etiqueta"),
+  (req, res) => {
+    SKU.findById(req.params.id)
+      .exec()
+      .then(sku => {
+        if (!sku) throw "No existe el sku"
+        sku.etiquetas.pull(req.params.etiqueta)
+        return sku.save()
+      })
+      .then(sku => res.send(sku))
+      .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
+  }
+)
 
 function recalcularExistencia(sku) {
   // Recalculamos la existencia.
@@ -418,7 +409,7 @@ function recalcularExistenciaPorAlmacenes(sku) {
 // Crea un nuevo lote en el sku
 app.post(
   "/lote/crear/:id",
-  $("sku:lote:crear", undefined, "Crear lotes nuevos"),
+  $("sku:lote:crear", "Crear lotes nuevos"),
   (req, res, next) => {
     SKU.findById(req.params.id)
       .select("lotes")
@@ -471,8 +462,8 @@ app.get("/lote/:id", (req, res, next) => {
     .exec()
     .then(sku => {
       if (!sku) throw "No existe el id"
-      
-      // Por defecto no vemos los lotes con existencia. 
+
+      // Por defecto no vemos los lotes con existencia.
       if (req.query.sinExistencia)
         sku.lotes = sku.lotes.filter(x => x.existencia > 0)
       // Solo contiene id y lotes
@@ -484,11 +475,7 @@ app.get("/lote/:id", (req, res, next) => {
 // Crea un movimento  lote seleccionado
 app.put(
   "/lote/movimiento/agregar/:id/:idLote/",
-  $(
-    "sku:lote:movimiento:Agregar",
-    undefined,
-    "Agregar entradas o salidas a un lote."
-  ),
+  $("sku:lote:movimiento:Agregar", "Agregar entradas o salidas a un lote."),
   (req, res, next) => {
     let id = req.params.id
     let idLote = req.params.idLote
@@ -515,11 +502,7 @@ app.put(
 // Elimina un movimento y recalcula el valor de las existencias.
 app.delete(
   "/lote/movimiento/eliminar/:id/:idLote/:idMovimiento",
-  $(
-    "sku:lote:movimiento:Eliminar",
-    undefined,
-    "Eliminar movimentos de un lote"
-  ),
+  $("sku:lote:movimiento:Eliminar", "Eliminar movimentos de un lote"),
   (req, res, next) => {
     let id = req.params.id
     let idLote = req.params.idLote
@@ -550,7 +533,6 @@ app.put(
   "/lote/movimiento/transferir-entre-almacenes/:id/:lote",
   $(
     "sku:lote:movimiento:transferir-entre-almacenes",
-    undefined,
     "Hacer transfericias entre dos almacenes."
   ),
   (req, res, next) => {
@@ -594,11 +576,7 @@ app.put(
 // Modifica el movimiento seleccinado y recalcula el valor de las existencias.
 app.put(
   "/lote/movimiento/modificar/:id/:idLote/:idMovimiento",
-  $(
-    "sku:lote:movimiento:modificar",
-    undefined,
-    "Modificar un movimento existente"
-  ),
+  $("sku:lote:movimiento:modificar", "Modificar un movimento existente"),
   (req, res, next) => {
     let id = req.params.id
     let idLote = req.params.idLote
@@ -630,7 +608,7 @@ app.put(
 // Elimina el lote seleccionado y afecta la cantidad total del sku
 app.delete(
   "/lote/eliminar/:id/:idLote",
-  $("sku:lote:eliminar", undefined, "Eliminar lotes completamente"),
+  $("sku:lote:eliminar", "Eliminar lotes completamente"),
   (req, res, next) => {
     let id = req.params.id
     let idLote = req.params.idLote

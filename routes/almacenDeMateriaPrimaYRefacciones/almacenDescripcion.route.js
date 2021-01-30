@@ -5,7 +5,7 @@ var AlmacenDescripcion = require("../../models/almacenRefaccionesYMateriaPrima/a
 var RESP = require("../../utils/respStatus")
 
 var guard = require("express-jwt-permissions")()
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -16,7 +16,7 @@ const erro = (res, err, msj) => {
 
 app.get(
   "/",
-  permisos.$("almacenDescripcion:leer:todo"),
+  $("almacenDescripcion:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -42,7 +42,7 @@ app.get(
 
 app.get(
   "/:id",
-  permisos.$("almacenDescripcion:leer:id"),
+  $("almacenDescripcion:leer:id"),
   (req, res) => {
     AlmacenDescripcion.findById(req.params.id)
       .exec()
@@ -58,7 +58,7 @@ app.get(
 
 app.get(
   "/buscar/:termino",
-  permisos.$("almacenDescripcion:leer:termino"),
+  $("almacenDescripcion:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -111,7 +111,7 @@ app.get(
 
 app.post(
   "/",
-  permisos.$("almacenDescripcion:crear"),
+  $("almacenDescripcion:crear"),
   (req, res) => {
     const alma = new AlmacenDescripcion(req.body)
 
@@ -128,7 +128,7 @@ app.post(
 
 app.put(
   "/",
-  permisos.$("almacenDescripcion:modificar"),
+  $("almacenDescripcion:modificar"),
   (req, res) => {
     const alma = req.body
 
@@ -155,7 +155,7 @@ app.put(
 
 app.delete(
   "/:id",
-  permisos.$("almacenDescripcion:eliminar"),
+  $("almacenDescripcion:eliminar"),
   (req, res) => {
     AlmacenDescripcion.findById(req.params.id)
       .exec()

@@ -2,7 +2,7 @@ const express = require('express');
 const app = express();
 const RESP = require('../../utils/respStatus');
 const SKU = require('../../models/sku.model');
-const permisos = require('../../config/permisos.config')
+const $ =  require('@codice-progressio/easy-permissions').$
 
 /**
  * Guardar nuevo lote. 
@@ -10,7 +10,7 @@ const permisos = require('../../config/permisos.config')
  */
 app.post(
   "/",
-  permisos.$("almacenDeProductoTerminado:lote:crear"),
+  $("almacenDeProductoTerminado:lote:crear"),
   (req, res) => {
     let idSKU = req.body._id
     let lote = req.body.lote

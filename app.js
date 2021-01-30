@@ -1,4 +1,13 @@
 require("dotenv").config()
+const easyPermissions = require("@codice-progressio/easy-permissions")
+// Generación de permisos
+
+easyPermissions.config({
+  modoProduccion: process.env.PRODUCCION === "true",
+  generarPermisos: false,
+})
+
+console.log(easyPermissions.configuraciones)
 const compression = require("compression")
 // Requires
 const express = require("express")

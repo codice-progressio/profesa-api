@@ -4,7 +4,7 @@ const Requisicion = require("../../models/requisiciones/requisicion.model")
 const RESP = require("../../utils/respStatus")
 
 const guard = require("express-jwt-permissions")()
-const permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const ObjectId = require("mongoose").Types.ObjectId
 
@@ -31,7 +31,7 @@ function actualizarHistorial(r, user) {
   return r
 }
 
-app.post("/", permisos.$("requisicion:crear"), (req, res) => {
+app.post("/", $("requisicion:crear"), (req, res) => {
   const r = new Requisicion(req.body)
   r.usuario = req.user
 
@@ -47,7 +47,7 @@ app.post("/", permisos.$("requisicion:crear"), (req, res) => {
     })
 })
 
-app.put("/", permisos.$("requisicion:modificar"), (req, res) => {
+app.put("/", $("requisicion:modificar"), (req, res) => {
   Requisicion.findById(req.body._id)
     .exec()
     .then(requisicion => {
@@ -82,7 +82,7 @@ app.put("/", permisos.$("requisicion:modificar"), (req, res) => {
     })
 })
 
-app.delete("/:id", permisos.$("requisicion:eliminar"), (req, res) => {
+app.delete("/:id", $("requisicion:eliminar"), (req, res) => {
   Requisicion.findById(req.params.id)
     .exec()
     .then(requisicion => {
@@ -105,7 +105,7 @@ app.delete("/:id", permisos.$("requisicion:eliminar"), (req, res) => {
     })
 })
 
-app.get("/buscar/id/:id", permisos.$("requisicion:leer:id"), (req, res) => {
+app.get("/buscar/id/:id", $("requisicion:leer:id"), (req, res) => {
   Requisicion.findById(req.params.id)
     .exec()
     .then(requisicion => {
@@ -127,7 +127,7 @@ app.get("/buscar/id/:id", permisos.$("requisicion:leer:id"), (req, res) => {
 // =====================================
 // -->
 
-app.get("/", permisos.$("requisicion:leer:todo"), async (req, res) => {
+app.get("/", $("requisicion:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -254,7 +254,7 @@ function estatusEsRequisicion(requisicion, requisicionBody, user) {
 
 app.put(
   "/estatus/actualizar/:id",
-  permisos.$("requisicion:estatus:actualizar"),
+  $("requisicion:estatus:actualizar"),
   (req, res) => {
     obtenerRequisicion(req.params.id)
       // Pasamos toda la requisicion pero solo vamos a utilizar

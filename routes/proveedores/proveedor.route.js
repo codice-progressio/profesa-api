@@ -1,7 +1,7 @@
 //Esto es necesario
 const app = require("express")()
 const Proveedor = require("../../models/proveedores/proveedor.model")
-const $ = require("../../config/permisos.config").$
+const $ = require("@codice-progressio/easy-permissions").$
 const sku = require("../../models/sku.model")
 
 app.post("/", $("proveedor:crear"), (req, res) => {

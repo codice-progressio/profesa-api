@@ -1,4 +1,4 @@
-var $ = require("../../config/permisos.config").$
+var $ = require("@codice-progressio/easy-permissions").$
 
 module.exports = function (permisos) {
   var menusSeleccionables = generarMenus()

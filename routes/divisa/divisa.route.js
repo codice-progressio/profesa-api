@@ -8,7 +8,7 @@ const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 
 var guard = require("express-jwt-permissions")()
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -17,7 +17,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$("divisa:crear"), (req, res) => {
+app.post("/", $("divisa:crear"), (req, res) => {
   return new Divisa(req.body)
     .save()
     .then(divisa => {
@@ -28,7 +28,7 @@ app.post("/", permisos.$("divisa:crear"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error guardando la divisa"))
 })
 
-app.get("/", permisos.$("divisa:leer:todo"), async (req, res) => {
+app.get("/", $("divisa:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -50,7 +50,7 @@ app.get("/", permisos.$("divisa:leer:todo"), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando las divisas"))
 })
 
-app.get("/:id", permisos.$("divisa:leer:id"), (req, res) => {
+app.get("/:id", $("divisa:leer:id"), (req, res) => {
   Divisa.findById(req.params.id)
     .exec()
     .then(divisa => {
@@ -63,7 +63,7 @@ app.get("/:id", permisos.$("divisa:leer:id"), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  permisos.$("divisa:leer:termino"),
+  $("divisa:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -119,7 +119,7 @@ app.get(
   }
 )
 
-app.put("/", permisos.$("divisa:modificar"), (req, res) => {
+app.put("/", $("divisa:modificar"), (req, res) => {
   Divisa.findById(req.body._id)
     .exec()
     .then(divisa => {
@@ -141,7 +141,7 @@ app.put("/", permisos.$("divisa:modificar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error actualizando la divisa"))
 })
 
-app.delete("/:id", permisos.$("divisa:eliminar"), (req, res) => {
+app.delete("/:id", $("divisa:eliminar"), (req, res) => {
   Divisa.findById(req.params.id)
     .exec()
     .then(divisa => {

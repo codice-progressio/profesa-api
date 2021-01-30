@@ -3,9 +3,9 @@ const app = express()
 
 const Changelog = require("../models/changelogs.model")
 const pjson = require("../package.json")
-var permisos = require("../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
-app.put("/", permisos.$("SUPER_ADMIN"), (req, res, next) => {
+app.put("/", $("SUPER_ADMIN"), (req, res, next) => {
   Changelog.findOne()
     .exec()
     .then(x => {

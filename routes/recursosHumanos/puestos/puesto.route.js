@@ -10,8 +10,7 @@ const fs = require("fs")
 const fileUpload = require("express-fileupload")
 const populacionManual = require("./puesto.route.aggregate")
 
-var guard =  require('express-jwt-permissions')()
-var permisos = require('../../../config/permisos.config')
+const $ =  require('@codice-progressio/easy-permissions').$
 
 app.use(fileUpload())
 
@@ -22,7 +21,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.get("/", permisos.$('puesto:leer:todo'),(req, res) => {
+app.get("/", $('puesto:leer:todo'),(req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -63,7 +62,7 @@ app.get("/", permisos.$('puesto:leer:todo'),(req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los puestos"))
 })
 
-app.get("/:id", permisos.$('puesto:leer:id'), (req, res) => {
+app.get("/:id", $('puesto:leer:id'), (req, res) => {
   Puesto.aggregate(
     [
       {
@@ -80,7 +79,7 @@ app.get("/:id", permisos.$('puesto:leer:id'), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando el id del puesto"))
 })
 
-app.get("/buscar/:termino", permisos.$('puesto:leer:termino'), async (req, res) => {
+app.get("/buscar/:termino", $('puesto:leer:termino'), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -141,7 +140,7 @@ app.get("/buscar/:termino", permisos.$('puesto:leer:termino'), async (req, res) 
  * @returns
  */
 
-app.post("/", permisos.$('puesto:crear'), (req, res) => {
+app.post("/", $('puesto:crear'), (req, res) => {
   const puesto = new Puesto(parsearBody(req.body))
 
   const organigramaFile = req.files ? req.files.organigrama : null
@@ -177,7 +176,7 @@ app.post("/", permisos.$('puesto:crear'), (req, res) => {
     })
 })
 
-app.put("/", permisos.$('puesto:modificar'),(req, res) => {
+app.put("/", $('puesto:modificar'),(req, res) => {
   const puesto = parsearBody(req.body)
   const organigramaFile = req.files ? req.files.organigrama : null
 
@@ -246,7 +245,7 @@ function cargarOrganigrama(organigramaFile, id, nombreAnterior = "") {
   return nombre
 }
 
-app.post("/multiple", permisos.$('XXXXX:multiplePuesto'), (req, res) => {
+app.post("/multiple", $('XXXXX:multiplePuesto'), (req, res) => {
   Puesto.find({ _id: { $in: req.body } })
     .exec()
     .then(puestos => {
@@ -260,7 +259,7 @@ app.post("/multiple", permisos.$('XXXXX:multiplePuesto'), (req, res) => {
     })
 })
 
-app.delete("/:id", permisos.$('puesto:eliminar'),(req, res) => {
+app.delete("/:id", $('puesto:eliminar'),(req, res) => {
   Puesto.findById(req.params.id)
     .exec()
     .then(resp => {

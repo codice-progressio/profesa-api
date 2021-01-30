@@ -8,7 +8,7 @@ const Departamento = require("../../models/departamento")
 const Folio = require("../../models/folios/folio")
 const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
-var permisos = require("../../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 var guard = require("express-jwt-permissions")()
 
 const erro = (res, err, msj) => {
@@ -20,7 +20,7 @@ const erro = (res, err, msj) => {
 
 app.post(
   "/asignar",
-  permisos.$("programacionTransformacion:asignar"),
+  $("programacionTransformacion:asignar"),
   (req, res) => {
     //Recibimos una orden ligera.
     const datos = req.body
@@ -46,7 +46,7 @@ app.post(
 
 app.get(
   "/ordenesPorAsignar",
-  permisos.$("programacionTransformacion:ordenesPorAsignar"),
+  $("programacionTransformacion:ordenesPorAsignar"),
   async (req, res) => {
     //El id actual de transformacion
     const idTransformacion = req.parametros.departamentoTransformacion
@@ -409,7 +409,7 @@ function obtenerPaso(orden) {
 
 app.put(
   "/actualizarUbicacion",
-  permisos.$("programacionTransformacion:actualizarUbicacion"),
+  $("programacionTransformacion:actualizarUbicacion"),
   (req, res) => {
     var datos = null
     Maquina.aggregate([

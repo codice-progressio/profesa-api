@@ -4,8 +4,8 @@ var app = express()
 var Parametros = require("../../models/defautls/parametros.model")
 var guard = require("express-jwt-permissions")()
 var bcrypt = require("bcryptjs")
-var Usuario = require("../../models/usuario")
-var permisos = require("../../config/permisos.config")
+var Usuario = require("../../models/usuario.model")
+const $ =  require("@codice-progressio/easy-permissions").$
 var Proceso = require("../../models/procesos/proceso")
 var Departamento = require("../../models/departamento")
 
@@ -105,7 +105,7 @@ app.post("/super-admin/crear", async (req, res, next) => {
 
 app.get(
   "/localizacionDeOrdenes",
-  permisos.$("parametros:localizacionDeOrdenes"),
+  $("parametros:localizacionDeOrdenes"),
   (req, res, next) => {
     Parametros.findOne({})
       .populate("localizacionDeOrdenes.procesosIniciales", null, "Proceso")
@@ -132,7 +132,7 @@ app.get(
 
 app.get(
   "/procesosEspeciales",
-  permisos.$("parametros:procesosEspeciales"),
+  $("parametros:procesosEspeciales"),
   (req, res) => {
     Proceso.find({
       _id: { $in: req.parametros.procesosEspeciales },
@@ -143,7 +143,7 @@ app.get(
 )
 app.get(
   "/departamentoTransformacion",
-  permisos.$("parametros:departamentoTransformacion"),
+  $("parametros:departamentoTransformacion"),
   (req, res, next) => {
     Departamento.findById(req.parametros.departamentoTransformacion)
       .exec()
@@ -156,7 +156,7 @@ app.get(
 
 app.get(
   "/estacionesDeEscaneo",
-  permisos.$("parametros:estacionesDeEscaneo"),
+  $("parametros:estacionesDeEscaneo"),
   (req, res, next) => {
     Parametros.findOne({})
       .populate(" estacionesDeEscaneo.departamento", null, "Departamento")
@@ -169,7 +169,7 @@ app.get(
 
 //DESPUES DE AQUI TODO LO DEBE SE HACER EL SUPER ADMIN
 
-app.use(permisos.$("SUPER_ADMIN"))
+app.use($("SUPER_ADMIN"))
 
 // ESTA FUNCION ES DE UN SOLO USO Y ES PARA ELIMINAR TODOS LOS
 // ROLES DE LOS USUARIOS QUE EXISTEN ACTUALMENTE. SE PUEDE
@@ -206,7 +206,7 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
       //Revisamos dos veces que tenga el permiso por que para llegar
       // aqui usamos el token y ese todavia tiene el permiso.
       if (
-        !usuarioLogueado.permissions.includes(permisos.$("SUPER_ADMIN", false))
+        !usuarioLogueado.permissions.includes($("SUPER_ADMIN", false))
       )
         throw "No puedes continuar con esta operacion"
 
@@ -229,7 +229,7 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
         //NINGUN OTRO USUARIO DEBE DE TENER EL ROL SUPER ADMIN
         Usuario.updateMany(
           {},
-          { $pull: { permissions: permisos.$("SUPER_ADMIN") } }
+          { $pull: { permissions: $("SUPER_ADMIN") } }
         )
           .exec()
           .then(u => usuario.save()),

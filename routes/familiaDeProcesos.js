@@ -2,7 +2,7 @@ let express = require("express")
 let app = express()
 let FamiliaDeProcesos = require("../models/procesos/familiaDeProcesos")
 let RESP = require("../utils/respStatus")
-var permisos = require("../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -16,7 +16,7 @@ const erro = (res, err, msj) => {
 // ============================================
 app.post(
   "/",
-  permisos.$("familiaDeProcesos:crear"),
+  $("familiaDeProcesos:crear"),
   (req, res) => {
     new FamiliaDeProcesos(req.body)
       .save()
@@ -36,7 +36,7 @@ app.post(
 
 app.get(
   "/",
-  permisos.$("familiaDeProcesos:leer:todo"),
+  $("familiaDeProcesos:leer:todo"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -63,7 +63,7 @@ app.get(
 
 app.get(
   "/:id",
-  permisos.$("familiaDeProcesos:leer:id"),
+  $("familiaDeProcesos:leer:id"),
   (req, res) => {
     FamiliaDeProcesos.findById(req.params.id)
       .exec()
@@ -85,7 +85,7 @@ app.get(
 
 app.get(
   "/buscar/:termino",
-  permisos.$("familiaDeProcesos:leer:termino"),
+  $("familiaDeProcesos:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -141,7 +141,7 @@ app.get(
 
 app.delete(
   "/:id",
-  permisos.$("familiaDeProcesos:eliminar"),
+  $("familiaDeProcesos:eliminar"),
   (req, res) => {
     FamiliaDeProcesos.findById(req.params.id)
       .exec()
@@ -163,7 +163,7 @@ app.delete(
 
 app.put(
   "/",
-  permisos.$("familiaDeProcesos:modificar"),
+  $("familiaDeProcesos:modificar"),
   (req, res) => {
     return FamiliaDeProcesos.findById(req.body._id)
       .exec()

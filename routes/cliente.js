@@ -5,7 +5,7 @@ const RESP = require("../utils/respStatus")
 
 const app = express()
 
-const permisos = require("../config/permisos.config")
+const $ =  require("@codice-progressio/easy-permissions").$
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -14,7 +14,7 @@ const erro = (res, err, msj) => {
   })
 }
 
-app.post("/", permisos.$("cliente:crear"), (req, res) => {
+app.post("/", $("cliente:crear"), (req, res) => {
   return new Cliente(req.body)
     .save()
     .then(cliente => {
@@ -24,7 +24,7 @@ app.post("/", permisos.$("cliente:crear"), (req, res) => {
     })
     .catch(err => erro(res, err, "Hubo un error guardando el cliente"))
 })
-app.get("/", permisos.$("cliente:leer:todo"), async (req, res) => {
+app.get("/", $("cliente:leer:todo"), async (req, res) => {
   const desde = Number(req.query.desde || 0)
   const limite = Number(req.query.limite || 30)
   const sort = Number(req.query.sort || 1)
@@ -46,7 +46,7 @@ app.get("/", permisos.$("cliente:leer:todo"), async (req, res) => {
     .catch(err => erro(res, err, "Hubo un error buscando los clientes"))
 })
 
-app.get("/:id", permisos.$("cliente:leer:id"), (req, res) => {
+app.get("/:id", $("cliente:leer:id"), (req, res) => {
   Cliente.findById(req.params.id)
     .exec()
     .then(cliente => {
@@ -59,7 +59,7 @@ app.get("/:id", permisos.$("cliente:leer:id"), (req, res) => {
 
 app.get(
   "/buscar/:termino",
-  permisos.$("cliente:leer:termino"),
+  $("cliente:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde || 0)
     const limite = Number(req.query.limite || 30)
@@ -115,7 +115,7 @@ app.get(
   }
 )
 
-app.delete("/:id", permisos.$("cliente:eliminar"), (req, res) => {
+app.delete("/:id", $("cliente:eliminar"), (req, res) => {
   Cliente.findById(req.params.id)
     .exec()
     .then(cliente => {
@@ -131,7 +131,7 @@ app.delete("/:id", permisos.$("cliente:eliminar"), (req, res) => {
     .catch(err => erro(res, err, "Hubo un error eliminando el cliente"))
 })
 
-app.put("/", permisos.$("cliente:modificar"), (req, res) => {
+app.put("/", $("cliente:modificar"), (req, res) => {
   Cliente.findById(req.body._id)
     .exec()
     .then(cliente => {

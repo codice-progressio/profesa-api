@@ -1,4 +1,10 @@
 const permisos = {
+  "administrador:usuario:leer:id":"Sin descripción",
+  "administrador:usuario:leer:termino":"Sin descripción",
+  "administrador:usuario:eliminar":"Sin descripción",
+  "administrador:usuario:crear":"Sin descripción",
+  "administrador:usuario:modificar":"Sin descripción",
+  "administrador:usuario:leer":"Sin descripción",
   "menu:compras:proveedores":"false",
   "menu:compras":"false",
   "menu:almacen:sku":"false",

@@ -260,8 +260,13 @@ function compras() {
     icono: "fas fa-shopping-bag",
     submenu: [
       {
+        titulo: "Compras",
+        url: "/compras",
+        permiso: $("menu:compras", false),
+      },
+      {
         titulo: "Proveedores",
-        url: "/proveedores",
+        url: "/compras/proveedores",
         permiso: $("menu:compras:proveedores", false),
       },
       // {

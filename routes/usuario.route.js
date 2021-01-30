@@ -29,6 +29,7 @@ app.get("/", $("administrador:usuario:leer"), async (req, res) => {
         .filter(x => !x.permissions.includes("SUPER_ADMIN"))
       return res.send(usuarios)
     })
+    .catch(e => next(e))
 })
 
 // ============================================

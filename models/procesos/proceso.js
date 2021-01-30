@@ -16,11 +16,6 @@ var procesoSchema = new Schema({
 
     // pasos: [pasoSchema],
     observaciones: { type: String },
-    // especial: { type: Boolean, value: false },
-    // gastos: {
-    //     type: [gastoConsumoSchema],
-    //     // validate: [Array.prototype.greaterThan0, 'El campo debe tener por lo menos un gasto definido']
-    // },
     maquinas: [{ type: Schema.Types.ObjectId, ref: 'Maquina' }],
 
     // Si el proceso corresponde a una cadena que requiere producirse este 

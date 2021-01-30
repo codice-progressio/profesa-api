@@ -7,30 +7,13 @@ const fs = require("fs")
 const mongoose = require("mongoose")
 const colores = require("./utils/colors")
 const bodyParser = require("body-parser")
-const RESP = require("./utils/respStatus")
 const _ROUTES = require("./config/routes").ROUTES
 const cors = require("cors")
-
-
 
 // Inicializar variables.
 var app = express()
 
 app.disable("x-powered-by")
-
-// Esta función nos ayuda a quitar duplicados dentro
-//  del array.
-Array.prototype.unique = (function (a) {
-  return function () {
-    return this.filter(a)
-  }
-})(function (a, b, c) {
-  return c.indexOf(a, b + 1) < 0
-})
-
-Array.prototype.greaterThan0 = function (a) {
-  return a.length >= 1
-}
 
 app.use(compression())
 app.use(cors())

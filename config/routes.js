@@ -113,7 +113,7 @@ module.exports.ROUTES = function (app) {
   // app.use("/folios", folioNewRoutes)
   // app.use("/orden", ordenRoutes)
   // //----------------------------
-  // app.use("/usuario", usuarioRoutes)
+  app.use("/usuario", usuarioRoutes)
   // app.use("/upload", uploadRoutes)
 
   app.use("/sku", skuRoutes)

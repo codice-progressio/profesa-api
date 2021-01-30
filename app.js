@@ -4,10 +4,9 @@ const easyPermissions = require("@codice-progressio/easy-permissions")
 
 easyPermissions.config({
   modoProduccion: process.env.PRODUCCION === "true",
-  generarPermisos: false,
+  generarPermisos: true,
 })
 
-console.log(easyPermissions.configuraciones)
 const compression = require("compression")
 // Requires
 const express = require("express")

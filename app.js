@@ -2,17 +2,16 @@ require("dotenv").config()
 const compression = require("compression")
 // Requires
 const express = require("express")
-
 const https = require("https")
 const fs = require("fs")
-
 const mongoose = require("mongoose")
-mongoose.Promise = global.Promise
 const colores = require("./utils/colors")
 const bodyParser = require("body-parser")
 const RESP = require("./utils/respStatus")
 const _ROUTES = require("./config/routes").ROUTES
 const cors = require("cors")
+
+
 
 // Inicializar variables.
 var app = express()

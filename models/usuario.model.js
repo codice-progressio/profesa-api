@@ -20,6 +20,7 @@ const usuarioSchema = new Schema({
   permissions: {
     type: [String],
     default: ["login"],
+    select: false,
   },
 })
 

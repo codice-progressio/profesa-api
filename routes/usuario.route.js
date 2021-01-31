@@ -91,7 +91,18 @@ app.put("/agregar-permisos", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-app.delete("/eliminar-permiso", (req, res) => {})
+app.delete("/eliminar-permiso", (req, res, next) => {
+  Usuario.findById(req.body._id)
+    .select("+permissions")
+    .exec()
+    .then(u => {
+      if (!u) throw "No existe el id"
+      u.permissions.pull(req.body.permission)
+      return u.save()
+    })
+    .then(u => res.send(u))
+    .catch(_ => next(_))
+})
 
 // ============================================
 // Crear un nuevo usuario.

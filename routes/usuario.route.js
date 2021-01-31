@@ -127,10 +127,6 @@ app.get(
   "/buscar/termino/:termino",
   $("administrador:usuario:leer:termino"),
   async (req, res, next) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "nombre")
     const termino = String(
       req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     )
@@ -142,12 +138,7 @@ app.get(
       $or: [],
     }
 
-    ;["nombre"].forEach(x => $match.$or.push(b(x)))
-
-    const total = await Usuario.aggregate([
-      { $match },
-      { $count: "total" },
-    ]).exec()
+    ;["nombre", "email"].forEach(x => $match.$or.push(b(x)))
 
     Usuario.aggregate([
       { $match },
@@ -180,12 +171,6 @@ app.get(
           "empleado.fotografia": 1,
         },
       },
-
-      { $sort: { [campo]: sort } },
-      //Desde aqui limitamos unicamente lo que queremos ver
-      { $limit: desde + limite },
-      { $skip: desde },
-      { $sort: { [campo]: sort } },
     ])
       .exec()
       .then(usuarios => {
@@ -196,14 +181,7 @@ app.get(
           }
           return x
         })
-        //Si no hay resultados no se crea la propiedad
-        // y mas adelante nos da error.
-        if (!total.length) total.push({ total: 0 })
-
-        return RESP._200(res, null, [
-          { tipo: "usuarios", datos: usuarios },
-          { tipo: "total", datos: total.pop().total },
-        ])
+        return res.send(usuarios)
       })
       .catch(err => next(err))
   }

@@ -74,11 +74,16 @@ app.put("/agregar-permisos", (req, res, next) => {
 // ============================================
 app.post("/", $("administrador:usuario:crear"), (req, res, next) => {
   //   comprobarEmpleadoActivo(req.body.empleado, req.body.permissions)
-
-  new Usuario(req.body)
-    .save()
-    .then(u => res.send(u))
-    .catch(_ => next(_))
+  bcrypt.hash(req.body.password, 10, function (err, hash) {
+    req.body.password = hash
+    new Usuario(req.body)
+      .save()
+      .then(x => {
+        u.password = ":D"
+        return res.send(u)
+      })
+      .catch(_ => next(_))
+  })
 })
 
 // ============================================

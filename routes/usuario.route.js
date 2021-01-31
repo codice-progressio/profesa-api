@@ -7,26 +7,25 @@ const Empleado = require("../models/recursosHumanos/empleados/empleado.model")
 const app = express()
 
 const $ = require("@codice-progressio/easy-permissions").$
+const PERMISOS = require("../seguridad/permisos.seguridad")
 
 // ============================================
 // Obtener todos los usuarios.
 // ============================================
-app.get("/", $("administrador:usuario:leer"), async (req, res) => {
+app.get("/", $("administrador:usuario:leer"), async (req, res, next) => {
   Usuario.find()
     .populate("empleado", "nombres apellidos fotografia", "Empleado")
     .lean()
     .exec()
     .then(usuarios => {
-      usuarios = usuarios
-        .map(x => {
-          if (x.empleado) {
-            let em = x.empleado
-            x.nombre = em.nombres + " " + em.apellidos
-            x.img = em.fotografia
-          }
-          return x
-        })
-        .filter(x => !x.permissions.includes("SUPER_ADMIN"))
+      usuarios = usuarios.map(x => {
+        if (x.empleado) {
+          let em = x.empleado
+          x.nombre = em.nombres + " " + em.apellidos
+          x.img = em.fotografia
+        }
+        return x
+      })
       return res.send(usuarios)
     })
     .catch(e => next(e))

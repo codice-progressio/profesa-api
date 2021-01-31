@@ -56,12 +56,19 @@ app.put("/password", (req, res, next) => {
   Usuario.findById(req.body._id)
     .select("+password")
     .exec()
-    .then(usuario => {
-      if (!usuario) throw "No existe el id"
-      usuario.password = bcrypt()
-      return usuario.save()
+    .then(u => {
+      if (!u) throw "No existe el id"
+
+      bcrypt.hash(req.body.password, 10, function (err, hash) {
+        u.password = hash
+        u.save()
+          .then(u2 => {
+            u.password = ":D"
+            return res.send(u2)
+          })
+          .catch(_ => next(_))
+      })
     })
-    .then(u => res.send(u))
     .catch(_ => next(_))
 })
 

@@ -73,8 +73,24 @@ app.put("/password", (req, res, next) => {
 })
 
 app.put("/agregar-permisos", (req, res, next) => {
-  next(new Error("No deifino"))
+  Usuario.findById(req.body._id)
+    .select("+permissions")
+    .exec()
+    .then(u => {
+      // Solo agregamos los permisos en listados
+      let permisos = Array.from(
+        new Set(req.body.permissions.concat(u.permissions))
+      ).filter(x => Object.keys(PERMISOS).includes(x))
+      // Removemos todo para poder agregar
+      while (u.permissions.length > 0) u.permissions.pop()
+      permisos.forEach(x => u.permissions.push(x))
+      return u.save()
+    })
+    .then(u => res.send(u))
+    .catch(_ => next(_))
 })
+
+app.delete("/eliminar-permiso", (req, res) => {})
 
 // ============================================
 // Crear un nuevo usuario.

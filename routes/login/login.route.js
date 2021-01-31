@@ -20,13 +20,13 @@ function crearToken(usuario) {
 
 app.post("/renuevatoken", (req, res, next) => {
   Usuario.findById(req.user._id)
-    .select("+passsword")
+    .select("+passsword +permissions")
     .lean()
     .exec()
     .then(usuario => {
       if (!usuario) throw "No se renovo la sesion"
       let token = crearToken(usuario)
-      return res.send(token)
+      return res.send({token})
     })
     .catch(err => {
       next(err)
@@ -39,7 +39,7 @@ app.post("/", (req, res, next) => {
   var usuarioLogueado = null
   Usuario.findOne({ email: body.email })
     .populate("empleado", "nombres apellidos fotografia")
-    .select("+password")
+    .select("+password +permissions")
     .lean()
     .exec()
     .then(usuarioDB => {
@@ -66,7 +66,7 @@ app.post("/", (req, res, next) => {
         usuarioDB.img = e.fotografia
       }
 
-      return res.send(token)
+      return res.send({token})
     })
     .catch(err => next(err))
 })

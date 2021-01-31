@@ -32,59 +32,41 @@ app.get("/", $("administrador:usuario:leer"), async (req, res, next) => {
 })
 
 // ============================================
-// Actualizar usuario
+// Actualizar usuario (Nombre, email)
 // ============================================
-app.put("/", $("administrador:usuario:modificar"), (req, res) => {
-  var id = req.body._id
-  var body = req.body
-  //Eliminamos todos los roles que no existen.
-  body.permissions = body.permissions.filter(permiso =>
-    $.lista.includes(permiso)
-  )
+app.put("/", $("administrador:usuario:modificar"), (req, res, next) => {
+  const id = req.body._id
+  const body = req.body
   Usuario.findById(id)
     .exec()
     .then(async u => {
       if (!u) throw "No exise el id"
-
       u.nombre = body.nombre
       u.email = body.email
-      u.empleado = body.empleado ? body.empleado : null
 
-      while (u.permissions.length > 0) {
-        u.permissions.pop()
-      }
-
-      req.body.permissions.forEach(x => u.permissions.push(x))
-      await comprobarEmpleadoActivo(u.empleado, u.permissions)
-      if (body.password) {
-        // Si se agrega un password si se modifica MIENTRAS NO SEA SUPER ADMIN.
-        u.password = bcrypt.hashSync(body.password, 10)
-      }
-      if (u._id.toString() === req.parametros.super.id) {
-        //Es super usuario, debe incluir SUPER_ADMIN y login
-
-        if (!u.permissions.includes("SUPER_ADMIN"))
-          u.permissions.push($("SUPER_ADMIN"))
-
-        if (!u.permissions.includes("login")) u.permissions.push($("login"))
-      }
-
+      // await comprobarEmpleadoActivo(u.empleado, u.permissions)
       return u.save()
     })
-    .then(uG => {
-      uG.password = ":D"
-      return RESP._200(
-        res,
-        `Se actualizo el usuario ${uG.nombre} correctamente.`,
-        [{ tipo: "usuario", datos: uG }]
-      )
+    .then(u => res.send(u))
+    .catch(_ => next(_))
+})
+
+// Actualizar password
+app.put("/password", (req, res, next) => {
+  Usuario.findById(req.body._id)
+    .select("+password")
+    .exec()
+    .then(usuario => {
+      if (!usuario) throw "No existe el id"
+      usuario.password = bcrypt()
+      return usuario.save()
     })
-    .catch(err => {
-      return RESP._500(res, {
-        msj: "Hubo un error actualizando el usuario.",
-        err: err,
-      })
-    })
+    .then(u => res.send(u))
+    .catch(_ => next(_))
+})
+
+app.put("/agregar-permisos", (req, res, next) => {
+  next(new Error("No deifino"))
 })
 
 // ============================================

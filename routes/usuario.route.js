@@ -77,6 +77,7 @@ app.put("/agregar-permisos", (req, res, next) => {
     .select("+permissions")
     .exec()
     .then(u => {
+      if (!u) throw "No existe el id"
       // Solo agregamos los permisos en listados
       let permisos = Array.from(
         new Set(req.body.permissions.concat(u.permissions))

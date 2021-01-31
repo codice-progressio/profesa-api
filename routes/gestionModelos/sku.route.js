@@ -7,40 +7,10 @@ const mongoose = require("mongoose")
 const ObjectId = mongoose.Types.ObjectId
 const $ = require("@codice-progressio/easy-permissions").$
 // const fs = require("fs")
-const { Storage } = require("@google-cloud/storage")
-const Sharp = require("sharp")
-
-const fileFilter = (req, file, cb) => {
-  if (
-    file.mimetype === "image/jpg" ||
-    file.mimetype === "image/jpeg" ||
-    file.mimetype === "image/png"
-  ) {
-    cb(null, true)
-  } else {
-    cb(`La imagen ${file.originalname} no es de tipo jpg/jpeg or png`, false)
-  }
-}
-
 // const upload = require("multer")({ dest: "uploads/sku/", fileFilter })
+// Libreria para convertir imagenes
 
-const multer = require("multer")
-const upload = multer({
-  fileFilter,
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 5 * 1024 * 1024, //tamaño < 5 MB
-  },
-})
-
-const storage = new Storage({
-  projectId: process.env.GCLOUD_PROJECT_ID,
-  ...(process.env.PRODUCCION === "false"
-    ? { keyFilename: process.env.GCLOUD_APPLICATION_CREDENTIALS }
-    : { credentials: JSON.parse(process.env.GCLOUD_APPLICATION_CREDENTIALS) }),
-})
-
-const bucket = storage.bucket(process.env.GCLOUD_STORAGE_BUCKET_URL)
+const cloudStorage = require("../../utils/cloud-storage")
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -62,21 +32,8 @@ app.post("/", $("sku:crear", "Crea un nuevo SKU"), (req, res, next) => {
 app.put(
   "/imagen",
   $("sku:imagen:agregar", "Agregar una imagen al SKU"),
-  upload.single("img"),
-  (req, params, next) => {
-    // Con este middleware redimiensionamos el tamaño de
-    // imagen para que no mida mas de 1000
-    Sharp(req.file.buffer)
-      // El maximo tamaño horizontal de las imagenes debe ser 1200
-      .resize(1200, 1200, { withoutEnlargement: true, fit: Sharp.fit.inside })
-      .jpeg({ quality: 80 })
-      .toBuffer()
-      .then(data => {
-        req.file.buffer = data
-        return next()
-      })
-      .catch(err => next(err))
-  },
+  cloudStorage.recibirImagen.single("img"),
+  cloudStorage.redimencionarMiddleware,
   (req, res, next) => {
     let publicUrl = ""
     SKU.findById(req.body._id)
@@ -84,7 +41,7 @@ app.put(
       .then(sku => {
         if (!sku) throw "No existe el id"
         const nuevoNombre = ObjectId() + ""
-        const blob = bucket.file(nuevoNombre)
+        const blob = cloudStorage.bucket.file(nuevoNombre)
         const blobStream = blob.createWriteStream({
           metadata: {
             // Important: You need to pass the file mimetype as metadata to createWriteStream() otherwise your file won’t be stored in the proper format and won’t be readable.
@@ -116,6 +73,7 @@ app.put(
             })
             .catch(err => next(err))
         })
+
         blobStream.end(req.file.buffer)
       })
       .catch(_ => {
@@ -148,7 +106,7 @@ app.delete(
         if (!imgDB) throw "No existe la imagen"
 
         try {
-          await eliminarImagenDeBucket(imgDB.nombreBD)
+          await cloudStorage.eliminarImagenDeBucket(imgDB.nombreBD)
         } catch (error) {
           throw next(error)
         }
@@ -164,11 +122,6 @@ app.delete(
       .catch(_ => next(_))
   }
 )
-
-function eliminarImagenDeBucket(nombre) {
-  const file = bucket.file(nombre)
-  return file.delete()
-}
 
 app.get(
   "/",
@@ -330,7 +283,9 @@ app.delete("/:id", $("sku:eliminar"), async (req, res, next) => {
       if (!sku) throw "No existe el sku"
 
       // Elimimanos todas las imagenes.
-      let promesas = sku.imagenes.map(x => eliminarImagenDeBucket(x.nombreBD))
+      let promesas = sku.imagenes.map(x =>
+        cloudStorage.eliminarImagenDeBucket(x.nombreBD)
+      )
 
       return Promise.all(promesas).then(() => sku.remove())
     })

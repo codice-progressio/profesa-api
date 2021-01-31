@@ -24,7 +24,7 @@ const usuarioSchema = new Schema({
 })
 
 usuarioSchema.plugin(uniqueValidator, {
-  message: " El email ya esta registradof.",
+  message: " El email ya esta registrado.",
 })
 
 module.exports = mongoose.model("Usuario", usuarioSchema)

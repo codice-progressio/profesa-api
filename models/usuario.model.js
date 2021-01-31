@@ -1,6 +1,5 @@
 const mongoose = require("mongoose")
 const uniqueValidator = require("mongoose-unique-validator")
-const $ = require("@codice-progressio/easy-permissions").$
 
 const Schema = mongoose.Schema
 
@@ -24,6 +23,8 @@ const usuarioSchema = new Schema({
   },
 })
 
-usuarioSchema.plugin(uniqueValidator, { message: " '{PATH}' debe ser único." })
+usuarioSchema.plugin(uniqueValidator, {
+  message: " El email ya esta registradof.",
+})
 
 module.exports = mongoose.model("Usuario", usuarioSchema)

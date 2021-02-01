@@ -15,7 +15,7 @@ const usuarioSchema = new Schema({
     required: [true, "La contraseña es necesaria."],
     select: false,
   },
-  img: { type: String, required: false },
+  img: require("./imagen.model"),
   permissions: {
     type: [String],
     default: ["login"],

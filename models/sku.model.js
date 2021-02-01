@@ -1,7 +1,7 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const loteSchema = require("./almacenProductoTerminado/lote.model")
-
+const imagenSchema = require("./imagen.model")
 const sku = new Schema({
   puedoProducirlo: { type: Boolean, default: false },
   puedoComprarlo: { type: Boolean, default: false },
@@ -24,13 +24,7 @@ const sku = new Schema({
 
   unidad: String,
   descripcion: String,
-  imagenes: [
-    {
-      nombreOriginal: String,
-      nombreBD: String,
-      path: String,
-    },
-  ],
+  imagenes: [imagenSchema],
 
   nombreCompleto: {
     type: String,

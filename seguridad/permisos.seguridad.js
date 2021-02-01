@@ -1,4 +1,5 @@
 const permisos = {
+  "usuario:modificar:agregar-imagen":"Agregar una imagen al usuario",
   "programacionTransformacion:actualizarUbicacion": "Sin descripción",
   "programacionTransformacion:ordenesPorAsignar": "Sin descripción",
   "programacionTransformacion:asignar": "Sin descripción",

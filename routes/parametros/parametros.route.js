@@ -9,6 +9,8 @@ const $ =  require("@codice-progressio/easy-permissions").$
 var Proceso = require("../../models/procesos/proceso")
 var Departamento = require("../../models/departamento")
 
+const permisos = require("../../seguridad/permisos.seguridad")
+
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.
  * En general hay que crear primero la propiedad correspondiente en el schema
@@ -248,6 +250,7 @@ app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
   //Reiniciamos todos los permisos del super administrador para agregar permisos nuevos que existan o eliminar los que ya no existen.
 
   Usuario.findById(req.parametros.super.id)
+    .select("+permissions")
     .exec()
     .then(u => {
       if (!u) throw "No existe usuario super-admin"
@@ -256,7 +259,7 @@ app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
         u.permissions.pop()
       }
 
-      permisos.lista.forEach(p => u.permissions.push(p))
+      Object.keys(permisos).forEach(p => u.permissions.push(p))
 
       return u.save()
     })

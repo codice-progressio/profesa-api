@@ -3,6 +3,7 @@ const express = require("express")
 const bcrypt = require("bcryptjs")
 const Usuario = require("../models/usuario.model")
 const Empleado = require("../models/recursosHumanos/empleados/empleado.model")
+const easyImages = require("@codice-progressio/easy-images")
 
 const app = express()
 
@@ -119,6 +120,61 @@ app.put(
         return u.save()
       })
       .then(u => res.send(u))
+      .catch(_ => next(_))
+  }
+)
+
+app.put(
+  "/imagen",
+  $("usuario:modificar:agregar-imagen", "Agregar una imagen al usuario"),
+  easyImages.recibirImagen.single("img"),
+  easyImages.redimencionarMiddleware,
+  async (req, res, next) => {
+    let us = await Usuario.findById(req.body._id).exec()
+    if (!us) throw new Error("No existe el id")
+    //Eliminamos la imagen actual si existe. 
+    if (us.img?.nombreBD)
+    {
+      try {
+        await easyImages.eliminarImagenDeBucket(us.img?.nombreBD)
+      } catch (error) {
+        return next(error)
+      }
+    }
+    // Subimos la imagen nueva
+    easyImages
+      .subirImagen(req.file)
+      .then(data => {
+        // Sustituimos los datos de la anterior imagen con
+        // los nuevos
+        us.img = {
+          nombreOriginal: req.file.originalname,
+          nombreBD: data.nuevoNombre,
+          path: data.publicUrl,
+        }
+        return us.save()
+      })
+      .then(usuario => res.send(usuario))
+      .catch(_ => next(_))
+  }
+)
+
+//Eliminamos una imagen
+app.delete(
+  "/imagen/:id",
+  $("usuario:modificar:eliminar-imagen", "Elimina la imagen del usuario"),
+  async (req, res, next) => {
+    // El id del sku
+    const id = req.params.id
+    // Buscamos por id
+    const usuario = await Usuario.findById(id).exec()
+    easyImages
+      .eliminarImagenDeBucket(usuario.img.nombreBD)
+      .then(respuesta => {
+        usuario.img = null
+        return usuario.save()
+      })
+      .then(usuario => res.send(usuario))
       .catch(_ => next(_))
   }
 )

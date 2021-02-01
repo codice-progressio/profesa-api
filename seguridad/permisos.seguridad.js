@@ -1,4 +1,9 @@
 const permisos = {
+  "login":"false",
+  "menu:compras:proveedores":"false",
+  "menu:compras":"false",
+  "menu:almacen:sku":"false",
+  "menu:almacen":"false",
   "programacionTransformacion:actualizarUbicacion":"Sin descripción",
   "programacionTransformacion:ordenesPorAsignar":"Sin descripción",
   "programacionTransformacion:asignar":"Sin descripción",

@@ -11,6 +11,7 @@
   "author": "Rafael Ramirez",
   "license": "ISC",
   "dependencies": {
+    "@codice-progressio/easy-images": "^0.1.0",
     "@codice-progressio/easy-permissions": "^0.1.0",
     "@google-cloud/storage": "^5.7.0",
     "@types/moment-duration-format": "^2.2.2",

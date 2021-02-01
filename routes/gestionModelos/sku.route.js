@@ -4,13 +4,12 @@ const express = require("express")
 const SKU = require("../../models/sku.model")
 const app = express()
 const mongoose = require("mongoose")
-const ObjectId = mongoose.Types.ObjectId
 const $ = require("@codice-progressio/easy-permissions").$
 // const fs = require("fs")
 // const upload = require("multer")({ dest: "uploads/sku/", fileFilter })
 // Libreria para convertir imagenes
 
-const cloudStorage = require("../../utils/cloud-storage")
+const easyImages = require("@codice-progressio/easy-images")
 
 const erro = (res, err, msj) => {
   return RESP._500(res, {
@@ -32,54 +31,27 @@ app.post("/", $("sku:crear", "Crea un nuevo SKU"), (req, res, next) => {
 app.put(
   "/imagen",
   $("sku:imagen:agregar", "Agregar una imagen al SKU"),
-  cloudStorage.recibirImagen.single("img"),
-  cloudStorage.redimencionarMiddleware,
-  (req, res, next) => {
+  easyImages.recibirImagen.single("img"),
+  easyImages.redimencionarMiddleware,
+  async (req, res, next) => {
+    const sku = await SKU.findById(req.body._id).exec()
+    if (!sku) throw next(new Error("No existe el id"))
     let publicUrl = ""
-    SKU.findById(req.body._id)
-      .exec()
+    easyImages
+      .subirImagen(req.file)
+      .then(data => {
+        publicUrl = data.publicUrl
+        sku.imagenes.push({
+          nombreOriginal: req.file.originalname,
+          nombreBD: data.nuevoNombre,
+          path: data.publicUrl,
+        })
+        return sku.save()
+      })
       .then(sku => {
-        if (!sku) throw "No existe el id"
-        const nuevoNombre = ObjectId() + ""
-        const blob = cloudStorage.bucket.file(nuevoNombre)
-        const blobStream = blob.createWriteStream({
-          metadata: {
-            // Important: You need to pass the file mimetype as metadata to createWriteStream() otherwise your file won’t be stored in the proper format and won’t be readable.
-            contentType: req.file.mimetype,
-          },
-        })
-
-        // If there's an error
-        blobStream.on("error", err => next(err))
-
-        // If all is good and done
-        blobStream.on("finish", () => {
-          // Assemble the file public URL
-          publicUrl = `https://firebasestorage.googleapis.com/v0/b/${
-            bucket.name
-          }/o/${encodeURI(blob.name)}?alt=media`
-          // Return the file name and its public URL
-          // for you to store in your own database
-
-          sku.imagenes.push({
-            nombreOriginal: req.file.originalname,
-            nombreBD: nuevoNombre,
-            path: publicUrl,
-          })
-          return sku
-            .save()
-            .then(sku => {
-              res.send(sku.imagenes.find(x => x.path === publicUrl))
-            })
-            .catch(err => next(err))
-        })
-
-        blobStream.end(req.file.buffer)
+        res.send(sku.imagenes.find(x => x.path === publicUrl))
       })
       .catch(_ => {
-        // //Si hay un error eliminanos la imagen
-        // // que subio multer
-        // fs.unlinkSync(req.file.path)
         next(_)
       })
   }
@@ -106,7 +78,7 @@ app.delete(
         if (!imgDB) throw "No existe la imagen"
 
         try {
-          await cloudStorage.eliminarImagenDeBucket(imgDB.nombreBD)
+          await easyImages.eliminarImagenDeBucket(imgDB.nombreBD)
         } catch (error) {
           throw next(error)
         }
@@ -284,7 +256,7 @@ app.delete("/:id", $("sku:eliminar"), async (req, res, next) => {
 
       // Elimimanos todas las imagenes.
       let promesas = sku.imagenes.map(x =>
-        cloudStorage.eliminarImagenDeBucket(x.nombreBD)
+        easyImages.eliminarImagenDeBucket(x.nombreBD)
       )
 
       return Promise.all(promesas).then(() => sku.remove())

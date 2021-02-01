@@ -1,15 +1,4 @@
 const permisos = {
-  "administrador:usuario:leer:id":"Sin descripción",
-  "administrador:usuario:leer:termino":"Sin descripción",
-  "administrador:usuario:eliminar":"Sin descripción",
-  "administrador:usuario:crear":"Sin descripción",
-  "administrador:usuario:modificar":"Sin descripción",
-  "administrador:usuario:leer":"Sin descripción",
-  "menu:compras:proveedores":"false",
-  "menu:compras":"false",
-  "menu:almacen:sku":"false",
-  "menu:almacen":"false",
-  login: "Sin descripción",
   "programacionTransformacion:actualizarUbicacion": "Sin descripción",
   "programacionTransformacion:ordenesPorAsignar": "Sin descripción",
   "programacionTransformacion:asignar": "Sin descripción",
@@ -20,7 +9,6 @@ const permisos = {
   "reportePersonalizadoAlmacenDeProduccion:leer:id": "Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:leer:todo": "Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:crear": "Sin descripción",
-  SUPER_ADMIN: "Sin descripción",
   "parametros:estacionesDeEscaneo": "Sin descripción",
   "parametros:departamentoTransformacion": "Sin descripción",
   "parametros:procesosEspeciales": "Sin descripción",
@@ -172,5 +160,21 @@ const permisos = {
   "sku:imagen:eliminar": "Eliminar una imagen del sku",
   "sku:imagen:agregar": "Agregar una imagen al SKU",
   "sku:crear": "Crea un nuevo SKU",
+  SUPER_ADMIN: "Sin descripción",
+  "administrador:usuario:leer:todo:ligero":
+    "Obtener todos los usuarios solo con los datos más basicos. ",
+  "administrador:usuario:leer:id": "Buscar un usuario por su id",
+  "administrador:usuario:leer:termino":
+    "Buscar un usuario por un termino de busqueda",
+  "administrador:usuario:eliminar": "Eliminar un usuario",
+  "administrador:usuario:crear": "Crear un usuario",
+  "administrador:usuario:modificar:eliminar-permiso":
+    "Eliminar permisos de un usuario",
+  "administrador:usuario:modificar:agregar-permisos":
+    "Agregar permisos a un usuario",
+  "administrador:usuario:modificar:password":
+    "Modificar el password de un usuario",
+  "administrador:usuario:modificar": "Modificar datos básicos de un usuario",
+  "administrador:usuario:leer": "Leer los usuarios existentes",
 }
 module.exports = permisos

@@ -7,6 +7,14 @@ easyPermissions.config({
   generarPermisos: true,
 })
 
+const easyImages = require("@codice-progressio/easy-images")
+
+easyImages.config({
+  GCLOUD_PROJECT_ID: process.env.GCLOUD_PROJECT_ID,
+  GCLOUD_STORAGE_BUCKET_URL: process.env.GCLOUD_STORAGE_BUCKET_URL,
+  GCLOUD_APPLICATION_CREDENTIALS: process.env.GCLOUD_APPLICATION_CREDENTIALS,
+})
+
 const compression = require("compression")
 // Requires
 const express = require("express")

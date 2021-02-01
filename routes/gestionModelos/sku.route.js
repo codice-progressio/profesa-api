@@ -3,7 +3,6 @@ const express = require("express")
 
 const SKU = require("../../models/sku.model")
 const app = express()
-const mongoose = require("mongoose")
 const $ = require("@codice-progressio/easy-permissions").$
 // const fs = require("fs")
 // const upload = require("multer")({ dest: "uploads/sku/", fileFilter })

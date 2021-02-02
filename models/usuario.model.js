@@ -4,7 +4,7 @@ const $ = require("@codice-progressio/easy-permissions").$
 const Schema = mongoose.Schema
 
 const usuarioSchema = new Schema({
-  nombre: { type: String },
+  nombre: { type: String, min:4},
   email: {
     type: String,
     unique: true,

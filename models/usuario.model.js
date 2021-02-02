@@ -4,7 +4,7 @@ const $ = require("@codice-progressio/easy-permissions").$
 const Schema = mongoose.Schema
 
 const usuarioSchema = new Schema({
-  nombre: { type: String, min:4},
+  nombre: { type: String, min: 4 },
   email: {
     type: String,
     unique: true,
@@ -27,6 +27,7 @@ const usuarioSchema = new Schema({
     ],
     select: false,
   },
+  eliminado: { type: Boolean, default: false },
 })
 
 usuarioSchema.plugin(uniqueValidator, {

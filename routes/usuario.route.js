@@ -132,9 +132,8 @@ app.put(
   async (req, res, next) => {
     let us = await Usuario.findById(req.body._id).exec()
     if (!us) throw new Error("No existe el id")
-    //Eliminamos la imagen actual si existe. 
-    if (us.img?.nombreBD)
-    {
+    //Eliminamos la imagen actual si existe.
+    if (us.img?.nombreBD) {
       try {
         await easyImages.eliminarImagenDeBucket(us.img?.nombreBD)
       } catch (error) {
@@ -174,12 +173,12 @@ app.delete(
         usuario.img = null
         return usuario.save()
       })
-      .then(usuario => res.send(usuario))
+      .then(usuario => res.send())
       .catch(_ => next(_))
   }
 )
 
-app.delete(
+app.put(
   "/eliminar-permiso",
   $(
     "administrador:usuario:modificar:eliminar-permiso",

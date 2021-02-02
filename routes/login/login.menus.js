@@ -45,7 +45,7 @@ function generarMenus() {
     // INGENIERIA: ingenieria(),
     // VENTAS: ventas(),
     COMPRAS: compras(),
-    // ADMINISTRADOR: administrador(),
+    ADMINISTRADOR: administrador(),
     // RH: rh(),
     // parametros: parametros(),
   }
@@ -281,35 +281,38 @@ function compras() {
 
 function administrador() {
   const menu = {
-    permiso: $("menu:administrador", false),
+    permiso: $("menu:administrador", "Ver el menu de administrador"),
     titulo: "Administrador",
     icono: "fas fa-user-cog",
     submenu: [
       {
         titulo: "Usuarios",
         url: "/usuarios",
-        permiso: $("menu:administrador:usuarios", false),
+        permiso: $(
+          "menu:administrador:usuarios",
+          "Ver el menu de usuarios dentro del menú administrador"
+        ),
       },
-      {
-        titulo: "Departametos",
-        url: "/departamentos",
-        permiso: $("menu:administrador:departamentos", false),
-      },
-      {
-        titulo: "Areas",
-        url: "/areas",
-        permiso: $("menu:administrador:areas", false),
-      },
-      {
-        titulo: "Clientes",
-        url: "/clientes",
-        permiso: $("menu:administrador:clientes", false),
-      },
-      {
-        titulo: "Almacen descripcion",
-        url: "/almacenDescripcion",
-        permiso: $("menu:administrador:almacenDescripcion", false),
-      },
+      // {
+      //   titulo: "Departametos",
+      //   url: "/departamentos",
+      //   permiso: $("menu:administrador:departamentos", "Ver el menu"),
+      // },
+      // {
+      //   titulo: "Areas",
+      //   url: "/areas",
+      //   permiso: $("menu:administrador:areas", false),
+      // },
+      // {
+      //   titulo: "Clientes",
+      //   url: "/clientes",
+      //   permiso: $("menu:administrador:clientes", false),
+      // },
+      // {
+      //   titulo: "Almacen descripcion",
+      //   url: "/almacenDescripcion",
+      //   permiso: $("menu:administrador:almacenDescripcion", false),
+      // },
     ],
   }
   return menu

@@ -209,11 +209,12 @@ app.post(
     //   comprobarEmpleadoActivo(req.body.empleado, req.body.permissions)
     bcrypt.hash(req.body.password, 10, function (err, hash) {
       req.body.password = hash
+      delete req.body._id
       new Usuario(req.body)
         .save()
         .then(x => {
-          u.password = ":D"
-          return res.send(u)
+          x.password = ":D"
+          return res.send(x)
         })
         .catch(_ => next(_))
     })

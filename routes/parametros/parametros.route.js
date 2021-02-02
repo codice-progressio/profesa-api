@@ -2,10 +2,9 @@ var express = require("express")
 var app = express()
 
 var Parametros = require("../../models/defautls/parametros.model")
-var guard = require("express-jwt-permissions")()
 var bcrypt = require("bcryptjs")
 var Usuario = require("../../models/usuario.model")
-const $ =  require("@codice-progressio/easy-permissions").$
+const $ = require("@codice-progressio/easy-permissions").$
 var Proceso = require("../../models/procesos/proceso")
 var Departamento = require("../../models/departamento")
 
@@ -207,9 +206,7 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
 
       //Revisamos dos veces que tenga el permiso por que para llegar
       // aqui usamos el token y ese todavia tiene el permiso.
-      if (
-        !usuarioLogueado.permissions.includes($("SUPER_ADMIN", false))
-      )
+      if (!usuarioLogueado.permissions.includes("SUPER_ADMIN"))
         throw "No puedes continuar con esta operacion"
 
       const contrasenaCorrecta = bcrypt.compareSync(
@@ -229,10 +226,7 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
       return Promise.all([
         parametros.save(),
         //NINGUN OTRO USUARIO DEBE DE TENER EL ROL SUPER ADMIN
-        Usuario.updateMany(
-          {},
-          { $pull: { permissions: $("SUPER_ADMIN") } }
-        )
+        Usuario.updateMany({}, { $pull: { permissions: "SUPER_ADMIN" } })
           .exec()
           .then(u => usuario.save()),
       ])

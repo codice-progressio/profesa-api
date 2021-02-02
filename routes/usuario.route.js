@@ -17,7 +17,7 @@ app.get(
   "/",
   $("administrador:usuario:leer", "Leer los usuarios existentes"),
   async (req, res, next) => {
-    Usuario.find()
+    Usuario.find({ eliminado: false })
       .populate("empleado", "nombres apellidos fotografia", "Empleado")
       .lean()
       .exec()
@@ -249,15 +249,12 @@ app.delete(
 
         if (req.parametros.super.id === u._id.toObject())
           throw "Imposible eliminar este usuario. "
-
-        return usuario.remove()
+        usuario.permissions.pull("login")
+        usuario.eliminado = true
+        return usuario.save()
       })
-      .then(ur => {
-        return RESP._200(res, "Se elimino el usuario", [
-          { tipo: "ur", datos: ur },
-        ])
-      })
-      .catch(err => erro(res, err, "Hubo un error eliminado el usuario"))
+      .then(usuario => res.send(usuario))
+      .catch(_ => next(_))
   }
 )
 
@@ -339,15 +336,15 @@ app.get(
       .then(usuario => {
         if (!usuario) throw "No existe el usuario"
 
-        if (usuario.empleado) {
-          usuario.nombre =
-            usuario.empleado.nombres + " " + usuario.empleado.apellidos
-          usuario.img = usuario.empleado.fotografia
-        }
+        // if (usuario.empleado) {
+        //   usuario.nombre =
+        //     usuario.empleado.nombres + " " + usuario.empleado.apellidos
+        //   usuario.img = usuario.empleado.fotografia
+        // }
 
-        return RESP._200(res, null, [{ tipo: "usuario", datos: usuario }])
+        res.send(usuario)
       })
-      .catch(err => erro(res, err, "Hubo un error buscando el usuario por id"))
+      .catch(_ => next(_))
   }
 )
 

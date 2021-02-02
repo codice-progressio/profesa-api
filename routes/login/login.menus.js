@@ -228,28 +228,7 @@ function parametros() {
     permiso: $("menu:parametros", false),
     titulo: "Parametros",
     icono: "fas fa-microchip",
-    submenu: [
-      {
-        titulo: "Localizacion de ordenes",
-        url: "/parametros/localizacionDeOrdenes",
-        permiso: $("menu:parametros:localizacionDeOrdenes", false),
-      },
-      {
-        titulo: "Procesos Especiales",
-        url: "/parametros/procesosEspeciales",
-        permiso: $("menu:parametros:procesosEspeciales", false),
-      },
-      {
-        titulo: "Restablecer o cambiar administrador",
-        url: "/parametros/administrador",
-        permiso: $("SUPER_ADMIN", false),
-      },
-      {
-        titulo: "Crear estaciones de escaneo",
-        url: "/parametros/scanners",
-        permiso: $("SUPER_ADMIN", false),
-      },
-    ],
+    submenu: [],
   }
   return menu
 }

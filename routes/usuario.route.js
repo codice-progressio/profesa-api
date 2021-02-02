@@ -153,7 +153,7 @@ app.put(
         }
         return us.save()
       })
-      .then(usuario => res.send(usuario))
+      .then(usuario => res.send(usuario.img))
       .catch(_ => next(_))
   }
 )

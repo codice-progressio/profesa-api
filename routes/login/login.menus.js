@@ -268,7 +268,7 @@ function administrador() {
     submenu: [
       {
         titulo: "Usuarios",
-        url: "/usuarios",
+        url: "/usuario",
         permiso: $(
           "menu:administrador:usuarios",
           "Ver el menu de usuarios dentro del menú administrador"

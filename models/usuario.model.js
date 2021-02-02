@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 const uniqueValidator = require("mongoose-unique-validator")
-
+const $ = require("@codice-progressio/easy-permissions").$
 const Schema = mongoose.Schema
 
 const usuarioSchema = new Schema({
@@ -18,7 +18,13 @@ const usuarioSchema = new Schema({
   img: require("./imagen.model"),
   permissions: {
     type: [String],
-    default: ["login"],
+    default: [
+      $(
+        "login",
+        "Permite loguear al usuario. Remover este permiso impedira que el usuario inicie sesión.",
+        { esMiddleware: false }
+      ),
+    ],
     select: false,
   },
 })

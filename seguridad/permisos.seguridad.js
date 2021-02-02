@@ -1,5 +1,7 @@
 const permisos = {
-  "login":"false",
+  "login":"Permite loguear al usuario. Remover este permiso impedira que el usuario inicie sesión.",
+  "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menú administrador",
+  "menu:administrador":"Ver el menu de administrador",
   "menu:compras:proveedores":"false",
   "menu:compras":"false",
   "menu:almacen:sku":"false",
@@ -174,6 +176,6 @@ const permisos = {
   "administrador:usuario:modificar:password":"Modificar el password de un usuario",
   "administrador:usuario:modificar":"Modificar datos básicos de un usuario",
   "administrador:usuario:leer":"Leer los usuarios existentes",
-  
+
 }
 module.exports = permisos

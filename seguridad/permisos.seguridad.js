@@ -1,4 +1,13 @@
 const permisos = {
+  "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menú administrador",
+  "menu:administrador":"Ver el menu de administrador",
+  "menu:compras:proveedores":"false",
+  "menu:compras":"false",
+  "menu:ventas:clientes":"false",
+  "menu:ventas:mis-pedidos":"false",
+  "menu:ventas":"Ver el menu de ventas",
+  "menu:almacen:sku":"false",
+  "menu:almacen":"false",
   "programacionTransformacion:actualizarUbicacion":"Sin descripción",
   "programacionTransformacion:ordenesPorAsignar":"Sin descripción",
   "programacionTransformacion:asignar":"Sin descripción",

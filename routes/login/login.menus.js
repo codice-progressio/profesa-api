@@ -45,7 +45,7 @@ function generarMenus() {
     ALMACENES: almacenes(),
     // CONTROL_DE_PRODUCCION: controlDeProduccion(),
     // INGENIERIA: ingenieria(),
-    // VENTAS: ventas(),
+    VENTAS: ventas(),
     COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
     // RH: rh(),
@@ -205,19 +205,19 @@ function ingenieria() {
 
 function ventas() {
   const menu = {
-    permiso: $("menu:ventas", false),
+    permiso: $("menu:ventas", "Ver el menu de ventas"),
     titulo: "Ventas",
     icono: "fas fa-file-contract",
     submenu: [
       {
-        titulo: "Mis folios",
-        url: "/ventas/misFolios",
-        permiso: $("menu:ventas:misFolios", false),
+        titulo: "Mis Pedidos",
+        url: "/ventas/misPedidos",
+        permiso: $("menu:ventas:mis-pedidos", false),
       },
       {
-        titulo: "Stock",
-        url: "/ventas/stock",
-        permiso: $("menu:ventas:stock", false),
+        titulo: "Clientes",
+        url: "/ventas/clientes",
+        permiso: $("menu:ventas:clientes", false),
       },
     ],
   }

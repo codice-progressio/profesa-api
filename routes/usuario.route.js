@@ -330,7 +330,7 @@ app.get(
   $("administrador:usuario:leer:id", "Buscar un usuario por su id"),
   (req, res) => {
     Usuario.findById(req.params.id)
-      .populate("empleado", "nombres apellidos fotografia", "Empleado")
+      .select("+permissions")
       .lean()
       .exec()
       .then(usuario => {
@@ -399,4 +399,9 @@ app.get(
       .catch(err => next(err))
   }
 )
+
+app.get("/permisos", (req, res) => {
+  res.send(PERMISOS)
+})
+
 module.exports = app

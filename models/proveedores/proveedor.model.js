@@ -18,7 +18,7 @@ const ProveedorSchema = new Schema(
         puesto: [String],
       },
     ],
-    rfc: { type: String, unique: true },
+    rfc: { type: String },
     cuentas: [
       {
         clabe: Number,

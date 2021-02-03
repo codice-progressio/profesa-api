@@ -213,12 +213,7 @@ function ventas() {
         titulo: "Mis Pedidos",
         url: "/ventas/misPedidos",
         permiso: $("menu:ventas:mis-pedidos", false),
-      },
-      {
-        titulo: "Clientes",
-        url: "/ventas/clientes",
-        permiso: $("menu:ventas:clientes", false),
-      },
+      }
     ],
   }
 
@@ -246,9 +241,9 @@ function compras() {
         permiso: $("menu:compras", false),
       },
       {
-        titulo: "Proveedores",
-        url: "/compras/proveedores",
-        permiso: $("menu:compras:proveedores", false),
+        titulo: "Contactos",
+        url: "/compras/contactos",
+        permiso: $("menu:compras:contactos", false),
       },
       // {
       //   titulo: "Divisas",

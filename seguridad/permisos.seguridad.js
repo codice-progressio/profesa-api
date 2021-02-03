@@ -1,4 +1,5 @@
 const permisos = {
+  "menu:compras:contactos":"false",
   "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menú administrador",
   "menu:administrador":"Ver el menu de administrador",
   "menu:compras:proveedores":"false",

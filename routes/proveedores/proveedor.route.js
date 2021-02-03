@@ -4,7 +4,7 @@ const Proveedor = require("../../models/proveedores/proveedor.model")
 const $ = require("@codice-progressio/easy-permissions").$
 const sku = require("../../models/sku.model")
 
-app.post("/", $("proveedor:crear"), (req, res) => {
+app.post("/", $("proveedor:crear"), (req, res, next) => {
   return new Proveedor(req.body)
     .save()
     .then(proveedor => res.send(proveedor))

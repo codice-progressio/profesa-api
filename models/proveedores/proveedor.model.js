@@ -31,6 +31,8 @@ const ProveedorSchema = new Schema(
     // por precio de proveedor no se vean afectadas
     // al eliminar todos los datos relacionados con el proveedor.
     eliminado: { type: Boolean, default: false, select: false },
+    esCliente: Boolean,
+    esProveedor: Boolean,
   },
   { collection: "proveedores" }
 )

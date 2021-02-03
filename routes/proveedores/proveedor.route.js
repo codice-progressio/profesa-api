@@ -5,6 +5,7 @@ const $ = require("@codice-progressio/easy-permissions").$
 const sku = require("../../models/sku.model")
 
 app.post("/", $("proveedor:crear"), (req, res, next) => {
+  console.log(req.body)
   return new Proveedor(req.body)
     .save()
     .then(proveedor => res.send(proveedor))
@@ -27,8 +28,7 @@ app.get("/", $("proveedor:leer:todo"), async (req, res) => {
     .catch(err => next(err))
 })
 
-app.get("/buscar/id/:id", $("proveedor:leer:id"), (req, res) =>
-{
+app.get("/buscar/id/:id", $("proveedor:leer:id"), (req, res) => {
   // Los eliminados no deben aparecer.
   Proveedor.findOne({ _id: req.params.id, eliminado: false })
     .exec()
@@ -56,7 +56,7 @@ app.get(
 
     const $match = {
       // No listmos los eliminados
-      eliminado:false,
+      eliminado: false,
       $or: [],
     }
 
@@ -94,6 +94,8 @@ app.put("/", $("proveedor:modificar"), (req, res, next) => {
         "contactos",
         "rfc",
         "cuentas",
+        "esCliente",
+        "esProveedor",
       ].forEach(x => {
         proveedor[x] = req.body[x]
       })
@@ -124,14 +126,13 @@ app.delete("/:id", $("proveedor:eliminar"), (req, res) => {
 // =====================================
 // -->
 
-app.get("/relacionados/:id", (req, res) =>
-{
+app.get("/relacionados/:id", (req, res) => {
   const desde = Number(req.query.desde ?? 0)
   const limite = Number(req.query.limite ?? 30)
   const sort = Number(req.query.sort ?? 1)
   const campo = String(req.query.campo ?? "nombre")
- 
- sku
+
+  sku
     .find({ "proveedores.idProveedor": req.params.id })
     .sort({ [campo]: sort })
     .limit(limite)

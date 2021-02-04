@@ -40,6 +40,10 @@ const ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateri
 
 const ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
 
+
+
+const pedidoRoute = require("../routes/pedidos/pedido.route")
+
 const jwt = require("express-jwt")
 const guard = require("express-jwt-permissions")()
 const $ = require("@codice-progressio/easy-permissions").$
@@ -122,5 +126,6 @@ module.exports.ROUTES = function (app) {
   // app.use("/proceso", procesoRoutes)
   // app.use("/familiaDeProcesos", familiaDeProcesosRoutes)
   // app.use("/maquina", maquinaRoutes)
+  app.use("/pedido", pedidoRoute)
 }
 //

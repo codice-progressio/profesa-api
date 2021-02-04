@@ -5,7 +5,7 @@ const Pedido = require("../../models/pedidos/pedido.model")
 function popular(doc) {
   return doc
     .populate("contacto", "nombre")
-    .populate("articulso.sku", "nombreCompleto descripcion existenciaActual")
+    .populate("articulos.sku", "nombreCompleto descripcion existenciaActual")
 }
 app.get(
   "/leer/todo",
@@ -27,7 +27,7 @@ app.get(
   "/buscar/id/:id",
   $("pedido:buscar:id", "Buscar un pedido por su id"),
   (req, res, next) => {
-    popular(Pedido.findById(req.body.id))
+    popular(Pedido.findById(req.params.id))
       .select("+acciones")
       .exec()
       .then(p => {

@@ -36,4 +36,4 @@ const ProveedorSchema = new Schema(
   },
   { collection: "proveedores" }
 )
-module.exports = mongoose.model("Proveedor", ProveedorSchema)
+module.exports = mongoose.model("Contacto", ProveedorSchema)

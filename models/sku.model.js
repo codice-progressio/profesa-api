@@ -3,6 +3,10 @@ const Schema = mongoose.Schema
 const loteSchema = require("./almacenProductoTerminado/lote.model")
 const imagenSchema = require("./imagen.model")
 const sku = new Schema({
+  eliminado: {
+    type: Boolean,
+    default: false,
+  },
   puedoProducirlo: { type: Boolean, default: false },
   puedoComprarlo: { type: Boolean, default: false },
   puedoVenderlo: { type: Boolean, default: false },

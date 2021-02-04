@@ -103,7 +103,7 @@ app.get(
     const sort = Number(req.query.sort || 1)
     const campo = String(req.query.campo || "nombreCompleto")
 
-    SKU.find()
+    SKU.find({ eliminado: false })
       .limit(limite)
       .skip(desde)
       .sort({ [campo]: sort })
@@ -143,6 +143,7 @@ app.get(
     })
 
     const $match = {
+      eliminado: false,
       $or: [],
     }
 
@@ -177,7 +178,7 @@ app.get(
 app.get("/buscar/etiquetas", (req, res, next) => {
   let etiquetas = req.query.etiquetas.split(",")
 
-  SKU.find({ etiquetas: { $all: etiquetas } })
+  SKU.find({ eliminado: false, etiquetas: { $all: etiquetas } })
     .exec()
     .then(skus => res.send(skus))
     .catch(_ => next(_))
@@ -253,12 +254,14 @@ app.delete("/:id", $("sku:eliminar"), async (req, res, next) => {
     .then(sku => {
       if (!sku) throw "No existe el sku"
 
-      // Elimimanos todas las imagenes.
-      let promesas = sku.imagenes.map(x =>
-        easyImages.eliminarImagenDeBucket(x.nombreBD)
-      )
+      // // Elimimanos todas las imagenes.
+      // let promesas = sku.imagenes.map(x =>
+      //   easyImages.eliminarImagenDeBucket(x.nombreBD)
+      // )
 
-      return Promise.all(promesas).then(() => sku.remove())
+      // return Promise.all(promesas).then(() => sku.remove())
+      sku.eliminado = true
+      return sku.save()
     })
     .then(sku => res.send(sku))
     .catch(err => next(err))

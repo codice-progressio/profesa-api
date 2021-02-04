@@ -213,7 +213,7 @@ function ventas() {
         titulo: "Mis Pedidos",
         url: "/ventas/misPedidos",
         permiso: $("menu:ventas:mis-pedidos", false),
-      }
+      },
     ],
   }
 
@@ -222,13 +222,32 @@ function ventas() {
 
 function parametros() {
   const menu = {
-    permiso: $("menu:parametros", false),
+    permiso: $(
+      "menu:parametros",
+      "Ver el menú para  modificar parametros del sistema"
+    ),
     titulo: "Parametros",
     icono: "fas fa-microchip",
-    submenu: [],
+    submenu: [
+      {
+        titulo: "Localizacion de pedidos",
+        url: "/parametros/localizacion",
+        permiso: $(
+          "menu:parametros:localizacion",
+          "Ver el menú para crear la localiz"
+        ),
+      },
+
+      {
+        titulo: "Estaciones de escaneo",
+        url: "/parametros/estaciones",
+        permiso: $("SUPER_ADMIN", false),
+      },
+    ],
   }
   return menu
 }
+
 function compras() {
   const menu = {
     permiso: $("menu:compras", false),
@@ -266,14 +285,17 @@ function administrador() {
         url: "/usuario",
         permiso: $(
           "menu:administrador:usuarios",
-          "Ver el menu de usuarios dentro del menú administrador"
+          "Ver el menu de usuarios dentro del menu administrador"
         ),
       },
-      // {
-      //   titulo: "Departametos",
-      //   url: "/departamentos",
-      //   permiso: $("menu:administrador:departamentos", "Ver el menu"),
-      // },
+      {
+        titulo: "Departametos",
+        url: "/departamentos",
+        permiso: $(
+          "menu:administrador:departamentos",
+          "Ver el menu de gestion de departamentos"
+        ),
+      },
       // {
       //   titulo: "Areas",
       //   url: "/areas",

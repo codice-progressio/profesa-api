@@ -12,7 +12,14 @@ const $ = require("@codice-progressio/easy-permissions").$
 const permisos = require("../../seguridad/permisos.seguridad")
 
 function crearToken(usuario) {
-  return jwt.sign({ ...usuario }, SEED, {
+  delete usuario.password
+  const objeto = {
+    ...usuario,
+    menu: obtenerMenu(usuario.permissions),
+    apiVersion: pjson.version,
+  }
+
+  return jwt.sign({ ...objeto }, SEED, {
     //Una hora 3600
     expiresIn: 3600 * 2,
   })
@@ -26,7 +33,7 @@ app.post("/renuevatoken", (req, res, next) => {
     .then(usuario => {
       if (!usuario) throw "No se renovo la sesion"
       let token = crearToken(usuario)
-      return res.send({token})
+      return res.send({ token })
     })
     .catch(err => {
       next(err)
@@ -35,8 +42,6 @@ app.post("/renuevatoken", (req, res, next) => {
 
 app.post("/", (req, res, next) => {
   var body = req.body
-  var datos = []
-  var usuarioLogueado = null
   Usuario.findOne({ email: body.email })
     .populate("empleado", "nombres apellidos fotografia")
     .select("+password +permissions")
@@ -51,13 +56,8 @@ app.post("/", (req, res, next) => {
         throw "Credenciales incorrectas"
 
       // crear un token!
-      delete usuarioDB.password
       if (!usuarioDB.permissions) usuarioDB.permissions = []
-      var token = crearToken({
-        ...usuarioDB,
-        menu: obtenerMenu(usuarioDB.permissions),
-        apiVersion: pjson.version,
-      })
+      var token = crearToken(usuarioDB)
       usuarioLogueado = usuarioDB
 
       let e = usuarioDB.empleado
@@ -66,7 +66,7 @@ app.post("/", (req, res, next) => {
         usuarioDB.img = e.fotografia
       }
 
-      return res.send({token})
+      return res.send({ token })
     })
     .catch(err => next(err))
 })

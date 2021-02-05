@@ -56,7 +56,7 @@ const sku = new Schema({
     select: false,
   },
 
-  costoVenta: { type: Number, min: 0 },
+  costoVenta: { type: Number, min: 0, default: 0 },
   proveedores: {
     select: false,
     type: [

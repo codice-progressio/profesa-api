@@ -5,7 +5,10 @@ const Pedido = require("../../models/pedidos/pedido.model")
 function popular(doc) {
   return doc
     .populate("contacto", "nombre")
-    .populate("articulos.sku", "nombreCompleto descripcion existenciaActual")
+    .populate(
+      "articulos.sku",
+      "nombreCompleto descripcion existenciaActual costoVenta"
+    )
 }
 app.get(
   "/leer/todo",

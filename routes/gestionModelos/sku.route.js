@@ -166,6 +166,7 @@ app.get(
           stockMinimo: "$stockMinimo",
           etiquetas: "$etiquetas",
           imagenes: "$imagenes",
+          costoVenta: "$costoVenta",
         },
       },
     ])
@@ -198,6 +199,7 @@ app.put("/", $("sku:modificar", "Modificar sku"), (req, res, next) => {
         "puedoProducirlo",
         "puedoComprarlo",
         "puedoVenderlo",
+        "costoVenta",
       ].forEach(x => (sku[x] = req.body[x]))
 
       return sku.save()

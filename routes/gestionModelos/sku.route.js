@@ -388,7 +388,7 @@ app.post(
 
 app.get("/lote/:id", (req, res, next) => {
   SKU.findById(req.params.id)
-    .select("lotes")
+    .select("lotes nombreCompleto")
     .lean()
     .exec()
     .then(sku => {
@@ -402,6 +402,78 @@ app.get("/lote/:id", (req, res, next) => {
     })
     .catch(_ => next(_))
 })
+
+app.get("/lote/movimientos/:id", (req, res, next) => {
+  SKU.findById(req.params.id)
+    .select("lotes nombreCompleto")
+    .populate("lotes.movimientos.usuario", "nombre email", "Usuario")
+    .lean()
+    .exec()
+    .then(sku => {
+      if (!sku) throw "No existe el id"
+
+      // Por defecto no vemos los lotes con existencia.
+      if (req.query.sinExistencia)
+        sku.lotes = sku.lotes.filter(x => x.existencia > 0)
+
+      // Reestructuramos
+      const modificado = sku.lotes
+        .map(lote => {
+          const json = {
+            idLote: lote._id,
+            loteExistencia: lote.existencia,
+            // existenciaAlmacenes: {},
+            loteObservaciones: lote.observaciones,
+            ...separarFecha(lote.createdAt, "loteCreado"),
+            ...separarFecha(lote.caducidad, "loteCaducidad"),
+          }
+
+          return lote.movimientos.map(movimiento => {
+            delete movimiento._id
+
+            const usuario = movimiento.usuario
+            delete usuario._id
+            delete movimiento.usuario
+
+            // Convertimos a positivo o negativo para mas comididad
+            movimiento.cantidad =
+              (movimiento.esEntrada ? 1 : -1) * movimiento.cantidad
+
+            movimiento = {
+              ...movimiento,
+              ...separarFecha(movimiento.createdAt, "movCreado"),
+            }
+            delete movimiento.createdAt
+
+            return { ...json, ...movimiento, ...usuario }
+          })
+        })
+        .reduce((acumulador, actual) => acumulador.concat(actual), [])
+
+      return res.send(modificado)
+    })
+    .catch(_ => next(_))
+})
+
+function obtenerFechaSeparada(fecha) {
+  const f = new Date(fecha)
+  return {
+    dia: f.getDate(),
+    mes: f.getMonth() + 1,
+    anio: f.getFullYear(),
+    hora: f.getHours(),
+    minuto: f.getMinutes(),
+  }
+}
+
+function separarFecha(fecha, prefijo) {
+  const objeto = {}
+  const f = obtenerFechaSeparada(fecha)
+  ;["dia", "mes", "anio", "hora", "minuto"].forEach(x => {
+    objeto[`${prefijo}_${x}`] = f[x]
+  })
+  return objeto
+}
 
 // Crea un movimento  lote seleccionado
 app.put(

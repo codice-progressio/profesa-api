@@ -8,6 +8,8 @@ const $ = require("@codice-progressio/easy-permissions").$
 // const upload = require("multer")({ dest: "uploads/sku/", fileFilter })
 // Libreria para convertir imagenes
 
+const Parametros = require("../../models/defautls/parametros.model")
+
 const easyImages = require("@codice-progressio/easy-images")
 
 const erro = (res, err, msj) => {
@@ -234,19 +236,22 @@ app.put(
 app.put(
   "/agregar-etiqueta",
   $("sku:modificar:agregar-etiqueta"),
-  (req, res, next) => {
-    SKU.findById(req.body._id)
-      .exec()
-      .then(sku => {
-        if (!sku) throw "No existe el sku"
-        // Campos modificables.
+  async (req, res, next) => {
+    try {
+      // Existe el sku
+      const sku = await SKU.findById(req.body._id).exec()
+      if (!sku) throw "No existe el sku"
 
-        sku.etiquetas.push(req.body.etiqueta)
+      // Comprobamos la etiqueta si esta registrada
 
-        return sku.save()
-      })
-      .then(sku => res.send(sku))
-      .catch(err => next(err))
+      await Parametros.crearEtiquetaSiNoExiste(req.body.etiqueta)
+      sku.etiquetas.push(req.body.etiqueta)
+
+      const skuGuardado = await sku.save()
+      return res.send(skuGuardado)
+    } catch (error) {
+      next(error)
+    }
   }
 )
 

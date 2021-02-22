@@ -1,6 +1,8 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
 const DomicilioSchema = require("./domicilio.model")
+
+// ESTO SE VA A CONVERTIR EN UN CONTACTO
 const ProveedorSchema = new Schema(
   {
     nombre: {
@@ -33,6 +35,7 @@ const ProveedorSchema = new Schema(
     eliminado: { type: Boolean, default: false, select: false },
     esCliente: Boolean,
     esProveedor: Boolean,
+    etiquetas: [String]
   },
   { collection: "proveedores" }
 )

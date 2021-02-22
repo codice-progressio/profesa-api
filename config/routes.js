@@ -40,13 +40,11 @@ const ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateri
 
 const ProgramacionTransformacion = require("../routes/ingenieria/programacionTransformacion.route")
 
-
-
 const pedidoRoute = require("../routes/pedidos/pedido.route")
 const estadisticasRoute = require("../routes/estadisticas/estadisticas.route")
 
 const jwt = require("express-jwt")
-const guard = require("express-jwt-permissions")() 
+const guard = require("express-jwt-permissions")()
 const $ = require("@codice-progressio/easy-permissions").$
 
 module.exports.ROUTES = function (app) {
@@ -63,7 +61,7 @@ module.exports.ROUTES = function (app) {
       path: rutasAExcluir,
     })
   )
-  
+
   //Excluimos rutas
   app.use(
     guard.check("login").unless({

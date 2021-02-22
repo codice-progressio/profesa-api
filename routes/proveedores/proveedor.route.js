@@ -3,6 +3,7 @@ const app = require("express")()
 const Proveedor = require("../../models/proveedores/proveedor.model")
 const $ = require("@codice-progressio/easy-permissions").$
 const sku = require("../../models/sku.model")
+const Parametros = require("../../models/defautls/parametros.model")
 
 app.post("/", $("proveedor:crear"), (req, res, next) => {
   console.log(req.body)
@@ -147,5 +148,23 @@ app.get("/relacionados/:id", (req, res) => {
 //  END Buscador todos los elementos relacionados con el proveedor
 // =====================================
 // -->
+
+app.put("/agregar-etiqueta", async (req, res, next) => {
+  try {
+    const proveedor = await Proveedor.findById(req.body._id)
+      .select("etiquetas")
+      .exec()
+
+    if (!proveedor) throw "No existe el id"
+    await Parametros.crearEtiquetaSiNoExiste(req.body.etiqueta)
+
+    proveedor.etiquetas.push(req.body.etiqueta)
+    const proSave = await proveedor.save()
+
+    return res.send(proSave)
+  } catch (error) {
+    next(error)
+  }
+})
 
 module.exports = app

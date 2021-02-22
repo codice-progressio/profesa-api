@@ -1,14 +1,19 @@
-var express = require("express")
-var app = express()
+const express = require("express")
+const app = express()
 
-var Parametros = require("../../models/defautls/parametros.model")
-var bcrypt = require("bcryptjs")
-var Usuario = require("../../models/usuario.model")
+const Parametros = require("../../models/defautls/parametros.model")
+const bcrypt = require("bcryptjs")
+const Usuario = require("../../models/usuario.model")
 const $ = require("@codice-progressio/easy-permissions").$
-var Proceso = require("../../models/procesos/proceso")
-var Departamento = require("../../models/departamento")
+const Proceso = require("../../models/procesos/proceso")
+const Departamento = require("../../models/departamento")
+const EtiquetasRoute = require("../../routes/parametros/parametros.etiquetas.route")
 
 const permisos = require("../../seguridad/permisos.seguridad")
+
+// Generales
+
+app.use("/etiquetas", EtiquetasRoute)
 
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.

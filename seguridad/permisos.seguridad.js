@@ -1,4 +1,5 @@
 const permisos = {
+  "menu:administrador:parametros":"Ver el menu de parametros",
   "menu:administrador:departamentos":"Ver el menu de gestion de departamentos",
   "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menu administrador",
   "menu:administrador":"Ver el menu de administrador",

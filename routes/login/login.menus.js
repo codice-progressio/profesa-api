@@ -229,20 +229,19 @@ function parametros() {
     titulo: "Parametros",
     icono: "fas fa-microchip",
     submenu: [
-      {
-        titulo: "Localizacion de pedidos",
-        url: "/parametros/localizacion",
-        permiso: $(
-          "menu:parametros:localizacion",
-          "Ver el menú para crear la localiz"
-        ),
-      },
-
-      {
-        titulo: "Estaciones de escaneo",
-        url: "/parametros/estaciones",
-        permiso: $("SUPER_ADMIN", false),
-      },
+      // {
+      //   titulo: "Localizacion de pedidos",
+      //   url: "/parametros/localizacion",
+      //   permiso: $(
+      //     "menu:parametros:localizacion",
+      //     "Ver el menú para crear la localiz"
+      //   ),
+      // },
+      // {
+      //   titulo: "Estaciones de escaneo",
+      //   url: "/parametros/estaciones",
+      //   permiso: $("SUPER_ADMIN", false),
+      // },
     ],
   }
   return menu
@@ -294,6 +293,14 @@ function administrador() {
         permiso: $(
           "menu:administrador:departamentos",
           "Ver el menu de gestion de departamentos"
+        ),
+      },
+      {
+        titulo: "Parametros",
+        url: "/parametros",
+        permiso: $(
+          "menu:administrador:parametros",
+          "Ver el menu de parametros"
         ),
       },
       // {

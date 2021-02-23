@@ -1,4 +1,10 @@
 const permisos = {
+  "rutas-de-entrega:eliminar:id":"Eliminar una ruta por su id",
+  "rutas-de-entrega:buscar:contactos-de-ruta":"Buscar todos los cantactos asignados a una ruta",
+  "rutas-de-entrega:buscar:id":"Buscar por id una ruta",
+  "rutas-de-entrega:leer:todo":"Leer todas las rutas existentes",
+  "rutas-de-entrega:crear-modificar":"Crear o modificar una ruta de entrega",
+  "proveedor:rutas:agregar":"Agregar rutas a un contacto",
   "menu:administrador:parametros":"Ver el menu de parametros",
   "menu:administrador:departamentos":"Ver el menu de gestion de departamentos",
   "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menu administrador",

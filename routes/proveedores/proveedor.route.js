@@ -13,17 +13,22 @@ app.post("/", $("proveedor:crear"), (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.get("/", $("proveedor:leer:todo"), async (req, res) => {
-  const desde = Number(req.query.desde ?? 0)
-  const limite = Number(req.query.limite ?? 30)
-  const sort = Number(req.query.sort ?? 1)
-  const campo = String(req.query.campo ?? "nombre")
+function agregarPaginacion(model, query) {
+  const desde = Number(query.desde ?? 0)
+  const limite = Number(query.limite ?? 30)
+  const sort = Number(query.sort ?? 1)
+  const campo = String(query.campo ?? "nombre")
 
-  //No listamos los proveedores eliminados
-  Proveedor.find({ eliminado: false })
+  return model
+    .select("etiquetas nombre contactos esCliente esProveedor ")
     .sort({ [campo]: sort })
     .limit(limite)
     .skip(desde)
+}
+
+app.get("/", $("proveedor:leer:todo"), async (req, res) => {
+  //No listamos los proveedores eliminados
+  agregarPaginacion(Proveedor.find({ eliminado: false }), req.query)
     .exec()
     .then(proveedores => res.send(proveedores))
     .catch(err => next(err))
@@ -44,10 +49,10 @@ app.get(
   "/buscar/termino/:termino",
   $("proveedor:leer:termino"),
   async (req, res) => {
-    const desde = Number(req.query.desde || 0)
-    const limite = Number(req.query.limite || 30)
-    const sort = Number(req.query.sort || 1)
-    const campo = String(req.query.campo || "nombre")
+    const desde = Number(req.query.desde ?? 0)
+    const limite = Number(req.query.limite ?? 30)
+    const sort = Number(req.query.sort ?? 1)
+    const campo = String(req.query.campo ?? "nombre")
     const termino = String(
       req.params.termino.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     )
@@ -149,7 +154,7 @@ app.get("/relacionados/:id", (req, res) => {
 // =====================================
 // -->
 
-app.put("/agregar-etiqueta", async (req, res, next) => {
+app.put("/etiquetas/agregar", async (req, res, next) => {
   try {
     const proveedor = await Proveedor.findById(req.body._id)
       .select("etiquetas")
@@ -161,10 +166,28 @@ app.put("/agregar-etiqueta", async (req, res, next) => {
     proveedor.etiquetas.push(req.body.etiqueta)
     const proSave = await proveedor.save()
 
-    return res.send(proSave)
+    return res.send(proSave.etiquetas)
   } catch (error) {
     next(error)
   }
+})
+
+app.put("/etiquetas/eliminar", async (req, res, next) => {
+  Proveedor.findByIdAndUpdate(
+    { _id: req.body._id },
+    { $pull: { etiquetas: req.body.etiqueta } }
+  )
+    .exec()
+    .then(r => res.send())
+    .catch(_ => next(_))
+})
+
+app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
+  const arreglo = [...req.query?.etiquetas?.split(",")] ?? []
+  agregarPaginacion(Proveedor.find({ etiquetas: { $all: arreglo } }), req.query)
+    .exec()
+    .then(contactos => res.send(contactos))
+    .catch(_ => next(_))
 })
 
 module.exports = app

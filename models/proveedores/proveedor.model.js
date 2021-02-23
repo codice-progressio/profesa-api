@@ -35,7 +35,8 @@ const ProveedorSchema = new Schema(
     eliminado: { type: Boolean, default: false, select: false },
     esCliente: Boolean,
     esProveedor: Boolean,
-    etiquetas: [String]
+    etiquetas: [String],
+    rutas: [String],
   },
   { collection: "proveedores" }
 )

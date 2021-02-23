@@ -20,7 +20,7 @@ function agregarPaginacion(model, query) {
   const campo = String(query.campo ?? "nombre")
 
   return model
-    .select("etiquetas nombre contactos esCliente esProveedor ")
+    .select("etiquetas nombre contactos esCliente esProveedor rutas ")
     .sort({ [campo]: sort })
     .limit(limite)
     .skip(desde)
@@ -189,5 +189,23 @@ app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
     .then(contactos => res.send(contactos))
     .catch(_ => next(_))
 })
+
+app.put(
+  "/rutas/agregar",
+  $("proveedor:rutas:agregar", "Agregar rutas a un contacto"),
+  (req, res) => {
+    Proveedor.findById(req.body._id)
+      .exec()
+      .then(p => {
+        if (!p) throw "No existe el id"
+
+        while (p.rutas.length > 0) p.rutas.pop()
+        p.rutas.push(...req.body.rutas)
+        return p.save()
+      })
+      .then(p => res.send(p))
+      .catch(_ => next(_))
+  }
+)
 
 module.exports = app

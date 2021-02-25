@@ -287,20 +287,28 @@ function administrador() {
           "Ver el menu de usuarios dentro del menu administrador"
         ),
       },
-      {
-        titulo: "Departametos",
-        url: "/departamentos",
-        permiso: $(
-          "menu:administrador:departamentos",
-          "Ver el menu de gestion de departamentos"
-        ),
-      },
+      // {
+      //   titulo: "Departametos",
+      //   url: "/departamentos",
+      //   permiso: $(
+      //     "menu:administrador:departamentos",
+      //     "Ver el menu de gestion de departamentos"
+      //   ),
+      // },
       {
         titulo: "Parametros",
         url: "/parametros",
         permiso: $(
           "menu:administrador:parametros",
           "Ver el menu de parametros"
+        ),
+      },
+      {
+        titulo: "Rutas",
+        url: "/parametros/rutas-de-entrega",
+        permiso: $(
+          "menu:administrador:rutas-de-entrega",
+          "Ver el menu de parametros de ruta de entrega"
         ),
       },
       // {

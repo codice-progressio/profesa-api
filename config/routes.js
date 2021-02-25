@@ -42,7 +42,7 @@ const ProgramacionTransformacion = require("../routes/ingenieria/programacionTra
 
 const pedidoRoute = require("../routes/pedidos/pedido.route")
 const estadisticasRoute = require("../routes/estadisticas/estadisticas.route")
-const rutasDeEntregaRoute = require("../routes/rutasDeEntrega/rutasDeEntrega.route")
+const rutaDeEntregaRoute = require("../routes/rutasDeEntrega/rutaDeEntrega.route")
 
 const jwt = require("express-jwt")
 const guard = require("express-jwt-permissions")()
@@ -128,6 +128,6 @@ module.exports.ROUTES = function (app) {
   // app.use("/maquina", maquinaRoutes)
   app.use("/pedido", pedidoRoute)
   app.use("/estadisticas", estadisticasRoute)
-  app.use("/rutas-de-entrega", rutasDeEntregaRoute)
+  app.use("/ruta-de-entrega", rutaDeEntregaRoute)
 }
 //

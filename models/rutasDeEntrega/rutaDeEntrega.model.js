@@ -1,6 +1,6 @@
 const mongoose = require("mongoose")
 const Schema = mongoose.Schema
-const RutasDeEntregaSchema = new Schema({
+const RutaDeEntregaSchema = new Schema({
   nombre: {
     type: String,
     min: [4, "El nombre debe contener cuatro letras o mas"],
@@ -9,4 +9,4 @@ const RutasDeEntregaSchema = new Schema({
   descripcion: String,
 })
 
-module.exports = mongoose.model("rutasDeEntrega", RutasDeEntregaSchema)
+module.exports = mongoose.model("rutaDeEntrega", RutaDeEntregaSchema)

@@ -37,6 +37,7 @@ app.get("/", $("proveedor:leer:todo"), async (req, res) => {
 app.get("/buscar/id/:id", $("proveedor:leer:id"), (req, res) => {
   // Los eliminados no deben aparecer.
   Proveedor.findOne({ _id: req.params.id, eliminado: false })
+    .populate("rutas", undefined, "rutaDeEntrega")
     .exec()
     .then(proveedor => {
       if (!proveedor) throw "No existe el id o ha sido eliminado"

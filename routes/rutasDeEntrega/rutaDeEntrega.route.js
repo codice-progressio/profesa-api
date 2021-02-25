@@ -1,5 +1,5 @@
 const app = require("express")()
-const RutasDeEntrega = require("../../models/rutasDeEntrega/rutasDeEntrega.model")
+const RutasDeEntrega = require("../../models/rutasDeEntrega/rutaDeEntrega.model")
 const ObjectId = require("mongoose").Types.ObjectId
 const $ = require("@codice-progressio/easy-permissions").$
 

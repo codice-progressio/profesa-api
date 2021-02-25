@@ -1,12 +1,6 @@
 const permisos = {
-  "rutas-de-entrega:eliminar:id":"Eliminar una ruta por su id",
-  "rutas-de-entrega:buscar:contactos-de-ruta":"Buscar todos los cantactos asignados a una ruta",
-  "rutas-de-entrega:buscar:id":"Buscar por id una ruta",
-  "rutas-de-entrega:leer:todo":"Leer todas las rutas existentes",
-  "rutas-de-entrega:crear-modificar":"Crear o modificar una ruta de entrega",
-  "proveedor:rutas:agregar":"Agregar rutas a un contacto",
+  "menu:administrador:rutas-de-entrega":"Ver el menu de parametros de ruta de entrega",
   "menu:administrador:parametros":"Ver el menu de parametros",
-  "menu:administrador:departamentos":"Ver el menu de gestion de departamentos",
   "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menu administrador",
   "menu:administrador":"Ver el menu de administrador",
   "menu:compras:contactos":"false",
@@ -15,6 +9,11 @@ const permisos = {
   "menu:ventas":"Ver el menu de ventas",
   "menu:almacen:sku":"false",
   "menu:almacen":"false",
+  "rutas-de-entrega:eliminar:id":"Eliminar una ruta por su id",
+  "rutas-de-entrega:buscar:contactos-de-ruta":"Buscar todos los cantactos asignados a una ruta",
+  "rutas-de-entrega:buscar:id":"Buscar por id una ruta",
+  "rutas-de-entrega:leer:todo":"Leer todas las rutas existentes",
+  "rutas-de-entrega:crear-modificar":"Crear o modificar una ruta de entrega",
   "pedido:eliminar":"Permite liminar un pedido",
   "pedido:modificar":"Modifcar un pedido",
   "pedido:crear":"Crear un pedido",
@@ -90,6 +89,7 @@ const permisos = {
   "divisa:leer:id":"Sin descripción",
   "divisa:leer:todo":"Sin descripción",
   "divisa:crear":"Sin descripción",
+  "proveedor:rutas:agregar":"Agregar rutas a un contacto",
   "proveedor:eliminar":"Sin descripción",
   "proveedor:modificar":"Sin descripción",
   "proveedor:leer:termino":"Sin descripción",
@@ -193,6 +193,6 @@ const permisos = {
   "administrador:usuario:modificar":"Modificar datos básicos de un usuario",
   "administrador:usuario:leer":"Leer los usuarios existentes",
   "login":"Permite loguear al usuario. Remover este permiso impedira que el usuario inicie sesión.",
- 
+    
 }
 module.exports = permisos

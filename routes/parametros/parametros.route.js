@@ -173,6 +173,31 @@ app.get(
   }
 )
 
+
+app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
+  //Reiniciamos todos los permisos del super administrador para agregar permisos nuevos que existan o eliminar los que ya no existen.
+
+  Usuario.findById(req.parametros.super.id)
+    .select("+permissions")
+    .exec()
+    .then(u => {
+      if (!u) throw "No existe usuario super-admin"
+
+      while (u.permissions.length > 0) {
+        u.permissions.pop()
+      }
+
+      Object.keys(permisos).forEach(p => u.permissions.push(p))
+
+      return u.save()
+    })
+    .then(uS => {
+      return res.send({
+        mensaje: "Se actualizaron los permisos del super-administrador",
+      })
+    })
+})
+
 //DESPUES DE AQUI TODO LO DEBE SE HACER EL SUPER ADMIN
 
 app.use($("SUPER_ADMIN"))
@@ -245,29 +270,7 @@ app.put("/configurar-super-admin/cambiar", async (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.put("/configurar-super-admin/permisos/reiniciar", (req, res) => {
-  //Reiniciamos todos los permisos del super administrador para agregar permisos nuevos que existan o eliminar los que ya no existen.
 
-  Usuario.findById(req.parametros.super.id)
-    .select("+permissions")
-    .exec()
-    .then(u => {
-      if (!u) throw "No existe usuario super-admin"
-
-      while (u.permissions.length > 0) {
-        u.permissions.pop()
-      }
-
-      Object.keys(permisos).forEach(p => u.permissions.push(p))
-
-      return u.save()
-    })
-    .then(uS => {
-      return res.send({
-        mensaje: "Se actualizaron los permisos del super-administrador",
-      })
-    })
-})
 
 // LO QUE SIGUE SON PERSONALIZABLES PARA CADA PROYECTO
 

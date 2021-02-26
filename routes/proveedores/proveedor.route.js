@@ -187,8 +187,14 @@ app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
   const arreglo = [...req.query?.etiquetas?.split(",")] ?? []
   agregarPaginacion(Proveedor.find({ etiquetas: { $all: arreglo } }), req.query)
     .exec()
-    .then(contactos => res.send(contactos))
-    .catch(_ => next(_))
+    .then(contactos => {
+      console.log(contactos)
+      res.send(contactos)
+    })
+    .catch(_ => {
+      console.log("error", _)
+      next(_)
+    })
 })
 
 app.put(

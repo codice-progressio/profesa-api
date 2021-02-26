@@ -32,7 +32,7 @@ var app = express()
 app.disable("x-powered-by")
 
 app.use(compression())
-app.use(cors())
+app.use(cors({ credentials: true, origin: true }))
 
 //  Body parser
 // parse application/x-www-form-urlencoded

@@ -36,6 +36,10 @@ app.use((req, res, next) => {
   console.log("Entramos 0")
   next()
 })
+app.use((req, res, next) => {
+  console.log("Entramos 0.0")
+  next()
+})
 
 var corsOptions = {
   origin: process.env.ORIGIN,

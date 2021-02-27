@@ -27,7 +27,7 @@ const _ROUTES = require("./config/routes")
 const cors = require("cors")
 
 // Inicializar variables.
-var app = express()
+const app = express()
 
 app.disable("x-powered-by")
 app.use(compression())
@@ -37,12 +37,12 @@ app.use((req, res, next) => {
   next()
 })
 app.use((req, res, next) => {
-  console.log("Entramos 0.0")
+  console.log("Entramos 0")
   next()
 })
 
-var corsOptions = {
-  origin: process.env.ORIGIN,
+const corsOptions = {
+  origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
 }
 

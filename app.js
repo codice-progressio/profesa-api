@@ -23,7 +23,7 @@ const fs = require("fs")
 const mongoose = require("mongoose")
 const colores = require("./utils/colors")
 const bodyParser = require("body-parser")
-const _ROUTES = require("./config/routes").ROUTES
+const _ROUTES = require("./config/routes")
 const cors = require("cors")
 
 // Inicializar variables.
@@ -74,7 +74,7 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
     next()
   })
 
-  _ROUTES(app)
+  app.use(_ROUTES)
 
   // Llamamos a los errores.
   app.use(function (req, res) {

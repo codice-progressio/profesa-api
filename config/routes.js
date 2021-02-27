@@ -73,7 +73,7 @@ const $ = require("@codice-progressio/easy-permissions").$
 
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
-app.use("/parametros", Parametros)
+// app.use("/parametros", Parametros)
 
 // //Cargamos todos los parametros en cada peticion para tener disponible
 // //la informacion en req.parametros

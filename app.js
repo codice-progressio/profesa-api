@@ -30,8 +30,12 @@ const cors = require("cors")
 var app = express()
 
 app.disable("x-powered-by")
-
 app.use(compression())
+
+app.use((req, res, next) => {
+  console.log("Entramos 0")
+  next()
+})
 
 var corsOptions = {
   origin: process.env.ORIGIN,
@@ -41,14 +45,32 @@ var corsOptions = {
 console.log(corsOptions)
 app.use(cors(corsOptions))
 
+app.use((req, res, next) => {
+  console.log("Entramos 1")
+  next()
+})
+
 //  Body parser
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.json({ limit: "50mb" }))
+app.use((req, res, next) => {
+  console.log("Entramos 2")
+  next()
+})
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }))
+app.use((req, res, next) => {
+  console.log("Entramos 3")
+  next()
+})
 
 //Convierte los valores de los query que se pasan por url
 // en valores. Ej. 'true'=> true, '1000' => 1000
 app.use(require("express-query-auto-parse")())
+
+app.use((req, res, next) => {
+  console.log("Entramos 4")
+  next()
+})
 
 mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
@@ -59,6 +81,11 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
     console.log(err)
     throw err
   }
+
+  app.use((req, res, next) => {
+    console.log("Entramos 5")
+    next()
+  })
   // Mensaje de conexion exitosa a la BD
   console.log("[ INFO ] Conectado a la BD")
 
@@ -74,11 +101,26 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
     next()
   })
 
+  app.use((req, res, next) => {
+    console.log("Entramos 6")
+    next()
+  })
+
   app.use(_ROUTES)
+
+  app.use((req, res, next) => {
+    console.log("Entramos 7")
+    next()
+  })
 
   // Llamamos a los errores.
   app.use(function (req, res) {
     return res.status(404).send("No existe la pagina")
+  })
+
+  app.use((req, res, next) => {
+    console.log("Entramos 8")
+    next()
   })
 
   app.use(function (err, req, res, next) {

@@ -71,7 +71,7 @@ app.use(
   })
 )
 
-app.use("/img", imagenesRoutes)
+// app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
 app.use("/parametros", Parametros)
 
@@ -94,7 +94,7 @@ app.use("/login", loginRoutes)
 
 //Para usar esta parte debe tener permisos de login
 
-app.use("/changelogs", Changelogs)
+// app.use("/changelogs", Changelogs)
 
 app.use("/programacionTransformacion", ProgramacionTransformacion)
 app.use(

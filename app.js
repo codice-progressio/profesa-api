@@ -37,12 +37,11 @@ app.use((req, res, next) => {
   next()
 })
 app.use((req, res, next) => {
-  console.log("Entramos 0")
+  console.log("Entramos 0.1")
   next()
 })
 
 const corsOptions = {
-  origin: "*",
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
 }
 

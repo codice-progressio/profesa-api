@@ -43,7 +43,7 @@ var corsOptions = {
 }
 
 console.log(corsOptions)
-// app.use(cors(corsOptions))
+app.use(cors())
 
 app.use((req, res, next) => {
   console.log("Entramos 1")

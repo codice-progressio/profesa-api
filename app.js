@@ -32,7 +32,14 @@ var app = express()
 app.disable("x-powered-by")
 
 app.use(compression())
-app.use(cors({ credentials: true, origin: true }))
+
+var corsOptions = {
+  origin: process.env.ORIGIN,
+  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+  credentials: true,
+}
+console.log(corsOptions)
+app.use(cors(corsOptions))
 
 //  Body parser
 // parse application/x-www-form-urlencoded

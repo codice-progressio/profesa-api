@@ -129,7 +129,7 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
   // Llamamos a los errores.
   app.use(function (req, res, next) {
     console.log("No existe la pagina")
-    return res.status(404).send({error:"No existe la pagina"})
+    return res.status(404).send("No existe la pagina")
   })
 
   app.use((req, res, next) => {

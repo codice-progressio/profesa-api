@@ -50,8 +50,8 @@ const jwt = require("express-jwt")
 const guard = require("express-jwt-permissions")()
 const $ = require("@codice-progressio/easy-permissions").$
 
-Aseguramos todo menos el login y paremetros. Internamente paraemtros
-se asegura. Tambien crea el req.user
+//Aseguramos todo menos el login y paremetros. Internamente paraemtros
+// se asegura. Tambien crea el req.user
 const rutasAExcluir = [
   "/parametros",
   "/parametros/super-admin/crear",
@@ -71,8 +71,8 @@ app.use(
   })
 )
 
-app.use("/img", imagenesRoutes)
-Este va primero por que se usan permisos especiales internamente
+// app.use("/img", imagenesRoutes)
+//Este va primero por que se usan permisos especiales internamente
 app.use("/parametros", Parametros)
 
 //Cargamos todos los parametros en cada peticion para tener disponible

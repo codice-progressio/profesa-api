@@ -41,13 +41,10 @@ app.use((req, res, next) => {
   next()
 })
 
-const corsOptions = {
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
-  preflightContinue:"false"
-}
 
-console.log(corsOptions)
-app.use(cors(corsOptions))
+console.log()
+app.use(cors())
+app.options('*', cors())
 
 // app.use((req, res, next) => {
 //   console.log("entregamos 0.2")

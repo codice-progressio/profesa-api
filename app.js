@@ -45,8 +45,8 @@ const corsOptions = {
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
 }
 
-console.log(corsOptions)
-app.use(cors())
+// console.log(corsOptions)
+// app.use(cors())
 
 app.use((req, res, next) => {
   console.log("Entramos 1")

@@ -43,22 +43,23 @@ app.use((req, res, next) => {
 
 const corsOptions = {
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS",
+  preflightContinue:"false"
 }
 
-// console.log(corsOptions)
-// app.use(cors())
+console.log(corsOptions)
+app.use(cors(corsOptions))
 
-app.use((req, res, next) => {
-  console.log("entregamos 0.2")
-  res.header("Access-Control-Allow-Origin", "*")
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
-  )
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-  res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE")
-  next()
-})
+// app.use((req, res, next) => {
+//   console.log("entregamos 0.2")
+//   res.header("Access-Control-Allow-Origin", "*")
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
+//   )
+//   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+//   res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE")
+//   next()
+// })
 
 app.use((req, res, next) => {
   console.log("Entramos 1")

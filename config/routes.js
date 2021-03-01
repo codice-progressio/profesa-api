@@ -92,7 +92,7 @@ app.use((req, res, next) => {
 })
 app.use("/login", loginRoutes)
 
-Para usar esta parte debe tener permisos de login
+// Para usar esta parte debe tener permisos de login
 
 app.use("/changelogs", Changelogs)
 

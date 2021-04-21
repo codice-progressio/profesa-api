@@ -3,7 +3,7 @@ const easyPermissions = require("@codice-progressio/easy-permissions")
 // Generación de permisos
 
 easyPermissions.config({
-  modoProduccion: process.env.PRODUCCION === "true",
+  modoProduccion: process.env.NODE_ENV === 'production',
   generarPermisos: true,
 })
 
@@ -102,7 +102,7 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
   console.log("[ INFO ] Conectado a la BD")
 
   app.use((req, res, next) => {
-    if (process.env.PROUDCCION === "false") {
+    if (process.env.NODE_ENV !== "production" ) {
       console.log(
         `${new Date()}|` +
           colores.success("PETICION RECIBIDA") +

@@ -71,7 +71,7 @@ app.use(
   })
 )
 
-app.use("/img", imagenesRoutes)
+// app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
 app.use("/parametros", Parametros)
 
@@ -92,7 +92,7 @@ app.use((req, res, next) => {
 })
 app.use("/login", loginRoutes)
 
-//Para usar esta parte debe tener permisos de login
+// Para usar esta parte debe tener permisos de login
 
 app.use("/changelogs", Changelogs)
 
@@ -119,7 +119,7 @@ app.use("/proveedor", proveedorRoute)
 // app.use("/orden", ordenRoutes)
 // //----------------------------
 app.use("/usuario", usuarioRoutes)
-// app.use("/upload", uploadRoutes)
+app.use("/upload", uploadRoutes)
 
 app.use("/sku", skuRoutes)
 // app.use("/cliente", clienteRoutes)

@@ -27,28 +27,62 @@ const _ROUTES = require("./config/routes")
 const cors = require("cors")
 
 // Inicializar variables.
-var app = express()
+const app = express()
 
 app.disable("x-powered-by")
-
 app.use(compression())
 
-var corsOptions = {
-  origin: process.env.ORIGIN,
-  optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
-  credentials: true,
-}
-console.log(corsOptions)
-app.use(cors(corsOptions))
+app.use((req, res, next) => {
+  console.log("Entramos 0")
+  next()
+})
+app.use((req, res, next) => {
+  console.log("Entramos 0.1")
+  next()
+})
+
+console.log()
+app.use(cors())
+app.options("*", cors())
+
+// app.use((req, res, next) => {
+//   console.log("entregamos 0.2")
+//   res.header("Access-Control-Allow-Origin", "*")
+//   res.header(
+//     "Access-Control-Allow-Headers",
+//     "Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
+//   )
+//   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
+//   res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE")
+//   next()
+// })
+
+app.use((req, res, next) => {
+  console.log("Entramos 1")
+  next()
+})
 
 //  Body parser
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.json({ limit: "50mb" }))
+app.use((req, res, next) => {
+  console.log("Entramos 2")
+  next()
+})
 app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }))
+app.use((req, res, next) => {
+  console.log("Entramos 3")
+  next()
+})
 
 //Convierte los valores de los query que se pasan por url
 // en valores. Ej. 'true'=> true, '1000' => 1000
 app.use(require("express-query-auto-parse")())
+
+app.use((req, res, next) => {
+  console.log("Entramos 4")
+  next()
+})
 
 mongoose.set("useNewUrlParser", true)
 mongoose.set("useUnifiedTopology", true)
@@ -59,6 +93,11 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
     console.log(err)
     throw err
   }
+
+  app.use((req, res, next) => {
+    console.log("Entramos 5")
+    next()
+  })
   // Mensaje de conexion exitosa a la BD
   console.log("[ INFO ] Conectado a la BD")
 
@@ -74,11 +113,27 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
     next()
   })
 
+  app.use((req, res, next) => {
+    console.log("Entramos 6")
+    next()
+  })
+
   app.use(_ROUTES)
 
+  app.use((req, res, next) => {
+    console.log("Entramos 7")
+    next()
+  })
+
   // Llamamos a los errores.
-  app.use(function (req, res) {
+  app.use(function (req, res, next) {
+    console.log("No existe la pagina")
     return res.status(404).send("No existe la pagina")
+  })
+
+  app.use((req, res, next) => {
+    console.log("Entramos 8")
+    next()
   })
 
   app.use(function (err, req, res, next) {
@@ -115,21 +170,22 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
   })
 
   const msjServidor = () => {
-    console.log(`Servidor iniciado en el puerto: ${process.env.PORT}`)
+    console.log(`[ INFO ] Servidor iniciado en el puerto: ${process.env.PORT}`)
   }
 
-  if (process.env.PRODUCCION === "true") {
-    console.log("[ INFO ] Modo produccion")
+  console.log("[ INFO ] Modo:" + process.env.NODE_ENV)
+
+  if (process.env.NODE_ENV === "production") {
     app.listen(process.env.PORT, msjServidor)
   } else {
     https
       .createServer(
         {
           key: fs.readFileSync(
-            "f:/proyectos/geracion-de-certificados/cert/desarrollo.key"
+            "./node_modules/@codice-progressio/easy-https/cert/desarrollo.key"
           ),
           cert: fs.readFileSync(
-            "f:/proyectos/geracion-de-certificados/cert/desarrollo.crt"
+            "./node_modules/@codice-progressio/easy-https/cert/desarrollo.crt"
           ),
         },
         app

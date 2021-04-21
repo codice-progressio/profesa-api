@@ -41,10 +41,9 @@ app.use((req, res, next) => {
   next()
 })
 
-
 console.log()
 app.use(cors())
-app.options('*', cors())
+app.options("*", cors())
 
 // app.use((req, res, next) => {
 //   console.log("entregamos 0.2")
@@ -171,21 +170,22 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
   })
 
   const msjServidor = () => {
-    console.log(`Servidor iniciado en el puerto: ${process.env.PORT}`)
+    console.log(`[ INFO ] Servidor iniciado en el puerto: ${process.env.PORT}`)
   }
 
-  if (process.env.PRODUCCION === "true") {
-    console.log("[ INFO ] Modo produccion")
+  console.log("[ INFO ] Modo:" + process.env.NODE_ENV)
+
+  if (process.env.NODE_ENV === "production") {
     app.listen(process.env.PORT, msjServidor)
   } else {
     https
       .createServer(
         {
           key: fs.readFileSync(
-            "f:/proyectos/geracion-de-certificados/cert/desarrollo.key"
+            "./node_modules/@codice-progressio/easy-https/cert/desarrollo.key"
           ),
           cert: fs.readFileSync(
-            "f:/proyectos/geracion-de-certificados/cert/desarrollo.crt"
+            "./node_modules/@codice-progressio/easy-https/cert/desarrollo.crt"
           ),
         },
         app

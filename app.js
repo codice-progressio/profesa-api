@@ -29,6 +29,7 @@ const cors = require("cors")
 // Inicializar variables.
 const app = express()
 
+app.use(cors())
 app.disable("x-powered-by")
 app.use(compression())
 
@@ -40,7 +41,7 @@ app.use((req, res, next) => {
   console.log("Entramos 0.1")
   next()
 })
-app.use(cors())
+
 
 app.use((req, res, next) => {
   console.log("Entramos 1")

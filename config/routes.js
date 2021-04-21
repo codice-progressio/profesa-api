@@ -61,6 +61,7 @@ const rutasAExcluir = [
 
 app.use((req, res, next) => {
   console.log("Entramos 6.0")
+  next()
 })
 
 app.use(
@@ -70,6 +71,7 @@ app.use(
 )
 app.use((req, res, next) => {
   console.log("Entramos 6.1")
+  next()
 })
 
 //Excluimos rutas
@@ -81,6 +83,7 @@ app.use(
 
 app.use((req, res, next) => {
   console.log("Entramos 6.2")
+  next()
 })
 
 // app.use("/img", imagenesRoutes)

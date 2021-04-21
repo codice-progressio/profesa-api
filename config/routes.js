@@ -58,11 +58,19 @@ const rutasAExcluir = [
   "/login",
   "/img/usuarios/xxx",
 ]
+
+app.use((req, res, next) => {
+  console.log("Entramos 6.0")
+})
+
 app.use(
   jwt({ secret: process.env.SEED, algorithms: ["HS256"] }).unless({
     path: rutasAExcluir,
   })
 )
+app.use((req, res, next) => {
+  console.log("Entramos 6.1")
+})
 
 //Excluimos rutas
 app.use(
@@ -70,6 +78,10 @@ app.use(
     path: rutasAExcluir,
   })
 )
+
+app.use((req, res, next) => {
+  console.log("Entramos 6.2")
+})
 
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente

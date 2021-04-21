@@ -3,7 +3,7 @@ const easyPermissions = require("@codice-progressio/easy-permissions")
 // Generación de permisos
 
 easyPermissions.config({
-  modoProduccion: process.env.NODE_ENV === 'production',
+  modoProduccion: process.env.NODE_ENV === "production",
   generarPermisos: true,
 })
 
@@ -40,22 +40,7 @@ app.use((req, res, next) => {
   console.log("Entramos 0.1")
   next()
 })
-
-console.log()
 app.use(cors())
-app.options("*", cors())
-
-// app.use((req, res, next) => {
-//   console.log("entregamos 0.2")
-//   res.header("Access-Control-Allow-Origin", "*")
-//   res.header(
-//     "Access-Control-Allow-Headers",
-//     "Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
-//   )
-//   res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-//   res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE")
-//   next()
-// })
 
 app.use((req, res, next) => {
   console.log("Entramos 1")
@@ -102,7 +87,7 @@ mongoose.connection.openUri(process.env.URI, (err, res) => {
   console.log("[ INFO ] Conectado a la BD")
 
   app.use((req, res, next) => {
-    if (process.env.NODE_ENV !== "production" ) {
+    if (process.env.NODE_ENV !== "production") {
       console.log(
         `${new Date()}|` +
           colores.success("PETICION RECIBIDA") +

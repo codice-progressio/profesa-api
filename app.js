@@ -29,7 +29,10 @@ const cors = require("cors")
 // Inicializar variables.
 const app = express()
 
-app.use(cors())
+
+app.use(cors({ origin: "*", optionsSuccessStatus: 200 }))
+
+
 app.disable("x-powered-by")
 app.use(compression())
 
@@ -42,7 +45,6 @@ app.use((req, res, next) => {
   next()
 })
 
-
 app.use((req, res, next) => {
   console.log("Entramos 1")
   next()
@@ -50,12 +52,12 @@ app.use((req, res, next) => {
 
 //  Body parser
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.json({ limit: "50mb" }))
+app.use(express.json({ limit: "50mb" }))
 app.use((req, res, next) => {
   console.log("Entramos 2")
   next()
 })
-app.use(bodyParser.urlencoded({ limit: "50mb", extended: true }))
+app.use(express.urlencoded({ limit: "50mb", extended: true }))
 app.use((req, res, next) => {
   console.log("Entramos 3")
   next()

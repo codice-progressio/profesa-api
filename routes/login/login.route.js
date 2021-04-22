@@ -19,11 +19,14 @@ function crearToken(usuario) {
     apiVersion: pjson.version,
   }
 
+  //Una hora 3600
+  const hora = 3600
+
   let data = JSON.stringify({ ...objeto })
   data = JSON.parse(data.normalize("NFD").replace(/[\u0300-\u036f]/g, ""))
   return jwt.sign(data, SEED, {
-    //Una hora 3600
-    expiresIn: 3600 * 2,
+    // expiresIn: 3600 * 2,
+    expiresIn: hora * 2,
   })
 }
 

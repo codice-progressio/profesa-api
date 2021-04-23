@@ -1,183 +1,185 @@
-require("dotenv").config()
-const easyPermissions = require("@codice-progressio/easy-permissions")
-// Generación de permisos
+// require("dotenv").config()
+// const easyPermissions = require("@codice-progressio/easy-permissions")
+// // Generación de permisos
 
-easyPermissions.config({
-  modoProduccion: process.env.NODE_ENV === "production",
-  generarPermisos: true,
-})
+// easyPermissions.config({
+//   modoProduccion: process.env.NODE_ENV === "production",
+//   generarPermisos: true,
+// })
 
-const easyImages = require("@codice-progressio/easy-images")
+// const easyImages = require("@codice-progressio/easy-images")
 
-easyImages.config({
-  GCLOUD_PROJECT_ID: process.env.GCLOUD_PROJECT_ID,
-  GCLOUD_STORAGE_BUCKET_URL: process.env.GCLOUD_STORAGE_BUCKET_URL,
-  GCLOUD_APPLICATION_CREDENTIALS: process.env.GCLOUD_APPLICATION_CREDENTIALS,
-})
+// easyImages.config({
+//   GCLOUD_PROJECT_ID: process.env.GCLOUD_PROJECT_ID,
+//   GCLOUD_STORAGE_BUCKET_URL: process.env.GCLOUD_STORAGE_BUCKET_URL,
+//   GCLOUD_APPLICATION_CREDENTIALS: process.env.GCLOUD_APPLICATION_CREDENTIALS,
+// })
 
-const compression = require("compression")
-// Requires
+// const compression = require("compression")
+// // Requires
 const express = require("express")
-const https = require("https")
-const fs = require("fs")
-const mongoose = require("mongoose")
-const colores = require("./utils/colors")
-const bodyParser = require("body-parser")
-const _ROUTES = require("./config/routes")
+// const https = require("https")
+// const fs = require("fs")
+// const mongoose = require("mongoose")
+// const colores = require("./utils/colors")
+// const bodyParser = require("body-parser")
+// const _ROUTES = require("./config/routes")
 const cors = require("cors")
 
-// Inicializar variables.
+// // Inicializar variables.
 const app = express()
 
+app.use(cors())
 
-app.use(cors({ origin: "*", optionsSuccessStatus: 200 }))
-
-
-app.disable("x-powered-by")
-app.use(compression())
-
-app.use((req, res, next) => {
-  console.log("Entramos 0")
-  next()
-})
-app.use((req, res, next) => {
-  console.log("Entramos 0.1")
-  next()
+app.all("*", (req, res, next) => {
+  res.send("Entro")
 })
 
-app.use((req, res, next) => {
-  console.log("Entramos 1")
-  next()
-})
+// app.disable("x-powered-by")
+// app.use(compression())
 
-//  Body parser
-// parse application/x-www-form-urlencoded
-app.use(express.json({ limit: "50mb" }))
-app.use((req, res, next) => {
-  console.log("Entramos 2")
-  next()
-})
-app.use(express.urlencoded({ limit: "50mb", extended: true }))
-app.use((req, res, next) => {
-  console.log("Entramos 3")
-  next()
-})
+// app.use((req, res, next) => {
+//   console.log("Entramos 0")
+//   next()
+// })
+// app.use((req, res, next) => {
+//   console.log("Entramos 0.1")
+//   next()
+// })
 
-//Convierte los valores de los query que se pasan por url
-// en valores. Ej. 'true'=> true, '1000' => 1000
-app.use(require("express-query-auto-parse")())
+// app.use((req, res, next) => {
+//   console.log("Entramos 1")
+//   next()
+// })
 
-app.use((req, res, next) => {
-  console.log("Entramos 4")
-  next()
-})
+// //  Body parser
+// // parse application/x-www-form-urlencoded
+// app.use(express.json({ limit: "50mb" }))
+// app.use((req, res, next) => {
+//   console.log("Entramos 2")
+//   next()
+// })
+// app.use(express.urlencoded({ limit: "50mb", extended: true }))
+// app.use((req, res, next) => {
+//   console.log("Entramos 3")
+//   next()
+// })
 
-mongoose.set("useNewUrlParser", true)
-mongoose.set("useUnifiedTopology", true)
-mongoose.set("useCreateIndex", true)
-mongoose.connection.openUri(process.env.URI, (err, res) => {
-  if (err) {
-    // Mensaje de error en la base de datos.
-    console.log(err)
-    throw err
-  }
+// //Convierte los valores de los query que se pasan por url
+// // en valores. Ej. 'true'=> true, '1000' => 1000
+// app.use(require("express-query-auto-parse")())
 
-  app.use((req, res, next) => {
-    console.log("Entramos 5")
-    next()
-  })
-  // Mensaje de conexion exitosa a la BD
-  console.log("[ INFO ] Conectado a la BD")
+// app.use((req, res, next) => {
+//   console.log("Entramos 4")
+//   next()
+// })
 
-  app.use((req, res, next) => {
-    if (process.env.NODE_ENV !== "production") {
-      console.log(
-        `${new Date()}|` +
-          colores.success("PETICION RECIBIDA") +
-          colores.danger(req.method) +
-          colores.info(req.originalUrl)
-      )
-    }
-    next()
-  })
+// mongoose.set("useNewUrlParser", true)
+// mongoose.set("useUnifiedTopology", true)
+// mongoose.set("useCreateIndex", true)
+// mongoose.connection.openUri(process.env.URI, (err, res) => {
+//   if (err) {
+//     // Mensaje de error en la base de datos.
+//     console.log(err)
+//     throw err
+//   }
 
-  app.use((req, res, next) => {
-    console.log("Entramos 6")
-    next()
-  })
+//   app.use((req, res, next) => {
+//     console.log("Entramos 5")
+//     next()
+//   })
+//   // Mensaje de conexion exitosa a la BD
+//   console.log("[ INFO ] Conectado a la BD")
 
-  app.use(_ROUTES)
+//   app.use((req, res, next) => {
+//     if (process.env.NODE_ENV !== "production") {
+//       console.log(
+//         `${new Date()}|` +
+//           colores.success("PETICION RECIBIDA") +
+//           colores.danger(req.method) +
+//           colores.info(req.originalUrl)
+//       )
+//     }
+//     next()
+//   })
 
-  app.use((req, res, next) => {
-    console.log("Entramos 7")
-    next()
-  })
+//   app.use((req, res, next) => {
+//     console.log("Entramos 6")
+//     next()
+//   })
 
-  // Llamamos a los errores.
-  app.use(function (req, res, next) {
-    console.log("No existe la pagina")
-    return res.status(404).send("No existe la pagina")
-  })
+//   app.use(_ROUTES)
 
-  app.use((req, res, next) => {
-    console.log("Entramos 8")
-    next()
-  })
+//   app.use((req, res, next) => {
+//     console.log("Entramos 7")
+//     next()
+//   })
 
-  app.use(function (err, req, res, next) {
-    console.log(`err`, err)
-    //Errores de permisos
-    const errores = [
-      //Cuando el token no trae un usuario
-      "user_object_not_found",
-      //No autorizado
-      "permission_denied",
-    ]
+//   // Llamamos a los errores.
+//   app.use(function (req, res, next) {
+//     console.log("No existe la pagina")
+//     return res.status(404).send("No existe la pagina")
+//   })
 
-    if (errores.includes(err.code)) {
-      return res
-        .status(403)
-        .send(
-          `No tienes permisos para acceder a este contenido: '${req.permisoSolicitado}'`
-        )
-    }
+//   app.use((req, res, next) => {
+//     console.log("Entramos 8")
+//     next()
+//   })
 
-    if (err.code === "invalid_token") {
-      return res.status(401).send("Token invalido. Inicia sesion de nuevo")
-    }
+//   app.use(function (err, req, res, next) {
+//     console.log(`err`, err)
+//     //Errores de permisos
+//     const errores = [
+//       //Cuando el token no trae un usuario
+//       "user_object_not_found",
+//       //No autorizado
+//       "permission_denied",
+//     ]
 
-    if (err.code === "credentials_required") {
-      return res.status(401).send("Es necesario loguearte")
-    }
+//     if (errores.includes(err.code)) {
+//       return res
+//         .status(403)
+//         .send(
+//           `No tienes permisos para acceder a este contenido: '${req.permisoSolicitado}'`
+//         )
+//     }
 
-    if (err.errors) {
-      return res.status(500).send(err.message)
-    }
+//     if (err.code === "invalid_token") {
+//       return res.status(401).send("Token invalido. Inicia sesion de nuevo")
+//     }
 
-    return res.status(500).send(err)
-  })
+//     if (err.code === "credentials_required") {
+//       return res.status(401).send("Es necesario loguearte")
+//     }
+
+//     if (err.errors) {
+//       return res.status(500).send(err.message)
+//     }
+
+//     return res.status(500).send(err)
+//   })
 
   const msjServidor = () => {
     console.log(`[ INFO ] Servidor iniciado en el puerto: ${process.env.PORT}`)
   }
 
-  console.log("[ INFO ] Modo:" + process.env.NODE_ENV)
+//   console.log("[ INFO ] Modo:" + process.env.NODE_ENV)
 
-  if (process.env.NODE_ENV === "production") {
+//   if (process.env.NODE_ENV === "production") {
     app.listen(process.env.PORT, msjServidor)
-  } else {
-    https
-      .createServer(
-        {
-          key: fs.readFileSync(
-            "./node_modules/@codice-progressio/easy-https/cert/desarrollo.key"
-          ),
-          cert: fs.readFileSync(
-            "./node_modules/@codice-progressio/easy-https/cert/desarrollo.crt"
-          ),
-        },
-        app
-      )
-      .listen(process.env.PORT, msjServidor)
-  }
-})
+//   } else {
+//     https
+//       .createServer(
+//         {
+//           key: fs.readFileSync(
+//             "./node_modules/@codice-progressio/easy-https/cert/desarrollo.key"
+//           ),
+//           cert: fs.readFileSync(
+//             "./node_modules/@codice-progressio/easy-https/cert/desarrollo.crt"
+//           ),
+//         },
+//         app
+//       )
+//       .listen(process.env.PORT, msjServidor)
+//   }
+// })

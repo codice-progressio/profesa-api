@@ -40,7 +40,7 @@ const config = {
 app.use(
   cors({
     origin: "*", //servidor que deseas que consuma o (*) en caso que sea acceso libre
-    credentials: true,
+    // credentials: true,
   })
 )
 

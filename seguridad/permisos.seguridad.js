@@ -1,14 +1,5 @@
 const permisos = {
-  "menu:administrador:rutas-de-entrega":"Ver el menu de parametros de ruta de entrega",
-  "menu:administrador:parametros":"Ver el menu de parametros",
-  "menu:administrador:usuarios":"Ver el menu de usuarios dentro del menu administrador",
-  "menu:administrador":"Ver el menu de administrador",
-  "menu:compras:contactos":"false",
-  "menu:compras":"false",
-  "menu:ventas:mis-pedidos":"false",
-  "menu:ventas":"Ver el menu de ventas",
-  "menu:almacen:sku":"false",
-  "menu:almacen":"false",
+  "reportePersonalizadoAlmacenDeProduccion:leer:todo:termino":"Sin descripción",
   "rutas-de-entrega:eliminar:id":"Eliminar una ruta por su id",
   "rutas-de-entrega:buscar:contactos-de-ruta":"Buscar todos los cantactos asignados a una ruta",
   "rutas-de-entrega:buscar:id":"Buscar por id una ruta",
@@ -26,7 +17,7 @@ const permisos = {
   "programacionTransformacion:asignar":"Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:eliminar":"Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:modificar":"Sin descripción",
-  "reportePersonalizadoAlmacenDeProduccion:leer:todo:termino":"Sin descripción",
+  "reportePersonalizadoAlmaceznDeProduccion:leer:todo:termino":"Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:leer:id":"Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:leer:todo":"Sin descripción",
   "reportePersonalizadoAlmacenDeProduccion:crear":"Sin descripción",
@@ -192,7 +183,13 @@ const permisos = {
   "administrador:usuario:modificar:password":"Modificar el password de un usuario",
   "administrador:usuario:modificar":"Modificar datos básicos de un usuario",
   "administrador:usuario:leer":"Leer los usuarios existentes",
-  "login":"Permite loguear al usuario. Remover este permiso impedira que el usuario inicie sesión.",
-    
+  "usuario:modificar:inhabilitar":"Deshabilita al usuario ",
+  "usuario:modificar:eliminar-permiso":"Elimina un permiso del usuario",
+  "usuario:modificar:agregar-permiso":"Crea un nuevo permiso al usuario",
+  "usuario:crear":"Crear un nuevo usuario",
+  "login":"Iniciar sesión en el sistema",
+  "usuario:leer:todo":"Leer todos los usuarios registrados en el sistema. ",
+  "administrador":"Permisos de administrador",
+
 }
 module.exports = permisos

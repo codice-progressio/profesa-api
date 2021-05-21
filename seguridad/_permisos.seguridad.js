@@ -1,14 +1,5 @@
 const permisos = {
-  "menu:administrador:rutas-de-entrega":"menu:administrador:rutas-de-entrega",
-  "menu:administrador:parametros":"menu:administrador:parametros",
-  "menu:administrador:usuarios":"menu:administrador:usuarios",
-  "menu:administrador":"menu:administrador",
-  "menu:compras:contactos":"menu:compras:contactos",
-  "menu:compras":"menu:compras",
-  "menu:ventas:mis-pedidos":"menu:ventas:mis-pedidos",
-  "menu:ventas":"menu:ventas",
-  "menu:almacen:sku":"menu:almacen:sku",
-  "menu:almacen":"menu:almacen",
+  "reportePersonalizadoAlmacenDeProduccion:leer:todo:termino":"reportePersonalizadoAlmacenDeProduccion:leer:todo:termino",
   "rutas-de-entrega:eliminar:id":"rutas-de-entrega:eliminar:id",
   "rutas-de-entrega:buscar:contactos-de-ruta":"rutas-de-entrega:buscar:contactos-de-ruta",
   "rutas-de-entrega:buscar:id":"rutas-de-entrega:buscar:id",
@@ -192,7 +183,13 @@ const permisos = {
   "administrador:usuario:modificar:password":"administrador:usuario:modificar:password",
   "administrador:usuario:modificar":"administrador:usuario:modificar",
   "administrador:usuario:leer":"administrador:usuario:leer",
+  "usuario:modificar:inhabilitar":"usuario:modificar:inhabilitar",
+  "usuario:modificar:eliminar-permiso":"usuario:modificar:eliminar-permiso",
+  "usuario:modificar:agregar-permiso":"usuario:modificar:agregar-permiso",
+  "usuario:crear":"usuario:crear",
   "login":"login",
+  "usuario:leer:todo":"usuario:leer:todo",
+  "administrador":"administrador",
 
 }
 module.exports = permisos

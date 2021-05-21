@@ -1,14 +1,14 @@
 //Esto es necesario
 var express = require("express")
-const fileUpload = require("express-fileupload")
-const fs = require("fs")
+// const fileUpload = require("express-fileupload")
+// const fs = require("fs")
 
 var app = express()
 
 
-var Usuario = require("../models/usuario.model")
-var Requisicion = require("../models/requisiciones/requisicion.model")
-var Puesto = require("../models/recursosHumanos/puestos/puesto.model")
+// var Usuario = require("../models/usuario.model")
+// var Requisicion = require("../models/requisiciones/requisicion.model")
+// var Puesto = require("../models/recursosHumanos/puestos/puesto.model")
 
 // var RESP = require("../utils/respStatus")
 

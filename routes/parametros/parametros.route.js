@@ -4,7 +4,6 @@ const app = express()
 const Parametros = require("../../models/defautls/parametros.model")
 const EtiquetasRoute = require("../../routes/parametros/parametros.etiquetas.route")
 
-
 // Generales
 
 app.use("/etiquetas", EtiquetasRoute)
@@ -23,7 +22,8 @@ app.post("/", (req, res, next) => {
   Parametros.find()
     .exec()
     .then(parametros => {
-      if (parametros.length > 0) throw "Los parametros ya se han creado"
+      if (parametros.length > 0)
+        return res.send({ mensaje: "Los parametros ya existen" })
       var nPar = new Parametros()
       return nPar.save()
     })
@@ -52,7 +52,5 @@ app.use(async (req, res, next) => {
   req["parametros"] = parametro
   next()
 })
-
-
 
 module.exports = app

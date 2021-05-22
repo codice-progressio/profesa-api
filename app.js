@@ -92,6 +92,8 @@ mongoose
     codice_security.configuraciones.correo.mailOptions.from =
       process.env.CORREO_MAILOPTIONS_FROM
 
+    codice_security.configuraciones.jwt.decode.unless.push("/parametros")
+
     app.use(codice_security.basico())
     //Convierte los valores de los query que se pasan por url
     // en valores. Ej. 'true'=> true, '1000' => 1000

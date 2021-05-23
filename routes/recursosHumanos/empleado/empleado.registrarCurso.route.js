@@ -12,7 +12,6 @@ function agregarCurso(empleado, curso, datos) {
   existen(empleado, curso)
 
   empleado.eventos.unshift(crearEvento(curso, datos.fecha))
-  console.log(empleado.eventos, empleado.eventos)
   if (!curso.asistencias) curso.asistencias = []
   curso.asistencias.unshift({
     empleado: empleado._id,

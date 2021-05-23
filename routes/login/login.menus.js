@@ -1,10 +1,11 @@
-var $ = require("@codice-progressio/easy-permissions").$
+const codice_security = require("@codice-progressio/express-authentication")
+const $ = codice_security.configuraciones.easy_permissions.$
+const p = codice_security.configuraciones.permisos
+
 
 module.exports = function (permisos) {
   var menusSeleccionables = generarMenus()
-  if (
-    !permisos.includes($("SUPER_ADMIN", "Super admin", { esMiddleware: false }))
-  ) {
+  if (!permisos.includes(p.administrador.permiso)) {
     //En caso de que no sea el SUPER_ADMIN debemos eliminar los
     // menus que no coinciden contra los permisos que estan
     // en el arreglo del usuario.

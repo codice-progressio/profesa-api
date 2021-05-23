@@ -10,7 +10,6 @@ app.get("/", (req, res) => {
 })
 
 app.put("/eliminar", (req, res, next) => {
-  console.log(req.body)
   Parametros.findOneAndUpdate({}, { $pull: { etquetas: req.body.etiqueta } })
     .exec()
     .then(r => res.send())

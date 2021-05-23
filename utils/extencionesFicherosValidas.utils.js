@@ -5,7 +5,6 @@ module.exports.EXTENCIONES_FICHEROS = {
 
 module.exports.esImagen = function (archivo)
 {
-  console.log(`archivo`,archivo)
   return !(archivo.mimetype.match(/image\/*/) == null)
 }
 

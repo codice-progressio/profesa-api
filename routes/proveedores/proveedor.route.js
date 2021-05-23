@@ -6,22 +6,18 @@ const sku = require("../../models/sku.model")
 const Parametros = require("../../models/defautls/parametros.model")
 
 app.post("/", $("proveedor:crear"), (req, res, next) => {
-  console.log(req.body)
   return new Proveedor(req.body)
     .save()
     .then(proveedor => res.send(proveedor))
     .catch(err => next(err))
 })
 
-function agregarPaginacion(model, query)
-{
-  console.log("aqui funciona")
+function agregarPaginacion(model, query) {
   const desde = Number(query.desde ?? 0)
   const limite = Number(query.limite ?? 30)
   const sort = Number(query.sort ?? 1)
   const campo = String(query.campo ?? "nombre")
-  console.log("aqui funciona 2")
-  
+
   return model
     .select("etiquetas nombre contactos esCliente esProveedor rutas ")
     .sort({ [campo]: sort })
@@ -187,17 +183,13 @@ app.put("/etiquetas/eliminar", async (req, res, next) => {
 })
 
 app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
-  console.log("Entro aqui 1")
   const arreglo = [...req.query?.etiquetas?.split(",")] ?? []
-  console.log("Entro aqui 2")
   agregarPaginacion(Proveedor.find({ etiquetas: { $all: arreglo } }), req.query)
     .exec()
     .then(contactos => {
-      console.log(contactos)
       res.send(contactos)
     })
     .catch(_ => {
-      console.log("error", _)
       next(_)
     })
 })

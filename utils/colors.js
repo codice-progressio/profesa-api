@@ -58,8 +58,6 @@ var colores = {
     },
     log: {
         debug: function(txt) {
-            console.log('Aqui si');
-
             return `${f('DEBUG')} ${this.reset}=> ${txt}`;
         }
     }

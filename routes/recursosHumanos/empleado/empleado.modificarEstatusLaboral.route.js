@@ -2,7 +2,6 @@ const Empleado = require("../../../models/recursosHumanos/empleados/empleado.mod
 const Usuario = require("../../../models/usuario.model")
 
 module.exports.baja = function (datos) {
-  console.log(datos)
   let guardarEmpleado = null
   return Empleado.findById(datos._id)
     .exec()

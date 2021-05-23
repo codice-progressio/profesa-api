@@ -18,44 +18,7 @@ const ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateri
 const estadisticasRoute = require("../routes/estadisticas/estadisticas.route")
 const rutaDeEntregaRoute = require("../routes/rutasDeEntrega/rutaDeEntrega.route")
 
-const jwt = require("express-jwt")
-const guard = require("express-jwt-permissions")()
 
-//Aseguramos todo menos el login y paremetros. Internamente paraemtros
-// se asegura. Tambien crea el req.user
-const rutasAExcluir = [
-  "/parametros",
-  "/parametros/super-admin/crear",
-  "/login",
-  "/img/usuarios/xxx",
-]
-
-app.use((req, res, next) => {
-  console.log("Entramos 6.0")
-  next()
-})
-
-app.use(
-  jwt({ secret: process.env.SEED, algorithms: ["HS256"] }).unless({
-    path: rutasAExcluir,
-  })
-)
-app.use((req, res, next) => {
-  console.log("Entramos 6.1")
-  next()
-})
-
-//Excluimos rutas
-app.use(
-  guard.check("login").unless({
-    path: rutasAExcluir,
-  })
-)
-
-app.use((req, res, next) => {
-  console.log("Entramos 6.2")
-  next()
-})
 
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente

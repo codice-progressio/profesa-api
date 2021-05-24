@@ -59,6 +59,15 @@ mongoose
     //SEGURIDAD --------------------------------------
     const codice_security = require("@codice-progressio/express-authentication")
 
+    // Modificamos el schema de usuario para agregar la estructura
+    // de las imagenes.
+
+    codice_security.configuraciones.usuario.schema["img"] = {
+      nombreOriginal: String,
+      nombreBD: String,
+      path: String,
+    }
+
     codice_security.configuraciones.easy_permissions.config({
       modoProduccion: process.env.NODE_ENV === "production",
       generarPermisos: process.env.NODE_ENV !== "production",

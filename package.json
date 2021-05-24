@@ -13,7 +13,7 @@
   "dependencies": {
     "@codice-progressio/easy-images": "^0.1.5",
     "@codice-progressio/easy-permissions": "^0.2.1",
-    "@codice-progressio/express-authentication": "^1.2.1-4",
+    "@codice-progressio/express-authentication": "^1.2.1-7",
     "@google-cloud/storage": "^5.8.0",
     "@types/moment-duration-format": "^2.2.2",
     "bcryptjs": "^2.4.3",

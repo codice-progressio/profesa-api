@@ -202,6 +202,7 @@ app.put("/", $("sku:modificar", "Modificar sku"), (req, res, next) => {
         "puedoComprarlo",
         "puedoVenderlo",
         "costoVenta",
+        "codigo",
       ].forEach(x => (sku[x] = req.body[x]))
 
       return sku.save()

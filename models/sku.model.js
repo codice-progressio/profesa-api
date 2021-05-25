@@ -10,6 +10,13 @@ const sku = new Schema({
   puedoProducirlo: { type: Boolean, default: false },
   puedoComprarlo: { type: Boolean, default: false },
   puedoVenderlo: { type: Boolean, default: false },
+  //Para el codigo de barras
+  codigo: {
+    type: String, trim: true, index: {
+      unique: true,
+      partialFilterExpression: {codigo: {$type: "string"}}
+    }
+  },
 
   produccion: {
     //La familia de procesos es una agrupación de todos los procesos que conlleva este sku cuando se produce. .
@@ -80,8 +87,7 @@ const sku = new Schema({
             resolve(this.stockMinimo >= v)
           })
         },
-        msg:
-          "El valor maximo de stock no puede ser menor que el valor minimo de stock",
+        msg: "El valor maximo de stock no puede ser menor que el valor minimo de stock",
       },
     ],
   },

@@ -75,7 +75,7 @@ function puntoDeVenta() {
     // TODO MUNDO DEBE DE TENER ESTO.
     permiso: $("menu:venta-al-publico", "Menu de venta al publico"),
     titulo: "Venta al público",
-    icono: "fas money-bill-wave",
+    icono: "fas fa-shopping-cart",
     submenu: [
       {
         titulo: "Punto de venta",

@@ -187,6 +187,19 @@ app.get("/buscar/etiquetas", (req, res, next) => {
     .catch(_ => next(_))
 })
 
+app.get("/buscar/codigo/:codigo", (req, res, next) => {
+  let codigo = req.params.codigo
+  SKU.findOne({
+    eliminado: false,
+    puedoVenderlo: true,
+    codigo: codigo,
+  })
+    .select(" id nombreCompleto costoVenta codigo")
+    .exec()
+    .then(skus => res.send(skus))
+    .catch(_ => next(_))
+})
+
 app.put("/", $("sku:modificar", "Modificar sku"), (req, res, next) => {
   SKU.findById(req.body._id)
     .exec()

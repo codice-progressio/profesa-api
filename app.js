@@ -1,5 +1,3 @@
-// // Variables de ambiente
-// try {
 require("dotenv").config()
 console.log("[ INFO ] Modo:" + process.env.NODE_ENV)
 // Mongoose
@@ -120,7 +118,16 @@ mongoose
       return res.status(404).send(errP("No existe la pagina"))
     })
 
-    app.use(function (err, req, res) {
+    app.use(function (err, req, res, next) {
+      let nombreParametroRequest =
+        codice_security.configuraciones.easy_permissions.configuraciones
+          .nombreParametroRequest
+
+      if (req[nombreParametroRequest]) {
+        let leyenda = "No tienes permiso: " + req[nombreParametroRequest]
+        return res.status(401).send(leyenda)
+      }
+
       console.log(`err`, err)
       //Errores de permisos
       const errores = [

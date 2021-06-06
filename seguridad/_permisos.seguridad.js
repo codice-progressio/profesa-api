@@ -17,11 +17,7 @@ const permisos = {
   "rutas-de-entrega:buscar:id":"rutas-de-entrega:buscar:id",
   "rutas-de-entrega:leer:todo":"rutas-de-entrega:leer:todo",
   "rutas-de-entrega:crear-modificar":"rutas-de-entrega:crear-modificar",
-  "reportePersonalizadoAlmacenDeProduccion:eliminar":"reportePersonalizadoAlmacenDeProduccion:eliminar",
-  "reportePersonalizadoAlmacenDeProduccion:modificar":"reportePersonalizadoAlmacenDeProduccion:modificar",
-  "reportePersonalizadoAlmacenDeProduccion:leer:todo:termino":"reportePersonalizadoAlmacenDeProduccion:leer:todo:termino",
-  "reportePersonalizadoAlmacenDeProduccion:leer:id":"reportePersonalizadoAlmacenDeProduccion:leer:id",
-  "reportePersonalizadoAlmacenDeProduccion:leer:todo":"reportePersonalizadoAlmacenDeProduccion:leer:todo",
+  "venta-al-publico:crear:nota":"venta-al-publico:crear:nota",
   "proveedor:rutas:agregar":"proveedor:rutas:agregar",
   "proveedor:eliminar":"proveedor:eliminar",
   "proveedor:modificar":"proveedor:modificar",
@@ -54,5 +50,7 @@ const permisos = {
   "usuario:leer:todo":"usuario:leer:todo",
   "administrador":"administrador",
 
+
+  
 }
 module.exports = permisos

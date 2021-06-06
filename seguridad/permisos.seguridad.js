@@ -17,12 +17,7 @@ const permisos = {
   "rutas-de-entrega:buscar:id":"Buscar por id una ruta",
   "rutas-de-entrega:leer:todo":"Leer todas las rutas existentes",
   "rutas-de-entrega:crear-modificar":"Crear o modificar una ruta de entrega",
-  "reportePersonalizadoAlmacenDeProduccion:eliminar":"Sin descripción",
-  "reportePersonalizadoAlmacenDeProduccion:modificar":"Sin descripción",
-  "reportePersonalizadoAlmacenDeProduccion:leer:todo:termino":"Sin descripción",
-  "reportePersonalizadoAlmacenDeProduccion:leer:id":"Sin descripción",
-  "reportePersonalizadoAlmacenDeProduccion:leer:todo":"Sin descripción",
-  "reportePersonalizadoAlmacenDeProduccion:crear":"Sin descripción",
+  "venta-al-publico:crear:nota":"Sin descripción",
   "proveedor:rutas:agregar":"Agregar rutas a un contacto",
   "proveedor:eliminar":"Sin descripción",
   "proveedor:modificar":"Sin descripción",
@@ -54,6 +49,7 @@ const permisos = {
   "login":"Iniciar sesión en el sistema",
   "usuario:leer:todo":"Leer todos los usuarios registrados en el sistema. ",
   "administrador":"Permisos de administrador",
+  
 
 }
 module.exports = permisos

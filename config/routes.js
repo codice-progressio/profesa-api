@@ -12,8 +12,7 @@ const skuRoutes = require("../routes/gestionModelos/sku.route")
 const proveedorRoute = require("../routes/proveedores/proveedor.route")
 const Parametros = require("../routes/parametros/parametros.route")
 const Changelogs = require("../routes/changelogs.route")
-
-const ReportePersonalizadoAlmacenProduccion = require("../routes/almacenDeMateriaPrimaYRefacciones/reportePersonalizadoAlmacenProduccion.route")
+const ventaPublicoRoute = require("../routes/ventaAlPublico/ventaAlPublico.route")
 
 const estadisticasRoute = require("../routes/estadisticas/estadisticas.route")
 const rutaDeEntregaRoute = require("../routes/rutasDeEntrega/rutaDeEntrega.route")
@@ -68,6 +67,8 @@ app.use("/sku", skuRoutes)
 app.use("/estadisticas", estadisticasRoute)
 app.use("/ruta-de-entrega", rutaDeEntregaRoute)
 app.use("/ficheros", ficherosRoute)
+
+app.use("/venta-al-publico", ventaPublicoRoute)
 
 
 

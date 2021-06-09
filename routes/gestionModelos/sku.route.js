@@ -304,57 +304,57 @@ app.delete(
   }
 )
 
-function recalcularExistencia(sku) {
-  // Recalculamos la existencia.
-  let existenciaActual = 0
-  // Recorremos cada entrada de cada lote para saber
-  // Que tipo de movimento es.
-  sku.lotes.forEach(lote => {
-    lote.existencia = lote.movimientos.reduce(
-      (pre, cur) =>
-        cur.esEntrada ? (pre += cur.cantidad) : (pre -= cur.cantidad),
-      0
-    )
+// function recalcularExistencia(sku) {
+//   // Recalculamos la existencia.
+//   let existenciaActual = 0
+//   // Recorremos cada entrada de cada lote para saber
+//   // Que tipo de movimento es.
+//   sku.lotes.forEach(lote => {
+//     lote.existencia = lote.movimientos.reduce(
+//       (pre, cur) =>
+//         cur.esEntrada ? (pre += cur.cantidad) : (pre -= cur.cantidad),
+//       0
+//     )
 
-    existenciaActual += lote.existencia
-  })
+//     existenciaActual += lote.existencia
+//   })
 
-  return existenciaActual
-}
+//   return existenciaActual
+// }
 
-function recalcularExistenciaPorAlmacenes(sku) {
-  // Creamos un nuevo objeto para guardar el calculo de los diferentes
-  // almacenes. La clave debe ser el id del almacen seguido de
-  // la cantidad.
-  // { idAlmacen: 120 }
-  sku.lotes.forEach(lote => {
-    lote.existenciaAlmacenes = lote.movimientos.reduce((pre, cur) => {
-      // Si no existe el id del almacen, lo creamos
-      if (!pre.hasOwnProperty(cur.almacen)) pre[cur.almacen] = 0
+// function recalcularExistenciaPorAlmacenes(sku) {
+//   // Creamos un nuevo objeto para guardar el calculo de los diferentes
+//   // almacenes. La clave debe ser el id del almacen seguido de
+//   // la cantidad.
+//   // { idAlmacen: 120 }
+//   sku.lotes.forEach(lote => {
+//     lote.existenciaAlmacenes = lote.movimientos.reduce((pre, cur) => {
+//       // Si no existe el id del almacen, lo creamos
+//       if (!pre.hasOwnProperty(cur.almacen)) pre[cur.almacen] = 0
 
-      // Acumulados directamente al id.
-      pre[cur.almacen] = cur.esEntrada
-        ? (pre[cur.almacen] += cur.cantidad)
-        : (pre[cur.almacen] -= cur.cantidad)
+//       // Acumulados directamente al id.
+//       pre[cur.almacen] = cur.esEntrada
+//         ? (pre[cur.almacen] += cur.cantidad)
+//         : (pre[cur.almacen] -= cur.cantidad)
 
-      return pre
-    }, {})
-  })
+//       return pre
+//     }, {})
+//   })
 
-  // Sumamos todas las existencias de cada lote por almacen.
-  let almacenesSuma = {}
-  sku.lotes.forEach(lote => {
-    Object.keys(lote.existenciaAlmacenes).forEach(keyIdAlmacen => {
-      // Debe de existir el id
-      if (!almacenesSuma.hasOwnProperty(keyIdAlmacen))
-        almacenesSuma[keyIdAlmacen] = 0
-      // Solo necesitamos sumar por que aqui todo deberia ser positivo.
-      almacenesSuma[keyIdAlmacen] += lote.existenciaAlmacenes[keyIdAlmacen]
-    })
-  })
+//   // Sumamos todas las existencias de cada lote por almacen.
+//   let almacenesSuma = {}
+//   sku.lotes.forEach(lote => {
+//     Object.keys(lote.existenciaAlmacenes).forEach(keyIdAlmacen => {
+//       // Debe de existir el id
+//       if (!almacenesSuma.hasOwnProperty(keyIdAlmacen))
+//         almacenesSuma[keyIdAlmacen] = 0
+//       // Solo necesitamos sumar por que aqui todo deberia ser positivo.
+//       almacenesSuma[keyIdAlmacen] += lote.existenciaAlmacenes[keyIdAlmacen]
+//     })
+//   })
 
-  sku.existenciaAlmacenes = almacenesSuma
-}
+//   sku.existenciaAlmacenes = almacenesSuma
+// }
 
 // Crea un nuevo lote en el sku
 app.post(
@@ -388,8 +388,7 @@ app.post(
         }
         // Las entradas las acomodamos al principio para que se vea mas nice.
         sku.lotes.unshift(req.body)
-        sku.existencia = recalcularExistencia(sku)
-        recalcularExistenciaPorAlmacenes(sku)
+        sku.recalcularExistencia()
 
         return sku.save()
       })
@@ -501,22 +500,10 @@ app.put(
   (req, res, next) => {
     let id = req.params.id
     let idLote = req.params.idLote
+    let movimientos = req.body
+    let user = req.user
 
-    SKU.findById(id)
-      .select("lotes")
-      .exec()
-      .then(sku => {
-        if (!sku) throw "No existe el id"
-        let lote = sku.lotes.id(idLote)
-        if (!lote) throw "No existe el lote"
-
-        req.body.usuario = req.user._id
-        lote.movimientos.push(req.body)
-
-        sku.existencia = recalcularExistencia(sku)
-        recalcularExistenciaPorAlmacenes(sku)
-        return sku.save()
-      })
+    SKU.agregarMovimiento({ id, idLote, movimientos, user })
       .then(x => res.send(x))
       .catch(_ => next(_))
   }
@@ -530,22 +517,7 @@ app.delete(
     let idLote = req.params.idLote
     let idMovimiento = req.params.idMovimiento
 
-    SKU.findById(id)
-      .select("lotes")
-      .exec()
-      .then(sku => {
-        if (!sku) throw "No existe el id"
-        let lote = sku.lotes.id(idLote)
-        if (!lote) throw "No existe el lote"
-        let movimiento = lote.movimientos.id(idMovimiento)
-        if (!movimiento) throw "No existe el movimiento"
-
-        sku.lotes.id(idLote).movimientos.pull(idMovimiento)
-
-        sku.existencia = recalcularExistencia(sku)
-        recalcularExistenciaPorAlmacenes(sku)
-        return sku.save()
-      })
+    SKU.eliminarMovimiento(id, idLote, idMovimiento)
       .then(x => res.send(x))
       .catch(_ => next(_))
   }
@@ -589,6 +561,8 @@ app.put(
         sku.lotes.id(lote).movimientos.push(salidaAlmacen)
         sku.lotes.id(lote).movimientos.push(entradaAlmacen)
 
+        sku.recalcularExistencias()
+
         return sku.save()
       })
       .then(sku => res.send(sku))
@@ -619,8 +593,7 @@ app.put(
         movimiento.observaciones = req.body.observaciones
         movimiento.usuario = req.user._id
 
-        sku.existencia = recalcularExistencia(sku)
-        recalcularExistenciaPorAlmacenes(sku)
+        sku.recalcularExistencia()
         return sku.save()
       })
       .then(x => res.send(x))
@@ -645,8 +618,7 @@ app.delete(
 
         sku.lotes.pull(idLote)
 
-        sku.existencia = recalcularExistencia(sku)
-        recalcularExistenciaPorAlmacenes(sku)
+        sku.recalcularExistencia()
         return sku.save()
       })
       .then(x => res.send(x))
@@ -670,8 +642,7 @@ app.put("/lote/modificar/:id/:idLote/", (req, res, next) => {
       lote.observaciones = req.body.observaciones
       lote.caducidad = req.body.caducidad
 
-      sku.existencia = recalcularExistencia(sku)
-      recalcularExistenciaPorAlmacenes(sku)
+      sku.recalcularExistencia()
       return sku.save()
     })
     .then(x => res.send(x))

@@ -118,17 +118,11 @@ mongoose
       return res.status(404).send(errP("No existe la pagina"))
     })
 
-    app.use(function (err, req, res, next) {
+    app.use(function (error, req, res, next) {
       let nombreParametroRequest =
         codice_security.configuraciones.easy_permissions.configuraciones
           .nombreParametroRequest
 
-      if (req[nombreParametroRequest]) {
-        let leyenda = "No tienes permiso: " + req[nombreParametroRequest]
-        return res.status(401).send(leyenda)
-      }
-
-      console.log(`err`, err)
       //Errores de permisos
       const errores = [
         //Cuando el token no trae un usuario
@@ -137,31 +131,25 @@ mongoose
         "permission_denied",
       ]
 
-      if (errores.includes(err.code)) {
-        return res
-          .status(403)
-          .send(
-            errP(
-              `No tienes permisos para acceder a este contenido: '${req.permisoSolicitado}'`
-            )
-          )
-      }
-
-      if (err.code === "invalid_token") {
+      if (error.code === "invalid_token") {
         return res
           .status(401)
           .send(errP("Token invalido. Inicia sesion de nuevo"))
       }
 
-      if (err.code === "credentials_required") {
+      if (error.code === "credentials_required") {
         return res.status(401).send(errP("Es necesario loguearte"))
       }
 
-      if (err.errors) {
-        return res.status(500).send(errP(err.message))
+      if (error.errors) {
+        return res.status(500).send(errP(error.message))
       }
 
-      return res.status(500).send(errP(err))
+      if (error?.status === 403 && req[nombreParametroRequest]) {
+        let leyenda = "No tienes permiso: " + req[nombreParametroRequest]
+        return res.status(401).send(errP(leyenda))
+      }
+      return res.status(500).send(errP(error))
     })
   })
   .catch(_ => console.log("error mongo:", _))

@@ -191,12 +191,15 @@ app.get("/buscar/codigo/:codigo", (req, res, next) => {
   let codigo = req.params.codigo
   SKU.findOne({
     eliminado: false,
-    puedoVenderlo: true,
+    // puedoVenderlo: true,
     codigo: codigo,
   })
-    .select(" id nombreCompleto costoVenta codigo")
+    .select(" id nombreCompleto costoVenta codigo puedoVenderlo")
     .exec()
-    .then(skus => res.send(skus))
+    .then(skus => {
+      if (!skus.puedoVenderlo) throw "Producto no apto para venta al público"
+      res.send(skus)
+    })
     .catch(_ => next(_))
 })
 

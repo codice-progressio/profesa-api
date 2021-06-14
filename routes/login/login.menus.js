@@ -49,6 +49,7 @@ function generarMenus() {
     COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
     PUNTO_DE_VEMTA: puntoDeVenta(),
+    CONTABILIDAD: contabilidad(),
     // RH: rh(),
     // parametros: parametros(),
   }
@@ -83,6 +84,40 @@ function puntoDeVenta() {
         permiso: $(
           "menu:venta-al-publico:punto-de-venta",
           "Permite a este usuario utilizar el punto de venta "
+        ),
+      },
+    ],
+  }
+  return menu
+}
+function contabilidad() {
+  const menu = {
+    permiso: $("menu:contabilidad", "Menu de contabilidad"),
+    titulo: "Contabilidad",
+    icono: "fas fa-file-invoice-dollar",
+    submenu: [
+      {
+        titulo: "A - Tablero contable",
+        url: "/contabilidad",
+        permiso: $(
+          "menu:contabilidad:tablero-contable",
+          "Permite a este usuario entrar al tablero contable"
+        ),
+      },
+      {
+        titulo: "B - Remisiones",
+        url: "/contabilidad/remisiones",
+        permiso: $(
+          "menu:contabilidad:remisiones",
+          "Permite a este usuario entrar a la gestión de remisiones"
+        ),
+      },
+      {
+        titulo: "C - Facturas",
+        url: "/contabilidad/facturas",
+        permiso: $(
+          "menu:contabilidad:facturas",
+          "Permite a este usuario entrar a la gestión de facturas"
         ),
       },
     ],

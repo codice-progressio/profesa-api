@@ -11,13 +11,13 @@ const Schema = mongoose.Schema
 const LoteSchema = new Schema({
   existencia: {
     type: Number,
-    min: [0, "{PATH} de lote no puede ser menor que 0"],
+    // min: [0, "{PATH} de lote no puede ser menor que 0"],
   },
-  // La existencia de cada almacen que se vaya creando. 
-  // Este valor es dinamico pues permite que el usuario 
-  // cree diferentes almacenes segun sus necesidades. 
-  // Se espera que la clave de este objecto sea el id 
-  // del almacen y solo contenga la cantidad. 
+  // La existencia de cada almacen que se vaya creando.
+  // Este valor es dinamico pues permite que el usuario
+  // cree diferentes almacenes segun sus necesidades.
+  // Se espera que la clave de este objecto sea el id
+  // del almacen y solo contenga la cantidad.
   existenciaAlmacenes: {},
   observaciones: "",
   movimientos: [

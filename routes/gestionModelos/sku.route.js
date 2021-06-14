@@ -163,7 +163,9 @@ app.get(
       $or: [],
     }
 
-    ;["nombreCompleto", "descripcion", "codigo"].forEach(x => $match.$or.push(b(x)))
+    ;["nombreCompleto", "descripcion", "codigo"].forEach(x =>
+      $match.$or.push(b(x))
+    )
 
     SKU.aggregate([
       { $match },

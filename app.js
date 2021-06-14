@@ -119,6 +119,8 @@ mongoose
     })
 
     app.use(function (error, req, res, next) {
+      console.error(error)
+
       let nombreParametroRequest =
         codice_security.configuraciones.easy_permissions.configuraciones
           .nombreParametroRequest

@@ -27,8 +27,10 @@ const LoteSchema = new Schema({
       esEntrada: { type: Boolean, default: false },
       observaciones: String,
       createdAt: { type: Date, default: Date.now },
-      usuario: String, 
-      almacen: String
+      usuario: String,
+      almacen: String,
+      // El id de la remision en caso de que hubiera
+      remision: String,
     },
   ],
   createdAt: { type: Date, default: Date.now },

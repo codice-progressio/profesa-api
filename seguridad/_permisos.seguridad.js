@@ -1,4 +1,8 @@
 const permisos = {
+  "menu:contabilidad:facturas":"menu:contabilidad:facturas",
+  "menu:contabilidad:remisiones":"menu:contabilidad:remisiones",
+  "menu:contabilidad:tablero-contable":"menu:contabilidad:tablero-contable",
+  "menu:contabilidad":"menu:contabilidad",
   "menu:venta-al-publico:punto-de-venta":"menu:venta-al-publico:punto-de-venta",
   "menu:venta-al-publico":"menu:venta-al-publico",
   "menu:administrador:rutas-de-entrega":"menu:administrador:rutas-de-entrega",
@@ -11,13 +15,14 @@ const permisos = {
   "menu:ventas":"menu:ventas",
   "menu:almacen:sku":"menu:almacen:sku",
   "menu:almacen":"menu:almacen",
+  "contabilidad:remision:leer:todo":"contabilidad:remision:leer:todo",
+  "contabilidad:remision:crear":"contabilidad:remision:crear",
   "usuario:modificar:eliminar-imagen":"usuario:modificar:eliminar-imagen",
   "rutas-de-entrega:eliminar:id":"rutas-de-entrega:eliminar:id",
   "rutas-de-entrega:buscar:contactos-de-ruta":"rutas-de-entrega:buscar:contactos-de-ruta",
   "rutas-de-entrega:buscar:id":"rutas-de-entrega:buscar:id",
   "rutas-de-entrega:leer:todo":"rutas-de-entrega:leer:todo",
   "rutas-de-entrega:crear-modificar":"rutas-de-entrega:crear-modificar",
-  "venta-al-publico:crear:nota":"venta-al-publico:crear:nota",
   "proveedor:rutas:agregar":"proveedor:rutas:agregar",
   "proveedor:eliminar":"proveedor:eliminar",
   "proveedor:modificar":"proveedor:modificar",
@@ -49,8 +54,7 @@ const permisos = {
   "login":"login",
   "usuario:leer:todo":"usuario:leer:todo",
   "administrador":"administrador",
-
-
+  
   
 }
 module.exports = permisos

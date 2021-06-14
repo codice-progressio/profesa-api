@@ -20,7 +20,7 @@ const NotaSchema = new Schema(
   { timestamps: true }
 )
 
-module.exports = mongoose.model("nota", NotaSchema)
+module.exports = mongoose.model("remision", NotaSchema)
 
 var CounterSchema = Schema({
   _id: { type: String, required: true },

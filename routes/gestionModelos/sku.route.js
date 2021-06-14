@@ -183,6 +183,7 @@ app.get(
           etiquetas: "$etiquetas",
           imagenes: "$imagenes",
           costoVenta: "$costoVenta",
+          codigo: "$codigo",
         },
       },
     ])

@@ -393,20 +393,19 @@ app.post(
         // la primera entrada del lote.Si definimos el movimiento
         // si lo registramos de todas maneras.
 
-        //Agregamos el usuario actual
         if (!req.body.movimientos) {
           req.body["movimientos"] = [
             {
               cantidad: 0,
               esEntrada: true,
               observaciones: "[SISTEMA] Lote creado sin existencias",
+              // //Agregamos el usuario actual
               usuario: req.user._id,
             },
           ]
-        } else {
-          req.body.movimientos.forEach(x => (x.usuario = req.user._id))
         }
-        // Las entradas las acomodamos al principio para que se vea mas nice.
+        // Si se mandaran mas movimientos recorremos todos.
+        req?.body?.movimientos?.forEach(x => (x.usuario = req.user._id))
         sku.lotes.unshift(req.body)
         sku.recalcularExistencia()
 

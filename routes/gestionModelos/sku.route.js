@@ -20,8 +20,22 @@ const erro = (res, err, msj) => {
 }
 
 app.post("/", $("sku:crear", "Crea un nuevo SKU"), (req, res, next) => {
-  new SKU(req.body)
-    .save()
+  let s = new SKU(req.body)
+
+  s.lotes.push({
+    existencia: 0,
+    observaciones: "[ SISTEMA ] Lote creado sin existencia",
+    movimientos: [
+      {
+        cantidad: 0,
+        esEntrada: true,
+        observaciones: "[ SISTEMA ] Movimiento creado sin existencias",
+        usuario: req.user._id,
+      },
+    ],
+  })
+
+  s.save()
     .then(sku => {
       return res.send(sku)
     })

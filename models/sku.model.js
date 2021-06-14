@@ -127,7 +127,6 @@ sku.statics.agregarMovimiento = function (opciones) {
       lote.movimientos.push(opciones.movimientos)
 
       sku.recalcularExistencia()
-      sku.recalcularExistenciaPorAlmacenes()
       return sku.save()
     })
 }
@@ -146,7 +145,7 @@ sku.statics.eliminarMovimiento = function (id, idLote, idMovimiento) {
       sku.lotes.id(idLote).movimientos.pull(idMovimiento)
 
       sku.recalcularExistencia()
-      
+
       return sku.save()
     })
 }
@@ -167,7 +166,6 @@ sku.methods.recalcularExistencia = function () {
 
     existenciaActual += lote.existencia
   })
-
   this.existenciaActual = existenciaActual
   this.recalcularExistenciaPorAlmacenes()
 }

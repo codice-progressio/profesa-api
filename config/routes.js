@@ -12,13 +12,12 @@ const skuRoutes = require("../routes/gestionModelos/sku.route")
 const proveedorRoute = require("../routes/proveedores/proveedor.route")
 const Parametros = require("../routes/parametros/parametros.route")
 const Changelogs = require("../routes/changelogs.route")
-const ventaPublicoRoute = require("../routes/ventaAlPublico/ventaAlPublico.route")
 
 const estadisticasRoute = require("../routes/estadisticas/estadisticas.route")
 const rutaDeEntregaRoute = require("../routes/rutasDeEntrega/rutaDeEntrega.route")
 
 const ficherosRoute = require("../routes/ficheros.route")
-const facturacionRoute = require("../routes/facturacion/facturacion.route")
+const contabilidadRoute = require("../routes/contabilidad/contabilidad.route")
 
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
@@ -68,11 +67,7 @@ app.use("/sku", skuRoutes)
 app.use("/estadisticas", estadisticasRoute)
 app.use("/ruta-de-entrega", rutaDeEntregaRoute)
 app.use("/ficheros", ficherosRoute)
-
-app.use("/venta-al-publico", ventaPublicoRoute)
-app.use("/facturacion", facturacionRoute)
-
-
+app.use("/contabilidad", contabilidadRoute)
 
 module.exports = app
 //

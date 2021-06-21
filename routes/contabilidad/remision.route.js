@@ -60,7 +60,9 @@ app.post(
               articulos.forEach(a => {
                 console.log("entro 2")
                 // Buscamos el sku
-                let skuSeleccionado = skus.find(s => s._id.toString() === a.idSku)
+                let skuSeleccionado = skus.find(
+                  s => s._id.toString() === a.idSku
+                )
                 // Modificamos la entrada de almacen.
                 // 1.- Obtenemos el lote más antiguo por defecto.
                 console.log("Desde route:", skuSeleccionado.lotes)
@@ -79,7 +81,9 @@ app.post(
               })
               return Promise.all(promesas)
             })
-            .then(skusG => resolve(remisionGuardada))
+            .then(skusG => {
+              resolve(remisionGuardada)
+            })
         })
       })
       .then(r => res.send(r))

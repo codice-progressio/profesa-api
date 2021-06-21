@@ -166,7 +166,7 @@ sku.methods.recalcularExistencia = function () {
 
     existenciaActual += lote.existencia
   })
-  this.existenciaActual = existenciaActual
+  this.existencia = existenciaActual
   this.recalcularExistenciaPorAlmacenes()
 }
 
@@ -202,6 +202,74 @@ sku.methods.recalcularExistenciaPorAlmacenes = function () {
   })
 
   this.existenciaAlmacenes = almacenesSuma
+}
+
+sku.methods.descontarMovimientoUltimoLoteConExistencia = function (movimiento) {
+  // Debemos desconctar el movimiento al ultimo lote con existencia,
+  // en su defecto, al ultimo lote registrado aunque no tenga existencia.
+
+  let lotes = {
+    actuales: this.lotes,
+    conExistencia: this.lotes.filter(l => l.existencia > 0),
+  }
+
+  if (lotes.conExistencia?.length > 0) {
+    // 1. Tenemos lotes con existencia.
+
+    // Debemos revisar si vamos a separar la entrada entre varios.
+    let cantidadADescontar = movimiento.cantidad
+
+    let totalDeLotesConExistencia = lotes.conExistencia.length
+
+    for (let i = totalDeLotesConExistencia - 1; i >= 0; i--) {
+      // Solo continuamos si cantidadADescontar > 0
+      if (cantidadADescontar > 0) {
+        let loteSeleccionado = lotes.conExistencia[i]
+
+        let existenciaDeLote = loteSeleccionado.existencia
+
+        // Si cantidadADescontar > existenciaDeLote entonces
+        // duplicamos el movimiento para agregar solo la cantidad
+        // restante del lote.
+        let hayMasLotes = !!(totalDeLotesConExistencia - 1 - i)
+
+        if (hayMasLotes && cantidadADescontar > existenciaDeLote) {
+          // Duplicamos el objeto por que vamos a crear varios mov.
+          // para completar con los lotes la cantidad.
+          let movimientoDuplicado = Object.assign(movimiento)
+          movimientoDuplicado.cantidad = existenciaDeLote
+          cantidadADescontar = cantidadADescontar - existenciaDeLote
+          // Agregamos el abono al lote seleccionado.
+          loteSeleccionado.movimientos.push(movimientoDuplicado)
+          // Pasamos al siguiente bucle
+
+          continue
+        }
+        // Si ya no hay mas lotes o en este lote
+        // cantidadADescontar > existenciaDeLote, deberiamos poner todo
+        // lo que cantidadADescontar tiene pendiente, aunque
+        // esto haga que quede en negativo.
+        // movimiento.cantidad = cantidadADescontar
+        // loteSeleccionado.movimientos.push(movimiento)
+        // cantidadADescontar = 0
+        movimiento.cantidad = cantidadADescontar
+        loteSeleccionado.movimientos.push(movimiento)
+        // entonces cantidadADescontar debe = 0 para que no
+        // siga entrando a validar existencias.
+        cantidadADescontar = 0
+      }
+    }
+  } else {
+    // 2. No hay lotes con existencia
+
+    // Debemos de aplicar la cantidad al último lote que exista.
+    // Ese debe ser 0 por que usamos unshift para crear los lotes.
+    let ultimoLoteSinExistencia = lotes.actuales[0]
+    // Aplicamos el movimiento al lote
+    ultimoLoteSinExistencia.movimientos.push(movimiento)
+  }
+
+  this.recalcularExistencia()
 }
 
 module.exports = mongoose.model("sku", sku)

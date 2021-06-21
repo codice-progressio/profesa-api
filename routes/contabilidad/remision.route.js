@@ -13,7 +13,6 @@ app.post(
     // Buscamos todos los sku de la nota actual y ponemos el
     // precio al momento de la consulta para que haya una comparacion
     // si se cambio el precio.
-    console.log("entro 0")
     if (!articulos) throw "No se recibieron articulos para registrarse"
     let skusIds = articulos?.map(x => x.idSku) ?? null
 
@@ -38,7 +37,6 @@ app.post(
         nRemision.usuario = req.user._id
         let total = 0
         articulos.map(x => {
-          console.log("entro 7")
           total += x.precio
           nRemision.articulos.push(x)
         })
@@ -58,14 +56,12 @@ app.post(
               remisionGuardada = remision
               let promesas = []
               articulos.forEach(a => {
-                console.log("entro 2")
                 // Buscamos el sku
                 let skuSeleccionado = skus.find(
                   s => s._id.toString() === a.idSku
                 )
                 // Modificamos la entrada de almacen.
                 // 1.- Obtenemos el lote más antiguo por defecto.
-                console.log("Desde route:", skuSeleccionado.lotes)
                 skuSeleccionado.descontarMovimientoUltimoLoteConExistencia(
                   // 2.- creamos el nuevo movimiento
                   {
@@ -88,7 +84,6 @@ app.post(
       })
       .then(r => res.send(r))
       .catch(_ => {
-        console.log(_)
         next(_)
       })
   }
@@ -124,7 +119,6 @@ app.get(
     }
 
     for (const key in filtros) {
-      console.log(key, filtros[key])
       if (
         !filtros[key] ||
         Object.keys(filtros[key]).length === 0 ||
@@ -138,7 +132,6 @@ app.get(
     let sort = req.query?.sort ?? -1
     let sort_campo = req.query?.sort_campo ?? "created_at"
 
-    console.log(filtros)
     Remision.find(filtros)
       .select("consecutivo usuario total created_at")
       .skip(skip)

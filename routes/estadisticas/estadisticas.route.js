@@ -13,14 +13,14 @@ app.get("/total-costo-existencias", (req, res, next) => {
     .select("existencia costoVenta ")
     .exec()
     .then(skus => {
-      
-      const total = skus.reduce((acumulado, sku) =>
-      {
-        const mul = (sku.existencia ?? 0) * (sku.costoVenta ?? 0)
-        return mul + acumulado
+      const total = skus.reduce((acumulado, sku) => {
+        // La existencia debe ser >= 0 para que se calcule, si no, no
+        // se toma en cuenta.
+        let existencia = sku.existencia >= 0 ? sku.existencia ?? 0 : 0
+        const multiplicacion = existencia * (sku.costoVenta ?? 0)
+        return multiplicacion + acumulado
       }, 0)
 
-      
       res.send({ total })
     })
     .catch(_ => next(_))

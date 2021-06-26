@@ -14,10 +14,9 @@ app.post(
     // precio al momento de la consulta para que haya una comparacion
     // si se cambio el precio.
     if (!articulos) throw "No se recibieron articulos para registrarse"
-    let skusIds = articulos?.map(x => x.idSku) ?? null
-
+    let skusIds = articulos?.map(x => x.idSku) ?? [null]
     sku
-      .find({ _id: { $in: [skusIds] } })
+      .find({ _id: { $in: skusIds } })
       .select("+lotes")
       .exec()
       .then(skus => {

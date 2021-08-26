@@ -4,9 +4,11 @@ const app = express()
 const Parametros = require("../../models/defautls/parametros.model")
 const EtiquetasRoute = require("../../routes/parametros/parametros.etiquetas.route")
 
+const ListaDePrecioRoute = require("../../routes/parametros/parametros.listaDePrecios.route")
 // Generales
 
 app.use("/etiquetas", EtiquetasRoute)
+app.use("/lista-de-precios", ListaDePrecioRoute)
 
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.

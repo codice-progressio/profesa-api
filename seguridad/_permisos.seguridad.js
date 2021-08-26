@@ -1,4 +1,13 @@
 const permisos = {
+  "sku:leer:todo:lista-de-precios":"sku:leer:todo:lista-de-precios",
+  "menu:ventas:listas-de-precios":"menu:ventas:listas-de-precios",
+  "lista-de-precios:eliminar":"lista-de-precios:eliminar",
+  "lista-de-precios:asignar-a-acliente":"lista-de-precios:asignar-a-acliente",
+  "lista-de-precios:modificar:id":"lista-de-precios:modificar:id",
+  "lista-de-precios:leer:id":"lista-de-precios:leer:id",
+  "lista-de-precios:leer:todo":"lista-de-precios:leer:todo",
+  "lista-de-precios:crear":"lista-de-precios:crear",
+  "lista-de-precios:":"lista-de-precios:",
   "menu:contabilidad:facturas":"menu:contabilidad:facturas",
   "menu:contabilidad:remisiones":"menu:contabilidad:remisiones",
   "menu:contabilidad:tablero-contable":"menu:contabilidad:tablero-contable",

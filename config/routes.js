@@ -19,6 +19,8 @@ const rutaDeEntregaRoute = require("../routes/rutasDeEntrega/rutaDeEntrega.route
 const ficherosRoute = require("../routes/ficheros.route")
 const contabilidadRoute = require("../routes/contabilidad/contabilidad.route")
 
+const listaDePrecios = require("../routes/listaDePrecios.route")
+
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
 app.use("/parametros", Parametros)
@@ -68,6 +70,8 @@ app.use("/estadisticas", estadisticasRoute)
 app.use("/ruta-de-entrega", rutaDeEntregaRoute)
 app.use("/ficheros", ficherosRoute)
 app.use("/contabilidad", contabilidadRoute)
+
+app.use("/lista-de-precios", listaDePrecios)
 
 module.exports = app
 //

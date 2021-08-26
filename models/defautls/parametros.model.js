@@ -11,6 +11,12 @@ const parametrosDeTrabajoSchema = new Schema(
 
     // Nos sirve para el autocompletado de etiquetas.
     etiquetas: [String],
+
+    // La list por defecto que vamos a utilizar.
+    listaDePreciosDefault: {
+      $type: mongoose.Schema.Types.ObjectId,
+      ref: "listaDePrecios",
+    },
   },
   { collection: "parametrosDeTrabajo", typeKey: "$type" }
 )

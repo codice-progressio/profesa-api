@@ -227,6 +227,13 @@ function ventas() {
         url: "/ventas/misPedidos",
         permiso: $("menu:ventas:mis-pedidos", "", { esMiddleware: false }),
       },
+      {
+        titulo: "Listas de precios",
+        url: "/ventas/listas-de-precios",
+        permiso: $("menu:ventas:listas-de-precios", "", {
+          esMiddleware: false,
+        }),
+      },
     ],
   }
 

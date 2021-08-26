@@ -128,6 +128,22 @@ app.get(
       .catch(_ => next(_))
   }
 )
+app.get(
+  "/todo",
+  $(
+    "sku:leer:todo:lista-de-precios",
+    "Leer todos los sku registrados en la BD"
+  ),
+  async (req, res, next) => {
+    SKU.find()
+      .select(
+        " -produccion -imagenes -existenciaAlmacenes -lotes -proveedores "
+      )
+      .exec()
+      .then(skus => res.send({ skus }))
+      .catch(_ => next(_))
+  }
+)
 
 app.get(
   "/buscar/id/:id",

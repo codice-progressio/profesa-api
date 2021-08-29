@@ -1,18 +1,20 @@
 var mongoose = require("mongoose")
 var Schema = mongoose.Schema
 var uniqueValidator = require("mongoose-unique-validator")
-var marcaLaser = require("../models/marcaLaser")
 
 var clienteSchema = new Schema(
   {
-    sae: { type: String },
     nombre: {
       type: String,
       unique: true,
       required: [true, "El	nombre	es	necesario"],
     },
-    laserados: [marcaLaser],
+    listaDePrecios: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "listaDePrecios",
+    },
   },
+
   { collection: "clientes" }
 )
 

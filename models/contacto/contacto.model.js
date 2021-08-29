@@ -3,7 +3,7 @@ const Schema = mongoose.Schema
 const DomicilioSchema = require("./domicilio.model")
 
 // ESTO SE VA A CONVERTIR EN UN CONTACTO
-const ProveedorSchema = new Schema(
+const ContactoSchema = new Schema(
   {
     nombre: {
       type: String,
@@ -38,6 +38,6 @@ const ProveedorSchema = new Schema(
     etiquetas: [String],
     rutas: [String],
   },
-  { collection: "proveedores" }
+  { collection: "contactos" }
 )
-module.exports = mongoose.model("Contacto", ProveedorSchema)
+module.exports = mongoose.model("Contacto", ContactoSchema)

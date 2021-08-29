@@ -234,39 +234,44 @@ function ventas() {
           esMiddleware: false,
         }),
       },
+      {
+        titulo: "Clientes",
+        url: "/clientes",
+        permiso: $("menu:ventas:clientes", "", { esMiddleware: false }),
+      },
     ],
   }
 
   return menu
 }
 
-function parametros() {
-  const menu = {
-    permiso: $(
-      "menu:parametros",
-      "Ver el menú para  modificar parametros del sistema",
-      { esMiddleware: false }
-    ),
-    titulo: "Parametros",
-    icono: "fas fa-microchip",
-    submenu: [
-      // {
-      //   titulo: "Localizacion de pedidos",
-      //   url: "/parametros/localizacion",
-      //   permiso: $(
-      //     "menu:parametros:localizacion",
-      //     "Ver el menú para crear la localiz"
-      //   ),
-      // },
-      // {
-      //   titulo: "Estaciones de escaneo",
-      //   url: "/parametros/estaciones",
-      //   permiso: $("SUPER_ADMIN", false),
-      // },
-    ],
-  }
-  return menu
-}
+// function parametros() {
+//   const menu = {
+//     permiso: $(
+//       "menu:parametros",
+//       "Ver el menú para  modificar parametros del sistema",
+//       { esMiddleware: false }
+//     ),
+//     titulo: "Parametros",
+//     icono: "fas fa-microchip",
+//     submenu: [
+//       // {
+//       //   titulo: "Localizacion de pedidos",
+//       //   url: "/parametros/localizacion",
+//       //   permiso: $(
+//       //     "menu:parametros:localizacion",
+//       //     "Ver el menú para crear la localiz"
+//       //   ),
+//       // },
+//       // {
+//       //   titulo: "Estaciones de escaneo",
+//       //   url: "/parametros/estaciones",
+//       //   permiso: $("SUPER_ADMIN", false),
+//       // },
+//     ],
+//   }
+//   return menu
+// }
 
 function compras() {
   const menu = {
@@ -279,11 +284,7 @@ function compras() {
         url: "/compras",
         permiso: $("menu:compras", "", { esMiddleware: false }),
       },
-      {
-        titulo: "Contactos",
-        url: "/compras/contactos",
-        permiso: $("menu:compras:contactos", "", { esMiddleware: false }),
-      },
+
       // {
       //   titulo: "Divisas",
       //   url: "/divisas",
@@ -300,7 +301,7 @@ function administrador() {
       esMiddleware: false,
     }),
     titulo: "Administrador",
-    icono: "fas fa-user-cog",
+    icono: "fas fa-cogs",
     submenu: [
       {
         titulo: "Usuarios",
@@ -337,16 +338,18 @@ function administrador() {
           { esMiddleware: false }
         ),
       },
+
+      {
+        titulo: "Contactos",
+        url: "/parametros/contactos",
+        permiso: $("menu:administrador:contactos", "", { esMiddleware: false }),
+      },
       // {
       //   titulo: "Areas",
       //   url: "/areas",
       //   permiso: $("menu:administrador:areas", false),
       // },
-      // {
-      //   titulo: "Clientes",
-      //   url: "/clientes",
-      //   permiso: $("menu:administrador:clientes", false),
-      // },
+
       // {
       //   titulo: "Almacen descripcion",
       //   url: "/almacenDescripcion",

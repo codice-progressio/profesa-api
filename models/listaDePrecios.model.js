@@ -4,11 +4,22 @@ const Schema = mongoose.Schema
 
 const ListaDePrecios = new Schema(
   {
-    nombre: String,
+    nombre: {
+      require: [true, "Debes definir el nombre de la lista"],
+      type: String,
+      trim: true,
+      index: {
+        unique: true,
+        partialFilterExpression: { nombre: { $type: "string" } },
+      },
+    },
     skus: [
       {
-        sku: { type: String },
-        precio: Number,
+        sku: {
+          ref: "sku",
+          type: mongoose.Types.ObjectId,
+        },
+        precio: { type: Number, min: [0, "El precio minimo es 0"] },
       },
     ],
     iva: { type: Number, default: 0, min: 0 },

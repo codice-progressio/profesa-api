@@ -33,13 +33,9 @@ app.get(
   "/id/:id",
   $("lista-de-precios:leer:id", "Leer las listas de precio existentes"),
   (req, res, next) => {
-    ListaDePrecios.aggregate([
-      {
-        $match: {
-          _id: ObjectId(req.params.id),
-        },
-      },
+    let noCargarSkus = req.query.noCargarSkus
 
+    let aggregateSkus = [
       {
         $unwind: {
           path: "$skus",
@@ -99,8 +95,22 @@ app.get(
           esDefault: "$_id.esDefault",
         },
       },
-    ])
+    ]
+    let match = [
+      {
+        $match: {
+          _id: ObjectId(req.params.id),
+        },
+      },
+    ]
 
+    if (!noCargarSkus) match.push(...aggregateSkus)
+    else {
+      match.push({
+        $unset: ["skus"],
+      })
+    }
+    ListaDePrecios.aggregate(match)
       .then(li => {
         let listaDePrecios = li[0]
         if (!listaDePrecios) throw "No existe el id"
@@ -110,21 +120,39 @@ app.get(
   }
 )
 
+app.get("/id/:id/tamano-de-lista", (req, res, next) => {
+  ListaDePrecios.aggregate([
+    { $match: { _id: ObjectId(req.params.id) } },
+    {
+      $project: {
+        tamano: {
+          $size: "$skus",
+        },
+      },
+    },
+  ])
+    .exec()
+    .then(tamano => res.send({ ...tamano[0] }))
+    .catch(_ => next(_))
+})
 app.put("/", $("lista-de-precios:modificar:id"), (req, res, next) => {
   // Solo modificamos datos generales.
 
   console.log(req.body)
+  let noCargarSkus = req.query.noCargarSkus
+
   ListaDePrecios.findById(req.body._id)
     .then(lista => {
       if (!lista) throw "No existe la lista"
       lista.nombre = req.body.nombre
       lista.iva = req.body.iva
       lista.descripcion = req.body.descripcion
-      lista.esDefault = req.body.esDefault
 
-      // Limpiamos skus
-      while (lista.skus.length > 0) lista.skus.pop()
-      req.body.skus.forEach(s => lista.skus.push(s))
+      // Solo actualizamos los sku que se estan
+      if (!noCargarSkus) {
+        while (lista.skus.length > 0) lista.skus.pop()
+        req.body.skus.forEach(s => lista.skus.push(s))
+      }
 
       return lista.save()
     })

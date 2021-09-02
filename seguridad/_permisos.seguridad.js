@@ -1,4 +1,5 @@
 const permisos = {
+  "lista-de-precios:leer:todo:ligero":"lista-de-precios:leer:todo:ligero",
   "contacto:rutas:agregar":"contacto:rutas:agregar",
   "contacto:crear":"contacto:crear",
   "contacto:eliminar":"contacto:eliminar",

@@ -1,4 +1,5 @@
 const permisos = {
+  "lista-de-precios:leer:todo:ligero":"Leer las listas de precio existentes",
   "contacto:rutas:agregar":"Agregar rutas a un contacto",
   "contacto:crear":"Sin descripción",
   "contacto:eliminar":"Sin descripción",

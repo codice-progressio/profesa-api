@@ -68,13 +68,13 @@ app.post("/", (req, res, next) => {
 
   Promise.allSettled(PROMESAS)
     .then(r => {
-      skus_rechazados =
+      rechazados =
         r.filter(x => x.status === "rejected").map(x => x.reason) ?? []
-      skus_correctos = r.filter(x => x.status === "")
+      correctos = r.filter(x => x.status === "fulfilled")?.length ?? 0
 
       // 2.- Separar listas de precio
 
-      res.send({ rechazados: skus_rechazados })
+      res.send({ rechazados, correctos })
     })
     .catch(_ => next(_))
 

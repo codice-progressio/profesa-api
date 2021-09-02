@@ -19,7 +19,9 @@ function agregarPaginacion(model, query) {
   const campo = String(query.campo ?? "nombre")
 
   return model
-    .select("etiquetas nombre contactos esCliente esProveedor rutas ")
+    .select(
+      "etiquetas nombre razonSocial contactos esCliente esProveedor rutas "
+    )
     .sort({ [campo]: sort })
     .limit(limite)
     .skip(desde)
@@ -33,10 +35,11 @@ app.get("/", $("contacto:leer:todo"), async (req, res) => {
     .catch(err => next(err))
 })
 
-app.get("/buscar/id/:id", $("contacto:leer:id"), (req, res) => {
+app.get("/buscar/id/:id", $("contacto:leer:id"), (req, res, next) => {
   // Los eliminados no deben aparecer.
   Contacto.findOne({ _id: req.params.id, eliminado: false })
     .populate("rutas", undefined, "rutaDeEntrega")
+    // .populate("listaDePrecios","_id nombre", "ListaDePrecios")
     .exec()
     .then(contacto => {
       if (!contacto) throw "No existe el id o ha sido eliminado"
@@ -102,6 +105,7 @@ app.put("/", $("contacto:modificar"), (req, res, next) => {
         "cuentas",
         "esCliente",
         "esProveedor",
+        "listaDePrecios"
       ].forEach(x => {
         contacto[x] = req.body[x]
       })

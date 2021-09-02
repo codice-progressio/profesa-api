@@ -7,11 +7,13 @@ const EtiquetasRoute = require("../../routes/parametros/parametros.etiquetas.rou
 const ListaDePrecioRoute = require("../../routes/parametros/parametros.listaDePrecios.route")
 
 const SKUsRoute = require("../../routes/parametros/parametros.skus.route")
+const ContactoRoute = require("../../routes/parametros/parametros.contacto.route")
 // Generales
 
 app.use("/etiquetas", EtiquetasRoute)
 app.use("/lista-de-precios", ListaDePrecioRoute)
 app.use("/skus", SKUsRoute)
+app.use("/contactos", ContactoRoute)
 
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.

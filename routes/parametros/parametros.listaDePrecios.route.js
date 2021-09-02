@@ -42,16 +42,24 @@ app.post("/lote", async (req, res, next) => {
 
   let rechazados = []
 
-  let datosAcomodados = req.body.datos.map(dato => {
-    let id = IDS.find(sku => sku.codigo === dato.codigo)?._id
-    if (id) {
-      dato["sku"] = id
-    } else {
-      rechazados.push({ dato, error: "Al parecer no existe el codigo" })
-    }
-    return dato
-  })
-  console.log({ datosAcomodados })
+  let datosAcomodados = req.body.datos
+    .filter(dato => {
+      if (isNaN(dato?.precio)) {
+        rechazados.push({ dato, error: `${dato.precio} no es un numero` })
+        return false
+      }
+
+      return true
+    })
+    .map(dato => {
+      let id = IDS.find(sku => sku.codigo === dato.codigo)?._id
+      if (id) {
+        dato["sku"] = id
+      } else {
+        rechazados.push({ dato, error: "Al parecer no existe el codigo" })
+      }
+      return dato
+    })
   let filter = { nombre: req.body.nombre }
   let update = {
     nombre: req.body.nombre,

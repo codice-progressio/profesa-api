@@ -41,8 +41,8 @@ const sku = new Schema({
 
   nombreCompleto: {
     type: String,
-    unique: [true, "{{PATH}} Debe ser único"],
-    minlength: 4,
+    minlength: 1,
+    trim: true,
   },
 
   /**

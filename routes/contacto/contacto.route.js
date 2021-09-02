@@ -1,14 +1,14 @@
 //Esto es necesario
 const app = require("express")()
-const Proveedor = require("../../models/proveedores/proveedor.model")
+const Contacto = require("../../models/contacto/contacto.model")
 const $ = require("@codice-progressio/easy-permissions").$
 const sku = require("../../models/sku.model")
 const Parametros = require("../../models/defautls/parametros.model")
 
-app.post("/", $("proveedor:crear"), (req, res, next) => {
-  return new Proveedor(req.body)
+app.post("/", $("contacto:crear"), (req, res, next) => {
+  return new Contacto(req.body)
     .save()
-    .then(proveedor => res.send(proveedor))
+    .then(contacto => res.send(contacto))
     .catch(err => next(err))
 })
 
@@ -19,35 +19,38 @@ function agregarPaginacion(model, query) {
   const campo = String(query.campo ?? "nombre")
 
   return model
-    .select("etiquetas nombre contactos esCliente esProveedor rutas ")
+    .select(
+      "etiquetas nombre razonSocial contactos esCliente esProveedor rutas "
+    )
     .sort({ [campo]: sort })
     .limit(limite)
     .skip(desde)
 }
 
-app.get("/", $("proveedor:leer:todo"), async (req, res) => {
+app.get("/", $("contacto:leer:todo"), async (req, res) => {
   //No listamos los proveedores eliminados
-  agregarPaginacion(Proveedor.find({ eliminado: false }), req.query)
+  agregarPaginacion(Contacto.find({ eliminado: false }), req.query)
     .exec()
     .then(proveedores => res.send(proveedores))
     .catch(err => next(err))
 })
 
-app.get("/buscar/id/:id", $("proveedor:leer:id"), (req, res) => {
+app.get("/buscar/id/:id", $("contacto:leer:id"), (req, res, next) => {
   // Los eliminados no deben aparecer.
-  Proveedor.findOne({ _id: req.params.id, eliminado: false })
+  Contacto.findOne({ _id: req.params.id, eliminado: false })
     .populate("rutas", undefined, "rutaDeEntrega")
+    // .populate("listaDePrecios","_id nombre", "ListaDePrecios")
     .exec()
-    .then(proveedor => {
-      if (!proveedor) throw "No existe el id o ha sido eliminado"
-      return res.send(proveedor)
+    .then(contacto => {
+      if (!contacto) throw "No existe el id o ha sido eliminado"
+      return res.send(contacto)
     })
     .catch(err => next(err))
 })
 
 app.get(
   "/buscar/termino/:termino",
-  $("proveedor:leer:termino"),
+  $("contacto:leer:termino"),
   async (req, res) => {
     const desde = Number(req.query.desde ?? 0)
     const limite = Number(req.query.limite ?? 30)
@@ -68,7 +71,7 @@ app.get(
 
     ;["nombre", "rfc", "razonSocial"].forEach(x => $match.$or.push(b(x)))
 
-    Proveedor.aggregate([
+    Contacto.aggregate([
       { $match },
 
       //Fin de populacion
@@ -85,12 +88,12 @@ app.get(
   }
 )
 
-app.put("/", $("proveedor:modificar"), (req, res, next) => {
-  Proveedor.findById(req.body._id)
+app.put("/", $("contacto:modificar"), (req, res, next) => {
+  Contacto.findById(req.body._id)
     .exec()
-    .then(proveedor => {
-      if (!proveedor) {
-        throw "No existe el proveedor"
+    .then(contacto => {
+      if (!contacto) {
+        throw "No existe el contacto"
       }
 
       ;[
@@ -102,33 +105,34 @@ app.put("/", $("proveedor:modificar"), (req, res, next) => {
         "cuentas",
         "esCliente",
         "esProveedor",
+        "listaDePrecios"
       ].forEach(x => {
-        proveedor[x] = req.body[x]
+        contacto[x] = req.body[x]
       })
 
-      return proveedor.save()
+      return contacto.save()
     })
-    .then(proveedor => res.send(proveedor))
+    .then(contacto => res.send(contacto))
     .catch(err => next(err))
 })
 
-app.delete("/:id", $("proveedor:eliminar"), (req, res) => {
-  Proveedor.findById(req.params.id)
+app.delete("/:id", $("contacto:eliminar"), (req, res) => {
+  Contacto.findById(req.params.id)
     .select("+eliminado")
     .exec()
-    .then(proveedor => {
-      if (!proveedor) throw "No existe el proveedor"
+    .then(contacto => {
+      if (!contacto) throw "No existe el contacto"
       // Solo cambiamos la bandera.
-      proveedor.eliminado = true
-      return proveedor.save()
+      contacto.eliminado = true
+      return contacto.save()
     })
-    .then(proveedor => res.send(proveedor))
+    .then(contacto => res.send(contacto))
     .catch(err => next(err))
 })
 
 // <!--
 // =====================================
-//  Buscador todos los elementos relacionados con el proveedor
+//  Buscador todos los elementos relacionados con el contacto
 // =====================================
 // -->
 
@@ -150,21 +154,21 @@ app.get("/relacionados/:id", (req, res) => {
 
 // <!--
 // =====================================
-//  END Buscador todos los elementos relacionados con el proveedor
+//  END Buscador todos los elementos relacionados con el contacto
 // =====================================
 // -->
 
 app.put("/etiquetas/agregar", async (req, res, next) => {
   try {
-    const proveedor = await Proveedor.findById(req.body._id)
+    const contacto = await Contacto.findById(req.body._id)
       .select("etiquetas")
       .exec()
 
-    if (!proveedor) throw "No existe el id"
+    if (!contacto) throw "No existe el id"
     await Parametros.crearEtiquetaSiNoExiste(req.body.etiqueta)
 
-    proveedor.etiquetas.push(req.body.etiqueta)
-    const proSave = await proveedor.save()
+    contacto.etiquetas.push(req.body.etiqueta)
+    const proSave = await contacto.save()
 
     return res.send(proSave.etiquetas)
   } catch (error) {
@@ -173,7 +177,7 @@ app.put("/etiquetas/agregar", async (req, res, next) => {
 })
 
 app.put("/etiquetas/eliminar", async (req, res, next) => {
-  Proveedor.findByIdAndUpdate(
+  Contacto.findByIdAndUpdate(
     { _id: req.body._id },
     { $pull: { etiquetas: req.body.etiqueta } }
   )
@@ -184,7 +188,7 @@ app.put("/etiquetas/eliminar", async (req, res, next) => {
 
 app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
   const arreglo = [...req.query?.etiquetas?.split(",")] ?? []
-  agregarPaginacion(Proveedor.find({ etiquetas: { $all: arreglo } }), req.query)
+  agregarPaginacion(Contacto.find({ etiquetas: { $all: arreglo } }), req.query)
     .exec()
     .then(contactos => {
       res.send(contactos)
@@ -196,9 +200,9 @@ app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
 
 app.put(
   "/rutas/agregar",
-  $("proveedor:rutas:agregar", "Agregar rutas a un contacto"),
+  $("contacto:rutas:agregar", "Agregar rutas a un contacto"),
   (req, res) => {
-    Proveedor.findById(req.body._id)
+    Contacto.findById(req.body._id)
       .exec()
       .then(p => {
         if (!p) throw "No existe el id"

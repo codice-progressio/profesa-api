@@ -30,6 +30,22 @@ app.get(
 )
 
 app.get(
+  "/todo-ligero",
+  $(
+    "lista-de-precios:leer:todo:ligero",
+    "Leer las listas de precio existentes para asignar a un contacto"
+  ),
+  (req, res, next) => {
+    ListaDePrecios.find({})
+      // Sin productos para que pese menos xD
+      .select("nombre")
+      .exec()
+      .then(listaDePrecios => res.send({ listaDePrecios }))
+      .catch(_ => next(_))
+  }
+)
+
+app.get(
   "/id/:id",
   $("lista-de-precios:leer:id", "Leer las listas de precio existentes"),
   (req, res, next) => {

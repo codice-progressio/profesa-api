@@ -3,7 +3,7 @@ const RutasDeEntrega = require("../../models/rutasDeEntrega/rutaDeEntrega.model"
 const ObjectId = require("mongoose").Types.ObjectId
 const $ = require("@codice-progressio/easy-permissions").$
 
-const Contacto = require("../../models/proveedores/proveedor.model")
+const Contacto = require("../../models/contacto/contacto.model")
 
 // Me aurre una operación.
 app.put(

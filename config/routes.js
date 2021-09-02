@@ -9,7 +9,7 @@ const uploadRoutes = require("../routes/upload")
 // ============================================
 
 const skuRoutes = require("../routes/gestionModelos/sku.route")
-const proveedorRoute = require("../routes/proveedores/proveedor.route")
+const contactoRoute = require("../routes/contacto/contacto.route")
 const Parametros = require("../routes/parametros/parametros.route")
 const Changelogs = require("../routes/changelogs.route")
 
@@ -52,7 +52,7 @@ app.use("/changelogs", Changelogs)
 // app.use("/curso", CursoRoute)
 // app.use("/requisicion", RequisicionRoute)
 // app.use("/divisa", DivisaRoute)
-app.use("/proveedor", proveedorRoute)
+app.use("/contacto", contactoRoute)
 // app.use("/articulo", articuloRoute)
 // app.use("/almacenDescripcion", almacenDescripcionRoute)
 // app.use("/almacenDeProductoTerminado", almacenDeProductoTerminadoRoute)

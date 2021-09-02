@@ -3,15 +3,19 @@ const Schema = mongoose.Schema
 const DomicilioSchema = require("./domicilio.model")
 
 // ESTO SE VA A CONVERTIR EN UN CONTACTO
-const ProveedorSchema = new Schema(
+const ContactoSchema = new Schema(
   {
-    nombre: {
+    codigo: {
       type: String,
-      required: [true, "El nombre es obligatorio"],
+      trim: true,
+      index: {
+        unique: true,
+        partialFilterExpression: { codigo: { $type: "string" } },
+      },
     },
-    razonSocial: { type: String },
+    razonSocial: { type: String, min:1 },
+    nombre: { type: String, min:1 },
     domicilios: [DomicilioSchema],
-
     contactos: [
       {
         nombre: String,
@@ -37,7 +41,9 @@ const ProveedorSchema = new Schema(
     esProveedor: Boolean,
     etiquetas: [String],
     rutas: [String],
+
+    listaDePrecios: { type: mongoose.Types.ObjectId, ref: "ListaDePrecios" },
   },
-  { collection: "proveedores" }
+  { collection: "contactos" }
 )
-module.exports = mongoose.model("Contacto", ProveedorSchema)
+module.exports = mongoose.model("Contacto", ContactoSchema)

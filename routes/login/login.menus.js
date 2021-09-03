@@ -297,17 +297,17 @@ function compras() {
 
 function administrador() {
   const menu = {
-    permiso: $("menu:administrador", "Ver el menu de administrador", {
+    permiso: $("login", undefined, {
       esMiddleware: false,
     }),
-    titulo: "Administrador",
+    titulo: "Configuraciones",
     icono: "fas fa-cogs",
     submenu: [
       {
         titulo: "Usuarios",
         url: "/usuario",
         permiso: $(
-          "menu:administrador:usuarios",
+          "menu:configuraciones:usuarios",
           "Ver el menu de usuarios dentro del menu administrador",
           { esMiddleware: false }
         ),
@@ -316,7 +316,7 @@ function administrador() {
       //   titulo: "Departametos",
       //   url: "/departamentos",
       //   permiso: $(
-      //     "menu:administrador:departamentos",
+      //     "menu:configuraciones:departamentos",
       //     "Ver el menu de gestion de departamentos"
       //   ),
       // },
@@ -324,7 +324,7 @@ function administrador() {
         titulo: "Parametros",
         url: "/parametros",
         permiso: $(
-          "menu:administrador:parametros",
+          "menu:configuraciones:parametros",
           "Ver el menu de parametros",
           { esMiddleware: false }
         ),
@@ -333,7 +333,7 @@ function administrador() {
         titulo: "Rutas",
         url: "/parametros/rutas-de-entrega",
         permiso: $(
-          "menu:administrador:rutas-de-entrega",
+          "menu:configuraciones:rutas-de-entrega",
           "Ver el menu de parametros de ruta de entrega",
           { esMiddleware: false }
         ),
@@ -342,18 +342,18 @@ function administrador() {
       {
         titulo: "Contactos",
         url: "/parametros/contactos",
-        permiso: $("menu:administrador:contactos", "", { esMiddleware: false }),
+        permiso: $("menu:configuraciones:contactos", "", { esMiddleware: false }),
       },
       // {
       //   titulo: "Areas",
       //   url: "/areas",
-      //   permiso: $("menu:administrador:areas", false),
+      //   permiso: $("menu:configuraciones:areas", false),
       // },
 
       // {
       //   titulo: "Almacen descripcion",
       //   url: "/almacenDescripcion",
-      //   permiso: $("menu:administrador:almacenDescripcion", false),
+      //   permiso: $("menu:configuraciones:almacenDescripcion", false),
       // },
     ],
   }

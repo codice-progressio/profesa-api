@@ -9,11 +9,34 @@ const ListaDePrecioRoute = require("../../routes/parametros/parametros.listaDePr
 const SKUsRoute = require("../../routes/parametros/parametros.skus.route")
 const ContactoRoute = require("../../routes/parametros/parametros.contacto.route")
 // Generales
+const $ = require('@codice-progressio/easy-permissions').$
 
 app.use("/etiquetas", EtiquetasRoute)
-app.use("/lista-de-precios", ListaDePrecioRoute)
-app.use("/skus", SKUsRoute)
-app.use("/contactos", ContactoRoute)
+
+app.use(
+  "/lista-de-precios",
+  $(
+    "configuraciones:lista-de-precios:administrar",
+    "Administrar las configuraciones generales de listas de precios como la carga por lotes y listas por default."
+  ),
+  ListaDePrecioRoute
+)
+app.use(
+  "/skus",
+  $(
+    "configuraciones:skus:administrar",
+    "Administrar las configuraciones generales de los skus como carga por lote",
+  ),
+  SKUsRoute
+)
+app.use(
+  "/contactos",
+  $(
+    "configuraciones:contactos:administrar",
+    "Administrar las configuraciones generales de contactos como carga por lotes"
+  ),
+  ContactoRoute
+)
 
 /**
  * Este route guarda los paramentros para definir el trabajo del sistema.

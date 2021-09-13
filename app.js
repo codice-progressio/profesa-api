@@ -57,9 +57,11 @@ mongoose
     //SEGURIDAD --------------------------------------
     const codice_security = require("@codice-progressio/express-authentication")
 
+    // Contrasena offline
+    codice_security.configuraciones.usuario.schema["password_offline"] = String
+
     // Modificamos el schema de usuario para agregar la estructura
     // de las imagenes.
-
     codice_security.configuraciones.usuario.schema["img"] = {
       nombreOriginal: String,
       nombreBD: String,

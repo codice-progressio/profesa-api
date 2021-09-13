@@ -3,6 +3,10 @@ const $ = require("@codice-progressio/easy-permissions").$
 const ListaDePrecios = require("../models/listaDePrecios.model")
 const ObjectId = require("mongoose").Types.ObjectId
 const Cliente = require("../models/cliente")
+const Offline = require("./listaDePrecios.offline.route")
+
+
+app.use("/offline", Offline)
 
 app.post(
   "/",

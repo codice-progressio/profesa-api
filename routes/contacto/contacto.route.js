@@ -4,6 +4,11 @@ const Contacto = require("../../models/contacto/contacto.model")
 const $ = require("@codice-progressio/easy-permissions").$
 const sku = require("../../models/sku.model")
 const Parametros = require("../../models/defautls/parametros.model")
+const ContactoOfflineRoute = require("./contacto.offline.route")
+
+
+app.use("/offline", ContactoOfflineRoute)
+
 
 app.post("/", $("contacto:crear"), (req, res, next) => {
   return new Contacto(req.body)

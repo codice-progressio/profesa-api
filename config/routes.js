@@ -20,6 +20,7 @@ const ficherosRoute = require("../routes/ficheros.route")
 const contabilidadRoute = require("../routes/contabilidad/contabilidad.route")
 
 const listaDePrecios = require("../routes/listaDePrecios.route")
+const UsuarioOfflineRoute = require("../routes/usuario.offline.route.js")
 
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
@@ -72,6 +73,8 @@ app.use("/ficheros", ficherosRoute)
 app.use("/contabilidad", contabilidadRoute)
 
 app.use("/lista-de-precios", listaDePrecios)
+
+app.use("/usuario/offline", UsuarioOfflineRoute)
 
 module.exports = app
 //

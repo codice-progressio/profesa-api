@@ -11,7 +11,6 @@ app.use("/sincronizar", (req, res, next) => {
         " "
       )
     )
-
     .then(skus => res.send({ skus }))
     .catch(_ => next(_))
 })

@@ -32,7 +32,7 @@ function agregarPaginacion(model, query) {
     .skip(desde)
 }
 
-app.get("/", $("contacto:leer:todo"), async (req, res) => {
+app.get("/", $("contacto:leer:todo"), async (req, res, next) => {
   //No listamos los proveedores eliminados
   agregarPaginacion(Contacto.find({ eliminado: false }), req.query)
     .exec()
@@ -56,7 +56,7 @@ app.get("/buscar/id/:id", $("contacto:leer:id"), (req, res, next) => {
 app.get(
   "/buscar/termino/:termino",
   $("contacto:leer:termino"),
-  async (req, res) => {
+  async (req, res, next) => {
     const desde = Number(req.query.desde ?? 0)
     const limite = Number(req.query.limite ?? 30)
     const sort = Number(req.query.sort ?? 1)
@@ -101,7 +101,7 @@ app.put("/", $("contacto:modificar"), (req, res, next) => {
         throw "No existe el contacto"
       }
 
-      ;[
+      [
         "nombre",
         "razonSocial",
         "domicilios",
@@ -121,7 +121,7 @@ app.put("/", $("contacto:modificar"), (req, res, next) => {
     .catch(err => next(err))
 })
 
-app.delete("/:id", $("contacto:eliminar"), (req, res) => {
+app.delete("/:id", $("contacto:eliminar"), (req, res, next) => {
   Contacto.findById(req.params.id)
     .select("+eliminado")
     .exec()
@@ -141,7 +141,7 @@ app.delete("/:id", $("contacto:eliminar"), (req, res) => {
 // =====================================
 // -->
 
-app.get("/relacionados/:id", (req, res) => {
+app.get("/relacionados/:id", (req, res, next) => {
   const desde = Number(req.query.desde ?? 0)
   const limite = Number(req.query.limite ?? 30)
   const sort = Number(req.query.sort ?? 1)
@@ -187,7 +187,7 @@ app.put("/etiquetas/eliminar", async (req, res, next) => {
     { $pull: { etiquetas: req.body.etiqueta } }
   )
     .exec()
-    .then(r => res.send())
+    .then(() => res.send())
     .catch(_ => next(_))
 })
 
@@ -206,7 +206,7 @@ app.get("/etiquetas/buscar/etiquetas", (req, res, next) => {
 app.put(
   "/rutas/agregar",
   $("contacto:rutas:agregar", "Agregar rutas a un contacto"),
-  (req, res) => {
+  (req, res, next) => {
     Contacto.findById(req.body._id)
       .exec()
       .then(p => {

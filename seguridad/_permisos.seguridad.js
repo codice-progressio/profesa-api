@@ -1,4 +1,5 @@
 const permisos = {
+  "configuraciones:usuarios:administrar":"configuraciones:usuarios:administrar",
   "menu:contabilidad:facturas": "menu:contabilidad:facturas",
   "menu:contabilidad:remisiones": "menu:contabilidad:remisiones",
   "menu:contabilidad:tablero-contable": "menu:contabilidad:tablero-contable",

@@ -74,7 +74,6 @@ app.post("/lote", async (req, res, next) => {
 
   ListaDePrecios.updateOne(filter, update, options)
     .then(respuesta => {
-      console.log({ respuesta, rechazados })
       res.send({ respuesta, rechazados })
     })
     .catch(_ => next(_))

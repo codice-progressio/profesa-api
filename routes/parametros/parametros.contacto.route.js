@@ -2,14 +2,25 @@ const app = require("express")()
 const Contacto = require("../../models/contacto/contacto.model")
 const ListaDePrecios = require("../../models/listaDePrecios.model")
 
+
 app.post("/", async (req, res, next) => {
-  ;["domicilios", "contactos", "cuentas", "eliminado", "rutas"].forEach(x => {
+  ["domicilios", "contactos", "cuentas", "eliminado", "rutas"].forEach(x => {
     if (Object.keys(req.body).includes(x)) delete req.body[x]
   })
 
   // Obtenemos las listas existentes para obtener el id.
 
   let listasExistentes = await ListaDePrecios.find().select("nombre").exec()
+  let usuarios = await require('mongoose')
+    .model(
+      require('@codice-progressio/express-authentication')
+      .configuraciones
+      .usuario
+      .nombre_bd
+    )
+    .find()
+    .select('_id nombre email')
+    .exec()
 
   function updateContacto(datos) {
     // Transformamos las etiquetas.
@@ -35,6 +46,27 @@ app.post("/", async (req, res, next) => {
       } else datos.listaDePrecios = idLista
     } else datos["listaDePrecios"] = undefined
 
+
+    // Agregar vendedores
+    // Debe ser un string separado por comas
+    if (datos?.usuarios_asignados) {
+      let leyenda = '[ NO ENCONTRADO ]'
+      let msjError = (d) => leyenda + ' ' + d
+      let usuarios = datos.usuarios_asignados
+        .split(',')
+        .map(x => x.trim())
+        .map(x => {
+          usuarios.find(u => x === u.nombre) ?? msjError(x)
+        })
+       
+      let erroresExistentes = usuarios.filter(x => x.includes(leyenda))
+      
+      if (erroresExistentes.length > 0)
+        error = error + ` { ERRORES DE USUARIO } => ${ erroresExistentes.join(' ** ') } `
+    } else datos['usuarios_asignados'] = usuarios.map(x=>x._id)
+
+
+    
     let filter = {
       codigo: datos.codigo,
     }
@@ -55,7 +87,7 @@ app.post("/", async (req, res, next) => {
 
       promesa
         .exec()
-        .then(respuesta => resolve())
+        .then(() => resolve())
         .catch(error => {
           reject({ error: error.toString(), datos })
         })
@@ -72,7 +104,6 @@ app.post("/", async (req, res, next) => {
       let correctos =
         respuesta.filter(x => x.status === "fulfilled")?.length ?? 0
 
-      console.log(rechazados)
       res.send({
         rechazados,
         correctos,

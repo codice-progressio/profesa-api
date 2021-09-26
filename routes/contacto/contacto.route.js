@@ -42,11 +42,14 @@ app.get("/", $("contacto:leer:todo"), async (req, res, next) => {
 
 app.get("/buscar/id/:id", $("contacto:leer:id"), (req, res, next) => {
   // Los eliminados no deben aparecer.
+
+
   Contacto.findOne({ _id: req.params.id, eliminado: false })
     .populate("rutas", undefined, "rutaDeEntrega")
-    // .populate("listaDePrecios","_id nombre", "ListaDePrecios")
+    .populate("usuariosAsignados", 'nombre', 'Usuario')
     .exec()
     .then(contacto => {
+      console.log(contacto)
       if (!contacto) throw "No existe el id o ha sido eliminado"
       return res.send(contacto)
     })

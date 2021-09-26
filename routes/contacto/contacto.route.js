@@ -113,7 +113,8 @@ app.put("/", $("contacto:modificar"), (req, res, next) => {
         "cuentas",
         "esCliente",
         "esProveedor",
-        "listaDePrecios"
+        "listaDePrecios",
+        "usuariosAsignados"
       ].forEach(x => {
         contacto[x] = req.body[x]
       })

@@ -20,36 +20,31 @@ app.post('/', async (req, res, next) => {
              
              
              datos['email'] = datos.email?.toLowerCase() ?? undefined 
-
-             console.log("")
-
              // Encriptamos el pasword
              express_authentication.hash.crypt(datos.password)
              .then(password=>{
                 let filter = {
                     email: datos.email,
-                    
                   }
-                  console.log("")           
                   let update = {
                       ...datos,
-                      inhabilitado: false,
+                    inhabilitado: false,
+                    "email_validado":{
+                      validado:true
+                    },
                       password  
                   }
-                  console.log("")
                   let options = {
                     upsert: true,
                     runValidators: true,
                     setDefaultsOnInsert: true,
                     context: 'query'
                   }
-                  console.log("")
                  let Usuario = require('mongoose')
                      .model(express_authentication
                      .configuraciones
                      .usuario
                      .nombre_bd)
-                     console.log("")
                  return  Usuario.updateOne(filter, update, options)
                     .exec()
                   })
@@ -74,9 +69,6 @@ app.post('/', async (req, res, next) => {
       res.send({ rechazados, correctos })
     })
     .catch(_ => next(_))
-
-
 });
-
 
 module.exports = app

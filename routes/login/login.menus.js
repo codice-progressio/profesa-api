@@ -224,7 +224,7 @@ function ventas() {
     submenu: [
       {
         titulo: "Mis Pedidos",
-        url: "/ventas/misPedidos",
+        url: "/ventas/mis-pedidos",
         permiso: $("menu:ventas:mis-pedidos", "", { esMiddleware: false }),
       },
       {
@@ -233,11 +233,6 @@ function ventas() {
         permiso: $("menu:ventas:listas-de-precios", "", {
           esMiddleware: false,
         }),
-      },
-      {
-        titulo: "Clientes",
-        url: "/clientes",
-        permiso: $("menu:ventas:clientes", "", { esMiddleware: false }),
       },
     ],
   }
@@ -342,7 +337,9 @@ function administrador() {
       {
         titulo: "Contactos",
         url: "/parametros/contactos",
-        permiso: $("menu:configuraciones:contactos", "", { esMiddleware: false }),
+        permiso: $("menu:configuraciones:contactos", "", {
+          esMiddleware: false,
+        }),
       },
       // {
       //   titulo: "Areas",

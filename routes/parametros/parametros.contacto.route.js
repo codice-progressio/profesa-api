@@ -1,17 +1,30 @@
+
 const app = require("express")()
 const Contacto = require("../../models/contacto/contacto.model")
 const ListaDePrecios = require("../../models/listaDePrecios.model")
 
+
 app.post("/", async (req, res, next) => {
-  ;["domicilios", "contactos", "cuentas", "eliminado", "rutas"].forEach(x => {
+  ["domicilios", "contactos", "cuentas", "eliminado", "rutas"].forEach(x => {
     if (Object.keys(req.body).includes(x)) delete req.body[x]
   })
 
   // Obtenemos las listas existentes para obtener el id.
 
   let listasExistentes = await ListaDePrecios.find().select("nombre").exec()
-
-  function updateContacto(datos) {
+  
+  async function updateContacto(datos) {
+    const mongoose = require('mongoose')
+    let usuarios = await mongoose
+      .model(
+        require('@codice-progressio/express-authentication')
+        .configuraciones
+        .usuario
+        .nombre_bd
+      )
+      .find()
+      .select('_id nombre email')
+      .exec()
     // Transformamos las etiquetas.
 
     let error = undefined
@@ -35,6 +48,30 @@ app.post("/", async (req, res, next) => {
       } else datos.listaDePrecios = idLista
     } else datos["listaDePrecios"] = undefined
 
+
+    // Agregar vendedores
+    // Debe ser un string separado por comas
+    if (datos?.usuariosAsignados) {
+      
+      let leyenda = ' [ NO ENCONTRADO ]'
+      let msjError = (d) => `${leyenda} "${d}"`
+      
+      let usuariosConvertidos = datos.usuariosAsignados
+        .split(',')
+        .map(x => x.trim())
+        .map(x => {
+          let us = usuarios.find(u => x === u.nombre)
+          if(!us) error = error ? error +   msjError( x ) : msjError( x )
+          return us
+        }).filter(x=> x)
+               
+      datos['usuariosAsignados'] =[ ... usuariosConvertidos
+        .map(x => mongoose.Types.ObjectId(x._id))]
+        
+    } else datos['usuariosAsignados'] = []
+ 
+
+    
     let filter = {
       codigo: datos.codigo,
     }
@@ -47,7 +84,7 @@ app.post("/", async (req, res, next) => {
     }
 
     let promesa = Contacto.updateOne(filter, update, opciones)
-
+    
     return new Promise((resolve, reject) => {
       if (error) {
         return reject({ error, datos })
@@ -55,7 +92,7 @@ app.post("/", async (req, res, next) => {
 
       promesa
         .exec()
-        .then(respuesta => resolve())
+        .then(() => resolve())
         .catch(error => {
           reject({ error: error.toString(), datos })
         })
@@ -72,7 +109,6 @@ app.post("/", async (req, res, next) => {
       let correctos =
         respuesta.filter(x => x.status === "fulfilled")?.length ?? 0
 
-      console.log(rechazados)
       res.send({
         rechazados,
         correctos,

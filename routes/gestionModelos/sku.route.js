@@ -11,13 +11,15 @@ const $ = require("@codice-progressio/easy-permissions").$
 const Parametros = require("../../models/defautls/parametros.model")
 
 const easyImages = require("@codice-progressio/easy-images")
-
+const SkuOffline = require("./sku.offline.route")
 const erro = (res, err, msj) => {
   return RESP._500(res, {
     msj: msj,
     err: err,
   })
 }
+
+app.use("/offline", SkuOffline)
 
 app.post("/", $("sku:crear", "Crea un nuevo SKU"), (req, res, next) => {
   let s = new SKU(req.body)

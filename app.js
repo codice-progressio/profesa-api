@@ -30,7 +30,7 @@ mongoose
     // Creamos la conexion a express
     const msjServidor = () => {
       console.log(
-        `[ INFO ] Servidor iniciado en el puerto: ${process.env.PORT}`
+        `[ INFO ] Servidor iniciado en el puerto: ${ process.env.PORT }`
       )
     }
 
@@ -49,17 +49,21 @@ mongoose
 
       require("https")
         .createServer(credentials, app)
-        .listen(process.env.PORT, msjServidor)
-    }
-    // En modo produccion no ocupamos certificado
-    else app.listen(process.env.PORT, () => msjServidor)
+        // .listen(process.env.PORT, (msjServidor))
+        .listen(
+          process.env.PORT,
+          '0.0.0.0',
+          msjServidor)
+    } else app.listen(process.env.PORT, () => msjServidor)
 
     //SEGURIDAD --------------------------------------
     const codice_security = require("@codice-progressio/express-authentication")
 
+    // Contrasena offline
+    codice_security.configuraciones.usuario.schema["password_offline"] = String
+
     // Modificamos el schema de usuario para agregar la estructura
     // de las imagenes.
-
     codice_security.configuraciones.usuario.schema["img"] = {
       nombreOriginal: String,
       nombreBD: String,

@@ -41,6 +41,7 @@ const ContactoSchema = new Schema(
     esProveedor: Boolean,
     etiquetas: [String],
     rutas: [String],
+    usuariosAsignados: [String],
 
     listaDePrecios: { type: mongoose.Types.ObjectId, ref: "ListaDePrecios" },
   },

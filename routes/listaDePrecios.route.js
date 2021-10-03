@@ -3,6 +3,10 @@ const $ = require("@codice-progressio/easy-permissions").$
 const ListaDePrecios = require("../models/listaDePrecios.model")
 const ObjectId = require("mongoose").Types.ObjectId
 const Cliente = require("../models/cliente")
+const Offline = require("./listaDePrecios.offline.route")
+
+
+app.use("/offline", Offline)
 
 app.post(
   "/",
@@ -154,7 +158,6 @@ app.get("/id/:id/tamano-de-lista", (req, res, next) => {
 app.put("/", $("lista-de-precios:modificar:id"), (req, res, next) => {
   // Solo modificamos datos generales.
 
-  console.log(req.body)
   let noCargarSkus = req.query.noCargarSkus
 
   ListaDePrecios.findById(req.body._id)
@@ -214,7 +217,7 @@ app.delete("/:id", $("lista-de-precios:eliminar"), (req, res, next) => {
     }
   )
 
-    .then(ok => {
+    .then(() => {
       // Eliminamos la lista
       return ListaDePrecios.findByIdAndDelete(id)
     })

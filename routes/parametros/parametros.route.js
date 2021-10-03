@@ -9,6 +9,8 @@ const ListaDePrecioRoute = require("../../routes/parametros/parametros.listaDePr
 const SKUsRoute = require("../../routes/parametros/parametros.skus.route")
 const ContactoRoute = require("../../routes/parametros/parametros.contacto.route")
 // Generales
+const UsuarioRoute = require("./parametros.usuario.route.js")
+
 const $ = require('@codice-progressio/easy-permissions').$
 
 app.use("/etiquetas", EtiquetasRoute)
@@ -36,6 +38,15 @@ app.use(
     "Administrar las configuraciones generales de contactos como carga por lotes"
   ),
   ContactoRoute
+)
+
+app.use(
+  "/usuarios",
+  $(
+    "configuraciones:usuarios:administrar",
+    "Administrar las configuraciones generales de usuarios como carga por lotes"
+  ),
+  UsuarioRoute
 )
 
 /**

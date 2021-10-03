@@ -1,4 +1,5 @@
 const permisos = {
+  "configuraciones:usuarios:administrar":"Administrar las configuraciones generales de usuarios como carga por lotes",
   "menu:contabilidad:facturas":
     "Permite a este usuario entrar a la gestión de facturas",
   "menu:contabilidad:remisiones":

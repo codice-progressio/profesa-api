@@ -1,6 +1,5 @@
 const app = require("express")()
 const SKU = require("../../models/sku.model")
-const ListDePrecios = require("../../models/listaDePrecios.model")
 
 app.post("/", (req, res, next) => {
   // 1.- Remplazar todos los productos
@@ -50,7 +49,7 @@ app.post("/", (req, res, next) => {
     return new Promise((resolve, reject) => {
       promesa
         .exec()
-        .then(respuesta => resolve())
+        .then(() => resolve())
         .catch(error => {
           reject({ error: error.toString(), datos })
         })
@@ -64,21 +63,17 @@ app.post("/", (req, res, next) => {
   // Debemos de recibir un arreglo
   const PROMESAS = req.body.map(d => sku(d))
 
-  let skus_rechazados = []
-
   Promise.allSettled(PROMESAS)
     .then(r => {
-      rechazados =
+     let rechazados =
         r.filter(x => x.status === "rejected").map(x => x.reason) ?? []
-      correctos = r.filter(x => x.status === "fulfilled")?.length ?? 0
+      let correctos = r.filter(x => x.status === "fulfilled")?.length ?? 0
 
       // 2.- Separar listas de precio
 
       res.send({ rechazados, correctos })
     })
     .catch(_ => next(_))
-
-  // 3.- Guardar listas de precios con productos relacionados
 })
 
 /**

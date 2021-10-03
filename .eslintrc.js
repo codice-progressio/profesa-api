@@ -1,7 +1,7 @@
 module.exports = {
   env: {
     commonjs: true,
-    es8: true,
+    es6: true,
     node: true,
   },
   extends: "eslint:recommended",
@@ -12,5 +12,7 @@ module.exports = {
   parserOptions: {
     ecmaVersion: 2020,
   },
-  rules: {},
+  rules: {
+    "brace-style": ["error", "1tbs", { "allowSingleLine": true }]
+  }
 }

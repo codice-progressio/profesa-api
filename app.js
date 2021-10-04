@@ -59,6 +59,8 @@ mongoose
     //SEGURIDAD --------------------------------------
     const codice_security = require("@codice-progressio/express-authentication")
 
+    //Gmail requiere conexion segura. 
+    codice_security.configuraciones.correo.transport['secure'] = true
     // Contrasena offline
     codice_security.configuraciones.usuario.schema["password_offline"] = String
 
@@ -99,6 +101,8 @@ mongoose
       process.env.CORREO_TRANSPORT_AUTH_USER
     codice_security.configuraciones.correo.transport.auth.pass =
       process.env.CORREO_TRANSPORT_AUTH_PASS
+
+    
 
     codice_security.configuraciones.correo.mailOptions.from =
       process.env.CORREO_MAILOPTIONS_FROM

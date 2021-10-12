@@ -12,12 +12,6 @@ const Parametros = require("../../models/defautls/parametros.model")
 
 const easyImages = require("@codice-progressio/easy-images")
 const SkuOffline = require("./sku.offline.route")
-const erro = (res, err, msj) => {
-  return RESP._500(res, {
-    msj: msj,
-    err: err,
-  })
-}
 
 app.use("/offline", SkuOffline)
 
@@ -329,7 +323,7 @@ app.delete("/:id", $("sku:eliminar"), async (req, res, next) => {
 app.delete(
   "/:id/etiqueta/:etiqueta",
   $("sku:eliminar:etiqueta"),
-  (req, res) => {
+  (req, res, next) => {
     SKU.findById(req.params.id)
       .exec()
       .then(sku => {
@@ -338,7 +332,7 @@ app.delete(
         return sku.save()
       })
       .then(sku => res.send(sku))
-      .catch(err => erro(res, err, "Hubo un error eliminando el sku"))
+      .catch(err => next(err))
   }
 )
 

@@ -46,10 +46,10 @@ function generarMenus() {
     // CONTROL_DE_PRODUCCION: controlDeProduccion(),
     // INGENIERIA: ingenieria(),
     VENTAS: ventas(),
-    COMPRAS: compras(),
+    // COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
-    PUNTO_DE_VEMTA: puntoDeVenta(),
-    CONTABILIDAD: contabilidad(),
+    // PUNTO_DE_VEMTA: puntoDeVenta(),
+    // CONTABILIDAD: contabilidad(),
     // RH: rh(),
     // parametros: parametros(),
   }

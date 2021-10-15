@@ -26,6 +26,7 @@ app.post("/", async (req, res, next) => {
       )
       .find()
       .select('_id nombre email')
+      .lean()
       .exec()
     // Transformamos las etiquetas.
 
@@ -38,8 +39,7 @@ app.post("/", async (req, res, next) => {
         .filter(x => x)
     }
 
-    // Remplazar listas
-
+    // Remplazar lista
     if (datos?.listaDePrecios) {
       let idLista = listasExistentes.find(
         x => x.nombre === datos.listaDePrecios
@@ -50,13 +50,12 @@ app.post("/", async (req, res, next) => {
       } else datos.listaDePrecios = idLista
     } else datos["listaDePrecios"] = undefined
 
-
     // Agregar vendedores
     // Debe ser un string separado por comas
     if (datos?.usuariosAsignados) {
-      
+
       let leyenda = ' [ NO ENCONTRADO ]'
-      let msjError = (d) => `${leyenda} "${d}"`
+      let msjError = (d) => `${ leyenda } "${ d }"`
       
       let usuariosConvertidos = datos.usuariosAsignados
         .split(',')
@@ -72,8 +71,6 @@ app.post("/", async (req, res, next) => {
         
     } else datos['usuariosAsignados'] = []
  
-
-    
     let filter = {
       codigo: datos.codigo,
     }
@@ -148,7 +145,6 @@ function organizarDomicilios(datosEstructurados) {
 
   // Obtenemos todos los encabezados que incluyen domicilio
   let encabezados = todosLosEncabezados.filter(x => x.includes(nombreEncabezado))
-  console.log({encabezados})
   let re = /\D+/g
   let cantidadDeDomicilios = Array.from(
     

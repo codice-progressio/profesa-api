@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node app.js",
     "start-local": "nodemon app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "release": "standard-version"
   },
   "author": "Rafael Ramirez",
   "license": "ISC",
@@ -40,11 +41,26 @@
   },
   "devDependencies": {
     "@codice-progressio/easy-https": "^1.1.1",
+    "@commitlint/cli": "^13.2.1",
+    "@commitlint/config-conventional": "^13.2.0",
     "eslint": "^7.21.0",
-    "nodemon": "^2.0.7"
+    "husky": "^7.0.2",
+    "nodemon": "^2.0.7",
+    "standard-version": "^9.3.1"
   },
   "engines": {
     "node": "14.x",
     "npm": "6.x"
-  }
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  
 }

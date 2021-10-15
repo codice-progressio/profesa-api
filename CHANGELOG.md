@@ -1,3 +1,19 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+## [4.1.0](https://github.com/codice-progressio/profesa-api/compare/v4.0.0...v4.1.0) (2021-10-15)
+
+
+### Features
+
+* Librerias actualizadas por seguridad ([13777e8](https://github.com/codice-progressio/profesa-api/commit/13777e84c4c64d475ec57d669038d3d7d617977b))
+
+
+### Bug Fixes
+
+* Typo en package.json ([819273b](https://github.com/codice-progressio/profesa-api/commit/819273b388d93716d617ab2d3ad02cd8201abeda))
+
 ### Changelog
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.

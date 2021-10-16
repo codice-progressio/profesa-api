@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.1.1](https://github.com/codice-progressio/profesa-api/compare/v4.1.0...v4.1.1) (2021-10-16)
+
+
+### Bug Fixes
+
+* Actualización de permisos da error Closes [#37](https://github.com/codice-progressio/profesa-api/issues/37) ([c618b21](https://github.com/codice-progressio/profesa-api/commit/c618b216c7db6cdf95e918582e695a4d795e8510))
+* Actualización de permisos da error Closes codice-progressio/profesa-gui[#37](https://github.com/codice-progressio/profesa-api/issues/37) ([0001205](https://github.com/codice-progressio/profesa-api/commit/0001205fb8bc1cfcf9f6bce92e09f458c6797f65))
+
 ## [4.1.0](https://github.com/codice-progressio/profesa-api/compare/v4.0.0...v4.1.0) (2021-10-15)
 
 

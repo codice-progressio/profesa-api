@@ -12,7 +12,7 @@ app.get("/ligth", (req, res, next) => {
     .catch(_ => next(_))
 })
 
-app.get("/", (req, res) => {
+app.get("/", (req, res, next) => {
   Parametros.findOne()
     // .select("listaDePreciosDefault")
     .exec()

@@ -52,7 +52,7 @@ const Schema = mongoose.Schema
 codice_security.configuraciones.jwt.decode.unless.push("/parametros")
 
 
-let schema = new Schema(codice_security.configuraciones.schema)
+let schema = new Schema(codice_security.configuraciones.usuario.schema)
 
  module.exports.basico = codice_security.basico
  module.exports.schema = schema

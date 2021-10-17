@@ -74,7 +74,11 @@ app.post("/lote", async (req, res, next) => {
 
   ListaDePrecios.updateOne(filter, update, options)
     .then(respuesta => {
-      res.send({ respuesta, rechazados })
+     
+      req.version_offline().then(parametros => {
+        res.send({ respuesta, rechazados, version:parametros.version_offline })
+      })
+      .catch(_=>next(_))
     })
     .catch(_ => next(_))
 })

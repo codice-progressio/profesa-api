@@ -1,4 +1,5 @@
 const permisos = {
+  "parametros:version-offline-reiniciar":"Reinicia el versionado offline",
   "menu:configuraciones:contactos":"",
   "menu:configuraciones:rutas-de-entrega":"Ver el menu de parametros de ruta de entrega",
   "menu:configuraciones:parametros":"Ver el menu de parametros",

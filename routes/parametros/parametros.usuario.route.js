@@ -63,10 +63,14 @@ app.post('/', async (req, res, next) => {
         r.filter(x => x.status === "rejected").map(x => x.reason) ?? []
       let correctos = r.filter(x => x.status === "fulfilled")?.length ?? 0
 
-      // 2.- Separar listas de precio
-        console.log(r)
-
-      res.send({ rechazados, correctos })
+      req.version_offline().then(parametros => {
+         res.send({
+           rechazados,
+           correctos,
+           version:parametros.version_offline 
+        })
+      })
+      .catch(_=>next(_))
     })
     .catch(_ => next(_))
 });

@@ -15,6 +15,50 @@ const $ = require('@codice-progressio/easy-permissions').$
 
 app.use("/etiquetas", EtiquetasRoute)
 
+
+
+app.get("/version-offline", (req, res, next) => {
+  
+  Parametros.findOne().select('version_offline').exec()
+  .then(p=> res.send({ version_offline: p.version_offline }))
+  .catch(_=>next(_))
+})
+
+
+app.post("/version-offline-reiniciar",
+  $("parametros:version-offline-reiniciar", "Reinicia el versionado offline"), (req, res, next) => {
+  
+  Parametros.updateOne({}, {version_offline:0}).exec()
+  .then(()=>res.send())
+  .catch(_=>next(_))
+})
+
+
+//Crea una operación para guardar una nueva verisión y la almacena 
+// en el objeto req. Esto se comparte con los contactos, skus, usuarios y listas 
+// de precios. 
+app.use((req, res ,next) => {
+  
+  req['version_offline'] = ()=> new Promise((resolve, reject) => {
+    const parametros = require('../../models/defautls/parametros.model')
+    
+    parametros.findOne().select('version_offline')
+
+    .exec()
+      .then(parametro => {
+        parametro.version_offline++ 
+        return parametro.save()
+
+    })
+    .then(_ => resolve(_))
+    .catch(_=>reject(_))
+  })
+
+  return next()
+ })
+
+
+
 app.use(
   "/lista-de-precios",
   $(

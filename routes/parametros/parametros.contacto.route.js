@@ -48,7 +48,7 @@ app.post("/", async (req, res, next) => {
       if (!idLista) {
         error = `No existe una lista llamada ${datos.listaDePrecios}`
       } else datos.listaDePrecios = idLista
-    } else datos["listaDePrecios"] = undefined
+    }
 
     // Agregar vendedores
     // Debe ser un string separado por comas

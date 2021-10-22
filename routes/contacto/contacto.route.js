@@ -49,7 +49,6 @@ app.get("/buscar/id/:id", $("contacto:leer:id"), (req, res, next) => {
     .populate("usuariosAsignados", 'nombre', 'Usuario')
     .exec()
     .then(contacto => {
-      console.log(contacto)
       if (!contacto) throw "No existe el id o ha sido eliminado"
       return res.send(contacto)
     })

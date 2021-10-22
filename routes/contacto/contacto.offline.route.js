@@ -5,6 +5,7 @@ app.get("/sincronizar", (req, res, next) => {
   Contacto.find({
     eliminado: false,
     esCliente: true,
+    usuariosAsignados: req.user._id
   })
     .then(contactos => res.send({ contactos }))
     .catch(_ => next(_))

@@ -1,3 +1,36 @@
+# Changelog
+
+All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
+
+### [4.1.3](https://github.com/codice-progressio/profesa-api/compare/v4.1.2...v4.1.3) (2021-10-17)
+
+### [4.1.2](https://github.com/codice-progressio/profesa-api/compare/v4.1.1...v4.1.2) (2021-10-17)
+
+
+### Bug Fixes
+
+* Se modifican listas de precios cuando no hay asignadas en lista de contactos Closes codice-progressio/profesa-gui[#41](https://github.com/codice-progressio/profesa-api/issues/41) ([1e12cda](https://github.com/codice-progressio/profesa-api/commit/1e12cdae28b35eb90f9917109731ce2d98b183ba))
+
+### [4.1.1](https://github.com/codice-progressio/profesa-api/compare/v4.1.0...v4.1.1) (2021-10-16)
+
+
+### Bug Fixes
+
+* Actualización de permisos da error Closes [#37](https://github.com/codice-progressio/profesa-api/issues/37) ([c618b21](https://github.com/codice-progressio/profesa-api/commit/c618b216c7db6cdf95e918582e695a4d795e8510))
+* Actualización de permisos da error Closes codice-progressio/profesa-gui[#37](https://github.com/codice-progressio/profesa-api/issues/37) ([0001205](https://github.com/codice-progressio/profesa-api/commit/0001205fb8bc1cfcf9f6bce92e09f458c6797f65))
+
+## [4.1.0](https://github.com/codice-progressio/profesa-api/compare/v4.0.0...v4.1.0) (2021-10-15)
+
+
+### Features
+
+* Librerias actualizadas por seguridad ([13777e8](https://github.com/codice-progressio/profesa-api/commit/13777e84c4c64d475ec57d669038d3d7d617977b))
+
+
+### Bug Fixes
+
+* Typo en package.json ([819273b](https://github.com/codice-progressio/profesa-api/commit/819273b388d93716d617ab2d3ad02cd8201abeda))
+
 ### Changelog
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.

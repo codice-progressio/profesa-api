@@ -17,6 +17,10 @@ const parametrosDeTrabajoSchema = new Schema(
       $type: mongoose.Schema.Types.ObjectId,
       ref: "listaDePrecios",
     },
+
+    //Versionado de datos offline. Si algunos de los 
+    // datos offline se modifica este tiene que aumentar. 
+    version_offline:{$type:Number, default:0}
   },
   { collection: "parametrosDeTrabajo", typeKey: "$type" }
 )

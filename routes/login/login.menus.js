@@ -43,14 +43,14 @@ function generarMenus() {
   return {
     // REPORTES: reportes(),
     ALMACENES: almacenes(),
-    // CONTROL_DE_PRODUCCION: controlDeProduccion(),
+    CONTROL_DE_PRODUCCION: controlDeProduccion(),
     // INGENIERIA: ingenieria(),
     VENTAS: ventas(),
-    // COMPRAS: compras(),
+    COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
-    // PUNTO_DE_VEMTA: puntoDeVenta(),
-    // CONTABILIDAD: contabilidad(),
-    // RH: rh(),
+    PUNTO_DE_VEMTA: puntoDeVenta(),
+    CONTABILIDAD: contabilidad(),
+    RH: rh(),
     // parametros: parametros(),
   }
 }
@@ -122,46 +122,6 @@ function contabilidad() {
       },
     ],
   }
-  return menu
-}
-
-function reportes() {
-  const menu = {
-    permiso: $("menu:reportes", "Ver el menu de reportes", {
-      esMiddleware: false,
-    }),
-    titulo: "Reportes",
-    icono: "fas fa-chart-pie",
-    submenu: [
-      {
-        titulo: "Faltante producto terminado",
-        url: "/reportes/productoTerminado/faltantes",
-        permiso: $("menu:reportes:productoTerminado:faltantes", "", {
-          esMiddleware: false,
-        }),
-      },
-      {
-        titulo: "Faltantes almacen de produccion",
-        url: "/reportes/almacenDeProduccion/faltantes",
-        permiso: $("menu:reportes:almacenDeProduccion:faltantes", "", {
-          esMiddleware: false,
-        }),
-      },
-      {
-        titulo: "Personalizados",
-        url: "/reportes/almacenDeProduccion/personalizado",
-        permiso: $("menu:reportes:almacenDeProduccion:personalizado", "", {
-          esMiddleware: false,
-        }),
-      },
-      {
-        titulo: "Transformacion",
-        url: "/reportes/transformacion",
-        permiso: $("menu:reportes:transformacion", "", { esMiddleware: false }),
-      },
-    ],
-  }
-
   return menu
 }
 
@@ -240,34 +200,6 @@ function ventas() {
   return menu
 }
 
-// function parametros() {
-//   const menu = {
-//     permiso: $(
-//       "menu:parametros",
-//       "Ver el menú para  modificar parametros del sistema",
-//       { esMiddleware: false }
-//     ),
-//     titulo: "Parametros",
-//     icono: "fas fa-microchip",
-//     submenu: [
-//       // {
-//       //   titulo: "Localizacion de pedidos",
-//       //   url: "/parametros/localizacion",
-//       //   permiso: $(
-//       //     "menu:parametros:localizacion",
-//       //     "Ver el menú para crear la localiz"
-//       //   ),
-//       // },
-//       // {
-//       //   titulo: "Estaciones de escaneo",
-//       //   url: "/parametros/estaciones",
-//       //   permiso: $("SUPER_ADMIN", false),
-//       // },
-//     ],
-//   }
-//   return menu
-// }
-
 function compras() {
   const menu = {
     permiso: $("menu:compras", "", { esMiddleware: false }),
@@ -280,11 +212,11 @@ function compras() {
         permiso: $("menu:compras", "", { esMiddleware: false }),
       },
 
-      // {
-      //   titulo: "Divisas",
-      //   url: "/divisas",
-      //   permiso: $("menu:compras:divisas", false),
-      // },
+      {
+        titulo: "Divisas",
+        url: "/divisas",
+        permiso: $("menu:compras:divisas", false),
+      },
     ],
   }
   return menu
@@ -307,14 +239,14 @@ function administrador() {
           { esMiddleware: false }
         ),
       },
-      // {
-      //   titulo: "Departametos",
-      //   url: "/departamentos",
-      //   permiso: $(
-      //     "menu:configuraciones:departamentos",
-      //     "Ver el menu de gestion de departamentos"
-      //   ),
-      // },
+      {
+        titulo: "Departametos",
+        url: "/departamentos",
+        permiso: $(
+          "menu:configuraciones:departamentos",
+          "Ver el menu de gestion de departamentos"
+        ),
+      },
       {
         titulo: "Parametros",
         url: "/parametros",
@@ -341,17 +273,17 @@ function administrador() {
           esMiddleware: false,
         }),
       },
-      // {
-      //   titulo: "Areas",
-      //   url: "/areas",
-      //   permiso: $("menu:configuraciones:areas", false),
-      // },
+      {
+        titulo: "Areas",
+        url: "/areas",
+        permiso: $("menu:configuraciones:areas", false),
+      },
 
-      // {
-      //   titulo: "Almacen descripcion",
-      //   url: "/almacenDescripcion",
-      //   permiso: $("menu:configuraciones:almacenDescripcion", false),
-      // },
+      {
+        titulo: "Almacen descripcion",
+        url: "/almacenDescripcion",
+        permiso: $("menu:configuraciones:almacenDescripcion", false),
+      },
     ],
   }
   return menu

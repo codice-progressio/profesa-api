@@ -43,14 +43,14 @@ function generarMenus() {
   return {
     // REPORTES: reportes(),
     ALMACENES: almacenes(),
-    CONTROL_DE_PRODUCCION: controlDeProduccion(),
+    // CONTROL_DE_PRODUCCION: controlDeProduccion(),
     // INGENIERIA: ingenieria(),
     VENTAS: ventas(),
-    COMPRAS: compras(),
+    // COMPRAS: compras(),
     ADMINISTRADOR: administrador(),
-    PUNTO_DE_VEMTA: puntoDeVenta(),
-    CONTABILIDAD: contabilidad(),
-    RH: rh(),
+    // PUNTO_DE_VEMTA: puntoDeVenta(),
+    // CONTABILIDAD: contabilidad(),
+    // RH: rh(),
     // parametros: parametros(),
   }
 }

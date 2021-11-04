@@ -30,16 +30,17 @@ mongoose
     // Creamos la conexion a express
     const msjServidor = () => {
       console.log(
-        `[ INFO ] Servidor iniciado en el puerto: ${ process.env.PORT }`
+        `[ INFO ] Servidor iniciado en el puerto: ${process.env.PORT}`
       )
     }
 
     // Para modo development necesitamos definir un certificado
     if (process.env.NODE_ENV === "development") {
       // Ruta de llave y certificados
-      let ssl = {
-        key: process.env.DESARROLLO_KEY,
-        cert: process.env.DESARROLLO_CERT,
+
+      const ssl = {
+        key: "./node_modules/@codice-progressio/easy-https/cert/desarrollo.key",
+        cert: "./node_modules/@codice-progressio/easy-https/cert/desarrollo.crt",
       }
       // Solo leemos estos datos si estamos en local
       let fs = require("fs")
@@ -50,20 +51,34 @@ mongoose
       require("https")
         .createServer(credentials, app)
         // .listen(process.env.PORT, (msjServidor))
-        .listen(
-          process.env.PORT,
-          '0.0.0.0',
-          msjServidor)
-    } else app.listen(process.env.PORT, () => msjServidor)
-    
+        .listen(process.env.PORT, "0.0.0.0", msjServidor)
+    } else {
+      if (process.env.NUBE === 'true')
+        //Despliegue heroku
+        app.listen(process.env.PORT, () => msjServidor)
+      else {
+        let fs = require("fs")
+        let ssl = {
+          key: process.env.KEY,
+          cert: process.env.CERT,
+        }
+        const key = fs.readFileSync(ssl.key, "utf8")
+        const cert = fs.readFileSync(ssl.cert, "utf8")
+        const credentials = { key, cert }
+
+        require("https")
+          .createServer(credentials, app)
+          .listen(process.env.PORT, msjServidor)
+      }
+    }
+
     // SEGURIDAD
-    let security = require('./app.security')
+    let security = require("./app.security")
 
     // HOOKS
-    require('./models/hooks/usuario.hooks.route')(security.schema)
+    require("./models/hooks/usuario.hooks.route")(security.schema)
     app.use(security.basico(security.schema))
 
-    
     //Convierte los valores de los query que se pasan por url
     // en valores. Ej. 'true'=> true, '1000' => 1000
     app.use(require("express-query-auto-parse")())
@@ -84,10 +99,9 @@ mongoose
       console.error(error)
 
       let nombreParametroRequest =
-        require('@codice-progressio/express-authentication').configuraciones.easy_permissions.configuraciones
-          .nombreParametroRequest
+        require("@codice-progressio/express-authentication").configuraciones
+          .easy_permissions.configuraciones.nombreParametroRequest
 
-      
       if (error.code === "invalid_token") {
         return res
           .status(401)

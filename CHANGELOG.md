@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.2.1](https://github.com/codice-progressio/profesa-api/compare/v4.1.3...v4.2.1) (2021-11-04)
+
+
+### Bug Fixes
+
+* Menus ([9350663](https://github.com/codice-progressio/profesa-api/commit/93506632b917ac23171efc401d88eeb944f7fcb7))
+* Preparado para despliegue en servidor local ([995631d](https://github.com/codice-progressio/profesa-api/commit/995631d96921c4a1af69658c3c9c506917d04058))
+
 ## [4.2.0](https://github.com/RafaelAngelRamirez/imperium-sic-api/compare/v4.0.0...v4.2.0) (2021-10-23)
 
 

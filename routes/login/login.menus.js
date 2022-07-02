@@ -239,14 +239,14 @@ function administrador() {
           { esMiddleware: false }
         ),
       },
-      {
-        titulo: "Departametos",
-        url: "/departamentos",
-        permiso: $(
-          "menu:configuraciones:departamentos",
-          "Ver el menu de gestion de departamentos"
-        ),
-      },
+      // {
+      //   titulo: "Departametos",
+      //   url: "/departamentos",
+      //   permiso: $(
+      //     "menu:configuraciones:departamentos",
+      //     "Ver el menu de gestion de departamentos"
+      //   ),
+      // },
       {
         titulo: "Parametros",
         url: "/parametros",
@@ -256,15 +256,15 @@ function administrador() {
           { esMiddleware: false }
         ),
       },
-      {
-        titulo: "Rutas",
-        url: "/parametros/rutas-de-entrega",
-        permiso: $(
-          "menu:configuraciones:rutas-de-entrega",
-          "Ver el menu de parametros de ruta de entrega",
-          { esMiddleware: false }
-        ),
-      },
+      // {
+      //   titulo: "Rutas",
+      //   url: "/parametros/rutas-de-entrega",
+      //   permiso: $(
+      //     "menu:configuraciones:rutas-de-entrega",
+      //     "Ver el menu de parametros de ruta de entrega",
+      //     { esMiddleware: false }
+      //   ),
+      // },
 
       {
         titulo: "Contactos",
@@ -273,17 +273,17 @@ function administrador() {
           esMiddleware: false,
         }),
       },
-      {
-        titulo: "Areas",
-        url: "/areas",
-        permiso: $("menu:configuraciones:areas", false),
-      },
+      // {
+      //   titulo: "Areas",
+      //   url: "/areas",
+      //   permiso: $("menu:configuraciones:areas", false),
+      // },
 
-      {
-        titulo: "Almacen descripcion",
-        url: "/almacenDescripcion",
-        permiso: $("menu:configuraciones:almacenDescripcion", false),
-      },
+      // {
+      //   titulo: "Almacen descripcion",
+      //   url: "/almacenDescripcion",
+      //   permiso: $("menu:configuraciones:almacenDescripcion", false),
+      // },
     ],
   }
   return menu

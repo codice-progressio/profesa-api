@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.2.4](https://github.com/codice-progressio/profesa-api/compare/v4.2.3...v4.2.4) (2022-07-14)
+
+
+### Bug Fixes
+
+* Correo de recuperacion no funciona ([064b7e2](https://github.com/codice-progressio/profesa-api/commit/064b7e2d9cdac36ea251bd33a263db4ecfd2f208))
+
 ### [4.2.3](https://github.com/codice-progressio/profesa-api/compare/v4.2.2...v4.2.3) (2022-07-13)
 
 

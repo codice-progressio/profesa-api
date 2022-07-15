@@ -1,6 +1,6 @@
 {
   "name": "imperium-sic-api",
-  "version": "4.2.4",
+  "version": "4.2.5",
   "description": "API server IMPERIUMsic",
   "main": "index.js",
   "scripts": {

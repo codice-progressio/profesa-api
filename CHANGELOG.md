@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.2.5](https://github.com/codice-progressio/profesa-api/compare/v4.2.4...v4.2.5) (2022-07-15)
+
+
+### Bug Fixes
+
+* Continua problema de autenticacion ([09e973a](https://github.com/codice-progressio/profesa-api/commit/09e973a8810a66acf3950ee929c8910942813d18))
+
 ### [4.2.4](https://github.com/codice-progressio/profesa-api/compare/v4.2.3...v4.2.4) (2022-07-14)
 
 

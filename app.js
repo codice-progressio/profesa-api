@@ -2,9 +2,6 @@ require("dotenv").config()
 console.log("[ INFO ] Modo:" + process.env.NODE_ENV)
 // Mongoose
 const mongoose = require("mongoose")
-mongoose.set("useNewUrlParser", true)
-mongoose.set("useUnifiedTopology", true)
-mongoose.set("useCreateIndex", true)
 mongoose.set("bufferCommands", false)
 // Conexión a la BD
 mongoose

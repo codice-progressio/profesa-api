@@ -1,0 +1,10 @@
+type Usuario {
+  _id: String!
+  nombre: String!
+  email: String!
+  password: String
+  permissions: [String]
+  inhabilitado: Boolean
+  password_offline: String
+  create_at: String
+}

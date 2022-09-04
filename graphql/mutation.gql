@@ -1,0 +1,5 @@
+type Mutation {
+
+    crear_orden_de_venta(_id:String, datos:OrdenDeVenta!): OrdenDeVenta
+
+}

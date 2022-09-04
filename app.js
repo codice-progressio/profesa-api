@@ -6,7 +6,8 @@ mongoose.set("bufferCommands", false)
 // Conexión a la BD
 mongoose
   .connect(process.env.URI)
-  .then(ok => {
+  .then(ok =>
+  {
     console.log("[ INFO ] Conectado a la BD")
     // Configuraciones generales express
     const express = require("express")
@@ -25,14 +26,16 @@ mongoose
     // })
 
     // Creamos la conexion a express
-    const msjServidor = () => {
+    const msjServidor = () =>
+    {
       console.log(
-        `[ INFO ] Servidor iniciado en el puerto: ${process.env.PORT}`
+        `[ INFO ] Servidor iniciado en el puerto: ${ process.env.PORT }`
       )
     }
 
     // Para modo development necesitamos definir un certificado
-    if (process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV === "development")
+    {
       // Ruta de llave y certificados
 
       const ssl = {
@@ -49,11 +52,13 @@ mongoose
         .createServer(credentials, app)
         // .listen(process.env.PORT, (msjServidor))
         .listen(process.env.PORT, "0.0.0.0", msjServidor)
-    } else {
+    } else
+    {
       if (process.env.NUBE === 'true')
         //Despliegue heroku
         app.listen(process.env.PORT, () => msjServidor)
-      else {
+      else
+      {
         let fs = require("fs")
         let ssl = {
           key: process.env.KEY,
@@ -68,6 +73,37 @@ mongoose
           .listen(process.env.PORT, msjServidor)
       }
     }
+
+    if (process.env.NODE_ENV === "development")
+      app.use((req, res, next) =>
+      {
+        const url = require('url')
+
+        const fullUrl = (req) =>
+        {
+          return url.format({
+            protocol: req.protocol,
+            host: req.get('host'),
+            pathname: req.originalUrl
+          })
+        }
+        console.log(`[ REQUEST ] ${ fullUrl(req) }`)
+        next()
+      })
+
+
+    const { graphqlHTTP } = require('express-graphql')
+    const { schemas, resolvers } = require("./graphql/main.resolver")
+
+    app.use(
+      '/graphql',
+      graphqlHTTP({
+        schema: schemas,
+        rootValue: resolvers,
+        graphiql: true,
+      })
+    )
+
 
     // SEGURIDAD
     let security = require("./app.security")
@@ -84,36 +120,43 @@ mongoose
     app.use(require("./config/routes"))
     // MANEJO DE ERRORES
     // Plantilla para la estructura de los errores.
-    let errP = error => {
+    let errP = error =>
+    {
       return { error }
     }
-    app.use(function (req, res) {
+    app.use(function (req, res)
+    {
       console.log("No existe la pagina")
       return res.status(404).send(errP("No existe la pagina"))
     })
 
-    app.use(function (error, req, res, next) {
+    app.use(function (error, req, res, next)
+    {
       console.error(error)
 
       let nombreParametroRequest =
         require("@codice-progressio/express-authentication").configuraciones
           .easy_permissions.configuraciones.nombreParametroRequest
 
-      if (error.code === "invalid_token") {
+      if (error.code === "invalid_token")
+      {
         return res
           .status(401)
           .send(errP("Token invalido. Inicia sesion de nuevo"))
       }
 
-      if (error.code === "credentials_required") {
+      if (error.code === "credentials_required")
+      {
         return res.status(401).send(errP("Es necesario loguearte"))
       }
 
-      if (error.errors) {
+      if (error.errors)
+      {
         return res.status(500).send(errP(error.message))
       }
 
-      if (error?.status === 403 && req[nombreParametroRequest]) {
+      if (error?.status === 403 && req[nombreParametroRequest])
+      {
         let leyenda = "No tienes permiso: " + req[nombreParametroRequest]
         return res.status(401).send(errP(leyenda))
       }

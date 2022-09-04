@@ -1,0 +1,49 @@
+type OrdenDeVenta {
+  _id: String
+  consecutivo: Int
+  eliminado: Boolean
+  contacto: String
+  usuario: String
+  articulos: [ArticuloPedido]
+  observaciones: String
+  acciones: [PedidoAccion]
+  listaDePreciosId: String
+  total: Float
+  iva: Float
+  importe: Float
+  folio: String
+  ubicacion: Ubicacion
+
+  sincronizado: Boolean
+  estado: [EstadoDeProceso]
+}
+
+type Ubicacion {
+  latitud: Float
+  longitud: Float
+}
+
+type PedidoAccion {
+  _id: String
+  accion: String
+  usuario: String
+  estadoDocumento: [EstadoDeProceso]
+}
+
+type ArticuloPedido {
+  _id: String
+  cantidad: Float
+  precio: Float
+  sku: String
+  observaciones: String
+  importe: Float
+}
+
+type EstadoDeProceso {
+  nombre: String
+  descripcion: String
+  hora_inicio: String
+  hora_final: String
+  observaciones: String
+  icono: String
+}

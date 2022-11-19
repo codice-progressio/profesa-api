@@ -1,6 +1,0 @@
-type Query {
-  usuarios(termino: String, limit: Int, skip: Int): [Usuario]!
-  usuarios_count: Int!
-  ordenes_de_venta(usuario:String, limit:Int, skip:Int):[OrdenDeVenta]!
-  ordenes_de_venta_count: Int!
-}

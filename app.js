@@ -93,13 +93,12 @@ mongoose
 
 
     const { graphqlHTTP } = require('express-graphql')
-    const { schemas, resolvers } = require("./graphql/main.resolver")
+    const { schema } = require("./graphql/main.graphql")
 
     app.use(
       '/graphql',
       graphqlHTTP({
-        schema: schemas,
-        rootValue: resolvers,
+        schema,
         graphiql: true,
       })
     )
@@ -163,4 +162,4 @@ mongoose
       return res.status(500).send(errP(error))
     })
   })
-  .catch(_ => console.log("error mongo:", _))
+  .catch(_ => console.log("[ ERROR APLICACION ]:", _))

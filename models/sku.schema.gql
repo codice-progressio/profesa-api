@@ -1,0 +1,34 @@
+query SKU {
+ _id:String
+ eliminado: Boolean
+  puedoProducirlo:  Boolean
+  puedoComprarlo:  Boolean
+  puedoVenderlo:  Boolean
+#   Para el codigo de barras
+  codigo: String
+  unidad: String
+  descripcion: String
+
+  nombreCompleto: String
+
+
+  costoVenta: Float
+  etiquetas: [String]!   
+}
+
+input SKU {
+  eliminado: Boolean
+  puedoProducirlo:  Boolean
+  puedoComprarlo:  Boolean
+  puedoVenderlo:  Boolean
+#   Para el codigo de barras
+  codigo: String
+  unidad: String
+  descripcion: String
+
+  nombreCompleto: String
+
+
+  costoVenta: Float
+  etiquetas: [String]!   
+}

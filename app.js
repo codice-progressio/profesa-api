@@ -92,16 +92,16 @@ mongoose
       })
 
 
-    const { graphqlHTTP } = require('express-graphql')
-    const { schema } = require("./graphql/main.graphql")
+    // const { graphqlHTTP } = require('express-graphql')
+    // const { schema } = require("./graphql/main.graphql")
 
-    app.use(
-      '/graphql',
-      graphqlHTTP({
-        schema,
-        graphiql: true,
-      })
-    )
+    // app.use(
+    //   '/graphql',
+    //   graphqlHTTP({
+    //     schema,
+    //     graphiql: true,
+    //   })
+    // )
 
 
     // SEGURIDAD

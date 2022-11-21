@@ -65,6 +65,12 @@ const permisos = {
   "usuario:leer:todo":"Leer todos los usuarios registrados en el sistema. ",
   "administrador":"Permisos de administrador",
 
+
 }
+
+
+
+// PERSONALIZADOS
+permisos["administrador:ventas"]="Permisos de administrador para ventas"
 
 module.exports = permisos

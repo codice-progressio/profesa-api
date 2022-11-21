@@ -182,9 +182,18 @@ function ventas() {
     titulo: "Ventas",
     icono: "fas fa-file-contract",
     submenu: [
+    
+      // Vamos a desactivar esto por que no queremos que consulten los pedidos 
+      // offline desde dentro de la aplicación. 
+      
+      // {
+      //   titulo: "Mis Pedidos offline",
+      //   url: "/ventas/mis-pedidos",
+      //   permiso: $("menu:ventas:mis-pedidos", "", { esMiddleware: false }),
+      // },
       {
-        titulo: "Mis Pedidos",
-        url: "/ventas/mis-pedidos",
+        titulo: "Todos mis pedidos",
+        url: "/ventas/todos-mis-pedidos",
         permiso: $("menu:ventas:mis-pedidos", "", { esMiddleware: false }),
       },
       {

@@ -21,7 +21,7 @@ const contabilidadRoute = require("../routes/contabilidad/contabilidad.route")
 
 const listaDePrecios = require("../routes/listaDePrecios.route")
 const UsuarioOfflineRoute = require("../routes/usuario.offline.route.js")
-
+const PedidoRoute = require('../routes/pedido.route')
 // app.use("/img", imagenesRoutes)
 //Este va primero por que se usan permisos especiales internamente
 app.use("/parametros", Parametros)
@@ -75,6 +75,8 @@ app.use("/contabilidad", contabilidadRoute)
 app.use("/lista-de-precios", listaDePrecios)
 
 app.use("/usuario/offline", UsuarioOfflineRoute)
+
+app.use('/pedido', PedidoRoute)
 
 module.exports = app
 //

@@ -26,6 +26,8 @@ module.exports.Obtener = async (req, res) => {
   let pedidos = await PedidoModel.find(queryFind)
     .limit(querys.limit)
     .skip(querys.skip)
+    .populate("usuario", "nombre apellido", 'Usuario')
+    .populate("contacto", "nombre razonSocial", 'Contacto')
     .exec();
   let total = await PedidoModel.countDocuments().exec();
 

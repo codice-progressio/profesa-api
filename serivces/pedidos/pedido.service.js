@@ -15,7 +15,7 @@ module.exports.Obtener = async (req, res) => {
   let queryFind = { usuario: req.user._id };
 
   // Si tiene permisos de administrador, puede ver todos los pedidos
-  if (es_admin(permissions)) queryFind = {};
+  if (es_admin(req.user?.permissions)) queryFind = {};
 
   // Si el query trae un id de pedido, es detalle.
   if (req.params.id) queryFind._id = req.query.id;
@@ -35,7 +35,8 @@ module.exports.Obtener = async (req, res) => {
   });
 };
 
-module.exports.Guardar = async (req, res) => {
+module.exports.Guardar = async (req, res, next) => {
+  delete req.body._id;
   let pedido = new PedidoModel(req.body);
   pedido.usuario = req.user._id;
   try {

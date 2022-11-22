@@ -1,6 +1,8 @@
 var mongoose = require("mongoose");
 var Schema = mongoose.Schema;
 var uniqueValidator = require("mongoose-unique-validator");
+var AutoIncrement = require("mongoose-sequence")(mongoose);
+
 
 const ArticuloPedidoSchema = {
   cantidad: Number,
@@ -11,9 +13,11 @@ const ArticuloPedidoSchema = {
   importe: Number,
 };
 
-var Schema = new Schema(
+var Esquema = new Schema(
   {
-    eliminado: Boolean,
+
+    folio_interno: Number,
+    eliminado: {type: Boolean, default: false},
     contacto: String,
     usuario: String,
     articulos: [ArticuloPedidoSchema],
@@ -34,8 +38,15 @@ var Schema = new Schema(
   { collection: "pedidos", timestamps: true }
 );
 
-Schema.plugin(uniqueValidator, {
+
+Esquema.plugin(AutoIncrement, {
+  id: "folio_interno_seq",
+  inc_field: "folio_interno"
+})
+
+
+Esquema.plugin(uniqueValidator, {
   message: "El campo '{PATH}' debe ser único.",
 });
 
-module.exports = mongoose.model("Pedido", Schema);
+module.exports = mongoose.model("Pedido", Esquema);

@@ -27,11 +27,11 @@ module.exports.Obtener = async (req, res) => {
     .limit(querys.limit)
     .skip(querys.skip)
     .populate("usuario", "nombre apellido", 'Usuario')
-    .populate("contacto", "nombre razonSocial", 'Contacto')
+    .populate("contacto", "nombre razonSocial rfc", 'Contacto')
     .populate("listaDePreciosId", "nombre iva", 'ListaDePrecios')
+    .populate("articulos.sku", "codigo nombreCompleto", 'sku')
     .exec();
   let total = await PedidoModel.countDocuments().exec();
-
   return res.send({
     pedidos,
     total,

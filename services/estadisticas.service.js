@@ -151,7 +151,7 @@ const getVentasPorVendedor = async (req, res, next) => {
         };
       });
 
-      return res.send(grafico);
+      return res.send({grafico});
     })
     .catch((_) => next(_));
 };

@@ -126,9 +126,6 @@ const getVentasPorVendedor = async (req, res, next) => {
     createdAt: { $gte: fecha_inicial },
     updatedAt: { $lte: fecha_final },
   };
-
-  console.log({ query });
-
   if (!esAdmin) query.usuario = req.user._id;
 
   Pedidos.find(query)
@@ -136,7 +133,6 @@ const getVentasPorVendedor = async (req, res, next) => {
     .populate("usuario", "nombre", "Usuario")
     .exec()
     .then((pedidos) => {
-      console.log({ pedidos });
       let vendedores = pedidos.reduce((acumulado, pedido) => {
         let usuario_id = pedido.usuario._id;
         if (!acumulado.hasOwnProperty(usuario_id))

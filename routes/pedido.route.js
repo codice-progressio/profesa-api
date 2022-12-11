@@ -1,6 +1,6 @@
 const app = require("express")();
 
-const PedidoService = require("../serivces/pedidos/pedido.service");
+const PedidoService = require("../services/pedidos/pedido.service");
 
 app.get("/", PedidoService.Obtener);
 app.get("/:id", PedidoService.Obtener);

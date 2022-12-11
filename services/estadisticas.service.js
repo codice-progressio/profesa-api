@@ -116,7 +116,49 @@ const getDiezMasVendidos = (req, res, next) => {};
 
 const getMejorCliente = (req, res, next) => {};
 
-const getVentasPorVendedor = (req, res, next) => {};
+const getVentasPorVendedor = async (req, res, next) => {
+  let fecha_inicial = dayjs().startOf("day").add(-1000, "day").toDate();
+  let fecha_final = dayjs().endOf("day").add(1, "day").toDate();
+
+  let esAdmin = req.user.permissions.includes("administrador");
+
+  let query = {
+    createdAt: { $gte: fecha_inicial },
+    updatedAt: { $lte: fecha_final },
+  };
+
+  console.log({ query });
+
+  if (!esAdmin) query.usuario = req.user._id;
+
+  Pedidos.find(query)
+    .select("usuario importe")
+    .populate("usuario", "nombre", "Usuario")
+    .exec()
+    .then((pedidos) => {
+      console.log({ pedidos });
+      let vendedores = pedidos.reduce((acumulado, pedido) => {
+        let usuario_id = pedido.usuario._id;
+        if (!acumulado.hasOwnProperty(usuario_id))
+          acumulado[usuario_id] = { pedidos: 0, vendido: 0 };
+        acumulado[usuario_id].pedidos++;
+        acumulado[usuario_id].vendido += pedido.importe;
+        acumulado[usuario_id].nombre = pedido.usuario.nombre;
+
+        return acumulado;
+      }, {});
+
+      let grafico = Object.entries(vendedores).map((vendedor) => {
+        return {
+          name: vendedor[1].nombre,
+          value: REDONDEAR(vendedor[1].vendido),
+        };
+      });
+
+      return res.send(grafico);
+    })
+    .catch((_) => next(_));
+};
 
 module.exports = {
   getTotalSkus,

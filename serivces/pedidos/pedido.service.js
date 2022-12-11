@@ -27,7 +27,7 @@ module.exports.Obtener = async (req, res) => {
     .limit(querys.limit)
     .skip(querys.skip)
     .populate("usuario", "nombre apellido", 'Usuario')
-    .populate("contacto", "nombre razonSocial rfc codigo", 'Contacto')
+    .populate("contacto", "nombre razonSocial rfc codigo domicilios", 'Contacto')
     .populate("listaDePreciosId", "nombre iva", 'ListaDePrecios')
     .populate("articulos.sku", "codigo nombreCompleto", 'sku')
     .exec();

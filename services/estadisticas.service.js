@@ -95,10 +95,10 @@ const getHoy = async (req, res, next) => {
 
     let masVendido = Object.entries(articulos)
       .sort((a, b) => b[1] - a[1])
-      ?.pop()[0];
+      ?.pop()
 
     if (masVendido)
-      masVendido = await Sku.findOne({ sku: masVendido })
+      masVendido = await Sku.findOne({ sku: masVendido[0] })
         .select("nombreCompleto")
         .exec();
 

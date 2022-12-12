@@ -118,7 +118,103 @@ const getVentasTrimestre = (req, res, next) => {};
 
 const getDiezMasVendidos = (req, res, next) => {};
 
-const getMejorCliente = (req, res, next) => {};
+const getMejorCliente = (req, res, next) => {
+  let formatoDeFecha = "YYYY-MM-DD";
+  let diasCalculados = 30;
+
+  let fecha_inicial = dayjs()
+    .startOf("day")
+    .add(-diasCalculados, "day")
+    .toDate();
+  let fecha_final = dayjs().endOf("day").toDate();
+  let query = {
+    createdAt: { $gte: fecha_inicial },
+    updatedAt: { $lte: fecha_final },
+  };
+
+  let esAdmin = req.user.permissions.includes("administrador");
+  if (!esAdmin) query.usuario = req.user._id;
+
+  Pedidos.find(query)
+    .select("contacto importe createdAt")
+    .populate("contacto", "nombre razonSocial", "Contacto")
+    .then((pedidos) => {
+      let clientes = {};
+
+      pedidos.forEach((pedido) => {
+        let contacto_id = pedido.contacto._id;
+        if (!clientes.hasOwnProperty(contacto_id))
+          clientes[contacto_id] = {
+            pedidos: [],
+            importe: 0,
+            nombre: pedido.contacto.nombre ?? pedido.contacto.razonSocial,
+          };
+
+        let registro = clientes[contacto_id];
+        registro.pedidos.push(pedido);
+        registro.importe += pedido.importe;
+      });
+
+      let mejorCliente = Object.entries(clientes)
+        .sort((a, b) => b[1].importe - a[1].importe)
+        ?.pop()[1];
+
+      let grafico = mejorCliente.pedidos
+        .map((pedido) => {
+          return {
+            fecha: dayjs(pedido.createdAt).format(formatoDeFecha),
+            value: pedido.importe,
+          };
+        })
+        .reduce((acumulado, pedido) => {
+          if (!acumulado.hasOwnProperty(pedido.fecha))
+            acumulado[pedido.fecha] = {
+              name: pedido.fecha,
+              value: 0,
+              datosAgrupados: 0,
+            };
+          acumulado[pedido.fecha].value += pedido.value;
+          acumulado[pedido.fecha].datosAgrupados++;
+
+          return acumulado;
+        }, {});
+
+      grafico = Object.entries(grafico).map((x) => x[1]);
+
+      // Completar fechas faltantes.
+      let grafico_fechas_completas = new Array(30)
+        .fill()
+        .map((x, i) => dayjs().add(-i, "days").format("YYYY-MM-DD"))
+        .map((fecha, i) => {
+          let registro = grafico.find(
+            (graf) => graf.name === fecha
+          );
+
+          if (registro) return registro;
+          return {
+            name: fecha,
+            value: 0,
+            datosAgrupados: 0,
+          };
+        });
+
+
+      let datos = {
+        nombre: mejorCliente.nombre,
+        comprado: mejorCliente.importe,
+        pedidos: mejorCliente.pedidos.length,
+        grafico: [
+          {
+            name: mejorCliente.nombre,
+            series: grafico_fechas_completas,
+          },
+        ],
+      };
+
+      return res.send(datos);
+    })
+    .catch((_) => next(_));
+};
 
 const getVentasPorVendedor = async (req, res, next) => {
   let fecha_inicial = dayjs().startOf("day").add(-30, "day").toDate();

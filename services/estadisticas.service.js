@@ -184,20 +184,21 @@ const getMejorCliente = (req, res, next) => {
       // Completar fechas faltantes.
       let grafico_fechas_completas = new Array(30)
         .fill()
-        .map((x, i) => dayjs().add(-i, "days").format("YYYY-MM-DD"))
+        .map((x, i) => dayjs().add(-i, "days").format(formatoDeFecha))
         .map((fecha, i) => {
-          let registro = grafico.find(
-            (graf) => graf.name === fecha
-          );
+          let registro = grafico.find((graf) => graf.name === fecha);
 
-          if (registro) return registro;
+          if (registro) {
+            registro.name = ` [ ${registro.datosAgrupados} ] ${registro.name}`;
+            return registro;
+          }
           return {
             name: fecha,
             value: 0,
             datosAgrupados: 0,
           };
-        });
-
+        })
+        .reverse();
 
       let datos = {
         nombre: mejorCliente.nombre,

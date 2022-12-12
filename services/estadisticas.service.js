@@ -40,74 +40,78 @@ const getTotalContactos = (req, res, next) => {
 };
 
 const getHoy = async (req, res, next) => {
-  let fecha_inicial = dayjs().startOf("day").add(-1, "day").toDate();
-  let fecha_final = dayjs().endOf("day").add(1, "day").toDate();
+  try {
+    let fecha_inicial = dayjs().startOf("day").toDate();
+    let fecha_final = dayjs().endOf("day").toDate();
 
-  let pedidos = await Pedidos.find({
-    createdAt: { $gte: fecha_inicial },
-    updatedAt: { $lte: fecha_final },
-  }).exec();
+    let pedidos = await Pedidos.find({
+      createdAt: { $gte: fecha_inicial },
+      updatedAt: { $lte: fecha_final },
+    }).exec();
 
-  let vendido = pedidos.reduce(
-    (acumulado, pedido) => acumulado + pedido.importe,
-    0
-  );
+    let vendido = pedidos.reduce(
+      (acumulado, pedido) => acumulado + pedido.importe,
+      0
+    );
 
-  let vendedores = pedidos.reduce((acumulado, pedido) => {
-    let usuario = pedido.usuario;
-    if (!acumulado.hasOwnProperty(usuario))
-      acumulado[usuario] = { pedidos: 0, vendido: 0 };
-    acumulado[usuario].pedidos++;
-    acumulado[usuario].vendido += pedido.importe;
+    let vendedores = pedidos.reduce((acumulado, pedido) => {
+      let usuario = pedido.usuario;
+      if (!acumulado.hasOwnProperty(usuario))
+        acumulado[usuario] = { pedidos: 0, vendido: 0 };
+      acumulado[usuario].pedidos++;
+      acumulado[usuario].vendido += pedido.importe;
 
-    return acumulado;
-  }, {});
-
-  let grafico = Object.entries(vendedores).map((vendedor) => {
-    return { name: vendedor[0], value: vendedor[1].vendido };
-  });
-
-  let user = await mongoose
-    .model("Usuario")
-    .find({ _id: { $in: grafico.map((x) => x.name) } })
-    .select("nombre")
-    .exec();
-
-  grafico.forEach((x) => {
-    let nombre = user.find(
-      (y) => y._id.toString() === x.name.toString()
-    )?.nombre;
-    x.name = nombre;
-  });
-
-  vendedores = Object.entries(vendedores).length;
-
-  let articulos = pedidos
-    .map((p) => p.articulos)
-    .flat()
-    .reduce((acumulado, articulo) => {
-      let sku = articulo.sku;
-      if (!acumulado.hasOwnProperty(sku)) acumulado[sku] = 0;
-      acumulado[sku] += articulo.importe;
       return acumulado;
     }, {});
 
-  let masVendido = Object.entries(articulos)
-    .sort((a, b) => b[1] - a[1])
-    ?.pop()[0];
+    let grafico = Object.entries(vendedores).map((vendedor) => {
+      return { name: vendedor[0], value: vendedor[1].vendido };
+    });
 
-  if (masVendido)
-    masVendido = await Sku.findOne({ sku: masVendido })
-      .select("nombreCompleto")
+    let user = await mongoose
+      .model("Usuario")
+      .find({ _id: { $in: grafico.map((x) => x.name) } })
+      .select("nombre")
       .exec();
 
-  return res.send({
-    vendido: REDONDEAR(vendido),
-    pedidos: pedidos.length,
-    vendedores,
-    masVendido: masVendido?.nombreCompleto ?? "N/A",
-    grafico,
-  });
+    grafico.forEach((x) => {
+      let nombre = user.find(
+        (y) => y._id.toString() === x.name.toString()
+      )?.nombre;
+      x.name = nombre;
+    });
+
+    vendedores = Object.entries(vendedores).length;
+
+    let articulos = pedidos
+      .map((p) => p.articulos)
+      .flat()
+      .reduce((acumulado, articulo) => {
+        let sku = articulo.sku;
+        if (!acumulado.hasOwnProperty(sku)) acumulado[sku] = 0;
+        acumulado[sku] += articulo.importe;
+        return acumulado;
+      }, {});
+
+    let masVendido = Object.entries(articulos)
+      .sort((a, b) => b[1] - a[1])
+      ?.pop()[0];
+
+    if (masVendido)
+      masVendido = await Sku.findOne({ sku: masVendido })
+        .select("nombreCompleto")
+        .exec();
+
+    return res.send({
+      vendido: REDONDEAR(vendido),
+      pedidos: pedidos.length,
+      vendedores,
+      masVendido: masVendido?.nombreCompleto ?? "N/A",
+      grafico,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 const getVentasTrimestre = (req, res, next) => {};
@@ -117,8 +121,8 @@ const getDiezMasVendidos = (req, res, next) => {};
 const getMejorCliente = (req, res, next) => {};
 
 const getVentasPorVendedor = async (req, res, next) => {
-  let fecha_inicial = dayjs().startOf("day").add(-1000, "day").toDate();
-  let fecha_final = dayjs().endOf("day").add(1, "day").toDate();
+  let fecha_inicial = dayjs().startOf("day").add(-30, "day").toDate();
+  let fecha_final = dayjs().endOf("day").toDate();
 
   let esAdmin = req.user.permissions.includes("administrador");
 
@@ -144,14 +148,16 @@ const getVentasPorVendedor = async (req, res, next) => {
         return acumulado;
       }, {});
 
-      let grafico = Object.entries(vendedores).map((vendedor) => {
-        return {
-          name: vendedor[1].nombre,
-          value: REDONDEAR(vendedor[1].vendido),
-        };
-      });
+      let grafico = Object.entries(vendedores)
+        .map((vendedor) => {
+          return {
+            name: vendedor[1].nombre,
+            value: REDONDEAR(vendedor[1].vendido),
+          };
+        })
+        .sort((a, b) => b.value - a.value);
 
-      return res.send({grafico});
+      return res.send({ grafico });
     })
     .catch((_) => next(_));
 };

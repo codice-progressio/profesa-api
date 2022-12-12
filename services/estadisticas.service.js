@@ -116,7 +116,89 @@ const getHoy = async (req, res, next) => {
 
 const getVentasTrimestre = (req, res, next) => {};
 
-const getDiezMasVendidos = (req, res, next) => {};
+const getDiezMasVendidos = async (req, res, next) => {
+  let diasCalculados = 30;
+
+  let fecha_inicial = dayjs()
+    .startOf("day")
+    .add(-diasCalculados, "day")
+    .toDate();
+  let fecha_final = dayjs().endOf("day").toDate();
+  let query = {
+    createdAt: { $gte: fecha_inicial },
+    updatedAt: { $lte: fecha_final },
+  };
+
+  let esAdmin = req.user.permissions.includes("administrador");
+  if (esAdmin) query.usuario = req.user._id;
+  Pedidos.aggregate([
+    {
+      $match: query,
+    },
+    {
+      $project: {
+        articulos: 1,
+      },
+    },
+    {
+      $unwind: {
+        path: "$articulos",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $addFields: {
+        sku: {
+          $toObjectId: "$articulos.sku",
+        },
+      },
+    },
+    {
+      $lookup: {
+        from: "skus",
+        localField: "sku",
+        foreignField: "_id",
+        as: "sku",
+      },
+    },
+
+    {
+      $unwind: {
+        path: "$sku",
+        preserveNullAndEmptyArrays: true,
+      },
+    },
+    {
+      $project: {
+        articulos: 1,
+        sku: {
+          codigo: 1,
+          nombreCompleto: 1,
+        },
+      },
+    },
+
+    {
+      $group: {
+        _id: "$articulos.sku",
+        importe: { $sum: "$articulos.importe" },
+        codigo: { $first: "$sku.codigo" },
+        nombreCompleto: { $first: "$sku.nombreCompleto" },
+      },
+    },
+  ])
+    .then((articulos) => {
+      let datos = articulos
+        .sort((a, b) => b.importe - a.importe)
+        .slice(0, 10)
+        .map((x) => ({
+          name: `[${x.codigo}] ${x.nombreCompleto}`,
+          value: REDONDEAR(x.importe),
+        }));
+      res.send({ datos });
+    })
+    .catch((_) => next(_));
+};
 
 const getMejorCliente = (req, res, next) => {
   let formatoDeFecha = "YYYY-MM-DD";

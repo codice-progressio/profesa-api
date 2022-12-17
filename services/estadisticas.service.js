@@ -4,8 +4,11 @@ const Pedidos = require("../models/pedido.model");
 const mongoose = require("mongoose");
 
 const dayjs = require("dayjs");
+require("dayjs/locale/es-mx");
+require("dayjs/locale/en");
 
 const REDONDEAR = (numero) => Math.round(numero * 100) / 100;
+const formatoDeFecha = "YYYY-MM-DD";
 
 const getTotalSkus = (req, res, next) => {
   Sku.countDocuments()
@@ -95,7 +98,7 @@ const getHoy = async (req, res, next) => {
 
     let masVendido = Object.entries(articulos)
       .sort((a, b) => b[1] - a[1])
-      ?.pop()
+      ?.pop();
 
     if (masVendido)
       masVendido = await Sku.findOne({ sku: masVendido[0] })
@@ -114,7 +117,128 @@ const getHoy = async (req, res, next) => {
   }
 };
 
-const getVentasTrimestre = (req, res, next) => {};
+async function generar_mes(restar_al_mes, permissions, user_id) {
+  // Obtenemos el dia 1 de este mes y el último día.
+  let fecha_inicial = dayjs()
+    .add(-restar_al_mes, "month")
+    .locale("es-mx")
+    .startOf("month");
+
+  let mes = fecha_inicial.format("MMMM");
+  fecha_inicial = fecha_inicial.locale("en").toDate();
+
+  let fecha_final = dayjs()
+    .add(-restar_al_mes, "month")
+    .endOf("month")
+    .locale("en")
+    .toDate();
+  let query = {
+    createdAt: { $gte: fecha_inicial, $lte: fecha_final },
+  };
+
+  let esAdmin = permissions.includes("administrador");
+  if (esAdmin) query.usuario = user_id;
+
+  let pedidos = await Pedidos.aggregate([
+    {
+      $match: query,
+    },
+
+    {
+      $project: {
+        importe: 1,
+        createdAt: 1,
+      },
+    },
+  ]);
+
+  // Cambiamos el format de fecha para solo obtener el yyyy-MM-dd y poder
+  // agrupar los datos más fácilmente
+  pedidos.forEach((x) => {
+    x.createdAt = dayjs(x.createdAt).format(formatoDeFecha);
+  });
+
+  // Agrupamos por fecha
+  pedidos = pedidos.reduce((acumulados, pedido) => {
+    let fecha = pedido.createdAt;
+    if (!(fecha in acumulados))
+      acumulados[fecha] = {
+        name: fecha,
+        importe: 0,
+        datosAgrupados: 0,
+      };
+    let acumulado = acumulados[fecha];
+    acumulado.importe += pedido.importe;
+    acumulado.datosAgrupados++;
+
+    return acumulados;
+  }, {});
+
+  pedidos = Object.entries(pedidos);
+
+  let dias_del_mes = dayjs(fecha_final).diff(fecha_inicial, "day") + 1;
+
+  let grafico_fechas_completas = new Array(dias_del_mes)
+    .fill()
+    .map((x, i) => dayjs(fecha_final).add(-i, "days").format(formatoDeFecha))
+    .map((fecha, i) => {
+      let registro = pedidos.find((ped) => ped[0] === fecha);
+
+      if (registro) {
+        registro = registro[1];
+        let name = ` [ ${registro.datosAgrupados} ] ${registro.name}`;
+        let value = registro.importe;
+        let datosAgrupados = registro.datosAgrupados;
+
+        let datos = {
+          name,
+          value,
+          datosAgrupados,
+        };
+
+        return datos;
+      }
+      return {
+        name: fecha,
+        value: 0,
+        datosAgrupados: 0,
+      };
+    })
+    .reverse();
+
+  let total_mes = grafico_fechas_completas.reduce((acumulado, dia) => {
+    return acumulado + dia.value;
+  }, 0);
+
+  let este_mes = {
+    name: mes,
+    total_mes,
+    series: grafico_fechas_completas,
+  };
+  return este_mes;
+}
+
+const getVentasTrimestre = async (req, res, next) => {
+  meses_a_calcular = 3;
+
+  let meses = [];
+  let totales = [];
+
+  for (let i = 0; i < meses_a_calcular; i++) {
+    let mes = await generar_mes(i, req.user.permissions, req.user._id);
+    meses.push(mes);
+    totales.push({ name: mes.name, value: mes.total_mes });
+  }
+
+  let datos = {
+    graficos: {
+      totales,
+      meses,
+    },
+  };
+
+  res.send(datos);
+};
 
 const getDiezMasVendidos = async (req, res, next) => {
   let diasCalculados = 30;
@@ -130,7 +254,7 @@ const getDiezMasVendidos = async (req, res, next) => {
   };
 
   let esAdmin = req.user.permissions.includes("administrador");
-  if (esAdmin) query.usuario = req.user._id;
+  if (!esAdmin) query.usuario = req.user._id;
   Pedidos.aggregate([
     {
       $match: query,
@@ -201,7 +325,6 @@ const getDiezMasVendidos = async (req, res, next) => {
 };
 
 const getMejorCliente = (req, res, next) => {
-  let formatoDeFecha = "YYYY-MM-DD";
   let diasCalculados = 30;
 
   let fecha_inicial = dayjs()

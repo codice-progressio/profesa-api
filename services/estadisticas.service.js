@@ -186,7 +186,7 @@ async function generar_mes(restar_al_mes, permissions, user_id) {
 
       if (registro) {
         registro = registro[1];
-        let name = ` [ ${registro.datosAgrupados} ] ${registro.name}`;
+        let name = `${registro.name}`;
         let value = registro.importe;
         let datosAgrupados = registro.datosAgrupados;
 
@@ -203,6 +203,12 @@ async function generar_mes(restar_al_mes, permissions, user_id) {
         value: 0,
         datosAgrupados: 0,
       };
+    })
+    .map((x) =>
+    {
+      let dia = x.name.split('-')[2]
+      x.name = dia
+      return x;
     })
     .reverse();
 

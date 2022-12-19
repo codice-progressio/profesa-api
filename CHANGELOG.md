@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.3.0](https://github.com/codice-progressio/profesa-api/compare/v4.2.5...v4.3.0) (2022-12-19)
+
+
+### Features
+
+* Autoincremento de folio interno. ([13440b4](https://github.com/codice-progressio/profesa-api/commit/13440b4d3e82d9fef21f260597d486931ad9adf8))
+* breaking: Actualizaciones de seguirdad ([8250f3a](https://github.com/codice-progressio/profesa-api/commit/8250f3a20dd02938c996d3ffe8ef81cb716f40ea))
+* Estadisticas - Diez más vendidos ([79f1115](https://github.com/codice-progressio/profesa-api/commit/79f11150724fb395340b659fd04f7e8bfd8038a0))
+* Estadisticas - Mejor cliente ([a5c09d7](https://github.com/codice-progressio/profesa-api/commit/a5c09d73e212c38030ed741399139365ee8c660c))
+* Estadisticas - Ventas por vendedor. ([719ef9b](https://github.com/codice-progressio/profesa-api/commit/719ef9b31c587d49ef0c5bfd7de85f063f50f9a3))
+* Estadisticas hoy ([0648dcc](https://github.com/codice-progressio/profesa-api/commit/0648dcc62a373faef14a6152a7991594c36518a4))
+* Graphql integrada. Ordenes de venta migrado. Usuarios migrados. ([cd3cd8a](https://github.com/codice-progressio/profesa-api/commit/cd3cd8a87b412ab423ef746df18fc255394c99c5))
+* Integracion de grphql deteneda ([e5885bb](https://github.com/codice-progressio/profesa-api/commit/e5885bbe814c2ba27bd17f4276b7cf173174a32a))
+* Reporte trimestral ([6f06020](https://github.com/codice-progressio/profesa-api/commit/6f0602012e15f9fa8b3153ed35f0a0cf57c0a5eb))
+* Ruta ping agregada. Registro de pedidos agregado ([ffb6949](https://github.com/codice-progressio/profesa-api/commit/ffb6949fac4ef7775e5833dc8e545fa9b2d146a5))
+* Se popula lista de precios ([c6b3006](https://github.com/codice-progressio/profesa-api/commit/c6b30061da171b875b80d1fe3ca2499401e4c047))
+
+
+### Bug Fixes
+
+* Actualizaciones de seguridad ([e8f6a04](https://github.com/codice-progressio/profesa-api/commit/e8f6a04772f51365b5d8d86949809b8c105d8bcd))
+* Agregados populates ([5cd35f6](https://github.com/codice-progressio/profesa-api/commit/5cd35f680f9a9376cb24fc35b2ed9b92d0239635))
+* Contacto populado ([d7a17fe](https://github.com/codice-progressio/profesa-api/commit/d7a17fe9858e780f01c9996deedf5e150bfa0e17))
+* Estadistica hoy da error si no hay resultados ([85d917f](https://github.com/codice-progressio/profesa-api/commit/85d917f91705a8bd114bfc455693c173ba0bd77e))
+* Estructura de datos corregida ([198887c](https://github.com/codice-progressio/profesa-api/commit/198887cd26d8c648459fe61c3f8336b069c55925))
+* Las fechas se debe apilar para comparar los 3 meses ([962a6ee](https://github.com/codice-progressio/profesa-api/commit/962a6ee1bcf269dedc4023e2a6ff2cafef2fa481))
+* No se muestran deatos de usuario y contacto ([1e275d2](https://github.com/codice-progressio/profesa-api/commit/1e275d214a9b0b32e5f590214ff8020ec2ea2097))
+* No se popula codigo ([e2ff12c](https://github.com/codice-progressio/profesa-api/commit/e2ff12c0f4e11ae2d886b0df2df6cd8ac12a86d5))
+* Orden de grafico mejor cliente ([58ebd2f](https://github.com/codice-progressio/profesa-api/commit/58ebd2f02c513f7a5a482b36f10a6c1b9f6cf6f8))
+* Paquetes actualizados ([b5450d9](https://github.com/codice-progressio/profesa-api/commit/b5450d9cf8693600e2a2890c7362fb053b983942))
+* Removido route grapql ([9b69af6](https://github.com/codice-progressio/profesa-api/commit/9b69af64ece1dcd49ef34b365b85957f072304b2))
+
 ### [4.2.5](https://github.com/codice-progressio/profesa-api/compare/v4.2.4...v4.2.5) (2022-07-15)
 
 

@@ -350,6 +350,9 @@ const getMejorCliente = (req, res, next) => {
     .select("contacto importe createdAt")
     .populate("contacto", "nombre razonSocial", "Contacto")
     .then((pedidos) => {
+
+      if (pedidos.length<1) return res.send({})
+
       let clientes = {};
 
       pedidos.forEach((pedido) => {

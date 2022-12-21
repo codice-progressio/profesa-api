@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [4.3.1](https://github.com/codice-progressio/profesa-api/compare/v4.3.0...v4.3.1) (2022-12-21)
+
+
+### Bug Fixes
+
+* Error al cargar estadisticas de usuario si no hay pedidos registrados ([32b6a76](https://github.com/codice-progressio/profesa-api/commit/32b6a76bff2a550308519a03fe84c50da8f7981f))
+
 ## [4.3.0](https://github.com/codice-progressio/profesa-api/compare/v4.2.5...v4.3.0) (2022-12-19)
 
 

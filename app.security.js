@@ -3,6 +3,9 @@ const codice_security = require("@codice-progressio/express-authentication")
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
+// Path de usuarios 
+codice_security.configuraciones.ruta_usuario = '/api/usuario'
+
  //Gmail requiere conexion segura. 
  codice_security.configuraciones.correo.transport['secure'] = true
  // Contrasena offline

@@ -110,7 +110,7 @@ mongoose
 
     app.use(require("cors")(cors));
 
-    app.get("/ping", (req, res) => res.send({ ok: true }));
+    app.get("/api/ping", (req, res) => res.send({ ok: true }));
 
     // HOOKS
     require("./models/hooks/usuario.hooks.route")(security.schema);
@@ -121,7 +121,7 @@ mongoose
     app.use(require("express-query-auto-parse")());
 
     // Cargamos todas las rutas
-    app.use(require("./config/routes"));
+    app.use('/api', require("./config/routes"));
     // MANEJO DE ERRORES
     // Plantilla para la estructura de los errores.
     let errP = (error) => {

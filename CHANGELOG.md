@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.4.0](https://github.com/codice-progressio/profesa-api/compare/v4.3.1...v4.4.0) (2023-06-17)
+
+
+### Features
+
+* Dockerfile y .dockerignore creados ([1752c71](https://github.com/codice-progressio/profesa-api/commit/1752c71a5d21cbe39b358ba157c806fc13260409))
+
+
+### Bug Fixes
+
+* Actualizado express-authenticatio para path 'api' ([06a441f](https://github.com/codice-progressio/profesa-api/commit/06a441f537dd5ebb124f37fd1cc3ec0aa5ea75e7))
+
 ### [4.3.1](https://github.com/codice-progressio/profesa-api/compare/v4.3.0...v4.3.1) (2022-12-21)
 
 

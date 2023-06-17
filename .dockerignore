@@ -1,0 +1,56 @@
+# Ignorar archivos y carpetas específicos en la construcción de la imagen Docker
+
+# Ignorar archivos de configuración local (por ejemplo, archivos .env)
+.env
+
+# Ignorar directorios de dependencias de paquetes
+node_modules/
+vendor/
+
+# Ignorar archivos y directorios generados durante la construcción
+/build/
+/dist/
+/out/
+*.log
+
+# Ignorar archivos de respaldo generados por editores de texto
+*~
+
+# Ignorar archivos y directorios de control de versiones
+.git/
+.svn/
+
+# Ignorar archivos y directorios de desarrollo local
+docker-compose.yml
+.dockerignore
+.docker/
+README.md
+
+# Ignorar archivos específicos
+app.secret
+credentials.json
+
+# Ignorar archivos y carpetas que contengan datos sensibles
+*.pem
+*.key
+
+# Ignorar archivos de registro o de salida de aplicaciones
+*.log
+*.txt
+
+# Ignorar archivos y carpetas específicos dentro de un directorio
+logs/
+temp/*.tmp
+
+# Ignorar archivos de pruebas o ejemplos
+test/
+examples/
+
+# Ignorar cualquier archivo o carpeta que comience con un punto
+.*
+
+# Referencias:
+# 1. Documentación oficial de Docker: https://docs.docker.com/engine/reference/builder/#dockerignore-file
+# 2. Guía de referencia de .dockerignore: https://github.com/docker/cli/blob/master/docs/reference/builder.md#dockerignore-file
+# 3. Ejemplos adicionales: https://github.com/toptal/dockerignore
+

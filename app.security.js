@@ -52,7 +52,12 @@ codice_security.configuraciones.ruta_usuario = '/api/usuario'
  codice_security.configuraciones.correo.mailOptions.from =
    process.env.CORREO_MAILOPTIONS_FROM
 
-codice_security.configuraciones.jwt.decode.unless.push("/parametros")
+
+let unless = JSON.parse(JSON.stringify(codice_security.configuraciones.jwt.decode.unless));
+unless.push("/parametros")
+unless = unless.map(a => `/api` + a);
+
+codice_security.configuraciones.jwt.decode.unless = unless
 
 
 let schema = new Schema(codice_security.configuraciones.usuario.schema)
